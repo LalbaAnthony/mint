@@ -1,10 +1,12 @@
-# Cahier des charges — Mint
+# Cahier des charges - Mint
 
-Application web progressive de gestion de finances personnelles · Version 1.0 · Nov 11, 2026 · @Anthony
+Application web progressive de gestion de finances personnelles · Version 1.1 · 11 novembre 2026
 
 ## 1. Présentation du projet
 
 Mint remplace les trois bases Notion utilisées aujourd'hui pour suivre l'argent. Il ajoute ce que Notion ne fait pas : le calcul automatique du solde prévisionnel de chaque compte, jour par jour.
+
+L'identité visuelle et les règles d'interface sont fixées par la charte graphique (`docs/graphic-charter.md`), qui complète ce document sans le contredire.
 
 ### 1.1 Contexte
 
@@ -233,7 +235,7 @@ Une occurrence dont la date est passée est réputée exécutée : elle devient 
 
 Le solde prévisionnel d'un compte c en fin de journée J se calcule de proche en proche à partir du solde réel d'aujourd'hui :
 
-```latex
+```math
 S_c(J) = S_c(J-1) + \sum_{f \in F_c(J)} m(f) - L_c(J) + I_c(J)
 ```
 
@@ -243,7 +245,7 @@ F\_c(J) regroupe les flux datés du jour J sur le compte c (occurrences non exé
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PRV-01 | Pour chaque compte actif et chaque jour J entre aujourd'hui et aujourd'hui + horizon : solde prévisionnel en fin de journée.                                                                                                                                                                                                                                                                                                                      |
 | PRV-02 | Point de départ (J = aujourd'hui) : solde calculé incluant toutes les opérations datées d'aujourd'hui ou avant (CPT-04), ou solde de référence pour un placement (CPT-06), moins la part d'enveloppes du jour. Les occurrences du jour sont déjà exécutées (EXE-03).                                                                                                                                                                              |
-| PRV-03 | Flux pris en compte : occurrences non exécutées à leur date effective (ECH-06, ECH-07) — dépenses en débit, revenus en crédit, transferts en débit de la source et crédit de la cible ; opérations datées après aujourd'hui déjà enregistrées ; parts d'enveloppes (PRV-04) ; intérêts estimés (LIV-03).                                                                                                                                          |
+| PRV-03 | Flux pris en compte : occurrences non exécutées à leur date effective (ECH-06, ECH-07) : dépenses en débit, revenus en crédit, transferts en débit de la source et crédit de la cible ; opérations datées après aujourd'hui déjà enregistrées ; parts d'enveloppes (PRV-04) ; intérêts estimés (LIV-03).                                                                                                                                          |
 | PRV-04 | Lissage des enveloppes. Mois en cours : reste = max(0, disponible − occurrences futures du mois sur les catégories de l'enveloppe), réparti également sur les jours restants du mois, aujourd'hui inclus. Mois futurs : montant mensuel (ou exception ENV-07) réparti sur tous les jours du mois ; le report n'est pas projeté. Débit sur le compte par défaut de l'enveloppe. Répartition au centime, reste d'arrondi porté sur le dernier jour. |
 | PRV-05 | Vue agrégée : somme des soldes prévisionnels des comptes actifs, avec sous-totaux par usage. Les transferts internes y sont neutres.                                                                                                                                                                                                                                                                                                              |
 | PRV-06 | Horizon : préférence utilisateur de 1 à 12 mois (défaut 3), modifiable ponctuellement depuis les vues.                                                                                                                                                                                                                                                                                                                                            |
@@ -274,12 +276,12 @@ F\_c(J) regroupe les flux datés du jour J sur le compte c (occurrences non exé
 
 ### 3.16 Tableau de bord (DSH)
 
-| ID     | Exigence                                                                                                                                                                                                                                                                     |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DSH-01 | Courbe du solde prévisionnel sur l'horizon : vue agrégée par défaut, sélecteur de compte, ligne du seuil d'alerte, point minimal annoté. Les 30 derniers jours affichent le solde réel.                                                                                      |
-| DSH-02 | Répartition des dépenses sur une période (mois en cours par défaut) : par groupe Needs / Wants / Save comparé aux cibles (CAT-06), puis par catégorie au clic sur un groupe. Base : opérations réelles, catégorie Ajustement exclue. Remplace la vue Notion « Repartition ». |
-| DSH-03 | Revenus et dépenses par mois : 12 derniers mois en réel, mois de l'horizon en prévisionnel (occurrences + enveloppes), visuellement distingués ; solde mensuel revenus − dépenses ; transferts internes exclus.                                                              |
-| DSH-04 | Bandeau : patrimoine total actuel (somme des comptes actifs), alertes actives, opérations à catégoriser, propositions de rapprochement en attente.                                                                                                                           |
+| ID     | Exigence                                                                                                                                                                                                                                                                                                          |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DSH-01 | Courbe du solde prévisionnel sur l'horizon : vue agrégée par défaut, sélecteur de compte, ligne du seuil d'alerte, point minimal annoté. Les 30 derniers jours affichent le solde réel.                                                                                                                           |
+| DSH-02 | Répartition des dépenses sur une période (mois en cours par défaut) : par groupe Needs / Wants / Save comparé aux cibles (CAT-06), puis par catégorie au clic sur un groupe. Base : opérations réelles, catégorie Ajustement exclue. Remplace la vue Notion « Repartition ».                                      |
+| DSH-03 | Revenus et dépenses par mois : 12 derniers mois en réel, mois de l'horizon en prévisionnel (occurrences + enveloppes), visuellement distingués ; solde mensuel revenus − dépenses ; transferts internes exclus.                                                                                                   |
+| DSH-04 | Bandeau : patrimoine total actuel (somme des comptes actifs), alertes actives (lot 2 : comptes dont le solde prévisionnel passe sous le seuil dans les 7 prochains jours, PRV-07 ; lot 3 : s'y ajoutent les dépassements de plafond, LIV-02), opérations à catégoriser, propositions de rapprochement en attente. |
 
 ### 3.17 Notifications (NOTIF)
 
@@ -299,100 +301,140 @@ F\_c(J) regroupe les flux datés du jour J sur le compte c (occurrences non exé
 
 Les critères sont chiffrés pour servir directement de cas de test. Date de référence : aujourd'hui = mercredi 11 novembre 2026, sauf mention contraire. Montants fictifs.
 
-**US-01 — Inviter un proche** (ADM-01, AUTH-01) En tant qu'administrateur, je veux inviter un proche par email afin qu'il crée son compte.
+**US-01 - Inviter un proche** (ADM-01, AUTH-01)
+
+En tant qu'administrateur, je veux inviter un proche par email afin qu'il crée son compte.
 
 - Étant donné une invitation envoyée le 1er décembre 2026, quand l'invité ouvre le lien le 5 décembre, alors il définit mot de passe et langue et arrive sur un espace vide doté des catégories par défaut (CAT-05).
 - Quand le même lien est ouvert le 9 décembre, alors la page indique l'expiration et aucun compte n'est créé.
 - Quand un lien déjà accepté est rouvert, alors il est refusé.
 
-**US-02 — Isolation des données** (section 2, ADM-06) En tant qu'utilisateur, je veux que personne d'autre, administrateur compris, ne voie mes données dans l'application.
+**US-02 - Isolation des données** (section 2, ADM-06)
+
+En tant qu'utilisateur, je veux que personne d'autre, administrateur compris, ne voie mes données dans l'application.
 
 - Étant donné deux utilisateurs A et B, quand A appelle une route de l'API avec l'identifiant d'un compte de B, alors la réponse est 404 et aucune donnée n'est renvoyée.
 - Quand l'administrateur ouvre la console, alors il ne voit que email, rôle, langue, dates et statut de chaque utilisateur.
 
-**US-03 — Se connecter par passkey** (AUTH-03) En tant qu'utilisateur, je veux me connecter sur mon téléphone sans saisir de mot de passe.
+**US-03 - Se connecter par passkey** (AUTH-03)
+
+En tant qu'utilisateur, je veux me connecter sur mon téléphone sans saisir de mot de passe.
 
 - Étant donné une passkey enregistrée sur le téléphone, quand je choisis « Se connecter avec une passkey », alors je suis connecté après la vérification biométrique.
 - Quand cette passkey est supprimée du profil, alors toute tentative avec elle est refusée.
 
-**US-04 — Savoir où est mon argent** (CPT-01, CPT-08) En tant qu'utilisateur, je veux voir mes comptes regroupés par usage avec leurs totaux.
+**US-04 - Savoir où est mon argent** (CPT-01, CPT-08)
+
+En tant qu'utilisateur, je veux voir mes comptes regroupés par usage avec leurs totaux.
 
 - Étant donné un compte courant (Courant) à 2 000 €, un LEP (Épargne de précaution) à 5 000 € et un Livret A (Épargne) à 12 000 €, quand j'ouvre la vue, alors je vois trois groupes aux sous-totaux de 2 000 €, 5 000 € et 12 000 € et un total de 19 000 €.
 
-**US-05 — Corriger un écart avec la banque** (CPT-05) En tant qu'utilisateur, je veux comparer le solde calculé à mon relevé et corriger l'écart.
+**US-05 - Corriger un écart avec la banque** (CPT-05)
+
+En tant qu'utilisateur, je veux comparer le solde calculé à mon relevé et corriger l'écart.
 
 - Étant donné un solde calculé de 1 250,00 € au 30 novembre, quand je saisis un solde relevé de 1 237,50 € à cette date, alors l'écart affiché est de −12,50 €.
 - Quand je clique « Corriger l'écart », alors une opération Ajustement de −12,50 € datée du 30 novembre est créée, l'écart passe à 0 et l'ajustement n'apparaît dans aucune répartition.
 
-**US-06 — Saisir un abonnement annuel** (ECH-04, ECH-05, ECH-09) En tant qu'utilisateur, je veux saisir un abonnement annuel à son montant réel et voir son coût mensuel.
+**US-06 - Saisir un abonnement annuel** (ECH-04, ECH-05, ECH-09)
+
+En tant qu'utilisateur, je veux saisir un abonnement annuel à son montant réel et voir son coût mensuel.
 
 - Étant donné une dépense de 44,16 €, annuelle, ancrée au 25 janvier 2027, payée par la carte du compte courant, marquée abonnement, quand j'ouvre la vue Abonnements, alors elle affiche 3,68 €/mois et une prochaine occurrence au 25 janvier 2027.
 - Dans le calendrier du compte courant, un débit de 44,16 € apparaît le lundi 25 janvier 2027 et aucun en décembre 2026.
 
-**US-07 — Décaler une échéance au jour ouvré** (ECH-06) En tant qu'utilisateur, je veux que mon loyer tombe sur le bon jour bancaire.
+**US-07 - Décaler une échéance au jour ouvré** (ECH-06)
+
+En tant qu'utilisateur, je veux que mon loyer tombe sur le bon jour bancaire.
 
 - Étant donné un loyer de 600 €, mensuel, le 1er, règle « jour ouvré suivant », alors l'occurrence de janvier 2027 est le lundi 4 janvier 2027 (1er férié, 2 et 3 en week-end) et celle de février le lundi 1er février 2027.
 
-**US-08 — Ajuster une occurrence variable** (ECH-07) En tant qu'utilisateur, je veux corriger le montant attendu d'un mois précis sans toucher à l'échéance.
+**US-08 - Ajuster une occurrence variable** (ECH-07)
+
+En tant qu'utilisateur, je veux corriger le montant attendu d'un mois précis sans toucher à l'échéance.
 
 - Étant donné un revenu mensuel estimé à 200 € le 5, quand je fixe l'occurrence du 5 janvier 2027 à 180 €, alors la prévision crédite 180 € le 5 janvier et 200 € le 5 février, et l'échéance garde 200 €.
 
-**US-09 — Occurrence exécutée puis corrigée par l'import** (EXE-01, RAP-03, IMP-08) En tant qu'utilisateur, je veux que mes soldes restent justes sans attendre l'import, puis que la banque fasse foi.
+**US-09 - Occurrence exécutée puis corrigée par l'import** (EXE-01, RAP-03, IMP-08)
+
+En tant qu'utilisateur, je veux que mes soldes restent justes sans attendre l'import, puis que la banque fasse foi.
 
 - Étant donné ce revenu de 200 € le 5 sur le compte courant (date exacte), quand la tâche de 00:05 s'exécute le 5 décembre 2026, alors une opération de +200 € d'origine « échéance » datée du 5 décembre existe.
 - Quand j'importe le 8 décembre une ligne « 07/12/2026 VIR PRESTATION +187,00 », alors une proposition de rapprochement vers cette occurrence est affichée.
 - Quand je la valide, alors l'opération vaut +187,00 € au 7 décembre, origine « import », et le compte n'a qu'une opération pour cette occurrence.
 - Quand j'annule cet import, alors l'opération revient à +200 € au 5 décembre, origine « échéance ».
 
-**US-10 — Planifier un virement d'épargne** (ECH-01, CAT-03, PRV-05) En tant qu'utilisateur, je veux planifier un virement mensuel vers mon livret.
+**US-10 - Planifier un virement d'épargne** (ECH-01, CAT-03, PRV-05)
+
+En tant qu'utilisateur, je veux planifier un virement mensuel vers mon livret.
 
 - Étant donné un transfert de 100 € le 6 de chaque mois du compte courant (Courant) vers le Livret A (Épargne), alors chaque 6 la prévision débite 100 € du compte courant, crédite 100 € le Livret A et laisse la vue agrégée inchangée.
 - Pour le mois concerné, le groupe Save de la répartition augmente de 100 € et le total des dépenses du graphique revenus/dépenses n'augmente pas.
 
-**US-11 — Lisser une enveloppe dans la prévision** (ENV-03 à ENV-05, PRV-04) En tant qu'utilisateur, je veux que mon budget courses soit réparti sur les jours restants du mois.
+**US-11 - Lisser une enveloppe dans la prévision** (ENV-03 à ENV-05, PRV-04)
+
+En tant qu'utilisateur, je veux que mon budget courses soit réparti sur les jours restants du mois.
 
 - Étant donné une enveloppe Courses de 300 € sur le compte courant, en remise à zéro, 120 € déjà consommés en novembre et aucune occurrence future dans ses catégories, alors la prévision débite 9,00 € par jour du 11 au 30 novembre (180 € sur 20 jours).
 - En décembre 2026, elle débite 9,67 € par jour du 1er au 30 et 9,90 € le 31.
 - Le 15 novembre, après une dépense de 60 € et aucune autre depuis le 11, la prévision débite 7,50 € par jour du 15 au 30 (120 € sur 16 jours).
 
-**US-12 — Lire le solde jour par jour** (CAL-02, PRV-01) En tant qu'utilisateur, je veux voir dans le calendrier combien j'aurai chaque soir.
+**US-12 - Lire le solde jour par jour** (CAL-02, PRV-01)
+
+En tant qu'utilisateur, je veux voir dans le calendrier combien j'aurai chaque soir.
 
 - Étant donné un compte sans enveloppe, solde calculé de 1 000 € le 11 novembre, une dépense prévue de 50 € le 20 et un revenu prévu de 1 500 € le 28, alors la case du 19 affiche 1 000 €, celle du 20 affiche −50 € et 950 €, celle du 28 affiche +1 500 € et 2 450 €.
 
-**US-13 — Être prévenu d'un solde bas** (NOTIF-01, NOTIF-03) En tant qu'utilisateur, je veux être averti avant que mon compte passe sous un seuil.
+**US-13 - Être prévenu d'un solde bas** (NOTIF-01, NOTIF-03)
+
+En tant qu'utilisateur, je veux être averti avant que mon compte passe sous un seuil.
 
 - Étant donné un seuil de 200 € sur le compte courant et un minimum prévu de 150 € dans 4 jours, quand la tâche de 08:00 s'exécute, alors je reçois une notification push et une notification in-app indiquant le compte, la date et 150 €.
 - Le lendemain, situation inchangée : aucune nouvelle notification. Si le minimum descend à 100 € : nouvelle notification.
 
-**US-14 — Ne pas oublier un paiement manuel** (NOTIF-02, EXE-02) En tant qu'utilisateur, je veux un rappel avant chaque virement que je dois faire moi-même.
+**US-14 - Ne pas oublier un paiement manuel** (NOTIF-02, EXE-02)
+
+En tant qu'utilisateur, je veux un rappel avant chaque virement que je dois faire moi-même.
 
 - Étant donné un transfert de 100 € en mode Manuel le 10 décembre avec rappel à 2 jours, alors je reçois un rappel le 8 décembre à 08:00 et un autre le 10 décembre à 08:00.
 
-**US-15 — Respecter le plafond d'un livret** (LIV-01, LIV-02) En tant qu'utilisateur, je veux savoir quand un versement prévu dépassera le plafond.
+**US-15 - Respecter le plafond d'un livret** (LIV-01, LIV-02)
+
+En tant qu'utilisateur, je veux savoir quand un versement prévu dépassera le plafond.
 
 - Étant donné un LEP plafonné à 10 000 €, à 9 950 € hors intérêts, et un transfert prévu de 100 € le 6, alors la prochaine occurrence est marquée « dépasse le plafond de 50 € » dans l'échéance et le calendrier, une notification in-app est créée et l'enregistrement reste possible.
 
-**US-16 — Suivre un placement** (CPT-06) En tant qu'utilisateur, je veux connaître la plus-value latente de mon PEA.
+**US-16 - Suivre un placement** (CPT-06)
+
+En tant qu'utilisateur, je veux connaître la plus-value latente de mon PEA.
 
 - Étant donné un PEA avec 1 000 € de solde initial et 1 200 € de transferts entrants, quand je saisis une valorisation de 2 530 € au 30 novembre 2026, alors le total versé affiché est 2 200 € et la plus-value latente +330 € (+15,0 %).
 
-**US-17 — Importer un relevé CSV** (IMP-02, IMP-03, IMP-05) En tant qu'utilisateur, je veux importer le CSV de ma banque une seule fois configuré.
+**US-17 - Importer un relevé CSV** (IMP-02, IMP-03, IMP-05)
+
+En tant qu'utilisateur, je veux importer le CSV de ma banque une seule fois configuré.
 
 - Étant donné un premier fichier séparé par des points-virgules, encodé en Windows-1252, dates au format JJ/MM/AAAA et colonnes débit et crédit séparées, quand je configure l'assistant et valide, alors la configuration est enregistrée pour ce compte.
 - Quand j'importe un second fichier au même format, alors il est interprété sans configuration.
 - Quand je réimporte le premier fichier, alors toutes ses lignes sont signalées comme doublons et aucune opération n'est créée.
 
-**US-18 — Catégoriser automatiquement** (REG-01, REG-04) En tant qu'utilisateur, je veux que les libellés connus soient classés seuls.
+**US-18 - Catégoriser automatiquement** (REG-01, REG-04)
+
+En tant qu'utilisateur, je veux que les libellés connus soient classés seuls.
 
 - Étant donné une règle « libellé contient DEEZER » vers Services numériques, quand j'importe « PRLV SEPA DEEZER 06/12 », alors l'opération est catégorisée Services numériques.
 - Quand j'importe « CB BOULANGERIE » sans règle correspondante, alors l'opération est « à catégoriser ».
 
-**US-19 — Exporter puis supprimer mon compte** (AUTH-08, AUTH-09) En tant qu'utilisateur, je veux récupérer mes données puis les effacer.
+**US-19 - Exporter puis supprimer mon compte** (AUTH-08, AUTH-09)
+
+En tant qu'utilisateur, je veux récupérer mes données puis les effacer.
 
 - Quand je lance l'export, alors je télécharge un ZIP contenant un JSON complet et un CSV par entité, dont les nombres de lignes correspondent aux données affichées.
 - Quand je confirme la suppression, alors je suis déconnecté, plus aucune ligne liée à mon identifiant n'existe en base et mon adresse peut être réinvitée.
 
-**US-20 — Consulter hors connexion** (NF-PWA-02) En tant qu'utilisateur, je veux consulter mes dernières données sans réseau.
+**US-20 - Consulter hors connexion** (NF-PWA-02)
+
+En tant qu'utilisateur, je veux consulter mes dernières données sans réseau.
 
 - Étant donné la PWA installée et le tableau de bord ouvert une fois en ligne, quand je l'ouvre hors connexion, alors le tableau de bord, les comptes et le calendrier s'affichent avec un bandeau « Hors ligne : données du … » et toutes les actions d'écriture sont désactivées.
 
@@ -477,40 +519,40 @@ Conventions :
 
 La sécurité repose sur une protection standard sans chiffrement applicatif, décision du porteur ; l'isolation stricte entre utilisateurs est l'exigence la plus critique.
 
-| ID         | Domaine              | Exigence                                                                                                                                                                                                                                          |
-| ---------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| NF-SEC-01  | Sécurité             | HTTPS uniquement, certificats Let's Encrypt, en-tête HSTS.                                                                                                                                                                                        |
-| NF-SEC-02  | Sécurité             | En-têtes de sécurité : CSP stricte sans script inline, X-Content-Type-Options, Referrer-Policy, frame-ancestors 'none'.                                                                                                                           |
-| NF-SEC-03  | Sécurité             | Protection CSRF sur toutes les requêtes modifiantes, en plus du cookie SameSite=Lax.                                                                                                                                                              |
-| NF-SEC-04  | Sécurité             | Validation de toutes les entrées côté serveur par schéma. Les expressions régulières saisies par l'utilisateur (REG-01) sont exécutées avec un moteur sans retour arrière (RE2) ou une limite de longueur et de temps.                            |
-| NF-SEC-05  | Sécurité             | Isolation : chaque route de l'API dispose d'un test automatisé d'accès croisé entre deux utilisateurs (US-02).                                                                                                                                    |
-| NF-SEC-06  | Sécurité             | Aucun montant, libellé ni solde dans les journaux applicatifs. Journal d'audit des connexions et des actions d'administration.                                                                                                                    |
-| NF-SEC-07  | Sécurité             | PostgreSQL inaccessible hors du réseau Docker interne. Secrets (session, VAPID, SMTP, base) en variables d'environnement, jamais versionnés.                                                                                                      |
-| NF-SEC-08  | Sécurité             | Audit des dépendances en CI ; une vulnérabilité de sévérité haute ou critique bloque le pipeline.                                                                                                                                                 |
-| NF-RGPD-01 | Données personnelles | Données limitées à l'email, aux préférences et aux données financières saisies. Export (AUTH-08) et suppression (AUTH-09) en libre-service.                                                                                                       |
-| NF-PERF-01 | Performance          | Temps de réponse de l'API au 95e centile inférieur à 300 ms hors import et export, pour 10 utilisateurs et 10 000 opérations par utilisateur.                                                                                                     |
-| NF-PERF-02 | Performance          | Prévision sur 12 mois pour 20 comptes, 200 échéances et 10 enveloppes calculée en moins de 500 ms côté serveur.                                                                                                                                   |
-| NF-PERF-03 | Performance          | Import de 2 000 lignes (lecture, règles, rapprochement) traité en moins de 5 s.                                                                                                                                                                   |
-| NF-PERF-04 | Performance          | Score Lighthouse Performance mobile supérieur ou égal à 85 sur le tableau de bord.                                                                                                                                                                |
-| NF-PWA-01  | PWA                  | Manifest et service worker ; application installable sur Android, iOS et desktop.                                                                                                                                                                 |
-| NF-PWA-02  | PWA                  | Consultation hors connexion : dernières réponses des vues tableau de bord, comptes, calendrier (mois en cours et suivant), échéances et 90 derniers jours d'opérations. Bandeau horodaté, actions d'écriture désactivées.                         |
-| NF-PWA-03  | PWA                  | Cache vidé à la déconnexion et à la suppression du compte.                                                                                                                                                                                        |
-| NF-PWA-04  | PWA                  | Nouvelle version du service worker signalée à l'utilisateur avec rechargement à sa demande.                                                                                                                                                       |
-| NF-I18N-01 | Langues              | Interface en français et en anglais, aucune chaîne en dur. Langue réglée par profil.                                                                                                                                                              |
-| NF-I18N-02 | Langues              | Formats de date, de nombre et de montant selon la locale ; devise unique EUR.                                                                                                                                                                     |
-| NF-UX-01   | Ergonomie            | Responsive dès 360 px de large : barre de navigation basse sur mobile, barre latérale sur desktop.                                                                                                                                                |
-| NF-UX-02   | Ergonomie            | Thèmes clair et sombre, suivant le réglage du système par défaut.                                                                                                                                                                                 |
-| NF-ACC-01  | Accessibilité        | Niveau WCAG 2.1 AA visé : contrastes, navigation au clavier, libellés de formulaires, alternative textuelle aux graphiques.                                                                                                                       |
-| NF-COMP-01 | Compatibilité        | Deux dernières versions de Chrome, Edge, Firefox et Safari (macOS, iOS).                                                                                                                                                                          |
-| NF-QUA-01  | Qualité              | TypeScript strict et règles de code de la section 7.5, vérifiés en CI et par hooks Git locaux.                                                                                                                                                    |
-| NF-QUA-02  | Qualité              | Tests unitaires des modules de calcul : récurrences et jours fériés, équivalent mensuel, exécution, rapprochement, enveloppes, prévision, intérêts, lecture CSV. Couverture d'au moins 90 % sur ces modules ; US-06 à US-16 transcrites en tests. |
-| NF-QUA-03  | Qualité              | Tests d'intégration de l'API, dont les tests d'isolation NF-SEC-05.                                                                                                                                                                               |
-| NF-QUA-04  | Qualité              | Tests de bout en bout (Playwright) : invitation, connexion, création de compte et d'échéance, import avec rapprochement, calendrier.                                                                                                              |
-| NF-QUA-05  | Qualité              | CI/CD GitHub Actions décrite en section 7.6 : contrôles et tests sur chaque pull request, déploiement automatique à chaque push sur main.                                                                                                         |
-| NF-QUA-06  | Qualité              | Documentation de l'API au format OpenAPI 3, générée depuis les schémas zod et publiée dans docs/ ; README d'installation renvoyant à docs/ (CODE-10).                                                                                             |
-| NF-OPS-01  | Exploitation         | Endpoint de santé vérifiant l'API et la base.                                                                                                                                                                                                     |
-| NF-OPS-02  | Exploitation         | Chaque tâche planifiée signale succès ou échec à un service de supervision externe (ping de type Healthchecks.io) ; un échec alerte l'administrateur.                                                                                             |
-| NF-OPS-03  | Exploitation         | Journaux structurés JSON sur la sortie standard, rotation gérée par Docker.                                                                                                                                                                       |
+| ID         | Domaine              | Exigence                                                                                                                                                                                                                                                                                                                |
+| ---------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NF-SEC-01  | Sécurité             | HTTPS uniquement, certificats Let's Encrypt, en-tête HSTS.                                                                                                                                                                                                                                                              |
+| NF-SEC-02  | Sécurité             | En-têtes de sécurité des pages, servis par nginx dans le conteneur web : CSP sans 'unsafe-inline' pour les scripts (seul le script inline de configuration Nuxt est autorisé, par son empreinte sha256 calculée au build ; charte graphique, CHG-103), X-Content-Type-Options, Referrer-Policy, frame-ancestors 'none'. |
+| NF-SEC-03  | Sécurité             | Protection CSRF sur toutes les requêtes modifiantes, en plus du cookie SameSite=Lax.                                                                                                                                                                                                                                    |
+| NF-SEC-04  | Sécurité             | Validation de toutes les entrées côté serveur par schéma. Les expressions régulières saisies par l'utilisateur (REG-01) sont exécutées avec un moteur sans retour arrière (RE2) ou une limite de longueur et de temps.                                                                                                  |
+| NF-SEC-05  | Sécurité             | Isolation : chaque route de l'API dispose d'un test automatisé d'accès croisé entre deux utilisateurs (US-02).                                                                                                                                                                                                          |
+| NF-SEC-06  | Sécurité             | Aucun montant, libellé ni solde dans les journaux applicatifs. Journal d'audit des connexions et des actions d'administration.                                                                                                                                                                                          |
+| NF-SEC-07  | Sécurité             | PostgreSQL inaccessible hors du réseau Docker interne. Secrets (session, VAPID, SMTP, base) en variables d'environnement, jamais versionnés.                                                                                                                                                                            |
+| NF-SEC-08  | Sécurité             | Audit des dépendances en CI ; une vulnérabilité de sévérité haute ou critique bloque le pipeline.                                                                                                                                                                                                                       |
+| NF-RGPD-01 | Données personnelles | Données limitées à l'email, aux préférences et aux données financières saisies. Export (AUTH-08) et suppression (AUTH-09) en libre-service.                                                                                                                                                                             |
+| NF-PERF-01 | Performance          | Temps de réponse de l'API au 95e centile inférieur à 300 ms hors import et export, pour 10 utilisateurs et 10 000 opérations par utilisateur.                                                                                                                                                                           |
+| NF-PERF-02 | Performance          | Prévision sur 12 mois pour 20 comptes, 200 échéances et 10 enveloppes calculée en moins de 500 ms côté serveur.                                                                                                                                                                                                         |
+| NF-PERF-03 | Performance          | Import de 2 000 lignes (lecture, règles, rapprochement) traité en moins de 5 s.                                                                                                                                                                                                                                         |
+| NF-PERF-04 | Performance          | Score Lighthouse Performance mobile supérieur ou égal à 85 sur le tableau de bord.                                                                                                                                                                                                                                      |
+| NF-PWA-01  | PWA                  | Manifest et service worker ; application installable sur Android, iOS et desktop.                                                                                                                                                                                                                                       |
+| NF-PWA-02  | PWA                  | Consultation hors connexion : dernières réponses des vues tableau de bord, comptes, calendrier (mois en cours et suivant), échéances et 90 derniers jours d'opérations. Bandeau horodaté, actions d'écriture désactivées.                                                                                               |
+| NF-PWA-03  | PWA                  | Cache vidé à la déconnexion et à la suppression du compte.                                                                                                                                                                                                                                                              |
+| NF-PWA-04  | PWA                  | Nouvelle version du service worker signalée à l'utilisateur avec rechargement à sa demande.                                                                                                                                                                                                                             |
+| NF-I18N-01 | Langues              | Interface en français et en anglais, aucune chaîne en dur. Langue réglée par profil.                                                                                                                                                                                                                                    |
+| NF-I18N-02 | Langues              | Formats de date, de nombre et de montant selon la locale ; devise unique EUR.                                                                                                                                                                                                                                           |
+| NF-UX-01   | Ergonomie            | Responsive dès 360 px de large : barre de navigation basse sur mobile, barre latérale sur desktop.                                                                                                                                                                                                                      |
+| NF-UX-02   | Ergonomie            | Thèmes clair et sombre, suivant le réglage du système par défaut.                                                                                                                                                                                                                                                       |
+| NF-ACC-01  | Accessibilité        | Niveau WCAG 2.1 AA visé : contrastes, navigation au clavier, libellés de formulaires, alternative textuelle aux graphiques.                                                                                                                                                                                             |
+| NF-COMP-01 | Compatibilité        | Deux dernières versions de Chrome, Edge, Firefox et Safari (macOS, iOS).                                                                                                                                                                                                                                                |
+| NF-QUA-01  | Qualité              | TypeScript strict et règles de code de la section 7.5, vérifiés en CI et par hooks Git locaux.                                                                                                                                                                                                                          |
+| NF-QUA-02  | Qualité              | Tests unitaires des modules de calcul : récurrences et jours fériés, équivalent mensuel, exécution, rapprochement, enveloppes, prévision, intérêts, lecture CSV. Couverture d'au moins 90 % sur ces modules ; US-06 à US-16 transcrites en tests.                                                                       |
+| NF-QUA-03  | Qualité              | Tests d'intégration de l'API, dont les tests d'isolation NF-SEC-05.                                                                                                                                                                                                                                                     |
+| NF-QUA-04  | Qualité              | Tests de bout en bout (Playwright) : invitation, connexion, création de compte et d'échéance, import avec rapprochement, calendrier.                                                                                                                                                                                    |
+| NF-QUA-05  | Qualité              | CI/CD GitHub Actions décrite en section 7.6 : contrôles et tests sur chaque pull request, déploiement automatique à chaque push sur main.                                                                                                                                                                               |
+| NF-QUA-06  | Qualité              | Documentation de l'API au format OpenAPI 3, générée depuis les schémas zod et publiée dans docs/ ; README d'installation renvoyant à docs/ (CODE-10).                                                                                                                                                                   |
+| NF-OPS-01  | Exploitation         | Endpoint de santé vérifiant l'API et la base.                                                                                                                                                                                                                                                                           |
+| NF-OPS-02  | Exploitation         | Chaque tâche planifiée signale succès ou échec à un service de supervision externe (ping de type Healthchecks.io) ; un échec alerte l'administrateur.                                                                                                                                                                   |
+| NF-OPS-03  | Exploitation         | Journaux structurés JSON sur la sortie standard, rotation gérée par Docker.                                                                                                                                                                                                                                             |
 
 Les sauvegardes de la base ne sont pas spécifiées dans ce cahier des charges.
 
@@ -522,7 +564,8 @@ Mint se compose d'un front Nuxt et d'une API Express, déployés en quatre conte
 
 | Couche                 | Choix                                                                                                                             | Exigences couvertes      |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Front                  | Nuxt 4, Vue 3, TypeScript, Pinia ; mode SPA (`ssr: false`), build statique                                                        | toutes les vues          |
+| Front                  | Nuxt 4, Vue 3, TypeScript, Pinia ; mode SPA (`ssr: false`), build statique ; `experimental.entryImportMap: false`                 | toutes les vues          |
+| Serveur statique       | nginx:alpine dans le conteneur `web` : fichiers du build, repli SPA sur `200.html`, en-tête CSP généré au build                   | NF-SEC-02                |
 | Composants d'interface | Nuxt UI (Tailwind CSS)                                                                                                            | toutes les vues          |
 | Icônes                 | @nuxt/icon (collections Iconify)                                                                                                  | CODE-11                  |
 | Graphiques             | ECharts via vue-echarts, import à la carte                                                                                        | DSH-01 à DSH-03, CODE-11 |
@@ -541,7 +584,7 @@ Mint se compose d'un front Nuxt et d'une API Express, déployés en quatre conte
 | Lecture CSV            | csv-parse et iconv-lite                                                                                                           | IMP-02                   |
 | Jours fériés           | calcul interne (date de Pâques par algorithme)                                                                                    | ECH-06                   |
 | Dépôt                  | un seul dépôt, npm workspaces : `front/`, `api/`, `shared/`                                                                       | CODE-08                  |
-| Lint et formatage      | ESLint (flat config, typescript-eslint, eslint-plugin-vue) et Prettier                                                            | CODE-13                  |
+| Lint et formatage      | ESLint (flat config, typescript-eslint, eslint-plugin-vue) et Prettier (`semi: false`, `singleQuote: true`, `printWidth: 80`)     | CODE-13, CODE-16         |
 | Tests                  | Vitest (unitaires et intégration, couverture v8), supertest, Playwright                                                           | NF-QUA-02 à NF-QUA-04    |
 | Hooks Git              | simple-git-hooks ; commitlint (Conventional Commits)                                                                              | CODE-12, CODE-14         |
 | CI/CD                  | GitHub Actions ; images publiées sur Docker Hub                                                                                   | section 7.6              |
@@ -549,8 +592,8 @@ Mint se compose d'un front Nuxt et d'une API Express, déployés en quatre conte
 ### 7.2 Déploiement
 
 - VPS OVH existant, Docker Compose, Apache en reverse proxy (un vhost dédié, un sous-domaine à définir), certificats Let's Encrypt en mode webroot.
-- Conteneurs : `web` (fichiers statiques du build Nuxt), `api` (Express), `worker` (même image que `api`, commande de lancement des tâches planifiées), `db` (PostgreSQL, volume persistant, non exposé).
-- Routage Apache : `/api/` vers `api`, le reste vers `web`.
+- Conteneurs : `web` (nginx:alpine : fichiers statiques du build Nuxt et en-têtes de sécurité des pages), `api` (Express), `worker` (même image que `api`, commande de lancement des tâches planifiées), `db` (PostgreSQL, volume persistant, non exposé).
+- Routage Apache : `/api/` vers `api`, le reste vers `web`. Apache ne pose pas d'en-tête CSP : celui des pages vient de `web`.
 - Fuseau Europe/Paris fixé par variable d'environnement pour `api` et `worker`.
 - Un seul `worker` exécute les tâches. Un verrou consultatif PostgreSQL empêche toute exécution concurrente, en plus de l'idempotence (EXE-03).
 - Images `mint-web` et `mint-api` publiées sur Docker Hub en dépôts publics, taguées `latest` et SHA du commit. Aucun secret n'est embarqué dans une image (NF-SEC-07).
@@ -568,7 +611,29 @@ Mint se compose d'un front Nuxt et d'une API Express, déployés en quatre conte
 
 ### 7.4 Schéma d'architecture
 
-&#91;embedded content: Architecture de déploiement · 4 conteneurs, 3 services externes\]
+```mermaid
+flowchart TB
+  pwa["Navigateur (PWA installée)<br/>cache hors ligne, réception Web Push"]
+  apache["Apache (reverse proxy)<br/>TLS Let's Encrypt, vhost dédié"]
+  subgraph vps["VPS OVH, Docker Compose"]
+    web["web (nginx)<br/>build statique Nuxt, en-tête CSP"]
+    api["api<br/>Express + Sequelize, REST /api/v1"]
+    worker["worker<br/>même image que api, tâches planifiées"]
+    db[("db<br/>PostgreSQL, réseau Docker interne")]
+  end
+  smtp["Serveur SMTP<br/>invitations, réinitialisation"]
+  push["Services Web Push<br/>notifications vers les appareils"]
+  sup["Supervision<br/>ping des tâches planifiées"]
+  pwa -->|HTTPS| apache
+  apache -->|"/"| web
+  apache -->|"/api/"| api
+  api --> db
+  worker --> db
+  api --> smtp
+  api --> push
+  worker --> push
+  worker --> sup
+```
 
 Le navigateur ne communique qu'avec Apache ; PostgreSQL n'est joignable que depuis le réseau Docker interne, par api et worker.
 
@@ -587,11 +652,13 @@ Ces règles s'appliquent à tout le dépôt et sont contrôlées automatiquement
 | CODE-07 | Aucun tiret cadratin (U+2014) nulle part dans le dépôt, messages de commit compris. Tiret simple ou virgule à la place.                                                                                                                                                                                                                                                                                                                                                              |
 | CODE-08 | Tout type et toute interface sont déclarés dans le dossier `types/` de leur paquet (`front/types/`, `api/types/`, `shared/types/`), jamais là où ils sont utilisés, même sans franchir de frontière de module. Les types communs à plusieurs paquets vont dans `shared/types/`. Cela couvre les props et emits des composants Vue, l'état des stores Pinia et les augmentations de modules (fichiers `.d.ts`). Les modules de logique les importent exclusivement par `import type`. |
 | CODE-09 | Schémas zod (valeurs) dans `schemas/` ; types dérivés par `z.infer` déclarés dans `types/`. Le schéma est la source unique de vérité du type.                                                                                                                                                                                                                                                                                                                                        |
-| CODE-10 | `docs/` (Markdown) contient : architecture et modèle de données, avec les règles de calcul (prévision, rapprochement, intérêts) ; décisions d'architecture (un ADR par fichier) ; exploitation (installation, variables d'environnement, déploiement, tâches planifiées, retour arrière) ; conventions de code (ces règles détaillées) ; spécification OpenAPI générée.                                                                                                              |
+| CODE-10 | `docs/` (Markdown) contient : architecture et modèle de données, avec les règles de calcul (prévision, rapprochement, intérêts) ; décisions d'architecture (un ADR par fichier) ; exploitation (installation, variables d'environnement, déploiement, tâches planifiées, retour arrière) ; conventions de code (ces règles détaillées) ; spécification OpenAPI générée ; cahier des charges (`specifications.md`) et charte graphique (`graphic-charter.md`).                        |
 | CODE-11 | Front : aucun élément `<svg>` écrit dans le code source. Hors champ : les fichiers .svg statiques de front/public/ et les SVG générés à l'exécution par ECharts (charte graphique, CHG-01 et CHG-70). Icônes par @nuxt/icon, graphiques par ECharts, composants par Nuxt UI.                                                                                                                                                                                                         |
 | CODE-12 | Messages de commit au format Conventional Commits, vérifiés par commitlint.                                                                                                                                                                                                                                                                                                                                                                                                          |
 | CODE-13 | Contrôles automatiques bloquants : règles ESLint (`no-explicit-any`, `consistent-type-assertions` limité à `as const` hors module de validation, `ban-ts-comment`, `no-non-null-assertion`, interdiction des déclarations `type` et `interface` hors `types/`, `vue/no-restricted-html-elements` pour `svg`, `consistent-type-imports`) et script de scan des caractères interdits (emoji, U+2014) sur tous les fichiers suivis par Git.                                             |
 | CODE-14 | Hooks simple-git-hooks. pre-commit : ESLint, Prettier `--check` et scan des caractères interdits sur les fichiers indexés. commit-msg : commitlint et scan du message. Le typecheck complet est laissé à la CI.                                                                                                                                                                                                                                                                      |
+| CODE-15 | Fins de ligne LF imposées pour tout le dépôt par `.gitattributes` (`* text=auto eol=lf`).                                                                                                                                                                                                                                                                                                                                                                                            |
+| CODE-16 | Prettier appliqué à tout le dépôt, documentation comprise : `semi: false`, `singleQuote: true`, `printWidth: 80`.                                                                                                                                                                                                                                                                                                                                                                    |
 
 ### 7.6 Intégration et déploiement continus
 
@@ -618,14 +685,14 @@ Quatre lots livrables séparément : le lot 1 suffit à abandonner Notion, le lo
 
 | Lot                                 | Priorité (MoSCoW) | Contenu                                                                                                                                                                                                                                                                                                                                                                                           | Critère de sortie                                                                                                            |
 | ----------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 1 — Socle et remplacement de Notion | Must              | AUTH-01, AUTH-02, AUTH-04 à AUTH-07 ; ADM-01 à ADM-07 ; CPT-01 à CPT-04, CPT-07, CPT-08 ; PAY-01 à PAY-05 ; CAT-01 à CAT-08, CAT-10 ; OPE-01 à OPE-06, OPE-08 ; ECH-01 à ECH-11 ; EXE-01 à EXE-04 ; ENV-01 à ENV-06 ; PRV-01 à PRV-09 ; CAL-01 à CAL-06 ; DSH-01 ; NF-SEC, NF-PERF-02, NF-PWA-01, NF-I18N (structure, français), NF-UX-01, NF-QUA, NF-OPS, CODE-01 à CODE-14, CI/CD (section 7.6) | US-01, US-02, US-04, US-06 à US-08, US-10 à US-12 validées ; toutes les données des trois bases Notion ressaisies (Annexe A) |
-| 2 — Réel bancaire                   | Must              | IMP-01 à IMP-08 ; REG-01 à REG-04 ; RAP-01 à RAP-08 ; CPT-05 ; EXE-05 ; OPE-07 ; DSH-02 à DSH-04 ; NF-PERF-03                                                                                                                                                                                                                                                                                     | US-05, US-09, US-17, US-18 validées                                                                                          |
-| 3 — Alertes, épargne, autonomie     | Should            | NOTIF-01 à NOTIF-09 ; LIV-01 à LIV-05 ; CPT-06 ; AUTH-03, AUTH-08, AUTH-09 ; CAT-09 ; NF-PWA-02 à NF-PWA-04 ; traduction anglaise complète                                                                                                                                                                                                                                                        | US-03, US-13 à US-16, US-19, US-20 validées                                                                                  |
-| 4 — Confort                         | Could             | ENV-07, ENV-08 ; REG-05 ; NF-UX-02 ; NF-ACC-01 au-delà des contrastes et du clavier                                                                                                                                                                                                                                                                                                               | revue d'accessibilité sans anomalie bloquante                                                                                |
+| 1 - Socle et remplacement de Notion | Must              | AUTH-01, AUTH-02, AUTH-04 à AUTH-07 ; ADM-01 à ADM-07 ; CPT-01 à CPT-04, CPT-07, CPT-08 ; PAY-01 à PAY-05 ; CAT-01 à CAT-08, CAT-10 ; OPE-01 à OPE-06, OPE-08 ; ECH-01 à ECH-11 ; EXE-01 à EXE-04 ; ENV-01 à ENV-06 ; PRV-01 à PRV-09 ; CAL-01 à CAL-06 ; DSH-01 ; NF-SEC, NF-PERF-02, NF-PWA-01, NF-I18N (structure, français), NF-UX-01, NF-QUA, NF-OPS, CODE-01 à CODE-16, CI/CD (section 7.6) | US-01, US-02, US-04, US-06 à US-08, US-10 à US-12 validées ; toutes les données des trois bases Notion ressaisies (Annexe A) |
+| 2 - Réel bancaire                   | Must              | IMP-01 à IMP-08 ; REG-01 à REG-04 ; RAP-01 à RAP-08 ; CPT-05 ; EXE-05 ; OPE-07 ; DSH-02 à DSH-04 ; NF-PERF-03                                                                                                                                                                                                                                                                                     | US-05, US-09, US-17, US-18 validées                                                                                          |
+| 3 - Alertes, épargne, autonomie     | Should            | NOTIF-01 à NOTIF-09 ; LIV-01 à LIV-05 ; DSH-04 (alertes de plafond) ; CPT-06 ; AUTH-03, AUTH-08, AUTH-09 ; CAT-09 ; NF-PWA-02 à NF-PWA-04 ; traduction anglaise complète                                                                                                                                                                                                                          | US-03, US-13 à US-16, US-19, US-20 validées                                                                                  |
+| 4 - Confort                         | Could             | ENV-07, ENV-08 ; REG-05 ; NF-UX-02 ; NF-ACC-01 au-delà des contrastes et du clavier                                                                                                                                                                                                                                                                                                               | revue d'accessibilité sans anomalie bloquante                                                                                |
 
 Won't pour cette version : tous les éléments de la colonne « Exclu » du périmètre (section 1.3).
 
-## Annexe A — Correspondance Notion vers Mint
+## Annexe A - Correspondance Notion vers Mint
 
 Chaque champ des trois bases Notion a un équivalent dans Mint ; la reprise se fait par ressaisie manuelle, qui doit couvrir la totalité des lignes.
 
@@ -633,7 +700,7 @@ Chaque champ des trois bases Notion a un équivalent dans Mint ; la reprise se f
 | ---------------- | -------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Where money      | Name                 | nom du compte                                                     | Compte : nom (CPT-01)                                                                                                                                                                          |
 | Where money      | Usage                | Emergency, Courant, Save                                          | Compte : usage. Emergency donne Épargne de précaution ; Courant donne Courant ; Save donne Épargne (livrets, PEL, épargne bancaire) ou Investissement (PEA, assurance-vie, plateformes crypto) |
-| Where money      | (absent)             | —                                                                 | Compte : nature, choisie à la ressaisie (CPT-02)                                                                                                                                               |
+| Where money      | (absent)             | -                                                                 | Compte : nature, choisie à la ressaisie (CPT-02)                                                                                                                                               |
 | Where money      | Amount               | montant en euros                                                  | Solde initial daté du jour de ressaisie ; première valorisation pour un placement (CPT-06)                                                                                                     |
 | Where money      | Total (SUM)          | somme des montants                                                | Total de la vue « Où est mon argent » (CPT-08)                                                                                                                                                 |
 | Expenses tracker | Name                 | libellé de la charge                                              | Échéance : libellé. Les budgets sans date (envies, courses, alimentation) deviennent des enveloppes (ENV-01)                                                                                   |
@@ -657,7 +724,7 @@ Chaque champ des trois bases Notion a un équivalent dans Mint ; la reprise se f
 
 Volume à ressaisir : 13 comptes, au moins 16 charges planifiées et 3 sources de revenus. La capture d'écran de la base Expenses tracker ne montre pas toutes les lignes : la ressaisie s'appuie sur la base Notion complète.
 
-## Annexe B — Hypothèses retenues par défaut
+## Annexe B - Hypothèses retenues par défaut
 
 Les valeurs ci-dessous n'ont pas été arbitrées par le porteur du projet ; elles s'appliquent tant qu'elles ne sont pas modifiées.
 

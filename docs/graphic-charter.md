@@ -1,13 +1,13 @@
 # Charte graphique · Mint
 
-Complément au cahier des charges Mint v1.0 · Version 1.0 · 11 novembre 2026
+Complément au cahier des charges Mint v1.1 · Version 1.1 · 11 novembre 2026
 
 ## 1. Objet et portée
 
-Ce document fixe l'identité visuelle de Mint et sa traduction en jetons, composants et règles d'interface dans la stack imposée (CDC, section 7.1). Il précise, sans les contredire, NF-UX-01, NF-UX-02, NF-ACC-01, NF-I18N-02, NF-PWA-01, NF-SEC-02 et CODE-11.
+Ce document fixe l'identité visuelle de Mint et sa traduction en jetons, composants et règles d'interface dans la stack imposée (CDC, section 7.1). Il précise, sans les contredire, NF-UX-01, NF-UX-02, NF-ACC-01, NF-I18N-02, NF-PWA-01, NF-SEC-02, CODE-11 et CODE-13.
 
 - Exigences identifiées `CHG-NN`, rattachées aux lots du CDC en section 13.1.
-- Emplacement dans le dépôt : `docs/charte-graphique.md` (CODE-10). Texte conforme à CODE-06 et CODE-07.
+- Emplacement dans le dépôt : `docs/graphic-charter.md` (CODE-10). Texte conforme à CODE-06 et CODE-07.
 - Versions minimales : Tailwind CSS 4.2 (palettes `olive` et `mist`), Nuxt UI 4.5 (neutre `olive`).
 - Chaque arbitrage du porteur est tracé dans le registre des décisions (section 13.3).
 
@@ -159,7 +159,7 @@ Gamme à teinte glissante : jaune-vert dans les clairs, vert franc dans les fonc
 ### 3.6 Règles d'emploi (CHG-12)
 
 - Composants : classes sémantiques uniquement (`text-primary`, `bg-muted`, `text-success`, `bg-accent-fill`, `bg-data-needs`...). Les classes de palette brutes sont interdites hors `main.css` (contrôle automatique CHG-104).
-- Un seul bouton plein (`solid`) primaire par vue. Actions secondaires en `outline` ou `ghost` neutre. Actions destructrices en `error` `soft` ou `outline`, `solid` seulement pour confirmer dans une modale.
+- Un seul bouton plein (`solid`) primaire dans le contenu de chaque vue. Le bouton « Ajouter » de la barre latérale desktop (CHG-55) n'entre pas dans ce décompte. Actions secondaires en `outline` ou `ghost` neutre. Actions destructrices en `error` `soft` ou `outline`, `solid` seulement pour confirmer dans une modale.
 - Liens dans le texte : `text-primary`, soulignés.
 - Bouton primaire plein : survol et appui en `mint-800` (clair) et `mint-300` (sombre), à la place de l'opacité 75 % par défaut de Nuxt UI, pour conserver le contraste du libellé.
 - Le corail n'est jamais une couleur de texte ni de bouton. Trois formes seulement : aplat (`bg-accent-fill` + `text-accent-on-fill`), tuile d'icône (`bg-accent-tile` + `text-accent-tile-icon`), série de données. Rôles : marqueurs du calendrier, badges et compteurs, mises en avant éditoriales (tuiles d'icône des indicateurs du tableau de bord, états vides).
@@ -199,6 +199,7 @@ Les paires impliquant les palettes Tailwind (emerald-700, sky-700, amber-700, re
 
 - Chiffres tabulaires, alignés à droite dans les colonnes.
 - Formatage par `Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' })` ; `signDisplay: 'exceptZero'` pour les flux, `'auto'` pour les soldes.
+- Le caractère du signe et les espaces (insécables) sont ceux que produit `Intl.NumberFormat` pour la locale. Les signes « + » et « − » de cette section désignent le sens du montant, pas un caractère imposé. Les tests comparent à la sortie d'`Intl`, jamais à une chaîne saisie.
 - Centimes affichés partout (listes, détails, soldes, totaux, cases du calendrier, indicateurs) sauf dans les graphiques : axes, étiquettes et infobulles arrondis à l'euro (`maximumFractionDigits: 0`).
 - La couleur ne porte jamais seule l'information : signe, icône ou libellé l'accompagne.
 
@@ -227,6 +228,8 @@ Dans le détail d'un groupe (DSH-02), chaque catégorie prend une nuance de la p
 | Sombre | 400, 600, 300, 700, 200, 500, 800, 100 |
 
 Au-delà de 8 catégories, la séquence reprend avec un motif hachuré. Chaque segment porte une étiquette (nom, pourcentage).
+
+Exception assumée au seuil de 3:1 de la section 3.7 : plusieurs nuances de la séquence restent sous 3:1 sur la surface (en clair, les nuances 200 à 400 et `coral-500` ; en sombre, les nuances 700 et 800). L'information ne repose jamais sur la seule couleur : chaque segment porte son étiquette et le tableau équivalent de CHG-77 reste disponible.
 
 ### 4.4 Flux et soldes (CHG-23)
 
@@ -314,18 +317,18 @@ Au-delà de 8 catégories, la séquence reprend avec un motif hachuré. Chaque s
 
 ## 7. Mise en page et navigation
 
-| ID     | Règle                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CHG-50 | Bascule à 1024 px (`lg`). En dessous : en-tête, barre basse, bouton flottant. Au-dessus : barre latérale.                                                                                                                                                                                                                                                                                                                             |
-| CHG-51 | En-tête mobile : 56 px, `bg-default`, bordure basse. Picto 24 px (lien vers l'accueil), titre de vue ; à droite, actions de vue et cloche de notifications avec compteur corail (NOTIF-04).                                                                                                                                                                                                                                           |
-| CHG-52 | Barre basse : 64 px + `env(safe-area-inset-bottom)`, `bg-default`, bordure haute. Entrées : Accueil, Comptes, Calendrier, Opérations, Plus. Icône 24 px et libellé `text-xs` toujours visibles. Entrée active : icône et libellé `text-primary`, pastille `bg-primary/10` derrière l'icône. Inactive : `text-muted`.                                                                                                                  |
-| CHG-53 | « Plus » ouvre un tiroir bas (`UDrawer`) : Échéances, Abonnements, Enveloppes, Import, Règles, Profil et préférences, Administration (administrateur seulement), Déconnexion.                                                                                                                                                                                                                                                         |
-| CHG-54 | Bouton flottant mobile : 56 px, `rounded-full`, `bg-primary`, icône `plus` en `text-inverted`, `shadow-lg`, à 16 px du bord droit, `bottom: calc(64px + 16px + env(safe-area-inset-bottom))`. Ouvre un tiroir : Dépense, Revenu, Transfert. Masqué sur les formulaires plein écran, désactivé hors ligne. Seul bouton plein primaire de la vue sur mobile.                                                                            |
-| CHG-55 | Desktop : `UDashboardGroup` et `UDashboardSidebar` repliable (256 px dépliée, icônes seules repliée). En tête : picto 28 px et « Mint », puis bouton plein primaire « Ajouter » pleine largeur avec menu Dépense, Revenu, Transfert. Navigation : Accueil, Comptes, Calendrier, Opérations ; séparateur ; Échéances, Abonnements, Enveloppes ; séparateur ; Import, Règles. Pied : Profil, Administration (administrateur seulement). |
-| CHG-56 | Contenu desktop : `UDashboardPanel` et `UDashboardNavbar` (titre de vue à gauche ; actions et cloche de notifications à droite). Sur toutes les tailles, les actions de vue sont en `soft` primaire ; le plein est réservé au bouton d'ajout et à la validation des formulaires et modales.                                                                                                                                           |
-| CHG-57 | Grilles : indicateurs du tableau de bord sur 1 colonne sous 768 px, 2 à partir de 768 px, 4 à partir de 1280 px. Formulaires limités à `max-w-2xl`. Opérations : `UTable` à partir de 1024 px ; en dessous, liste en lignes (libellé et catégorie à gauche, montant à droite).                                                                                                                                                        |
-| CHG-58 | Toasts : en haut au centre sous 1024 px (le bas est occupé par la barre basse et le bouton flottant), en bas à droite au-dessus.                                                                                                                                                                                                                                                                                                      |
-| CHG-59 | Écran de connexion : canevas, carte centrée `max-w-sm`, picto 48 px et « Mint » `text-3xl` au-dessus de la carte. Bouton « Se connecter avec une passkey » en `outline` neutre avec icône `key-round` ; validation du mot de passe en plein primaire.                                                                                                                                                                                 |
+| ID     | Règle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CHG-50 | Bascule à 1024 px (`lg`). En dessous : en-tête, barre basse, bouton flottant. Au-dessus : barre latérale.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| CHG-51 | En-tête mobile : 56 px, `bg-default`, bordure basse. Picto 24 px (lien vers l'accueil), titre de vue ; à droite, actions de vue et cloche de notifications avec compteur corail (NOTIF-04).                                                                                                                                                                                                                                                                                                                                                |
+| CHG-52 | Barre basse : 64 px + `env(safe-area-inset-bottom)`, `bg-default`, bordure haute. Entrées : Accueil, Comptes, Calendrier, Opérations, Plus. Icône 24 px et libellé `text-xs` toujours visibles. Entrée active : icône et libellé `text-primary`, pastille `bg-primary/10` derrière l'icône. Inactive : `text-muted`.                                                                                                                                                                                                                       |
+| CHG-53 | « Plus » ouvre un tiroir bas (`UDrawer`) : Échéances, Abonnements, Enveloppes, Import, Règles, Profil et préférences, Administration (administrateur seulement), Déconnexion.                                                                                                                                                                                                                                                                                                                                                              |
+| CHG-54 | Bouton flottant mobile : 56 px, `rounded-full`, `bg-primary`, icône `plus` en `text-inverted`, `shadow-lg`, à 16 px du bord droit, `bottom: calc(64px + 16px + env(safe-area-inset-bottom))`. Ouvre un tiroir : Dépense, Revenu, Transfert. Masqué sur les formulaires plein écran, désactivé hors ligne. Seul bouton plein primaire de la vue sur mobile.                                                                                                                                                                                 |
+| CHG-55 | Desktop : `UDashboardGroup` et `UDashboardSidebar` repliable (256 px dépliée, icônes seules repliée). En tête : picto 28 px et « Mint », puis bouton plein primaire « Ajouter » pleine largeur avec menu Dépense, Revenu, Transfert. Navigation : Accueil, Comptes, Calendrier, Opérations ; séparateur ; Échéances, Abonnements, Enveloppes ; séparateur ; Import, Règles. Pied : Profil, qui ouvre un menu (`UDropdownMenu`) « Profil et préférences » et « Déconnexion » (icône `log-out`) ; Administration (administrateur seulement). |
+| CHG-56 | Contenu desktop : `UDashboardPanel` et `UDashboardNavbar` (titre de vue à gauche ; actions et cloche de notifications à droite). Sur toutes les tailles, les actions de vue sont en `soft` primaire ; le plein est réservé au bouton d'ajout et à la validation des formulaires et modales.                                                                                                                                                                                                                                                |
+| CHG-57 | Grilles : indicateurs du tableau de bord sur 1 colonne sous 768 px, 2 à partir de 768 px, 4 à partir de 1280 px. Formulaires limités à `max-w-2xl`. Opérations : `UTable` à partir de 1024 px ; en dessous, liste en lignes (libellé et catégorie à gauche, montant à droite).                                                                                                                                                                                                                                                             |
+| CHG-58 | Toasts : en haut au centre sous 1024 px (le bas est occupé par la barre basse et le bouton flottant), en bas à droite au-dessus.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| CHG-59 | Écran de connexion : canevas, carte centrée `max-w-sm`, picto 48 px et « Mint » `text-3xl` au-dessus de la carte. Bouton « Se connecter avec une passkey » en `outline` neutre avec icône `key-round` ; validation du mot de passe en plein primaire.                                                                                                                                                                                                                                                                                      |
 
 ## 8. Composants métier
 
@@ -336,7 +339,7 @@ Au-delà de 8 catégories, la séquence reprend avec un motif hachuré. Chaque s
 | CHG-62 | Calendrier, grille complète (768 px et plus) : numéro du jour `text-xs` 500 en haut à gauche, en `text-dimmed` les samedis, dimanches et jours fériés (ECH-06) ; occurrences (libellé tronqué, montant signé selon CHG-20, marqueurs corail Manuel et abonnement) ; solde de fin de journée en bas à droite, `text-xs` 600 tabulaire. Jour passé : « n opérations » et total en `text-muted`, solde réel. Sous le seuil : fond `bg-warning/10`, solde `text-warning`, icône `triangle-alert`. Négatif : fond `bg-error/10`, solde `text-error`, icône `circle-alert` ; le négatif prime. Aujourd'hui : numéro dans une pastille `bg-primary text-inverted`. Jour sélectionné : `ring-2 ring-primary`. Jours hors du mois : numéro `text-dimmed`, sans contenu. |
 | CHG-63 | Calendrier compact (moins de 768 px, CAL-06) : numéro du jour et jusqu'à 3 points de 6 px : `success` (crédit), neutre (débit), corail (paiement manuel à déclencher). Teintes d'alerte de case identiques à CHG-62. Détail du jour sélectionné sous la grille.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | CHG-64 | Enveloppes (ENV-06) : `UProgress` de 8 px, `primary` jusqu'à 80 % inclus, `warning` au-delà de 80 %, `error` au-delà de 100 % (barre plafonnée à 100 %, dépassement chiffré en `text-error`). Lignes : consommé sur budget, disponible (règles de solde de CHG-20), disponible par jour restant.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| CHG-65 | Bandeau du tableau de bord (DSH-04) : quatre cartes. Patrimoine total (`text-3xl`, tuile d'icône d'accent avec `wallet`) ; alertes actives (icône `triangle-alert` en `text-warning`) ; opérations à catégoriser et propositions de rapprochement (compteurs corail).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| CHG-65 | Bandeau du tableau de bord (DSH-04) : quatre cartes. Patrimoine total (`text-3xl`, tuile d'icône d'accent avec `wallet`) ; alertes actives (icône `triangle-alert` en `text-warning` ; lot 2 : comptes dont le solde prévisionnel passe sous le seuil dans les 7 prochains jours, PRV-07 ; lot 3 : s'y ajoutent les dépassements de plafond, LIV-02) ; opérations à catégoriser et propositions de rapprochement (compteurs corail).                                                                                                                                                                                                                                                                                                                           |
 | CHG-66 | États vides : tuile ronde de 64 px `bg-accent-tile`, icône Lucide de 32 px `text-accent-tile-icon`, titre `text-base` 600, phrase `text-sm text-muted`, bouton `soft` primaire. Aucune illustration.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | CHG-67 | Centre de notifications (NOTIF-04) : `low_balance` et `deposit_cap` avec icône `triangle-alert` en `text-warning` ; `manual_reminder` avec pastille corail `hand`. Non lue : point corail de 8 px et titre en 600. Lue : titre en 400, `text-toned`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | CHG-68 | Hors ligne (NF-PWA-02) : `UAlert` `info` `soft` fixé sous l'en-tête, icône `wifi-off`, texte « Hors ligne : données du » suivi de la date et de l'heure ; actions d'écriture `disabled` avec infobulle. Nouvelle version (NF-PWA-04) : toast `info` persistant, action « Recharger » avec icône `refresh-cw`.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -475,11 +478,11 @@ export default defineConfig({
 ### 12.1 `front/app/assets/css/main.css` (CHG-100)
 
 ```css
-@import "tailwindcss";
-@import "@nuxt/ui";
+@import 'tailwindcss';
+@import '@nuxt/ui';
 
 @theme static {
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
 
   --color-mint-50: #e7fde6;
   --color-mint-100: #d5f2c1;
@@ -642,7 +645,8 @@ export default defineAppConfig({
         {
           color: 'primary',
           variant: 'solid',
-          class: 'hover:bg-(--app-primary-hover) active:bg-(--app-primary-hover)',
+          class:
+            'hover:bg-(--app-primary-hover) active:bg-(--app-primary-hover)',
         },
       ],
     },
@@ -664,6 +668,9 @@ export default defineAppConfig({
 ```ts
 export default defineNuxtConfig({
   ssr: false,
+  experimental: {
+    entryImportMap: false,
+  },
   css: ['~/assets/css/main.css'],
   ui: {
     colorMode: false,
@@ -756,88 +763,97 @@ La liste `clientBundle.icons` est complétée par les icônes internes de Nuxt U
 
 ### 12.4 CSP (CHG-103)
 
-Directives touchées par la charte, servies par Apache :
+En-tête servi par nginx dans le conteneur `web` (CDC, section 7.2). Apache le relaie sans poser de CSP. Directives touchées par la charte :
 
 | Directive     | Valeur                   | Motif                                                                                                      |
 | ------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `script-src`  | `'self'`                 | inchangée, aucun script inline (NF-SEC-02)                                                                 |
+| `script-src`  | `'self' 'sha256-...'`    | aucun `'unsafe-inline'` (NF-SEC-02) ; empreinte du seul script inline exécutable, calculée au build        |
 | `style-src`   | `'self' 'unsafe-inline'` | élément `<style>` des variables de couleurs injecté par Nuxt UI, styles des icônes injectés par @nuxt/icon |
 | `img-src`     | `'self' data:`           | masques CSS des icônes en `data:`                                                                          |
 | `font-src`    | `'self'`                 | Manrope auto-hébergée                                                                                      |
 | `connect-src` | `'self'`                 | aucune origine tierce (ni Iconify, ni Google Fonts)                                                        |
 
+Constat sur un build Nuxt 4.6.4 en `ssr: false` : le HTML généré contient un script inline `window.__NUXT__.config` (avec un `buildId` aléatoire, donc une empreinte différente à chaque build), une import map inline et un script `application/json` de données. L'import map est supprimée par `experimental.entryImportMap: false` (section 12.3). Le script JSON n'est pas exécuté et ne relève pas de `script-src`.
+
+Après `nuxt generate`, un script du paquet `front` calcule l'empreinte sha256 de chaque script inline exécutable de `index.html` et `200.html`, puis écrit l'en-tête complet dans la configuration nginx de l'image. Le build échoue si un script inline exécutable n'est pas couvert (CA-12).
+
 ### 12.5 Contrôle automatique des classes de palette (CHG-104)
 
-Le script de scan de CODE-13 est étendu : dans `front/app/**/*.vue`, toute classe Tailwind de palette brute (préfixe de couleur suivi d'un nom de palette et d'une nuance, par exemple `text-blue-600` ou `bg-coral-400`) bloque le hook pre-commit et la CI. Seul `main.css` référence les palettes.
+Le script de scan de CODE-13 est étendu : dans `front/app/**/*.{vue,ts}`, toute classe Tailwind de palette brute (préfixe de couleur suivi d'un nom de palette et d'une nuance, par exemple `text-blue-600` ou `bg-coral-400`) bloque le hook pre-commit et la CI. Seul `main.css` référence les palettes.
 
 ### 12.6 ADR à rédiger (CHG-105)
 
-Un fichier par décision dans `docs/` (CODE-10) : CSP `style-src 'unsafe-inline'` et `img-src data:` ; icônes embarquées sans fournisseur réseau ; rendu SVG d'ECharts ; mode de couleur désactivé jusqu'au lot 4.
+Un fichier par décision dans `docs/` (CODE-10) : CSP (empreinte du script inline Nuxt calculée au build, en-tête servi par nginx, `style-src 'unsafe-inline'`, `img-src data:`) ; icônes embarquées sans fournisseur réseau ; rendu SVG d'ECharts ; mode de couleur désactivé jusqu'au lot 4.
 
 ## 13. Lots, recette, décisions
 
 ### 13.1 Rattachement aux lots
 
-| Lot | Exigences                                                                                                                                                                                                                                                                                                             |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | CHG-01 à CHG-12, CHG-20, CHG-21, CHG-24, CHG-30, CHG-40 à CHG-44, CHG-50 à CHG-59 (sans la cloche de notifications), CHG-60, CHG-61 (archivé, origine, Manuel, abonnement), CHG-62 à CHG-64, CHG-66, CHG-69, CHG-70 à CHG-73, CHG-77, CHG-80 à CHG-84 (écrans de démarrage clairs), CHG-90, CHG-91, CHG-100 à CHG-105 |
-| 2   | CHG-22, CHG-23, CHG-61 (à catégoriser, rapprochée, non confirmée, ajustement), CHG-65, CHG-74, CHG-75                                                                                                                                                                                                                 |
-| 3   | CHG-51 et CHG-56 (cloche de notifications), CHG-61 (plafond), CHG-67, CHG-68, CHG-76, CHG-85                                                                                                                                                                                                                          |
-| 4   | CHG-92                                                                                                                                                                                                                                                                                                                |
+| Lot | Exigences                                                                                                                                                                                                                                                                                                                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | CHG-01 à CHG-12, CHG-20, CHG-21, CHG-23, CHG-24, CHG-30, CHG-40 à CHG-44, CHG-50 à CHG-59 (sans la cloche de notifications), CHG-60, CHG-61 (archivé, origine, Manuel, abonnement), CHG-62 à CHG-64, CHG-66, CHG-69, CHG-70 à CHG-73, CHG-77, CHG-80 à CHG-84 (écrans de démarrage clairs), CHG-90, CHG-91, CHG-100 à CHG-105 |
+| 2   | CHG-22, CHG-61 (à catégoriser, rapprochée, non confirmée, ajustement), CHG-65, CHG-74, CHG-75                                                                                                                                                                                                                                 |
+| 3   | CHG-51 et CHG-56 (cloche de notifications), CHG-61 (plafond), CHG-65 (plafonds dans les alertes actives), CHG-67, CHG-68, CHG-76, CHG-85                                                                                                                                                                                      |
+| 4   | CHG-92                                                                                                                                                                                                                                                                                                                        |
 
 ### 13.2 Critères d'acceptation
 
-| ID    | Critère                                                                                                                                                                                                                                |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CA-01 | `logo.svg`, `icon.svg`, `badge.svg` : `viewBox` carré, aucun attribut `style` ni `transform`, couleurs strictement conformes à la section 2.3. Superposés à l'original, écart maximal de 1 u.                                          |
-| CA-02 | Audit Lighthouse Accessibilité (outil déjà retenu par NF-PERF-04) sur connexion, accueil, comptes, calendrier, opérations et enveloppes : aucune erreur de contraste en clair, puis en sombre au lot 4.                                |
-| CA-03 | Tests Playwright en ligne puis hors ligne : aucune requête vers un domaine tiers ; icônes et police rendues hors ligne.                                                                                                                |
-| CA-04 | Aucune violation CSP dans la console sur l'ensemble des tests de bout en bout.                                                                                                                                                         |
-| CA-05 | `MoneyAmount` a pour style calculé `font-variant-numeric: tabular-nums`. Données de US-12 : la case du 20 affiche −50,00 € en couleur de texte standard et 950,00 € ; celle du 28 affiche +1 500,00 € en `text-success` et 2 450,00 €. |
-| CA-06 | Enveloppe de 300 € : 240,00 € consommés donnent `primary`, 240,01 € `warning`, 300,00 € `warning`, 300,01 € `error`.                                                                                                                   |
-| CA-07 | Calendrier, seuil de 200 € : un jour à 150 € prévus présente fond `warning` teinté, solde `text-warning` et icône ; un jour à −10,00 € présente fond `error` teinté.                                                                   |
-| CA-08 | Test unitaire : chaque valeur de `ui.icons` et de la table CHG-44 figure dans `icon.clientBundle.icons`.                                                                                                                               |
-| CA-09 | Manifeste sans erreur dans l'onglet Application des outils de développement de Chrome ; icône maskable entièrement visible sous un masque circulaire.                                                                                  |
-| CA-10 | Un commit contenant `text-blue-600` dans un fichier `.vue` est rejeté par le hook pre-commit et par la CI.                                                                                                                             |
-| CA-11 | Lots 1 à 3, système réglé en sombre : aucune classe `dark` sur `<html>`.                                                                                                                                                               |
+| ID    | Critère                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CA-01 | `logo.svg`, `icon.svg`, `badge.svg` : `viewBox` carré, aucun attribut `style` ni `transform`, couleurs strictement conformes à la section 2.3. Superposés à l'original, écart maximal de 1 u.                                                                                                                                                                                                     |
+| CA-02 | Audit Lighthouse Accessibilité (outil déjà retenu par NF-PERF-04) sur connexion, accueil, comptes, calendrier, opérations et enveloppes : aucune erreur de contraste en clair, puis en sombre au lot 4.                                                                                                                                                                                           |
+| CA-03 | Tests Playwright en ligne puis hors ligne : aucune requête vers un domaine tiers ; icônes et police rendues hors ligne.                                                                                                                                                                                                                                                                           |
+| CA-04 | Aucune violation CSP dans la console sur l'ensemble des tests de bout en bout.                                                                                                                                                                                                                                                                                                                    |
+| CA-05 | `MoneyAmount` a pour style calculé `font-variant-numeric: tabular-nums`. Données de US-12 : la case du 20 affiche le débit de 50 € en couleur de texte standard et un solde de 950 € ; celle du 28 affiche le crédit de 1 500 € en `text-success` et un solde de 2 450 €. Les chaînes attendues sont produites par `Intl.NumberFormat` pour la locale du test (CHG-20), jamais saisies à la main. |
+| CA-06 | Enveloppe de 300 € : 240,00 € consommés donnent `primary`, 240,01 € `warning`, 300,00 € `warning`, 300,01 € `error`.                                                                                                                                                                                                                                                                              |
+| CA-07 | Calendrier, seuil de 200 € : un jour à 150 € prévus présente fond `warning` teinté, solde `text-warning` et icône ; un jour à −10,00 € présente fond `error` teinté.                                                                                                                                                                                                                              |
+| CA-08 | Test unitaire : chaque valeur de `ui.icons` et de la table CHG-44 figure dans `icon.clientBundle.icons`.                                                                                                                                                                                                                                                                                          |
+| CA-09 | Manifeste sans erreur dans l'onglet Application des outils de développement de Chrome ; icône maskable entièrement visible sous un masque circulaire.                                                                                                                                                                                                                                             |
+| CA-10 | Un commit contenant `text-blue-600` dans un fichier `.vue` ou `.ts` de `front/app/` est rejeté par le hook pre-commit et par la CI.                                                                                                                                                                                                                                                               |
+| CA-11 | Lots 1 à 3, système réglé en sombre : aucune classe `dark` sur `<html>`.                                                                                                                                                                                                                                                                                                                          |
+| CA-12 | Un script inline exécutable présent dans `index.html` ou `200.html` sans empreinte dans la CSP fait échouer le build du conteneur `web`.                                                                                                                                                                                                                                                          |
 
 ### 13.3 Registre des décisions
 
-| Sujet                   | Retenu                                                                           | Écarté                                            |
-| ----------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------- |
-| Source du logo          | redessin géométrique                                                             | nettoyage minimal, redessin externe               |
-| Fichiers `.svg`         | assets autorisés, affichés par `<img>`                                           | collection d'icônes, raster seul                  |
-| Logo dans l'interface   | picto seul + mot-symbole, carré réservé aux icônes                               | carré partout, picto sans texte                   |
-| Casse                   | Mint                                                                             | mint, MINT                                        |
-| Primaire en clair       | mint-700 dérivé                                                                  | mint-600 exact, Tailwind green                    |
-| Neutre                  | olive                                                                            | neutral, zinc, stone                              |
-| Fond clair              | canevas olive-50, surfaces blanches                                              | blanc partout, menthe pâle                        |
-| Accent                  | corail                                                                           | aucun accent, bleu, orange, pêche, terracotta     |
-| Rôles de l'accent       | marqueurs du calendrier, badges et compteurs, mises en avant éditoriales         | boutons secondaires                               |
-| Success                 | emerald                                                                          | gamme mint                                        |
-| Montants                | crédits verts, débits neutres, rouge pour les soldes négatifs                    | débits rouges, tout neutre                        |
-| Warning, error          | amber, red (600 en clair)                                                        | yellow et red, amber et rose                      |
-| Groupes                 | Needs bleu, Wants corail, Save mint                                              | trois verts du logo, olive/corail/mint            |
-| Usages                  | Courant mist, Précaution teal, Épargne mint, Investissement violet               | aucune couleur, dégradé de verts                  |
-| Info                    | sky                                                                              | blue, neutre                                      |
-| Revenus, dépenses       | emerald, olive                                                                   | emerald et corail, emerald et rouge               |
-| Catégories              | nuances du groupe                                                                | palette fixe, couleur choisie par l'utilisateur   |
-| Réel, prévu             | plein, pointillé et hachuré                                                      | opacité, couleur différente                       |
-| Police                  | Manrope                                                                          | Inter, Plus Jakarta Sans, Geist                   |
-| Mot-symbole             | texte HTML, Manrope 700, `text-highlighted`                                      | police display, lettrage vectorisé, vert primaire |
-| Rayon                   | 0,5rem                                                                           | 0,25rem, 0,375rem, 0,75rem                        |
-| Densité                 | `md` partout                                                                     | `sm` sur desktop, `lg` partout                    |
-| Ajout rapide            | bouton flottant (mobile), bouton « Ajouter » en tête de barre latérale (desktop) | bouton central de barre, barre supérieure         |
-| Barre basse             | Accueil, Comptes, Calendrier, Opérations, Plus                                   | variantes Enveloppes, Échéances                   |
-| Bascule                 | 1024 px                                                                          | 768 px                                            |
-| Barre d'état            | fond de l'en-tête                                                                | vert primaire, menthe pâle                        |
-| Icônes                  | Lucide                                                                           | Phosphor, Tabler                                  |
-| Centimes                | partout sauf graphiques                                                          | partout, masqués dans les synthèses               |
-| États vides             | icône, texte, action                                                             | illustrations, picto Mint                         |
-| Ressources PWA          | CLI, PNG versionnés                                                              | intégration au build, PNG externes                |
-| Calendrier en alerte    | fond teinté, solde coloré, icône                                                 | solde seul, bordure                               |
-| Mode sombre             | spécifié, forcé en clair jusqu'au lot 4                                          | actif dès le lot 1, hors charte                   |
-| Badges corail           | aplat, texte coral-950                                                           | texte corail, pastille et texte neutre            |
-| Écrans de démarrage iOS | clair et sombre                                                                  | clair seul, aucun                                 |
-| Picto en sombre         | identique                                                                        | variante éclaircie                                |
-| CSP des styles          | `style-src 'unsafe-inline'`                                                      | empreintes au build, styles extraits              |
+| Sujet                    | Retenu                                                                           | Écarté                                                               |
+| ------------------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Source du logo           | redessin géométrique                                                             | nettoyage minimal, redessin externe                                  |
+| Fichiers `.svg`          | assets autorisés, affichés par `<img>`                                           | collection d'icônes, raster seul                                     |
+| Logo dans l'interface    | picto seul + mot-symbole, carré réservé aux icônes                               | carré partout, picto sans texte                                      |
+| Casse                    | Mint                                                                             | mint, MINT                                                           |
+| Primaire en clair        | mint-700 dérivé                                                                  | mint-600 exact, Tailwind green                                       |
+| Neutre                   | olive                                                                            | neutral, zinc, stone                                                 |
+| Fond clair               | canevas olive-50, surfaces blanches                                              | blanc partout, menthe pâle                                           |
+| Accent                   | corail                                                                           | aucun accent, bleu, orange, pêche, terracotta                        |
+| Rôles de l'accent        | marqueurs du calendrier, badges et compteurs, mises en avant éditoriales         | boutons secondaires                                                  |
+| Success                  | emerald                                                                          | gamme mint                                                           |
+| Montants                 | crédits verts, débits neutres, rouge pour les soldes négatifs                    | débits rouges, tout neutre                                           |
+| Warning, error           | amber, red (600 en clair)                                                        | yellow et red, amber et rose                                         |
+| Groupes                  | Needs bleu, Wants corail, Save mint                                              | trois verts du logo, olive/corail/mint                               |
+| Usages                   | Courant mist, Précaution teal, Épargne mint, Investissement violet               | aucune couleur, dégradé de verts                                     |
+| Info                     | sky                                                                              | blue, neutre                                                         |
+| Revenus, dépenses        | emerald, olive                                                                   | emerald et corail, emerald et rouge                                  |
+| Catégories               | nuances du groupe                                                                | palette fixe, couleur choisie par l'utilisateur                      |
+| Réel, prévu              | plein, pointillé et hachuré                                                      | opacité, couleur différente                                          |
+| Police                   | Manrope                                                                          | Inter, Plus Jakarta Sans, Geist                                      |
+| Mot-symbole              | texte HTML, Manrope 700, `text-highlighted`                                      | police display, lettrage vectorisé, vert primaire                    |
+| Rayon                    | 0,5rem                                                                           | 0,25rem, 0,375rem, 0,75rem                                           |
+| Densité                  | `md` partout                                                                     | `sm` sur desktop, `lg` partout                                       |
+| Ajout rapide             | bouton flottant (mobile), bouton « Ajouter » en tête de barre latérale (desktop) | bouton central de barre, barre supérieure                            |
+| Barre basse              | Accueil, Comptes, Calendrier, Opérations, Plus                                   | variantes Enveloppes, Échéances                                      |
+| Bascule                  | 1024 px                                                                          | 768 px                                                               |
+| Barre d'état             | fond de l'en-tête                                                                | vert primaire, menthe pâle                                           |
+| Icônes                   | Lucide                                                                           | Phosphor, Tabler                                                     |
+| Centimes                 | partout sauf graphiques                                                          | partout, masqués dans les synthèses                                  |
+| États vides              | icône, texte, action                                                             | illustrations, picto Mint                                            |
+| Ressources PWA           | CLI, PNG versionnés                                                              | intégration au build, PNG externes                                   |
+| Calendrier en alerte     | fond teinté, solde coloré, icône                                                 | solde seul, bordure                                                  |
+| Mode sombre              | spécifié, forcé en clair jusqu'au lot 4                                          | actif dès le lot 1, hors charte                                      |
+| Badges corail            | aplat, texte coral-950                                                           | texte corail, pastille et texte neutre                               |
+| Écrans de démarrage iOS  | clair et sombre                                                                  | clair seul, aucun                                                    |
+| Picto en sombre          | identique                                                                        | variante éclaircie                                                   |
+| CSP des styles           | `style-src 'unsafe-inline'`                                                      | empreintes au build, styles extraits                                 |
+| CSP des scripts          | empreinte sha256 calculée au build, en-tête servi par nginx                      | `'unsafe-inline'`, empreinte mise à jour dans Apache, `buildId` fixe |
+| Bouton plein sur desktop | barre latérale hors du décompte de CHG-12                                        | « Ajouter » en `soft`                                                |
+| Déconnexion sur desktop  | menu de l'entrée Profil                                                          | entrée dédiée en pied de barre, page Profil seule                    |
+| Alertes actives au lot 2 | calculées depuis la prévision (PRV-07)                                           | carte reportée au lot 3                                              |
