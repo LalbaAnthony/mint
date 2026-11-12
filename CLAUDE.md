@@ -21,6 +21,10 @@ The controls are the Git hooks, ESLint, Prettier, the typecheck, the forbidden-c
 - Neutralizing tests: `.skip`, `.only`, deleting a test or weakening an assertion to get green.
 - Bypassing the CI: direct push or force push to `main`, which triggers deployment, or re-running a flaky test until it passes.
 
+## Production
+
+- Domain: `mint.dev-it.app`, served by the Apache vhost whose reference is `apache.conf` at the repository root.
+
 ## When in doubt, ask
 
 If you have the slightest doubt about an implementation decision, ask me before continuing. Using the AskUserQuestion tool, ask me questions until no doubt remains, however many questions it takes.

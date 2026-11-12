@@ -49,7 +49,7 @@ services:
 
   api:
     profiles: [prod]
-    image: ${MINT_API_IMAGE}
+    image: ${API_IMAGE}
     build:
       context: .
       dockerfile: api/Dockerfile.prod
@@ -67,7 +67,7 @@ services:
 
   web:
     profiles: [prod]
-    image: ${MINT_WEB_IMAGE}
+    image: ${WEB_IMAGE}
     build:
       context: .
       dockerfile: front/Dockerfile.prod

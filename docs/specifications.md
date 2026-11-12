@@ -591,7 +591,7 @@ Mint se compose d'un front Nuxt et d'une API Express, déployés en quatre conte
 
 ### 7.2 Déploiement
 
-- VPS OVH existant, Docker Compose, Apache en reverse proxy (un vhost dédié, un sous-domaine à définir), certificats Let's Encrypt en mode webroot.
+- VPS OVH existant, Docker Compose, Apache en reverse proxy (un vhost dédié sur le sous-domaine `mint.dev-it.app`), certificats Let's Encrypt en mode webroot.
 - Conteneurs : `web` (nginx:alpine : fichiers statiques du build Nuxt et en-têtes de sécurité des pages), `api` (Express), `worker` (même image que `api`, commande de lancement des tâches planifiées), `db` (PostgreSQL, volume persistant, non exposé).
 - Routage Apache : `/api/` vers `api`, le reste vers `web`. Apache ne pose pas d'en-tête CSP : celui des pages vient de `web`.
 - Fuseau Europe/Paris fixé par variable d'environnement pour `api` et `worker`.

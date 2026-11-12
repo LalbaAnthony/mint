@@ -109,8 +109,8 @@ jobs:
             echo "POSTGRES_PASSWORD='$POSTGRES_PASSWORD'"
             echo "API_HOST_PORT='$API_HOST_PORT'"
             echo "WEB_HOST_PORT='$WEB_HOST_PORT'"
-            echo "MINT_API_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-api:$SHA'"
-            echo "MINT_WEB_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-web:$SHA'"
+            echo "API_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-api:$SHA'"
+            echo "WEB_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-web:$SHA'"
           } >"$RUNNER_TEMP/production.env"
 
       - name: Configure SSH with the pinned host key

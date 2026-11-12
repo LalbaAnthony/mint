@@ -28,21 +28,21 @@ Le contexte de build de `mint-web` utilise `front/Dockerfile.prod.dockerignore`,
 
 Tous au niveau du dépôt (Settings, Secrets and variables, Actions). Aucune valeur de déploiement n'est versionnée ni stockée en variable. Hors clé privée, aucune valeur ne doit contenir d'apostrophe droite ni de saut de ligne : le job `deploy` le vérifie avant toute connexion.
 
-| Secret                     | Usage                                                                                       |
-| -------------------------- | ------------------------------------------------------------------------------------------- |
-| `DOCKERHUB_USERNAME`       | compte Docker Hub, espace de noms des images                                                |
-| `DOCKERHUB_TOKEN`          | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`      |
-| `VPS_SSH_HOST`             | nom d'hôte ou adresse IP du VPS                                                             |
-| `VPS_SSH_PORT`             | port SSH du VPS                                                                             |
-| `VPS_SSH_USER`             | utilisateur SSH dédié au déploiement                                                        |
-| `VPS_SSH_PRIVATE_KEY`      | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                         |
-| `VPS_SSH_HOST_FINGERPRINT` | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64 |
-| `VPS_DEPLOY_PATH`          | dossier de déploiement sur le VPS, chemin absolu                                            |
-| `POSTGRES_DB`              | nom de la base de production                                                                |
-| `POSTGRES_USER`            | utilisateur PostgreSQL de production                                                        |
-| `POSTGRES_PASSWORD`        | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                  |
-| `API_HOST_PORT`            | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/`                           |
-| `WEB_HOST_PORT`            | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/`                     |
+| Secret                     | Usage                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| `DOCKERHUB_USERNAME`       | compte Docker Hub, espace de noms des images                                                     |
+| `DOCKERHUB_TOKEN`          | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`           |
+| `VPS_SSH_HOST`             | nom d'hôte ou adresse IP du VPS                                                                  |
+| `VPS_SSH_PORT`             | port SSH du VPS                                                                                  |
+| `VPS_SSH_USER`             | utilisateur SSH dédié au déploiement                                                             |
+| `VPS_SSH_PRIVATE_KEY`      | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                              |
+| `VPS_SSH_HOST_FINGERPRINT` | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64      |
+| `VPS_DEPLOY_PATH`          | dossier de déploiement sur le VPS, chemin absolu                                                 |
+| `POSTGRES_DB`              | nom de la base de production                                                                     |
+| `POSTGRES_USER`            | utilisateur PostgreSQL de production                                                             |
+| `POSTGRES_PASSWORD`        | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                       |
+| `API_HOST_PORT`            | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/` : `4568` (`apache.conf`)       |
+| `WEB_HOST_PORT`            | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/` : `4569` (`apache.conf`) |
 
 À chaque déploiement, le fichier `.env` du VPS est régénéré depuis ces secrets, avec `COMPOSE_PROFILES='prod'` et les références d'images `docker.io/<DOCKERHUB_USERNAME>/mint-api:<SHA>` et `mint-web:<SHA>`. Toute modification manuelle de ce fichier est écrasée au déploiement suivant. Un nouveau secret d'exécution (session, VAPID, SMTP) s'ajoute à la fois dans les secrets GitHub, dans `deploy.inc.yml` (déclaration, validation, écriture du `.env`), dans les deux flux et dans `docker-compose.yml`.
 
@@ -57,16 +57,21 @@ Tous au niveau du dépôt (Settings, Secrets and variables, Actions). Aucune val
 
 ## 5. Apache
 
-Un vhost dédié termine TLS (certificat Let's Encrypt en mode webroot) et pose HSTS (NF-SEC-01). Il ne pose aucun en-tête CSP : celui des pages vient du conteneur `web` (NF-SEC-02). Routage, avec les ports des secrets :
+Domaine de production : `mint.dev-it.app`. Le vhost de référence est `apache.conf` à la racine du dépôt. Il n'est ni généré ni déployé par la CI : le fichier du serveur (par exemple `/etc/apache2/sites-available/mint.conf`) doit rester identique, et toute modification passe par le dépôt.
 
-```apache
-ProxyPreserveHost On
-ProxyPass /api/ http://127.0.0.1:<API_HOST_PORT>/api/
-ProxyPassReverse /api/ http://127.0.0.1:<API_HOST_PORT>/api/
-ProxyPass / http://127.0.0.1:<WEB_HOST_PORT>/
-ProxyPassReverse / http://127.0.0.1:<WEB_HOST_PORT>/
-Header always set Strict-Transport-Security "max-age=31536000"
-```
+| Élément            | Valeur                                                                                                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Modules            | `a2enmod http2 ssl rewrite proxy proxy_http headers` ; HTTP/2 exige un MPM `event` ou `worker`                                                                       |
+| Port 80            | sert `/.well-known/acme-challenge/` depuis `/var/www/certbot`, redirige tout le reste en 301 vers HTTPS                                                              |
+| Routage 443        | `/api/` vers `127.0.0.1:4568` (`API_HOST_PORT`), le reste vers `127.0.0.1:4569` (`WEB_HOST_PORT`) ; les deux ports doivent correspondre aux secrets GitHub           |
+| En-têtes           | HSTS `max-age=63072000` sur tout le vhost (NF-SEC-01) ; `X-Content-Type-Options` et `Referrer-Policy` sur `/api/` seulement ; aucune CSP (NF-SEC-02, celle de `web`) |
+| En-tête vers l'API | `X-Forwarded-Proto: https`, pour les cookies de session `secure` derrière le proxy (avec `trust proxy` côté Express)                                                 |
+| TLS                | TLS 1.2 et plus, HTTP/2 par ALPN, même liste de chiffrements que les autres vhosts du serveur                                                                        |
+| Journaux           | `mint-prod_access.log` au format `combined` sans chaîne de requête (`%U`), qui peut porter des données saisies (NF-SEC-06) ; `mint-prod_error.log`                   |
+
+Les pages ont déjà `X-Content-Type-Options` et `Referrer-Policy` posés par nginx : les poser aussi dans Apache sur `/` dupliquerait ces en-têtes. Si l'API pose un jour ces en-têtes elle-même, les retirer du bloc `<Location /api/>`.
+
+Première mise en service : le vhost 443 référence un certificat qui n'existe pas encore, et `apachectl configtest` échouerait. Activer d'abord une version du fichier réduite au vhost 80, obtenir le certificat (`certbot certonly --webroot -w /var/www/certbot -d mint.dev-it.app`), puis installer le fichier complet, `apachectl configtest` et `systemctl reload apache2`.
 
 ## 6. Déroulé d'un déploiement
 
