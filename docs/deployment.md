@@ -1,0 +1,97 @@
+# Déploiement
+
+Exploitation de la chaîne de livraison décrite dans le cahier des charges (sections 7.2 et 7.6) : publication des images, déploiement sur le VPS, retour arrière. Les choix sont motivés dans l'ADR 0004 (déploiement) et l'ADR 0003 (CSP du conteneur `web`).
+
+## 1. Workflows
+
+| Fichier             | Déclencheur                         | Rôle                                                                                                                       |
+| ------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `release.flow.yml`  | push sur `main`                     | `checks.inc.yml`, puis `tests.inc.yml`, puis `build.inc.yml`, puis `deploy.inc.yml` avec le SHA du commit poussé           |
+| `rollback.flow.yml` | déclenchement manuel, SHA en entrée | `deploy.inc.yml` avec le SHA fourni                                                                                        |
+| `build.inc.yml`     | appelé par `release.flow.yml`       | construction `linux/amd64` et publication sur Docker Hub de `mint-api` et `mint-web`, tags `latest` et SHA complet         |
+| `deploy.inc.yml`    | appelé par les deux flux            | validation des secrets, SSH vers le VPS avec empreinte d'hôte épinglée, exécution de `.github/deploy/remote.sh` sur le VPS |
+
+Un seul run de `release.flow.yml` s'exécute à la fois : un push arrivé pendant un run attend, et un push plus récent remplace celui qui attend. Le job de déploiement partage le groupe de concurrence `deploy-production` avec `rollback.flow.yml` : deux déploiements ne se chevauchent jamais.
+
+## 2. Images
+
+| Image      | Dockerfile              | Contenu                                                                                                            |
+| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `mint-api` | `api/Dockerfile.prod`   | API Express compilée, utilisateur `node`, sert aussi les migrations (`node dist/db/migrate.js up`)                 |
+| `mint-web` | `front/Dockerfile.prod` | build statique Nuxt servi par nginx:alpine, utilisateur `nginx`, port 8080, en-têtes de sécurité et CSP (ADR 0003) |
+
+Les deux images sont publiées dans les dépôts Docker Hub `<DOCKERHUB_USERNAME>/mint-api` et `<DOCKERHUB_USERNAME>/mint-web`. Créer ces dépôts en public avant la première release : un push vers un dépôt inexistant le crée avec la visibilité par défaut du compte. Le VPS tire les images sans authentification. Le tag `latest` n'est utilisé par aucun déploiement, qui référence toujours le SHA complet.
+
+Le contexte de build de `mint-web` utilise `front/Dockerfile.prod.dockerignore`, celui de `mint-api` le `.dockerignore` racine.
+
+## 3. Secrets GitHub
+
+Tous au niveau du dépôt (Settings, Secrets and variables, Actions). Aucune valeur de déploiement n'est versionnée ni stockée en variable. Hors clé privée, aucune valeur ne doit contenir d'apostrophe droite ni de saut de ligne : le job `deploy` le vérifie avant toute connexion.
+
+| Secret                     | Usage                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| `DOCKERHUB_USERNAME`       | compte Docker Hub, espace de noms des images                                                |
+| `DOCKERHUB_TOKEN`          | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`      |
+| `VPS_SSH_HOST`             | nom d'hôte ou adresse IP du VPS                                                             |
+| `VPS_SSH_PORT`             | port SSH du VPS                                                                             |
+| `VPS_SSH_USER`             | utilisateur SSH dédié au déploiement                                                        |
+| `VPS_SSH_PRIVATE_KEY`      | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                         |
+| `VPS_SSH_HOST_FINGERPRINT` | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64 |
+| `VPS_DEPLOY_PATH`          | dossier de déploiement sur le VPS, chemin absolu                                            |
+| `POSTGRES_DB`              | nom de la base de production                                                                |
+| `POSTGRES_USER`            | utilisateur PostgreSQL de production                                                        |
+| `POSTGRES_PASSWORD`        | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                  |
+| `API_HOST_PORT`            | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/`                           |
+| `WEB_HOST_PORT`            | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/`                     |
+
+À chaque déploiement, le fichier `.env` du VPS est régénéré depuis ces secrets, avec `COMPOSE_PROFILES='prod'` et les références d'images `docker.io/<DOCKERHUB_USERNAME>/mint-api:<SHA>` et `mint-web:<SHA>`. Toute modification manuelle de ce fichier est écrasée au déploiement suivant. Un nouveau secret d'exécution (session, VAPID, SMTP) s'ajoute à la fois dans les secrets GitHub, dans `deploy.inc.yml` (déclaration, validation, écriture du `.env`), dans les deux flux et dans `docker-compose.yml`.
+
+## 4. Préparation du VPS
+
+1. Installer Docker Engine avec le plugin Docker Compose v2, `bash`, `curl` et `base64`.
+2. Créer un utilisateur dédié, membre du groupe `docker`. Ce groupe donne un accès équivalent à root sur l'hôte : l'utilisateur ne sert qu'au déploiement.
+3. Générer une paire de clés dédiée (`ssh-keygen -t ed25519 -N '' -f mint-deploy`), ajouter la clé publique à `~/.ssh/authorized_keys` de cet utilisateur et enregistrer la clé privée dans `VPS_SSH_PRIVATE_KEY`.
+4. Relever l'empreinte de la clé d'hôte sur le VPS : `ssh-keygen -l -E sha256 -f /etc/ssh/ssh_host_ed25519_key.pub`, puis enregistrer la valeur `SHA256:...` dans `VPS_SSH_HOST_FINGERPRINT`. Le job lit les clés servies par `ssh-keyscan` et n'accepte que celle dont l'empreinte est identique.
+5. Choisir `VPS_DEPLOY_PATH` (par exemple `/srv/mint`), accessible en écriture par l'utilisateur : le dossier est créé s'il n'existe pas. Il contient seulement `docker-compose.yml` et `.env`, mode 600.
+6. Réserver `API_HOST_PORT` et `WEB_HOST_PORT`, exposés seulement sur `127.0.0.1`.
+
+## 5. Apache
+
+Un vhost dédié termine TLS (certificat Let's Encrypt en mode webroot) et pose HSTS (NF-SEC-01). Il ne pose aucun en-tête CSP : celui des pages vient du conteneur `web` (NF-SEC-02). Routage, avec les ports des secrets :
+
+```apache
+ProxyPreserveHost On
+ProxyPass /api/ http://127.0.0.1:<API_HOST_PORT>/api/
+ProxyPassReverse /api/ http://127.0.0.1:<API_HOST_PORT>/api/
+ProxyPass / http://127.0.0.1:<WEB_HOST_PORT>/
+ProxyPassReverse / http://127.0.0.1:<WEB_HOST_PORT>/
+Header always set Strict-Transport-Security "max-age=31536000"
+```
+
+## 6. Déroulé d'un déploiement
+
+1. Validation du SHA (40 caractères hexadécimaux) et des secrets.
+2. Lecture de `docker-compose.yml` dans le commit déployé ; génération du `.env` de production sur le runner.
+3. Connexion SSH avec la clé d'hôte épinglée. Le script `.github/deploy/remote.sh` de la branche qui exécute le workflow est envoyé sur l'entrée standard de `bash`, précédé des variables du déploiement ; le `.env` et le fichier compose y voyagent encodés en base64, jamais en argument de commande.
+4. Sur le VPS, écriture de `.env.next` et `docker-compose.next.yml`, puis `docker compose pull api web`.
+5. Migrations Umzug dans un conteneur éphémère : `docker compose run --rm api node dist/db/migrate.js up`, qui démarre `db` au besoin.
+6. Seulement si les migrations réussissent : `.env.next` et `docker-compose.next.yml` remplacent `.env` et `docker-compose.yml`, puis `docker compose up --detach --no-build --wait` attend que `db`, `api` et `web` soient sains.
+7. Vérification par `curl` de `http://127.0.0.1:<API_HOST_PORT>/api/v1/health` et de `http://127.0.0.1:<WEB_HOST_PORT>/`.
+8. Suppression des tags locaux de `mint-api` et `mint-web` autres que le SHA déployé. Les images des autres services du VPS ne sont jamais touchées.
+
+Si une étape échoue avant le point 6, les conteneurs en place continuent de tourner sans changement et les fichiers `.next` sont supprimés. Si `up --wait` ou la vérification échoue, les nouveaux conteneurs restent en place : lancer un retour arrière.
+
+## 7. Retour arrière
+
+Actions, workflow `rollback`, Run workflow, puis saisir le SHA complet d'un commit de `main` déjà publié par une release. Le workflow redéploie ses images avec le `docker-compose.yml` de ce commit et les secrets actuels.
+
+- Les migrations déjà appliquées ne sont pas annulées : l'ancienne version doit tolérer le schéma courant.
+- Un SHA jamais publié échoue au pull, sans rien modifier sur le VPS.
+- Un retour arrière lancé pendant qu'une release est en cours de contrôles ou de tests est écrasé par cette release quand elle arrive au déploiement.
+
+## 8. Points d'attention
+
+- Changer `POSTGRES_PASSWORD` : PostgreSQL ne relit cette variable qu'à l'initialisation du volume. Modifier d'abord le mot de passe dans la base (`ALTER USER`), puis le secret. Sinon le déploiement suivant échoue à l'étape des migrations, sans interruption de la version en place.
+- Toute modification de la définition du service `db` dans `docker-compose.yml` (image, environnement) recrée le conteneur `db` dès l'étape des migrations, avant la bascule de l'API.
+- Docker Compose signale `The "DB_HOST_PORT" variable is not set` à chaque commande sur le VPS : la variable ne sert qu'au service `db-dev` du profil `dev`. Avertissement sans effet.
+- Le service `worker` (section 7.2) n'existe pas encore ; il sera ajouté à `docker-compose.yml` et à `remote.sh` (pull) avec les tâches planifiées.

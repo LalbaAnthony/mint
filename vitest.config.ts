@@ -16,6 +16,13 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'front-scripts',
+          include: ['front/scripts/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: 'api',
           include: ['api/**/*.test.ts'],
           globalSetup: ['api/tests/global-setup.ts'],
@@ -38,7 +45,12 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      include: ['scripts/**/*.ts', 'api/**/*.ts', 'front/app/**/*.{ts,vue}'],
+      include: [
+        'scripts/**/*.ts',
+        'api/**/*.ts',
+        'front/app/**/*.{ts,vue}',
+        'front/scripts/**/*.ts',
+      ],
       exclude: ['**/*.test.ts', '**/*.d.ts', 'api/tests/**', 'api/dist/**'],
       reporter: ['text', 'html', 'lcov'],
     },

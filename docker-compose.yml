@@ -65,6 +65,29 @@ services:
     healthcheck: *api-healthcheck
     logging: *json-logging
 
+  web:
+    profiles: [prod]
+    image: ${MINT_WEB_IMAGE}
+    build:
+      context: .
+      dockerfile: front/Dockerfile.prod
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:${WEB_HOST_PORT}:8080
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - -O
+        - /dev/null
+        - http://127.0.0.1:8080/healthz
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    logging: *json-logging
+
   db-dev:
     profiles: [dev]
     image: postgres:18-alpine

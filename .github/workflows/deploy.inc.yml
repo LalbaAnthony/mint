@@ -1,0 +1,179 @@
+name: deploy
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: Full commit SHA whose mint-api and mint-web images are deployed
+        required: true
+        type: string
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+      VPS_SSH_HOST:
+        required: true
+      VPS_SSH_PORT:
+        required: true
+      VPS_SSH_USER:
+        required: true
+      VPS_SSH_PRIVATE_KEY:
+        required: true
+      VPS_SSH_HOST_FINGERPRINT:
+        required: true
+      VPS_DEPLOY_PATH:
+        required: true
+      POSTGRES_DB:
+        required: true
+      POSTGRES_USER:
+        required: true
+      POSTGRES_PASSWORD:
+        required: true
+      API_HOST_PORT:
+        required: true
+      WEB_HOST_PORT:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      SHA: ${{ inputs.sha }}
+    steps:
+      - name: Validate inputs and secrets
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          VPS_SSH_HOST: ${{ secrets.VPS_SSH_HOST }}
+          VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT }}
+          VPS_SSH_USER: ${{ secrets.VPS_SSH_USER }}
+          VPS_SSH_HOST_FINGERPRINT: ${{ secrets.VPS_SSH_HOST_FINGERPRINT }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          API_HOST_PORT: ${{ secrets.API_HOST_PORT }}
+          WEB_HOST_PORT: ${{ secrets.WEB_HOST_PORT }}
+        run: |
+          failed=0
+          fail() {
+            echo "::error::$1"
+            failed=1
+          }
+          [[ "$SHA" =~ ^[0-9a-f]{40}$ ]] ||
+            fail 'sha must be a full 40-character lowercase commit SHA'
+          for name in DOCKERHUB_USERNAME VPS_SSH_HOST VPS_SSH_PORT \
+            VPS_SSH_USER VPS_SSH_HOST_FINGERPRINT VPS_DEPLOY_PATH POSTGRES_DB \
+            POSTGRES_USER POSTGRES_PASSWORD API_HOST_PORT WEB_HOST_PORT; do
+            value="${!name}"
+            if [[ -z "$value" || "$value" == *"'"* || "$value" == *$'\n'* ||
+              "$value" == *$'\r'* ]]; then
+              fail "secret $name must be set, without single quote or line break"
+            fi
+          done
+          for name in VPS_SSH_PORT API_HOST_PORT WEB_HOST_PORT; do
+            [[ "${!name}" =~ ^[0-9]{1,5}$ ]] ||
+              fail "secret $name must be a port number"
+          done
+          [[ "$VPS_DEPLOY_PATH" == /* ]] ||
+            fail 'secret VPS_DEPLOY_PATH must be an absolute path'
+          [[ "$VPS_SSH_HOST_FINGERPRINT" =~ ^SHA256:[A-Za-z0-9+/]{43}$ ]] ||
+            fail 'secret VPS_SSH_HOST_FINGERPRINT must look like SHA256:<43 base64 characters>'
+          exit "$failed"
+
+      - uses: actions/checkout@v7
+
+      - name: Read docker-compose.yml of the deployed commit
+        run: |
+          git fetch --no-tags --depth=1 origin "$SHA"
+          git show "$SHA:docker-compose.yml" >"$RUNNER_TEMP/docker-compose.yml"
+
+      - name: Write production environment file
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          API_HOST_PORT: ${{ secrets.API_HOST_PORT }}
+          WEB_HOST_PORT: ${{ secrets.WEB_HOST_PORT }}
+        run: |
+          umask 077
+          {
+            echo "COMPOSE_PROFILES='prod'"
+            echo "POSTGRES_DB='$POSTGRES_DB'"
+            echo "POSTGRES_USER='$POSTGRES_USER'"
+            echo "POSTGRES_PASSWORD='$POSTGRES_PASSWORD'"
+            echo "API_HOST_PORT='$API_HOST_PORT'"
+            echo "WEB_HOST_PORT='$WEB_HOST_PORT'"
+            echo "MINT_API_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-api:$SHA'"
+            echo "MINT_WEB_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-web:$SHA'"
+          } >"$RUNNER_TEMP/production.env"
+
+      - name: Configure SSH with the pinned host key
+        env:
+          VPS_SSH_HOST: ${{ secrets.VPS_SSH_HOST }}
+          VPS_SSH_PORT: ${{ secrets.VPS_SSH_PORT }}
+          VPS_SSH_USER: ${{ secrets.VPS_SSH_USER }}
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_HOST_FINGERPRINT: ${{ secrets.VPS_SSH_HOST_FINGERPRINT }}
+        run: |
+          ssh_directory="$HOME/.ssh"
+          install -d -m 700 "$ssh_directory"
+          umask 077
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" >"$ssh_directory/deploy_key"
+          ssh-keyscan -p "$VPS_SSH_PORT" -t ed25519,ecdsa,rsa "$VPS_SSH_HOST" \
+            >"$RUNNER_TEMP/scanned_host_keys"
+          : >"$ssh_directory/known_hosts"
+          while IFS= read -r host_key; do
+            [[ -z "$host_key" || "$host_key" == \#* ]] && continue
+            fingerprint="$(printf '%s\n' "$host_key" |
+              ssh-keygen -l -E sha256 -f - | awk '{ print $2 }')"
+            if [[ "$fingerprint" == "$VPS_SSH_HOST_FINGERPRINT" ]]; then
+              printf '%s\n' "$host_key" >>"$ssh_directory/known_hosts"
+            fi
+          done <"$RUNNER_TEMP/scanned_host_keys"
+          if [[ ! -s "$ssh_directory/known_hosts" ]]; then
+            echo '::error::no host key served by VPS_SSH_HOST matches VPS_SSH_HOST_FINGERPRINT'
+            exit 1
+          fi
+          cat >"$ssh_directory/config" <<EOF
+          Host mint-vps
+            HostName $VPS_SSH_HOST
+            Port $VPS_SSH_PORT
+            User $VPS_SSH_USER
+            IdentityFile $ssh_directory/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+            UserKnownHostsFile $ssh_directory/known_hosts
+            BatchMode yes
+            ConnectTimeout 15
+            ServerAliveInterval 30
+          EOF
+
+      - name: Pull, migrate, restart and check health on the VPS
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+          API_HOST_PORT: ${{ secrets.API_HOST_PORT }}
+          WEB_HOST_PORT: ${{ secrets.WEB_HOST_PORT }}
+        run: |
+          {
+            printf 'DEPLOY_PATH=%q\n' "$VPS_DEPLOY_PATH"
+            printf 'DEPLOY_SHA=%q\n' "$SHA"
+            printf 'DEPLOY_IMAGE_NAMESPACE=%q\n' "$DOCKERHUB_USERNAME"
+            printf 'DEPLOY_API_PORT=%q\n' "$API_HOST_PORT"
+            printf 'DEPLOY_WEB_PORT=%q\n' "$WEB_HOST_PORT"
+            printf 'DEPLOY_ENV_FILE_BASE64=%q\n' \
+              "$(base64 -w 0 "$RUNNER_TEMP/production.env")"
+            printf 'DEPLOY_COMPOSE_FILE_BASE64=%q\n' \
+              "$(base64 -w 0 "$RUNNER_TEMP/docker-compose.yml")"
+            cat .github/deploy/remote.sh
+          } | ssh mint-vps 'bash -s'
+
+      - name: Remove SSH key and production environment file
+        if: ${{ always() }}
+        run: rm -f "$HOME/.ssh/deploy_key" "$RUNNER_TEMP/production.env"
