@@ -1,0 +1,41 @@
+{
+  "name": "mint",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "front",
+    "api",
+    "shared"
+  ],
+  "scripts": {
+    "prepare": "simple-git-hooks",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p tsconfig.json && npm run typecheck --workspaces",
+    "scan": "node scripts/scan.ts --all",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "node scripts/pre-commit.ts",
+    "commit-msg": "npx --no -- commitlint --edit \"$1\" && node scripts/scan.ts --message \"$1\""
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@types/node": "^24.19.2",
+    "@vitest/coverage-v8": "^5.1.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-vue": "^10.12.1",
+    "prettier": "^3.10.1",
+    "simple-git-hooks": "^2.14.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^5.1.0",
+    "vue-eslint-parser": "^10.4.2"
+  }
+}

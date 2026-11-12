@@ -1,0 +1,81 @@
+name: checks
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Forbidden characters in tracked files
+        run: npm run scan
+
+      - name: Select pushed commits
+        id: commits
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PULL_REQUEST_BASE: ${{ github.event.pull_request.base.sha }}
+          PULL_REQUEST_HEAD: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            from="$PULL_REQUEST_BASE"
+            to="$PULL_REQUEST_HEAD"
+          elif [ -n "$PUSH_BEFORE" ] && [ "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            from="$PUSH_BEFORE"
+            to="$PUSH_AFTER"
+          else
+            from=""
+            to="$PUSH_AFTER"
+          fi
+          echo "from=$from" >> "$GITHUB_OUTPUT"
+          echo "to=$to" >> "$GITHUB_OUTPUT"
+
+      - name: commitlint
+        env:
+          FROM: ${{ steps.commits.outputs.from }}
+          TO: ${{ steps.commits.outputs.to }}
+        run: |
+          if [ -n "$FROM" ]; then
+            npx --no -- commitlint --from "$FROM" --to "$TO" --verbose
+          else
+            npx --no -- commitlint --last --verbose
+          fi
+
+      - name: Forbidden characters in commit messages
+        env:
+          FROM: ${{ steps.commits.outputs.from }}
+          TO: ${{ steps.commits.outputs.to }}
+        run: |
+          if [ -n "$FROM" ]; then
+            node scripts/scan.ts --commits "$FROM..$TO"
+          else
+            node scripts/scan.ts --commits "$TO^!"
+          fi
+
+      - name: Dependency audit
+        run: npm audit --audit-level=high
