@@ -1,0 +1,14 @@
+FROM node:24-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.base.json ./
+COPY api/package.json api/
+COPY front/package.json front/
+COPY shared/package.json shared/
+RUN npm ci --workspace @mint/api --ignore-scripts
+
+USER node
+WORKDIR /app/api
+EXPOSE 3000
+CMD ["npm", "run", "dev"]

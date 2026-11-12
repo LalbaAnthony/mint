@@ -1,0 +1,99 @@
+name: mint
+
+x-json-logging: &json-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '5'
+
+x-database-environment: &database-environment
+  POSTGRES_DB: ${POSTGRES_DB}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+x-database-healthcheck: &database-healthcheck
+  test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+  interval: 5s
+  timeout: 3s
+  retries: 10
+
+x-api-environment: &api-environment
+  TZ: Europe/Paris
+  PORT: 3000
+  DATABASE_PORT: 5432
+  DATABASE_NAME: ${POSTGRES_DB}
+  DATABASE_USER: ${POSTGRES_USER}
+  DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+
+x-api-healthcheck: &api-healthcheck
+  test:
+    - CMD
+    - node
+    - -e
+    - "fetch('http://127.0.0.1:3000/api/v1/health').then((response) => process.exit(response.ok ? 0 : 1), () => process.exit(1))"
+  interval: 10s
+  timeout: 5s
+  retries: 3
+  start_period: 15s
+
+services:
+  db:
+    profiles: [prod]
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment: *database-environment
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck: *database-healthcheck
+    logging: *json-logging
+
+  api:
+    profiles: [prod]
+    image: ${MINT_API_IMAGE}
+    build:
+      context: .
+      dockerfile: api/Dockerfile.prod
+    restart: unless-stopped
+    environment:
+      <<: *api-environment
+      DATABASE_HOST: db
+    ports:
+      - 127.0.0.1:${API_HOST_PORT}:3000
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck: *api-healthcheck
+    logging: *json-logging
+
+  db-dev:
+    profiles: [dev]
+    image: postgres:18-alpine
+    environment: *database-environment
+    ports:
+      - 127.0.0.1:${DB_HOST_PORT}:5432
+    volumes:
+      - db-dev-data:/var/lib/postgresql
+    healthcheck: *database-healthcheck
+
+  api-dev:
+    profiles: [dev]
+    build:
+      context: .
+      dockerfile: api/Dockerfile.dev
+    environment:
+      <<: *api-environment
+      DATABASE_HOST: db-dev
+      CHOKIDAR_USEPOLLING: 'true'
+    ports:
+      - 127.0.0.1:${API_HOST_PORT}:3000
+    volumes:
+      - ./api:/app/api
+      - /app/api/node_modules
+    depends_on:
+      db-dev:
+        condition: service_healthy
+    healthcheck: *api-healthcheck
+
+volumes:
+  db-data:
+  db-dev-data:
