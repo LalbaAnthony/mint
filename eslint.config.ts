@@ -14,7 +14,7 @@ const typeDeclarationOutsideTypesMessage =
   'Declare types and interfaces in the types/ directory of the package (CODE-08).'
 
 export default defineConfig(
-  globalIgnores(['**/dist/', '**/coverage/']),
+  globalIgnores(['**/dist/', '**/coverage/', '**/.nuxt/', '**/.output/']),
   {
     files: typeScriptFiles,
     plugins: { '@typescript-eslint': tseslint.plugin },

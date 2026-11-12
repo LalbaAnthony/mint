@@ -1,0 +1,146 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+@theme static {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+
+  --color-mint-50: #e7fde6;
+  --color-mint-100: #d5f2c1;
+  --color-mint-200: #bee393;
+  --color-mint-300: #a7d565;
+  --color-mint-400: #8cc42d;
+  --color-mint-500: #66a435;
+  --color-mint-600: #3d853c;
+  --color-mint-700: #2e6a30;
+  --color-mint-800: #245325;
+  --color-mint-900: #1c401d;
+  --color-mint-950: #0f2511;
+
+  --color-coral-50: #fef3f0;
+  --color-coral-100: #fde4dd;
+  --color-coral-200: #fbc8ba;
+  --color-coral-300: #f8a690;
+  --color-coral-400: #f58468;
+  --color-coral-500: #f2704f;
+  --color-coral-600: #de5333;
+  --color-coral-700: #b94027;
+  --color-coral-800: #953523;
+  --color-coral-900: #7a2f21;
+  --color-coral-950: #42150d;
+}
+
+@theme inline {
+  --color-canvas: var(--app-canvas);
+  --color-accent-fill: var(--app-accent-fill);
+  --color-accent-on-fill: var(--app-accent-on-fill);
+  --color-accent-tile: var(--app-accent-tile);
+  --color-accent-tile-icon: var(--app-accent-tile-icon);
+  --color-data-needs: var(--data-group-needs);
+  --color-data-wants: var(--data-group-wants);
+  --color-data-save: var(--data-group-save);
+  --color-data-current: var(--data-usage-current);
+  --color-data-emergency: var(--data-usage-emergency);
+  --color-data-savings: var(--data-usage-savings);
+  --color-data-investment: var(--data-usage-investment);
+  --color-data-income: var(--data-income);
+  --color-data-expense: var(--data-expense);
+}
+
+:root {
+  --ui-radius: 0.5rem;
+  --ui-primary: var(--ui-color-primary-700);
+  --ui-secondary: var(--ui-color-secondary-400);
+  --ui-success: var(--ui-color-success-700);
+  --ui-info: var(--ui-color-info-700);
+  --ui-warning: var(--ui-color-warning-700);
+  --ui-error: var(--ui-color-error-600);
+
+  --app-canvas: var(--ui-color-neutral-50);
+  --app-primary-hover: var(--ui-color-primary-800);
+  --app-accent-fill: var(--ui-color-secondary-400);
+  --app-accent-on-fill: var(--ui-color-secondary-950);
+  --app-accent-tile: var(--ui-color-secondary-100);
+  --app-accent-tile-icon: var(--ui-color-secondary-600);
+
+  --data-group-needs: var(--color-blue-600);
+  --data-group-wants: var(--ui-color-secondary-600);
+  --data-group-save: var(--ui-color-primary-600);
+  --data-usage-current: var(--color-mist-600);
+  --data-usage-emergency: var(--color-teal-600);
+  --data-usage-savings: var(--ui-color-primary-600);
+  --data-usage-investment: var(--color-violet-600);
+  --data-income: var(--color-emerald-600);
+  --data-expense: var(--ui-color-neutral-500);
+  --data-net: var(--ui-color-neutral-800);
+  --data-balance: var(--ui-color-primary-600);
+  --data-threshold: var(--color-amber-600);
+  --data-negative: var(--color-red-600);
+
+  --data-needs-1: var(--color-blue-600);
+  --data-needs-2: var(--color-blue-400);
+  --data-needs-3: var(--color-blue-800);
+  --data-needs-4: var(--color-blue-300);
+  --data-needs-5: var(--color-blue-700);
+  --data-needs-6: var(--color-blue-500);
+  --data-needs-7: var(--color-blue-900);
+  --data-needs-8: var(--color-blue-200);
+  --data-wants-1: var(--ui-color-secondary-600);
+  --data-wants-2: var(--ui-color-secondary-400);
+  --data-wants-3: var(--ui-color-secondary-800);
+  --data-wants-4: var(--ui-color-secondary-300);
+  --data-wants-5: var(--ui-color-secondary-700);
+  --data-wants-6: var(--ui-color-secondary-500);
+  --data-wants-7: var(--ui-color-secondary-900);
+  --data-wants-8: var(--ui-color-secondary-200);
+}
+
+.dark {
+  --ui-primary: var(--ui-color-primary-400);
+  --ui-secondary: var(--ui-color-secondary-400);
+  --ui-success: var(--ui-color-success-400);
+  --ui-info: var(--ui-color-info-400);
+  --ui-warning: var(--ui-color-warning-400);
+  --ui-error: var(--ui-color-error-400);
+
+  --app-canvas: var(--ui-color-neutral-950);
+  --app-primary-hover: var(--ui-color-primary-300);
+  --app-accent-tile: var(--ui-color-secondary-900);
+  --app-accent-tile-icon: var(--ui-color-secondary-200);
+
+  --data-group-needs: var(--color-blue-400);
+  --data-group-wants: var(--ui-color-secondary-400);
+  --data-group-save: var(--ui-color-primary-400);
+  --data-usage-current: var(--color-mist-400);
+  --data-usage-emergency: var(--color-teal-400);
+  --data-usage-savings: var(--ui-color-primary-400);
+  --data-usage-investment: var(--color-violet-400);
+  --data-income: var(--color-emerald-400);
+  --data-expense: var(--ui-color-neutral-400);
+  --data-net: var(--ui-color-neutral-200);
+  --data-balance: var(--ui-color-primary-400);
+  --data-threshold: var(--color-amber-400);
+  --data-negative: var(--color-red-400);
+
+  --data-needs-1: var(--color-blue-400);
+  --data-needs-2: var(--color-blue-600);
+  --data-needs-3: var(--color-blue-300);
+  --data-needs-4: var(--color-blue-700);
+  --data-needs-5: var(--color-blue-200);
+  --data-needs-6: var(--color-blue-500);
+  --data-needs-7: var(--color-blue-800);
+  --data-needs-8: var(--color-blue-100);
+  --data-wants-1: var(--ui-color-secondary-400);
+  --data-wants-2: var(--ui-color-secondary-600);
+  --data-wants-3: var(--ui-color-secondary-300);
+  --data-wants-4: var(--ui-color-secondary-700);
+  --data-wants-5: var(--ui-color-secondary-200);
+  --data-wants-6: var(--ui-color-secondary-500);
+  --data-wants-7: var(--ui-color-secondary-800);
+  --data-wants-8: var(--ui-color-secondary-100);
+}
+
+@layer base {
+  body {
+    background-color: var(--app-canvas);
+  }
+}

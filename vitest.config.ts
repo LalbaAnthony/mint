@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'node:url'
+import { defineVitestProject } from '@nuxt/test-utils/config'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -19,10 +21,24 @@ export default defineConfig({
           globalSetup: ['api/tests/global-setup.ts'],
         },
       },
+      await defineVitestProject({
+        test: {
+          name: 'front',
+          include: ['front/test/**/*.test.ts'],
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
+          environment: 'nuxt',
+          environmentOptions: {
+            nuxt: {
+              rootDir: fileURLToPath(new URL('./front', import.meta.url)),
+            },
+          },
+        },
+      }),
     ],
     coverage: {
       provider: 'v8',
-      include: ['scripts/**/*.ts', 'api/**/*.ts'],
+      include: ['scripts/**/*.ts', 'api/**/*.ts', 'front/app/**/*.{ts,vue}'],
       exclude: ['**/*.test.ts', '**/*.d.ts', 'api/tests/**', 'api/dist/**'],
       reporter: ['text', 'html', 'lcov'],
     },

@@ -53,6 +53,8 @@ const paletteClassPattern = new RegExp(
 
 const paletteCheckedPathPattern = /^front\/app\/.+\.(?:vue|ts)$/
 
+const characterUncheckedPaths = new Set(['package-lock.json'])
+
 const binarySniffLength = 8000
 
 const commitMessageScissorsPattern = /^# -+ >8 -+$/m
@@ -63,6 +65,10 @@ export function isBinary(content: Uint8Array): boolean {
 
 export function isPaletteCheckedPath(path: string): boolean {
   return paletteCheckedPathPattern.test(path)
+}
+
+export function isCharacterCheckedPath(path: string): boolean {
+  return !characterUncheckedPaths.has(path)
 }
 
 function locate(text: string, index: number) {
@@ -100,7 +106,9 @@ export function findPaletteClasses(text: string) {
 }
 
 export function findForbiddenContent(path: string, text: string) {
-  const findings = findForbiddenCharacters(text)
+  const findings = isCharacterCheckedPath(path)
+    ? findForbiddenCharacters(text)
+    : []
   if (isPaletteCheckedPath(path)) {
     findings.push(...findPaletteClasses(text))
   }

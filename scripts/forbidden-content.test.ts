@@ -6,6 +6,7 @@ import {
   findPaletteClasses,
   formatFinding,
   isBinary,
+  isCharacterCheckedPath,
   isPaletteCheckedPath,
 } from './forbidden-content.ts'
 
@@ -146,8 +147,26 @@ describe('findForbiddenContent', () => {
     ).toEqual([])
   })
 
-  it('checks forbidden characters in every path', () => {
+  it('checks forbidden characters in every authored path', () => {
     expect(findForbiddenContent('api/index.ts', emDash)).toHaveLength(1)
+  })
+
+  it('ignores forbidden characters in the generated npm lockfile', () => {
+    expect(
+      findForbiddenContent('package-lock.json', `"type": "x ${grinningFace}"`),
+    ).toEqual([])
+  })
+})
+
+describe('isCharacterCheckedPath', () => {
+  it.each([
+    ['package-lock.json', false],
+    ['package.json', true],
+    ['front/package-lock.json', true],
+    ['front/app/app.vue', true],
+    ['docs/specifications.md', true],
+  ])('%s is checked: %s', (path, expected) => {
+    expect(isCharacterCheckedPath(path)).toBe(expected)
   })
 })
 

@@ -1,0 +1,34 @@
+{
+  "app": {
+    "name": "Mint",
+    "homeLink": "Mint, accueil",
+    "documentTitle": "{view} - {name}"
+  },
+  "navigation": {
+    "main": "Navigation principale",
+    "home": "Accueil",
+    "accounts": "Comptes",
+    "calendar": "Calendrier",
+    "operations": "Opérations",
+    "more": "Plus",
+    "schedules": "Échéances",
+    "subscriptions": "Abonnements",
+    "envelopes": "Enveloppes",
+    "import": "Import",
+    "rules": "Règles",
+    "profile": "Profil",
+    "profileAndPreferences": "Profil et préférences",
+    "administration": "Administration",
+    "logout": "Déconnexion"
+  },
+  "quickAdd": {
+    "add": "Ajouter",
+    "title": "Ajouter une opération",
+    "expense": "Dépense",
+    "income": "Revenu",
+    "transfer": "Transfert"
+  },
+  "auth": {
+    "login": "Connexion"
+  }
+}
