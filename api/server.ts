@@ -1,6 +1,6 @@
 import { createServer } from 'node:http'
 import { createApp } from './app.js'
-import { createSequelize, isDatabaseReachable } from './db/sequelize.js'
+import { createDependencies } from './dependencies.js'
 import { parseEnvironment } from './environment.js'
 import { describeError, log } from './logger.js'
 import { serverEnvironmentSchema } from './schemas/environment.js'
@@ -15,10 +15,8 @@ function loadEnvironment() {
 }
 
 const environment = loadEnvironment()
-const sequelize = createSequelize(environment)
-const server = createServer(
-  createApp({ checkDatabase: () => isDatabaseReachable(sequelize) }),
-)
+const dependencies = createDependencies(environment)
+const server = createServer(createApp(dependencies))
 
 function closeServer(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -30,7 +28,7 @@ async function shutDown(signal: NodeJS.Signals): Promise<void> {
   log('info', 'api_stopping', { signal })
   try {
     await closeServer()
-    await sequelize.close()
+    await dependencies.sequelize.close()
     log('info', 'api_stopped')
   } catch (error) {
     log('error', 'api_stop_failed', { error: describeError(error) })

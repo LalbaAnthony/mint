@@ -1,5 +1,14 @@
-import { afterAll, afterEach, describe, expect, it, vi } from 'vitest'
-import { createTestSequelize } from '../tests/database.js'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
+import { createBlankDatabase } from '../tests/database.js'
+import type { IsolatedDatabase } from '../types/tests.js'
 import { createSequelize, isDatabaseReachable } from './sequelize.js'
 
 afterEach(() => {
@@ -7,14 +16,18 @@ afterEach(() => {
 })
 
 describe('isDatabaseReachable', () => {
-  const sequelize = createTestSequelize()
+  let database: IsolatedDatabase
+
+  beforeAll(async () => {
+    database = await createBlankDatabase()
+  })
 
   afterAll(async () => {
-    await sequelize.close()
+    await database.drop()
   })
 
   it('is true when PostgreSQL answers', async () => {
-    expect(await isDatabaseReachable(sequelize)).toBe(true)
+    expect(await isDatabaseReachable(database.sequelize)).toBe(true)
   })
 
   it('is false and logs the failure when PostgreSQL is unreachable', async () => {

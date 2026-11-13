@@ -1,21 +1,35 @@
-import { Router } from 'express'
-import type { HealthDependencies } from '../types/app.js'
+import { z } from 'zod'
+import { definePublicRoute } from '../http/route.js'
+import { noBody, noParams } from '../schemas/http.js'
 
-export function createHealthRouter(dependencies: HealthDependencies): Router {
-  const router = Router()
+const checkStatusSchema = z.enum(['ok', 'unavailable'])
 
-  router.get('/health', async (_request, response) => {
-    const databaseStatus = (await dependencies.checkDatabase())
-      ? 'ok'
-      : 'unavailable'
-    response
-      .status(databaseStatus === 'ok' ? 200 : 503)
-      .set('Cache-Control', 'no-store')
-      .json({
-        status: databaseStatus,
-        checks: { api: 'ok', database: databaseStatus },
-      })
+const healthResponseSchema = z
+  .object({
+    status: checkStatusSchema,
+    checks: z.object({ api: z.literal('ok'), database: checkStatusSchema }),
   })
+  .meta({ id: 'HealthResponse' })
 
-  return router
-}
+export const healthRoute = definePublicRoute({
+  method: 'get',
+  path: '/health',
+  summary: 'Check that the API and the database answer',
+  tag: 'operations',
+  body: noBody,
+  params: noParams,
+  responses: {
+    200: {
+      description: 'API and database available',
+      schema: healthResponseSchema,
+    },
+    503: { description: 'Database unavailable', schema: healthResponseSchema },
+  },
+  handle: async ({ app }) => {
+    const database = (await app.checkDatabase()) ? 'ok' : 'unavailable'
+    return {
+      status: database === 'ok' ? 200 : 503,
+      body: { status: database, checks: { api: 'ok', database } },
+    }
+  },
+})

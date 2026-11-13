@@ -1,0 +1,1475 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mint API",
+    "version": "1",
+    "description": "REST JSON API of Mint. Every modifying request carries the X-CSRF-Token header. Generated from the zod schemas: do not edit by hand."
+  },
+  "servers": [{ "url": "/" }],
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-mint-session"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "unavailable"] },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "api": { "type": "string", "enum": ["ok"] },
+              "database": { "type": "string", "enum": ["ok", "unavailable"] }
+            },
+            "required": ["api", "database"]
+          }
+        },
+        "required": ["status", "checks"]
+      },
+      "CsrfTokenResponse": {
+        "type": "object",
+        "properties": { "token": { "type": "string" } },
+        "required": ["token"]
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "maxLength": 254, "format": "email" },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "locale": { "$ref": "#/components/schemas/Locale" },
+          "forecastHorizonMonths": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "targets": { "$ref": "#/components/schemas/AllocationTargets" }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "locale",
+          "forecastHorizonMonths",
+          "targets"
+        ]
+      },
+      "UserRole": { "type": "string", "enum": ["admin", "user"] },
+      "Locale": { "type": "string", "enum": ["fr", "en"] },
+      "AllocationTargets": {
+        "type": "object",
+        "properties": {
+          "needs": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "wants": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "save": { "type": "integer", "minimum": 0, "maximum": 100 }
+        },
+        "required": ["needs", "wants", "save"]
+      },
+      "ApiError": {
+        "type": "object",
+        "properties": {
+          "error": { "type": "string" },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [{ "type": "string" }, { "type": "number" }]
+                  }
+                },
+                "message": { "type": "string" }
+              },
+              "required": ["path", "message"]
+            }
+          },
+          "retryAfterSeconds": { "type": "integer" }
+        },
+        "required": ["error"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "maxLength": 254, "format": "email" },
+          "password": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "required": ["email", "password"]
+      },
+      "InvitationStatusResponse": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "maxLength": 254, "format": "email" }
+        },
+        "required": ["email"]
+      },
+      "InvitationTokenRequest": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" }
+        },
+        "required": ["token"]
+      },
+      "AcceptInvitationRequest": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+          "password": { "type": "string", "minLength": 12, "maxLength": 256 },
+          "locale": { "$ref": "#/components/schemas/Locale" }
+        },
+        "required": ["token", "password", "locale"]
+      },
+      "PasswordResetRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "maxLength": 254, "format": "email" }
+        },
+        "required": ["email"]
+      },
+      "PasswordResetConfirmRequest": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" },
+          "password": { "type": "string", "minLength": 12, "maxLength": 256 }
+        },
+        "required": ["token", "password"]
+      },
+      "EmailChangeConfirmRequest": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string", "pattern": "^[A-Za-z0-9_-]{16,128}$" }
+        },
+        "required": ["token"]
+      },
+      "UpdateProfileRequest": {
+        "type": "object",
+        "properties": {
+          "locale": { "$ref": "#/components/schemas/Locale" },
+          "forecastHorizonMonths": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "targets": { "$ref": "#/components/schemas/AllocationTargets" }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "newPassword": { "type": "string", "minLength": 12, "maxLength": 256 }
+        },
+        "required": ["currentPassword", "newPassword"]
+      },
+      "EmailChangeRequest": {
+        "type": "object",
+        "properties": {
+          "newEmail": { "type": "string", "maxLength": 254, "format": "email" },
+          "password": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "required": ["newEmail", "password"]
+      },
+      "SessionListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/SessionSummary" }
+      },
+      "SessionSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastSeenAt": { "type": "string", "format": "date-time" },
+          "userAgent": { "type": ["string", "null"] },
+          "ip": { "type": ["string", "null"] },
+          "current": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "lastSeenAt",
+          "userAgent",
+          "ip",
+          "current"
+        ]
+      },
+      "AdminInvitationListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/AdminInvitation" }
+      },
+      "AdminInvitation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "maxLength": 254, "format": "email" },
+          "status": { "$ref": "#/components/schemas/InvitationStatus" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "acceptedAt": { "type": ["string", "null"], "format": "date-time" },
+          "revokedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "email",
+          "status",
+          "createdAt",
+          "expiresAt",
+          "acceptedAt",
+          "revokedAt"
+        ]
+      },
+      "InvitationStatus": {
+        "type": "string",
+        "enum": ["pending", "accepted", "expired", "revoked"]
+      },
+      "CreateInvitationRequest": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "maxLength": 254, "format": "email" }
+        },
+        "required": ["email"]
+      },
+      "AdminUserListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/AdminUser" }
+      },
+      "AdminUser": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "maxLength": 254, "format": "email" },
+          "role": { "$ref": "#/components/schemas/UserRole" },
+          "locale": { "$ref": "#/components/schemas/Locale" },
+          "status": { "$ref": "#/components/schemas/UserStatus" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastLoginAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "locale",
+          "status",
+          "createdAt",
+          "lastLoginAt"
+        ]
+      },
+      "UserStatus": { "type": "string", "enum": ["active", "disabled"] }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Check that the API and the database answer",
+        "tags": ["operations"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "API and database available",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/csrf": {
+      "get": {
+        "summary": "Issue the token to send in the X-CSRF-Token header",
+        "tags": ["auth"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "CSRF token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CsrfTokenResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "summary": "Log in with email and password",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Wrong email or password",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Disabled account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Account or address temporarily locked",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "summary": "Log out the current session",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": { "204": { "description": "Logged out" } }
+      }
+    },
+    "/api/v1/auth/session": {
+      "get": {
+        "summary": "Return the profile of the logged in user",
+        "tags": ["auth"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Logged in user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/invitation/check": {
+      "post": {
+        "summary": "Check an invitation link before showing the sign up form",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usable invitation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationStatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed token",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown, accepted or revoked invitation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "410": {
+            "description": "Expired invitation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts from this address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/invitation/accept": {
+      "post": {
+        "summary": "Create the account of an invitation and log it in",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created and logged in",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown, accepted or revoked invitation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "An account already uses this email",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "410": {
+            "description": "Expired invitation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts from this address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password-reset/request": {
+      "post": {
+        "summary": "Send a password reset link, same answer whether the email exists",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PasswordResetRequest" }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Request accepted" },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password-reset/confirm": {
+      "post": {
+        "summary": "Set a new password from a reset link and revoke every session",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Password changed" },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or already used link",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "410": {
+            "description": "Expired link",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts from this address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/email-change/confirm": {
+      "post": {
+        "summary": "Confirm a new email address from the link sent to it",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailChangeConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Email changed" },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown or already used link",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "An account already uses this email",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "410": {
+            "description": "Expired link",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts from this address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile": {
+      "patch": {
+        "summary": "Update language, forecast horizon and allocation targets",
+        "tags": ["profile"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateProfileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/password": {
+      "post": {
+        "summary": "Change the password and revoke every session, this one included",
+        "tags": ["profile"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangePasswordRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Password changed, logged out everywhere" },
+          "400": {
+            "description": "Invalid body or wrong current password",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Account temporarily locked",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/email": {
+      "post": {
+        "summary": "Send a confirmation link to the new email address",
+        "tags": ["profile"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EmailChangeRequest" }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Confirmation link sent to the new address" },
+          "400": {
+            "description": "Invalid body or wrong current password",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "An account already uses this email",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Account temporarily locked",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "502": {
+            "description": "The confirmation email could not be sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/sessions": {
+      "get": {
+        "summary": "List the active sessions of the logged in user",
+        "tags": ["profile"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Active sessions",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionListResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Log out every session of the user, this one included",
+        "tags": ["profile"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Logged out everywhere" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/invitations": {
+      "get": {
+        "summary": "List every invitation with its status",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Invitations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInvitationListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Invite someone by email",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInvitationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invitation sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminInvitation" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already registered or already invited",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "502": {
+            "description": "The invitation email could not be sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/invitations/{id}/resend": {
+      "post": {
+        "summary": "Send a new link and invalidate the previous one",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation sent again",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminInvitation" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown resource",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Accepted or revoked invitation, or email registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "502": {
+            "description": "The invitation email could not be sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/invitations/{id}/revoke": {
+      "post": {
+        "summary": "Revoke an invitation that was not accepted",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation revoked",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminInvitation" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown resource",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Accepted or already revoked invitation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "summary": "List users without any financial data",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/disable": {
+      "post": {
+        "summary": "Disable a user and revoke its sessions, data kept",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User disabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminUser" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown resource",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "An administrator cannot disable itself",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/enable": {
+      "post": {
+        "summary": "Enable a disabled user",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User enabled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminUser" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown resource",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/users/{id}/password-reset": {
+      "post": {
+        "summary": "Send a password reset link to a user",
+        "tags": ["administration"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "202": { "description": "Reset link sent" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "The user is not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown resource",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Disabled user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "502": {
+            "description": "The reset email could not be sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

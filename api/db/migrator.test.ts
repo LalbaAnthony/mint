@@ -1,8 +1,17 @@
 import { readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { afterAll, afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 import { migrations } from '../migrations/index.js'
-import { createTestSequelize } from '../tests/database.js'
+import { createBlankDatabase } from '../tests/database.js'
+import type { IsolatedDatabase } from '../types/tests.js'
 import { createMigrator, logMigrationEvent } from './migrator.js'
 
 const migrationsDirectory = fileURLToPath(
@@ -66,22 +75,40 @@ describe('logMigrationEvent', () => {
 })
 
 describe('createMigrator', () => {
-  const sequelize = createTestSequelize()
+  let database: IsolatedDatabase
+
+  beforeAll(async () => {
+    database = await createBlankDatabase()
+  })
 
   afterAll(async () => {
-    await sequelize.close()
+    await database.drop()
   })
 
   async function isCitextInstalled(): Promise<boolean> {
-    const [rows] = await sequelize.query(
+    const [rows] = await database.sequelize.query(
       "SELECT 1 FROM pg_extension WHERE extname = 'citext'",
     )
     return rows.length === 1
   }
 
+  async function listTables(): Promise<string[]> {
+    const [rows] = await database.sequelize.query(
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'schema_migrations' ORDER BY tablename",
+    )
+    return rows.flatMap((row) =>
+      typeof row === 'object' &&
+      row !== null &&
+      'tablename' in row &&
+      typeof row.tablename === 'string'
+        ? [row.tablename]
+        : [],
+    )
+  }
+
   it('applies then reverts every migration', async () => {
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true)
-    const migrator = createMigrator(sequelize)
+    const migrator = createMigrator(database.sequelize)
 
     await migrator.up()
 
@@ -89,10 +116,19 @@ describe('createMigrator', () => {
       migrations.map(({ name }) => name),
     )
     expect(await isCitextInstalled()).toBe(true)
+    expect(await listTables()).toEqual([
+      'categories',
+      'email_change_tokens',
+      'invitations',
+      'password_reset_tokens',
+      'sessions',
+      'users',
+    ])
 
     await migrator.down({ to: 0 })
 
     expect(await migrator.executed()).toEqual([])
     expect(await isCitextInstalled()).toBe(false)
+    expect(await listTables()).toEqual([])
   })
 })

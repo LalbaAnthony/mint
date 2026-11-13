@@ -1,7 +1,7 @@
-import type { DatabaseEnvironment } from './environment.js'
+import type { TestDatabaseServer } from './tests.js'
 
 declare module 'vitest' {
   export interface ProvidedContext {
-    testDatabase: DatabaseEnvironment
+    testDatabaseServer: TestDatabaseServer
   }
 }
