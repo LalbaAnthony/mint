@@ -48,3 +48,40 @@ jobs:
           name: coverage
           path: coverage/
           if-no-files-found: error
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Start the end-to-end stack
+        run: docker compose -f e2e/compose.yml up --build --detach --wait --wait-timeout 300
+
+      - name: Playwright
+        run: npm run test:e2e
+
+      - name: Stack logs
+        if: ${{ failure() }}
+        run: docker compose -f e2e/compose.yml logs --no-color
+
+      - name: Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+
+      - name: Stop the end-to-end stack
+        if: ${{ always() }}
+        run: docker compose -f e2e/compose.yml down --volumes

@@ -1,0 +1,95 @@
+name: mint-e2e
+
+x-api-environment: &api-environment
+  TZ: Europe/Paris
+  PORT: 3000
+  DATABASE_HOST: db
+  DATABASE_PORT: 5432
+  DATABASE_NAME: mint
+  DATABASE_USER: mint
+  DATABASE_PASSWORD: mint-e2e-only
+  APP_ORIGIN: http://localhost:${E2E_HTTP_PORT:-8090}
+  SESSION_SECRET: mint-e2e-only-session-secret-0123456789
+  SMTP_HOST: mailpit
+  SMTP_PORT: 1025
+  SMTP_TLS_MODE: none
+  SMTP_USER: ''
+  SMTP_PASSWORD: ''
+  MAIL_FROM: Mint <no-reply@mint.localhost>
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: mint
+      POSTGRES_USER: mint
+      POSTGRES_PASSWORD: mint-e2e-only
+    ports:
+      - 127.0.0.1:${E2E_DB_PORT:-5442}:5432
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mint -d mint']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    image: mint-api:e2e
+    build:
+      context: ..
+      dockerfile: api/Dockerfile.prod
+    command:
+      ['sh', '-c', 'node dist/db/migrate.js up && exec node dist/server.js']
+    environment: *api-environment
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/v1/health').then((response) => process.exit(response.ok ? 0 : 1), () => process.exit(1))"
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  web:
+    image: mint-web:e2e
+    build:
+      context: ..
+      dockerfile: front/Dockerfile.prod
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '-q',
+          '-O',
+          '/dev/null',
+          'http://127.0.0.1:8080/healthz',
+        ]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  proxy:
+    image: httpd:2.4.71-alpine
+    volumes:
+      - ./httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+    ports:
+      - 127.0.0.1:${E2E_HTTP_PORT:-8090}:8080
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    ports:
+      - 127.0.0.1:${E2E_MAILPIT_PORT:-8126}:8025
