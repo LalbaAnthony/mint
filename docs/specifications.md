@@ -440,7 +440,7 @@ En tant qu'utilisateur, je veux consulter mes dernières données sans réseau.
 
 ## 5. Modèle de données
 
-Le modèle compte 29 tables PostgreSQL réparties en six domaines ; les occurrences futures d'échéances ne sont pas stockées mais calculées à la volée.
+Le modèle compte 30 tables PostgreSQL réparties en six domaines ; les occurrences futures d'échéances ne sont pas stockées mais calculées à la volée.
 
 Conventions :
 
@@ -451,14 +451,15 @@ Conventions :
 
 ### 5.1 Identité et accès
 
-| Table                   | Champs principaux                                                                                                                                                                                     | Contraintes                                            |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| users                   | email (citext), password\_hash, role (admin, user), locale (fr, en), status (active, disabled), forecast\_horizon\_months, target\_needs\_pct, target\_wants\_pct, target\_save\_pct, last\_login\_at | email unique ; horizon 1 à 12 ; somme des cibles = 100 |
-| webauthn\_credentials   | user\_id, credential\_id, public\_key, sign\_count, transports, name, last\_used\_at                                                                                                                  | credential\_id unique                                  |
-| sessions                | sid, user\_id, data, expires\_at, user\_agent, ip, last\_seen\_at                                                                                                                                     | store des sessions serveur                             |
-| invitations             | email, token\_hash, invited\_by, expires\_at, accepted\_at, revoked\_at                                                                                                                               | jeton stocké haché                                     |
-| password\_reset\_tokens | user\_id, token\_hash, expires\_at, used\_at                                                                                                                                                          | jeton stocké haché, usage unique                       |
-| regulated\_caps         | product (livret\_a, ldds, lep, pel, cel), cap\_cents, updated\_by                                                                                                                                     | référence globale (LIV-01), aucune donnée utilisateur  |
+| Table                   | Champs principaux                                                                                                                                                                                     | Contraintes                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| users                   | email (citext), password\_hash, role (admin, user), locale (fr, en), status (active, disabled), forecast\_horizon\_months, target\_needs\_pct, target\_wants\_pct, target\_save\_pct, last\_login\_at | email unique ; horizon 1 à 12 ; somme des cibles = 100             |
+| webauthn\_credentials   | user\_id, credential\_id, public\_key, sign\_count, transports, name, last\_used\_at                                                                                                                  | credential\_id unique                                              |
+| sessions                | sid, user\_id, data, expires\_at, user\_agent, ip, last\_seen\_at                                                                                                                                     | store des sessions serveur                                         |
+| invitations             | email, token\_hash, invited\_by, expires\_at, accepted\_at, revoked\_at                                                                                                                               | jeton stocké haché                                                 |
+| password\_reset\_tokens | user\_id, token\_hash, expires\_at, used\_at                                                                                                                                                          | jeton stocké haché, usage unique                                   |
+| email\_change\_tokens   | user\_id, new\_email (citext), token\_hash, expires\_at, used\_at                                                                                                                                     | jeton stocké haché, usage unique, validité 1 h (AUTH-07, ADR 0010) |
+| regulated\_caps         | product (livret\_a, ldds, lep, pel, cel), cap\_cents, updated\_by                                                                                                                                     | référence globale (LIV-01), aucune donnée utilisateur              |
 
 ### 5.2 Comptes
 

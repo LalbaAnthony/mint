@@ -15,10 +15,10 @@ Un seul run de `release.flow.yml` s'exécute à la fois : un push arrivé pendan
 
 ## 2. Images
 
-| Image      | Dockerfile              | Contenu                                                                                                            |
-| ---------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `mint-api` | `api/Dockerfile.prod`   | API Express compilée, utilisateur `node`, sert aussi les migrations (`node dist/db/migrate.js up`)                 |
-| `mint-web` | `front/Dockerfile.prod` | build statique Nuxt servi par nginx:alpine, utilisateur `nginx`, port 8080, en-têtes de sécurité et CSP (ADR 0003) |
+| Image      | Dockerfile              | Contenu                                                                                                                                   |
+| ---------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `mint-api` | `api/Dockerfile.prod`   | API Express compilée, utilisateur `node`, sert aussi les migrations (`node dist/db/migrate.js up`) et la CLI d'administration (section 9) |
+| `mint-web` | `front/Dockerfile.prod` | build statique Nuxt servi par nginx:alpine, utilisateur `nginx`, port 8080, en-têtes de sécurité et CSP (ADR 0003)                        |
 
 Les deux images sont publiées dans les dépôts Docker Hub `<DOCKERHUB_USERNAME>/mint-api` et `<DOCKERHUB_USERNAME>/mint-web`. Créer ces dépôts en public avant la première release : un push vers un dépôt inexistant le crée avec la visibilité par défaut du compte. Le VPS tire les images sans authentification. Le tag `latest` n'est utilisé par aucun déploiement, qui référence toujours le SHA complet.
 
@@ -28,21 +28,28 @@ Le contexte de build de `mint-web` utilise `front/Dockerfile.prod.dockerignore`,
 
 Tous au niveau du dépôt (Settings, Secrets and variables, Actions). Aucune valeur de déploiement n'est versionnée ni stockée en variable. Hors clé privée, aucune valeur ne doit contenir d'apostrophe droite ni de saut de ligne : le job `deploy` le vérifie avant toute connexion.
 
-| Secret                     | Usage                                                                                            |
-| -------------------------- | ------------------------------------------------------------------------------------------------ |
-| `DOCKERHUB_USERNAME`       | compte Docker Hub, espace de noms des images                                                     |
-| `DOCKERHUB_TOKEN`          | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`           |
-| `VPS_SSH_HOST`             | nom d'hôte ou adresse IP du VPS                                                                  |
-| `VPS_SSH_PORT`             | port SSH du VPS                                                                                  |
-| `VPS_SSH_USER`             | utilisateur SSH dédié au déploiement                                                             |
-| `VPS_SSH_PRIVATE_KEY`      | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                              |
-| `VPS_SSH_HOST_FINGERPRINT` | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64      |
-| `VPS_DEPLOY_PATH`          | dossier de déploiement sur le VPS, chemin absolu                                                 |
-| `POSTGRES_DB`              | nom de la base de production                                                                     |
-| `POSTGRES_USER`            | utilisateur PostgreSQL de production                                                             |
-| `POSTGRES_PASSWORD`        | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                       |
-| `API_HOST_PORT`            | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/` : `4568` (`apache.conf`)       |
-| `WEB_HOST_PORT`            | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/` : `4569` (`apache.conf`) |
+| Secret                     | Usage                                                                                                                                  |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `DOCKERHUB_USERNAME`       | compte Docker Hub, espace de noms des images                                                                                           |
+| `DOCKERHUB_TOKEN`          | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`                                                 |
+| `VPS_SSH_HOST`             | nom d'hôte ou adresse IP du VPS                                                                                                        |
+| `VPS_SSH_PORT`             | port SSH du VPS                                                                                                                        |
+| `VPS_SSH_USER`             | utilisateur SSH dédié au déploiement                                                                                                   |
+| `VPS_SSH_PRIVATE_KEY`      | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                                                                    |
+| `VPS_SSH_HOST_FINGERPRINT` | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64                                            |
+| `VPS_DEPLOY_PATH`          | dossier de déploiement sur le VPS, chemin absolu                                                                                       |
+| `POSTGRES_DB`              | nom de la base de production                                                                                                           |
+| `POSTGRES_USER`            | utilisateur PostgreSQL de production                                                                                                   |
+| `POSTGRES_PASSWORD`        | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                                                             |
+| `API_HOST_PORT`            | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/` : `4568` (`apache.conf`)                                             |
+| `WEB_HOST_PORT`            | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/` : `4569` (`apache.conf`)                                       |
+| `SESSION_SECRET`           | secret de signature des cookies de session et des jetons CSRF, 32 caractères minimum (ADR 0006, ADR 0007)                              |
+| `SMTP_HOST`                | serveur SMTP d'envoi des invitations et des liens de réinitialisation                                                                  |
+| `SMTP_PORT`                | port de ce serveur                                                                                                                     |
+| `SMTP_TLS_MODE`            | `tls` (TLS implicite, port 465 en général), `starttls` (STARTTLS obligatoire, port 587) ou `none` (sans TLS, réservé au développement) |
+| `SMTP_USER`                | identifiant SMTP                                                                                                                       |
+| `SMTP_PASSWORD`            | mot de passe SMTP                                                                                                                      |
+| `MAIL_FROM`                | expéditeur des emails, par exemple `Mint <no-reply@dev-it.app>`                                                                        |
 
 À chaque déploiement, le fichier `.env` du VPS est régénéré depuis ces secrets, avec `COMPOSE_PROFILES='prod'` et les références d'images `docker.io/<DOCKERHUB_USERNAME>/mint-api:<SHA>` et `mint-web:<SHA>`. Toute modification manuelle de ce fichier est écrasée au déploiement suivant. Un nouveau secret d'exécution (session, VAPID, SMTP) s'ajoute à la fois dans les secrets GitHub, dans `deploy.inc.yml` (déclaration, validation, écriture du `.env`), dans les deux flux et dans `docker-compose.yml`.
 
@@ -100,3 +107,16 @@ Actions, workflow `rollback`, Run workflow, puis saisir le SHA complet d'un comm
 - Toute modification de la définition du service `db` dans `docker-compose.yml` (image, environnement) recrée le conteneur `db` dès l'étape des migrations, avant la bascule de l'API.
 - Docker Compose signale `The "DB_HOST_PORT" variable is not set` à chaque commande sur le VPS : la variable ne sert qu'au service `db-dev` du profil `dev`. Avertissement sans effet.
 - Le service `worker` (section 7.2) n'existe pas encore ; il sera ajouté à `docker-compose.yml` et à `remote.sh` (pull) avec les tâches planifiées.
+
+## 9. Administrateurs
+
+Le premier administrateur et toute promotion passent par la CLI de l'image `mint-api` (ADM-07), exécutée sur le VPS dans le dossier de déploiement. La commande demande le mot de passe deux fois, sans écho : elle exige un terminal interactif (`docker compose run` en alloue un par défaut).
+
+```sh
+docker compose run --rm api node dist/cli/admin.js create-admin --email owner@example.org --locale fr
+docker compose run --rm api node dist/cli/admin.js promote --email member@example.org
+```
+
+`create-admin` crée le compte, son jeu de catégories par défaut (CAT-05) et refuse une adresse déjà utilisée. `promote` donne le rôle administrateur à un compte existant. Les deux écrivent un événement d'audit (ADR 0009). Les autres comptes se créent uniquement par invitation depuis la console d'administration.
+
+Les secrets `SESSION_SECRET` et `SMTP_*` doivent exister avant le premier déploiement qui embarque l'authentification : sans eux, le job `deploy` échoue à la validation, avant toute connexion au VPS. Changer `SESSION_SECRET` déconnecte tous les utilisateurs.
