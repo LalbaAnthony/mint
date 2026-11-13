@@ -1,14 +1,31 @@
 {
   "name": "@mint/shared",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=22"
   },
+  "exports": {
+    "./schemas/*": {
+      "source": "./schemas/*.ts",
+      "types": "./schemas/*.ts",
+      "default": "./dist/schemas/*.js"
+    },
+    "./types/*": {
+      "source": "./types/*.ts",
+      "types": "./types/*.ts",
+      "default": "./dist/types/*.js"
+    }
+  },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
     "typescript": "~6.0.3"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }

@@ -2,7 +2,14 @@ import { fileURLToPath } from 'node:url'
 import { defineVitestProject } from '@nuxt/test-utils/config'
 import { defineConfig } from 'vitest/config'
 
+const sharedSourceDirectory = fileURLToPath(
+  new URL('./shared', import.meta.url),
+)
+
 export default defineConfig({
+  resolve: {
+    alias: { '@mint/shared': sharedSourceDirectory },
+  },
   test: {
     testTimeout: 30_000,
     projects: [
@@ -23,6 +30,13 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: 'shared',
+          include: ['shared/**/*.test.ts'],
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: 'api',
           include: ['api/**/*.test.ts'],
           globalSetup: ['api/tests/global-setup.ts'],
@@ -32,6 +46,7 @@ export default defineConfig({
         test: {
           name: 'front',
           include: ['front/test/**/*.test.ts'],
+          setupFiles: ['front/test/setup.ts'],
           testTimeout: 30_000,
           hookTimeout: 60_000,
           environment: 'nuxt',
@@ -48,10 +63,17 @@ export default defineConfig({
       include: [
         'scripts/**/*.ts',
         'api/**/*.ts',
+        'shared/**/*.ts',
         'front/app/**/*.{ts,vue}',
         'front/scripts/**/*.ts',
       ],
-      exclude: ['**/*.test.ts', '**/*.d.ts', 'api/tests/**', 'api/dist/**'],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.d.ts',
+        'api/tests/**',
+        'api/dist/**',
+        'shared/dist/**',
+      ],
       reporter: ['text', 'html', 'lcov'],
     },
   },
