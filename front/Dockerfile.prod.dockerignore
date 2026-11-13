@@ -11,7 +11,6 @@ docs
 scripts
 api/*
 !api/package.json
-shared/*
-!shared/package.json
+shared/**/*.test.ts
 front/test
 front/**/*.test.ts

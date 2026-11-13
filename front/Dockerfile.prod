@@ -8,6 +8,7 @@ COPY front/package.json front/
 COPY shared/package.json shared/
 RUN npm ci --workspace @mint/front --ignore-scripts
 
+COPY shared/ shared/
 COPY front/ front/
 RUN npm run generate --workspace @mint/front
 RUN node front/scripts/write-csp.ts --public front/.output/public --output content-security-policy.conf

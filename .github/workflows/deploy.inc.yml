@@ -32,6 +32,20 @@ on:
         required: true
       WEB_HOST_PORT:
         required: true
+      SESSION_SECRET:
+        required: true
+      SMTP_HOST:
+        required: true
+      SMTP_PORT:
+        required: true
+      SMTP_TLS_MODE:
+        required: true
+      SMTP_USER:
+        required: true
+      SMTP_PASSWORD:
+        required: true
+      MAIL_FROM:
+        required: true
 
 permissions:
   contents: read
@@ -58,6 +72,13 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           API_HOST_PORT: ${{ secrets.API_HOST_PORT }}
           WEB_HOST_PORT: ${{ secrets.WEB_HOST_PORT }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_TLS_MODE: ${{ secrets.SMTP_TLS_MODE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
         run: |
           failed=0
           fail() {
@@ -68,17 +89,23 @@ jobs:
             fail 'sha must be a full 40-character lowercase commit SHA'
           for name in DOCKERHUB_USERNAME VPS_SSH_HOST VPS_SSH_PORT \
             VPS_SSH_USER VPS_SSH_HOST_FINGERPRINT VPS_DEPLOY_PATH POSTGRES_DB \
-            POSTGRES_USER POSTGRES_PASSWORD API_HOST_PORT WEB_HOST_PORT; do
+            POSTGRES_USER POSTGRES_PASSWORD API_HOST_PORT WEB_HOST_PORT \
+            SESSION_SECRET SMTP_HOST SMTP_PORT SMTP_TLS_MODE SMTP_USER \
+            SMTP_PASSWORD MAIL_FROM; do
             value="${!name}"
             if [[ -z "$value" || "$value" == *"'"* || "$value" == *$'\n'* ||
               "$value" == *$'\r'* ]]; then
               fail "secret $name must be set, without single quote or line break"
             fi
           done
-          for name in VPS_SSH_PORT API_HOST_PORT WEB_HOST_PORT; do
+          for name in VPS_SSH_PORT API_HOST_PORT WEB_HOST_PORT SMTP_PORT; do
             [[ "${!name}" =~ ^[0-9]{1,5}$ ]] ||
               fail "secret $name must be a port number"
           done
+          (( ${#SESSION_SECRET} >= 32 )) ||
+            fail 'secret SESSION_SECRET must be at least 32 characters long'
+          [[ "$SMTP_TLS_MODE" =~ ^(tls|starttls|none)$ ]] ||
+            fail 'secret SMTP_TLS_MODE must be tls, starttls or none'
           [[ "$VPS_DEPLOY_PATH" == /* ]] ||
             fail 'secret VPS_DEPLOY_PATH must be an absolute path'
           [[ "$VPS_SSH_HOST_FINGERPRINT" =~ ^SHA256:[A-Za-z0-9+/]{43}$ ]] ||
@@ -100,6 +127,13 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           API_HOST_PORT: ${{ secrets.API_HOST_PORT }}
           WEB_HOST_PORT: ${{ secrets.WEB_HOST_PORT }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_TLS_MODE: ${{ secrets.SMTP_TLS_MODE }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
         run: |
           umask 077
           {
@@ -109,6 +143,13 @@ jobs:
             echo "POSTGRES_PASSWORD='$POSTGRES_PASSWORD'"
             echo "API_HOST_PORT='$API_HOST_PORT'"
             echo "WEB_HOST_PORT='$WEB_HOST_PORT'"
+            echo "SESSION_SECRET='$SESSION_SECRET'"
+            echo "SMTP_HOST='$SMTP_HOST'"
+            echo "SMTP_PORT='$SMTP_PORT'"
+            echo "SMTP_TLS_MODE='$SMTP_TLS_MODE'"
+            echo "SMTP_USER='$SMTP_USER'"
+            echo "SMTP_PASSWORD='$SMTP_PASSWORD'"
+            echo "MAIL_FROM='$MAIL_FROM'"
             echo "API_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-api:$SHA'"
             echo "WEB_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-web:$SHA'"
           } >"$RUNNER_TEMP/production.env"

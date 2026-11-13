@@ -24,6 +24,7 @@ x-api-environment: &api-environment
   DATABASE_NAME: ${POSTGRES_DB}
   DATABASE_USER: ${POSTGRES_USER}
   DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+  SESSION_SECRET: ${SESSION_SECRET}
 
 x-api-healthcheck: &api-healthcheck
   test:
@@ -57,6 +58,13 @@ services:
     environment:
       <<: *api-environment
       DATABASE_HOST: db
+      APP_ORIGIN: https://mint.dev-it.app
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_TLS_MODE: ${SMTP_TLS_MODE}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
     ports:
       - 127.0.0.1:${API_HOST_PORT}:3000
     depends_on:
@@ -106,16 +114,32 @@ services:
     environment:
       <<: *api-environment
       DATABASE_HOST: db-dev
+      APP_ORIGIN: http://localhost:3001
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_TLS_MODE: none
+      SMTP_USER: ''
+      SMTP_PASSWORD: ''
+      MAIL_FROM: Mint <no-reply@mint.localhost>
       CHOKIDAR_USEPOLLING: 'true'
     ports:
       - 127.0.0.1:${API_HOST_PORT}:3000
     volumes:
       - ./api:/app/api
+      - ./shared:/app/shared
       - /app/api/node_modules
     depends_on:
       db-dev:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck: *api-healthcheck
+
+  mailpit:
+    profiles: [dev]
+    image: axllent/mailpit:v1.31.3
+    ports:
+      - 127.0.0.1:${MAILPIT_UI_PORT}:8025
 
 volumes:
   db-data:
