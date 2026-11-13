@@ -1,5 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it } from 'vitest'
+import { signIn } from '../session'
 import { defineComponent, h } from 'vue'
 
 const NavigationProbe = defineComponent({
@@ -10,7 +11,7 @@ const NavigationProbe = defineComponent({
 })
 
 afterEach(() => {
-  useSessionStore().role = null
+  signIn('user')
 })
 
 describe('useNavigation', () => {
@@ -50,7 +51,7 @@ describe('useNavigation', () => {
 
     expect(wrapper.vm.administrationEntries).toEqual([])
 
-    useSessionStore().role = 'admin'
+    signIn('admin')
 
     expect(wrapper.vm.administrationEntries.map((entry) => entry.to)).toEqual([
       '/admin',

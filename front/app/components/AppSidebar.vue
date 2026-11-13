@@ -11,6 +11,7 @@ const {
   administrationEntries,
   quickAddEntries,
 } = useNavigation()
+const logout = useLogout()
 
 function toNavigationItems(entries: NavigationEntry[]): NavigationMenuItem[] {
   return entries.map(({ label, icon, to }) => ({ label, icon, to }))
@@ -38,7 +39,7 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
     icon: profileEntry.value.icon,
     to: profileEntry.value.to,
   },
-  { label: t('navigation.logout'), icon: icons.logout, disabled: true },
+  { label: t('navigation.logout'), icon: icons.logout, onSelect: logout },
 ])
 </script>
 

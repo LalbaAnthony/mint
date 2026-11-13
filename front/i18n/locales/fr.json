@@ -28,7 +28,150 @@
     "income": "Revenu",
     "transfer": "Transfert"
   },
+  "common": {
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "locales": {
+    "fr": "Français",
+    "en": "English"
+  },
+  "groups": {
+    "needs": "Besoins",
+    "wants": "Envies",
+    "save": "Épargne"
+  },
   "auth": {
-    "login": "Connexion"
+    "login": "Connexion",
+    "email": "Adresse email",
+    "password": "Mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "passwordConfirmation": "Confirmation du mot de passe",
+    "passwordRule": "12 caractères minimum",
+    "submitLogin": "Se connecter",
+    "forgotPassword": "Mot de passe oublié ?",
+    "forgotPasswordTitle": "Mot de passe oublié",
+    "forgotPasswordHelp": "Saisissez l'adresse de votre compte : vous recevrez un lien valable 1 heure pour choisir un nouveau mot de passe.",
+    "sendResetLink": "Recevoir un lien",
+    "resetLinkSent": "Si un compte utilise cette adresse, un lien de réinitialisation vient de lui être envoyé.",
+    "backToLogin": "Retour à la connexion",
+    "resetPasswordTitle": "Nouveau mot de passe",
+    "savePassword": "Enregistrer le mot de passe",
+    "passwordChanged": "Mot de passe modifié : reconnectez-vous.",
+    "requestNewLink": "Demander un nouveau lien"
+  },
+  "invitation": {
+    "title": "Créer votre compte",
+    "checking": "Vérification de l'invitation...",
+    "intro": "Vous avez été invité avec l'adresse {email}. Choisissez votre langue et votre mot de passe.",
+    "submit": "Créer mon compte"
+  },
+  "emailChange": {
+    "title": "Confirmation de l'adresse email",
+    "confirming": "Confirmation en cours...",
+    "confirmed": "Votre nouvelle adresse email est confirmée."
+  },
+  "profile": {
+    "preferences": "Préférences",
+    "language": "Langue",
+    "forecastHorizon": "Horizon de prévision",
+    "monthCount": "{n} mois",
+    "targets": "Cibles de répartition (%)",
+    "targetsRule": "La somme doit faire 100",
+    "preferencesSaved": "Préférences enregistrées.",
+    "account": "Compte",
+    "changeEmail": "Changer d'adresse email",
+    "newEmail": "Nouvelle adresse email",
+    "sendConfirmation": "Envoyer le lien de confirmation",
+    "emailLinkSent": "Un lien de confirmation a été envoyé à {email}.",
+    "passwordHelp": "Changer le mot de passe déconnecte toutes vos sessions.",
+    "changePassword": "Changer le mot de passe",
+    "passwordChangeEffect": "Toutes vos sessions seront fermées, celle-ci comprise.",
+    "sessions": "Sessions actives",
+    "currentSession": "Cette session",
+    "unknownDevice": "Appareil inconnu",
+    "sessionDetails": "Adresse IP {ip} · dernière activité {lastSeen}",
+    "logoutEverywhere": "Se déconnecter partout",
+    "logoutEverywhereEffect": "Toutes vos sessions seront fermées, celle-ci comprise.",
+    "loggedOutEverywhere": "Toutes vos sessions sont fermées."
+  },
+  "admin": {
+    "invite": "Inviter",
+    "inviteHelp": "Le destinataire reçoit un lien valable 7 jours pour créer son compte.",
+    "sendInvitation": "Envoyer l'invitation",
+    "invitationSent": "Invitation envoyée à {email}.",
+    "invitations": "Invitations",
+    "noInvitationTitle": "Aucune invitation",
+    "noInvitationText": "Invitez un proche par email pour qu'il crée son compte.",
+    "invitationStatus": {
+      "pending": "En attente",
+      "accepted": "Acceptée",
+      "expired": "Expirée",
+      "revoked": "Révoquée"
+    },
+    "sentOn": "Envoyée le {date}",
+    "expiresOn": "expire le {date}",
+    "acceptedOn": "acceptée le {date}",
+    "revokedOn": "révoquée le {date}",
+    "resend": "Renvoyer",
+    "revoke": "Révoquer",
+    "revokeTitle": "Révoquer l'invitation",
+    "revokeEffect": "Le lien envoyé à {email} ne fonctionnera plus.",
+    "users": "Utilisateurs",
+    "roles": {
+      "admin": "Administrateur",
+      "user": "Utilisateur"
+    },
+    "userStatus": {
+      "active": "Actif",
+      "disabled": "Désactivé"
+    },
+    "createdOn": "créé le {date}",
+    "lastLogin": "dernière connexion le {date}",
+    "neverLoggedIn": "jamais connecté",
+    "sendResetLink": "Envoyer un lien de réinitialisation",
+    "resetLinkSent": "Lien de réinitialisation envoyé à {email}.",
+    "disable": "Désactiver",
+    "disableTitle": "Désactiver l'utilisateur",
+    "disableEffect": "{email} sera déconnecté et ne pourra plus se connecter. Ses données sont conservées.",
+    "enable": "Réactiver"
+  },
+  "validation": {
+    "invalid": "Valeur invalide",
+    "required": "Champ obligatoire",
+    "invalid_email": "Adresse email invalide",
+    "too_long": "Valeur trop longue",
+    "password_too_short": "12 caractères minimum",
+    "passwords_differ": "Les deux mots de passe diffèrent",
+    "invalid_locale": "Langue non proposée",
+    "horizon_out_of_range": "Entre 1 et 12 mois",
+    "percentage_out_of_range": "Entre 0 et 100",
+    "targets_sum_not_100": "La somme des cibles doit faire 100",
+    "invalid_token": "Lien invalide"
+  },
+  "errors": {
+    "validation_failed": "Certaines valeurs sont invalides.",
+    "unauthenticated": "Votre session a expiré : reconnectez-vous.",
+    "forbidden": "Action réservée à l'administrateur.",
+    "not_found": "Élément introuvable.",
+    "csrf_invalid": "La requête a expiré : réessayez.",
+    "invalid_credentials": "Adresse email ou mot de passe incorrect.",
+    "account_locked": "Trop d'échecs : compte bloqué, réessayez dans {minutes} min.",
+    "too_many_attempts": "Trop de tentatives : réessayez dans {minutes} min.",
+    "account_disabled": "Ce compte est désactivé.",
+    "invitation_invalid": "Ce lien d'invitation n'est plus valide.",
+    "invitation_expired": "Cette invitation a expiré : demandez-en une nouvelle à l'administrateur.",
+    "token_invalid": "Ce lien n'est plus valide.",
+    "token_expired": "Ce lien a expiré.",
+    "email_taken": "Cette adresse email est déjà utilisée.",
+    "invitation_pending": "Une invitation est déjà en attente pour cette adresse.",
+    "invitation_not_resendable": "Cette invitation ne peut plus être renvoyée.",
+    "invitation_not_revocable": "Cette invitation ne peut plus être révoquée.",
+    "cannot_disable_self": "Vous ne pouvez pas désactiver votre propre compte.",
+    "user_disabled": "Cet utilisateur est désactivé.",
+    "mail_delivery_failed": "L'email n'a pas pu être envoyé : réessayez plus tard.",
+    "network_error": "Serveur injoignable : vérifiez votre connexion.",
+    "internal_error": "Une erreur est survenue : réessayez plus tard."
   }
 }

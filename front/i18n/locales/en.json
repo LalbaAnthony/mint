@@ -28,7 +28,150 @@
     "income": "Income",
     "transfer": "Transfer"
   },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "locales": {
+    "fr": "Français",
+    "en": "English"
+  },
+  "groups": {
+    "needs": "Needs",
+    "wants": "Wants",
+    "save": "Save"
+  },
   "auth": {
-    "login": "Log in"
+    "login": "Log in",
+    "email": "Email address",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordConfirmation": "Password confirmation",
+    "passwordRule": "At least 12 characters",
+    "submitLogin": "Log in",
+    "forgotPassword": "Forgot your password?",
+    "forgotPasswordTitle": "Forgot password",
+    "forgotPasswordHelp": "Type the address of your account: you will receive a link valid for 1 hour to choose a new password.",
+    "sendResetLink": "Send me a link",
+    "resetLinkSent": "If an account uses this address, a reset link has just been sent to it.",
+    "backToLogin": "Back to log in",
+    "resetPasswordTitle": "New password",
+    "savePassword": "Save the password",
+    "passwordChanged": "Password changed: log in again.",
+    "requestNewLink": "Request a new link"
+  },
+  "invitation": {
+    "title": "Create your account",
+    "checking": "Checking the invitation...",
+    "intro": "You were invited with the address {email}. Choose your language and your password.",
+    "submit": "Create my account"
+  },
+  "emailChange": {
+    "title": "Email address confirmation",
+    "confirming": "Confirming...",
+    "confirmed": "Your new email address is confirmed."
+  },
+  "profile": {
+    "preferences": "Preferences",
+    "language": "Language",
+    "forecastHorizon": "Forecast horizon",
+    "monthCount": "{n} month | {n} months",
+    "targets": "Allocation targets (%)",
+    "targetsRule": "The sum must be 100",
+    "preferencesSaved": "Preferences saved.",
+    "account": "Account",
+    "changeEmail": "Change email address",
+    "newEmail": "New email address",
+    "sendConfirmation": "Send the confirmation link",
+    "emailLinkSent": "A confirmation link was sent to {email}.",
+    "passwordHelp": "Changing the password logs out all your sessions.",
+    "changePassword": "Change password",
+    "passwordChangeEffect": "All your sessions will be closed, this one included.",
+    "sessions": "Active sessions",
+    "currentSession": "This session",
+    "unknownDevice": "Unknown device",
+    "sessionDetails": "IP address {ip} · last activity {lastSeen}",
+    "logoutEverywhere": "Log out everywhere",
+    "logoutEverywhereEffect": "All your sessions will be closed, this one included.",
+    "loggedOutEverywhere": "All your sessions are closed."
+  },
+  "admin": {
+    "invite": "Invite",
+    "inviteHelp": "The recipient gets a link valid for 7 days to create an account.",
+    "sendInvitation": "Send the invitation",
+    "invitationSent": "Invitation sent to {email}.",
+    "invitations": "Invitations",
+    "noInvitationTitle": "No invitation",
+    "noInvitationText": "Invite a relative by email so they create an account.",
+    "invitationStatus": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "expired": "Expired",
+      "revoked": "Revoked"
+    },
+    "sentOn": "Sent on {date}",
+    "expiresOn": "expires on {date}",
+    "acceptedOn": "accepted on {date}",
+    "revokedOn": "revoked on {date}",
+    "resend": "Send again",
+    "revoke": "Revoke",
+    "revokeTitle": "Revoke the invitation",
+    "revokeEffect": "The link sent to {email} will stop working.",
+    "users": "Users",
+    "roles": {
+      "admin": "Administrator",
+      "user": "User"
+    },
+    "userStatus": {
+      "active": "Active",
+      "disabled": "Disabled"
+    },
+    "createdOn": "created on {date}",
+    "lastLogin": "last login on {date}",
+    "neverLoggedIn": "never logged in",
+    "sendResetLink": "Send a reset link",
+    "resetLinkSent": "Reset link sent to {email}.",
+    "disable": "Disable",
+    "disableTitle": "Disable the user",
+    "disableEffect": "{email} will be logged out and unable to log in. Their data is kept.",
+    "enable": "Enable"
+  },
+  "validation": {
+    "invalid": "Invalid value",
+    "required": "Required field",
+    "invalid_email": "Invalid email address",
+    "too_long": "Value too long",
+    "password_too_short": "At least 12 characters",
+    "passwords_differ": "The two passwords differ",
+    "invalid_locale": "Language not available",
+    "horizon_out_of_range": "Between 1 and 12 months",
+    "percentage_out_of_range": "Between 0 and 100",
+    "targets_sum_not_100": "The targets must add up to 100",
+    "invalid_token": "Invalid link"
+  },
+  "errors": {
+    "validation_failed": "Some values are invalid.",
+    "unauthenticated": "Your session expired: log in again.",
+    "forbidden": "Only the administrator can do this.",
+    "not_found": "Item not found.",
+    "csrf_invalid": "The request expired: try again.",
+    "invalid_credentials": "Wrong email address or password.",
+    "account_locked": "Too many failures: account locked, try again in {minutes} min.",
+    "too_many_attempts": "Too many attempts: try again in {minutes} min.",
+    "account_disabled": "This account is disabled.",
+    "invitation_invalid": "This invitation link is no longer valid.",
+    "invitation_expired": "This invitation expired: ask the administrator for a new one.",
+    "token_invalid": "This link is no longer valid.",
+    "token_expired": "This link expired.",
+    "email_taken": "This email address is already used.",
+    "invitation_pending": "An invitation is already pending for this address.",
+    "invitation_not_resendable": "This invitation can no longer be sent again.",
+    "invitation_not_revocable": "This invitation can no longer be revoked.",
+    "cannot_disable_self": "You cannot disable your own account.",
+    "user_disabled": "This user is disabled.",
+    "mail_delivery_failed": "The email could not be sent: try again later.",
+    "network_error": "Server unreachable: check your connection.",
+    "internal_error": "Something went wrong: try again later."
   }
 }

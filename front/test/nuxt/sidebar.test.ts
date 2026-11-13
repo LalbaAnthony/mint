@@ -1,9 +1,10 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it } from 'vitest'
+import { signIn } from '../session'
 import AppSidebar from '~/components/AppSidebar.vue'
 
 afterEach(() => {
-  useSessionStore().role = null
+  signIn('user')
 })
 
 describe('AppSidebar (CHG-55)', () => {
@@ -63,7 +64,7 @@ describe('AppSidebar (CHG-55)', () => {
       wrapper.find('[data-testid="sidebar-administration"]').exists(),
     ).toBe(false)
 
-    useSessionStore().role = 'admin'
+    signIn('admin')
     await wrapper.vm.$nextTick()
 
     expect(

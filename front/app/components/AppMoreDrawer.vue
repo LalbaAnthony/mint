@@ -6,10 +6,18 @@ const open = defineModel<boolean>('open', { required: true })
 const { t } = useI18n()
 const route = useRoute()
 const { moreEntries } = useNavigation()
+const logout = useLogout()
 
 const items = computed<NavigationMenuItem[]>(() => [
   ...moreEntries.value.map(({ label, icon, to }) => ({ label, icon, to })),
-  { label: t('navigation.logout'), icon: icons.logout, disabled: true },
+  {
+    label: t('navigation.logout'),
+    icon: icons.logout,
+    onSelect: () => {
+      open.value = false
+      void logout()
+    },
+  },
 ])
 
 watch(

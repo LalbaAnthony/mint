@@ -1,10 +1,30 @@
+import { fileURLToPath } from 'node:url'
 import { defineNuxtConfig } from 'nuxt/config'
+
+const developmentApiOrigin =
+  process.env.MINT_DEV_API_ORIGIN ?? 'http://127.0.0.1:3000'
+
+function workspaceDirectory(relativePath: string): string {
+  const url = new URL(relativePath, import.meta.url)
+  return url.protocol === 'file:' ? fileURLToPath(url) : url.pathname
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2026-11-12',
   ssr: false,
   experimental: {
     entryImportMap: false,
+  },
+  alias: {
+    '@mint/shared': workspaceDirectory('../shared'),
+  },
+  devServer: {
+    port: 3001,
+  },
+  nitro: {
+    devProxy: {
+      '/api': { target: `${developmentApiOrigin}/api`, changeOrigin: false },
+    },
   },
   modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt'],
   css: ['~/assets/css/main.css'],
@@ -52,6 +72,12 @@ export default defineNuxtConfig({
         'lucide:credit-card',
         'lucide:shield-check',
         'lucide:trending-up',
+        'lucide:user-plus',
+        'lucide:send',
+        'lucide:ban',
+        'lucide:user-x',
+        'lucide:user-check',
+        'lucide:lock-keyhole',
         'lucide:arrow-down',
         'lucide:arrow-left',
         'lucide:arrow-right',

@@ -1,5 +1,6 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { signIn } from '../session'
 import { nextTick } from 'vue'
 import AppBottomBar from '~/components/AppBottomBar.vue'
 
@@ -10,7 +11,7 @@ function findMoreNavigation(): HTMLElement | null {
 }
 
 afterEach(() => {
-  useSessionStore().role = null
+  signIn('user')
   document.body.innerHTML = ''
 })
 

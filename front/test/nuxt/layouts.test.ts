@@ -15,6 +15,7 @@ import ProfilePage from '~/pages/profile/index.vue'
 import RulesPage from '~/pages/rules/index.vue'
 import SchedulesPage from '~/pages/schedules/index.vue'
 import SubscriptionsPage from '~/pages/subscriptions/index.vue'
+import { signOut } from '../session'
 
 describe('default layout (CHG-50)', () => {
   it('combines the sidebar, the content, the bottom bar and the FAB', async () => {
@@ -76,6 +77,8 @@ describe('app', () => {
   })
 
   it('uses the login title on the login screen', async () => {
+    signOut()
+
     await mountSuspended(App, { route: '/login' })
 
     await vi.waitFor(() => {

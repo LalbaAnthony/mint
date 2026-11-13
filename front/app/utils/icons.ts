@@ -37,4 +37,13 @@ export const icons = {
   usageEmergency: 'lucide:shield-check',
   usageSavings: 'lucide:piggy-bank',
   usageInvestment: 'lucide:trending-up',
+  invite: 'lucide:user-plus',
+  resend: 'lucide:send',
+  revoke: 'lucide:ban',
+  disableUser: 'lucide:user-x',
+  enableUser: 'lucide:user-check',
+  passwordReset: 'lucide:lock-keyhole',
+  error: 'lucide:circle-alert',
+  success: 'lucide:circle-check',
+  info: 'lucide:info',
 } as const
