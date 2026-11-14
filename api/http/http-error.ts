@@ -1,5 +1,10 @@
+import type { z } from 'zod'
 import type { ApiErrorCode } from '@mint/shared/types/errors'
-import type { HttpErrorDetails, HttpErrorInit } from '../types/http.js'
+import type {
+  HttpErrorDetails,
+  HttpErrorInit,
+  ValidationIssueDetails,
+} from '../types/http.js'
 
 export class HttpError extends Error {
   readonly status: number
@@ -21,6 +26,27 @@ export function notFound(): HttpError {
 
 export function unauthenticated(): HttpError {
   return new HttpError({ status: 401, code: 'unauthenticated' })
+}
+
+export function conflict(code: ApiErrorCode): HttpError {
+  return new HttpError({ status: 409, code })
+}
+
+export function toIssues(error: z.ZodError): ValidationIssueDetails[] {
+  return error.issues.map((issue) => ({
+    path: issue.path.map((segment) =>
+      typeof segment === 'symbol' ? String(segment) : segment,
+    ),
+    message: issue.message,
+  }))
+}
+
+export function validationFailed(issues: ValidationIssueDetails[]): HttpError {
+  return new HttpError({
+    status: 400,
+    code: 'validation_failed',
+    details: { issues },
+  })
 }
 
 export function tooManyAttempts(

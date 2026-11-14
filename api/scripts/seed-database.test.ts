@@ -4,14 +4,19 @@ import { createModels } from '../db/models.js'
 import { createMigratedDatabase } from '../tests/database.js'
 import type { CliDatabase } from '../types/cli.js'
 import type { IsolatedDatabase } from '../types/tests.js'
-import { defaultCategories } from '../users/default-categories.js'
+import {
+  defaultCategories,
+  systemCategories,
+} from '../users/default-categories.js'
 import { createUserWithDefaults } from '../users/users.js'
 import {
+  seedAccounts,
   seedAdministratorEmail,
   seedCustomizedUserEmail,
   seedDatabase,
   seedExtraUserCount,
   seedPassword,
+  seedPaymentMethods,
   seedSubcategoryGroups,
   seedTopLevelCategories,
 } from './seed-database.js'
@@ -73,16 +78,62 @@ describe('seedDatabase', () => {
     expect(administrator.lastLoginAt).toEqual(new Date('2026-11-10T10:00:00Z'))
   })
 
-  it('creates the default categories in the user locale', async () => {
+  it('creates the default and system categories in the user locale', async () => {
     const user = await findUser('user-en@mint.localhost')
     const categories = await cli.models.Category.findAll({
       where: { userId: user.id },
       order: [['sortOrder', 'ASC']],
     })
 
-    expect(categories.map((category) => category.name)).toEqual(
-      defaultCategories.map((category) => category.names.en),
+    expect(
+      categories
+        .filter((category) => !category.isSystem)
+        .map((category) => category.name),
+    ).toEqual(defaultCategories.map((category) => category.names.en))
+    expect(
+      categories
+        .filter((category) => category.isSystem)
+        .map((category) => category.name),
+    ).toEqual(systemCategories.map((category) => category.names.en))
+  })
+
+  it('gives the customized user one account per usage, an archived account and payment methods', async () => {
+    const user = await findUser(seedCustomizedUserEmail)
+    const accounts = await cli.models.Account.findAll({
+      where: { userId: user.id },
+      order: [['sortOrder', 'ASC']],
+    })
+    const paymentMethods = await cli.models.PaymentMethod.findAll({
+      where: { userId: user.id },
+    })
+
+    expect(accounts.map((account) => account.name)).toEqual(
+      seedAccounts.map((account) => account.name),
     )
+    expect(
+      new Set(
+        accounts
+          .filter((account) => account.archivedAt === null)
+          .map((account) => account.usage),
+      ),
+    ).toEqual(new Set(['current', 'emergency', 'savings', 'investment']))
+    expect(
+      accounts.every((account) => account.initialBalanceDate === '2026-11-11'),
+    ).toBe(true)
+    expect(
+      accounts.find((account) => account.name === 'LEP')?.initialBalanceCents,
+    ).toBe(500_000)
+    expect(
+      accounts.filter((account) => account.archivedAt !== null),
+    ).toHaveLength(1)
+    expect(paymentMethods).toHaveLength(seedPaymentMethods.length)
+    expect(
+      paymentMethods.filter((method) => method.archivedAt !== null),
+    ).toHaveLength(2)
+    const administrator = await findUser(seedAdministratorEmail)
+    expect(
+      await cli.models.Account.count({ where: { userId: administrator.id } }),
+    ).toBe(0)
   })
 
   it('adds custom, archived and second-level categories to the customized user', async () => {
@@ -100,6 +151,7 @@ describe('seedDatabase', () => {
 
     expect(categories).toHaveLength(
       defaultCategories.length +
+        systemCategories.length +
         seedTopLevelCategories.length +
         subcategoryCount,
     )

@@ -32,7 +32,7 @@ async function invite(email: string): Promise<string> {
 }
 
 describe('US-01 Inviter un proche (ADM-01, AUTH-01)', () => {
-  it('lets the invitee opened on 5 December set password and language, then lands on an empty space with the default categories', async () => {
+  it('lets the invitee opened on 5 December set password and language, then lands on an empty space with the default and system categories (CAT-05, CAT-08)', async () => {
     const token = await invite('proche@example.org')
     context.clock.set(new Date('2026-12-05T20:00:00+01:00'))
     const invitee = createClient(context.server)
@@ -84,6 +84,8 @@ describe('US-01 Inviter un proche (ADM-01, AUTH-01)', () => {
       ['income', null, 'Bonuses'],
       ['income', null, 'Refunds'],
       ['income', null, 'Other income'],
+      ['income', null, 'Interest'],
+      ['adjustment', null, 'Adjustment'],
     ])
   })
 
@@ -112,7 +114,11 @@ describe('US-01 Inviter un proche (ADM-01, AUTH-01)', () => {
       'Énergie et télécoms',
       'Assurances',
     ])
-    expect(names.at(-1)).toBe('Autres revenus')
+    expect(names.slice(-3)).toEqual([
+      'Autres revenus',
+      'Intérêts',
+      'Ajustement',
+    ])
   })
 
   it('shows the expiry on 9 December and creates no account', async () => {

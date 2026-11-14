@@ -86,7 +86,7 @@ describe('administrator commands (ADM-07)', () => {
     await database.drop()
   })
 
-  it('creates the first administrator with its default categories', async () => {
+  it('creates the first administrator with its default and system categories', async () => {
     const user = await createAdministrator(cli, {
       email: 'owner@example.org',
       locale: 'fr',
@@ -99,7 +99,7 @@ describe('administrator commands (ADM-07)', () => {
     )
     expect(
       await cli.models.Category.count({ where: { userId: user.id } }),
-    ).toBe(18)
+    ).toBe(20)
   })
 
   it('refuses an address already used', async () => {

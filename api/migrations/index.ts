@@ -6,6 +6,9 @@ import * as createInvitations from './0004-create-invitations.js'
 import * as createPasswordResetTokens from './0005-create-password-reset-tokens.js'
 import * as createEmailChangeTokens from './0006-create-email-change-tokens.js'
 import * as createCategories from './0007-create-categories.js'
+import * as addSystemCategories from './0008-add-system-categories.js'
+import * as createAccounts from './0009-create-accounts.js'
+import * as createPaymentMethods from './0010-create-payment-methods.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -15,4 +18,7 @@ export const migrations: Migration[] = [
   { name: '0005-create-password-reset-tokens', ...createPasswordResetTokens },
   { name: '0006-create-email-change-tokens', ...createEmailChangeTokens },
   { name: '0007-create-categories', ...createCategories },
+  { name: '0008-add-system-categories', ...addSystemCategories },
+  { name: '0009-create-accounts', ...createAccounts },
+  { name: '0010-create-payment-methods', ...createPaymentMethods },
 ]

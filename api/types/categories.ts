@@ -1,8 +1,23 @@
+import type {
+  CategoryKind,
+  EditableCategoryKind,
+  ExpenseGroup,
+} from '@mint/shared/types/categories'
 import type { Locale } from '@mint/shared/types/user'
-import type { CategoryKind, ExpenseGroup } from './models.js'
 
 export type DefaultCategory = {
-  kind: CategoryKind
+  kind: EditableCategoryKind
   expenseGroup: ExpenseGroup | null
   names: Record<Locale, string>
+}
+
+export type SystemCategory = {
+  kind: Exclude<CategoryKind, 'expense'>
+  names: Record<Locale, string>
+}
+
+export type CategorySiblingScope = {
+  parentId: string | null
+  kind: CategoryKind
+  expenseGroup: ExpenseGroup | null
 }

@@ -239,7 +239,7 @@ describe('users (ADM-03 to ADM-06)', () => {
       await context.dependencies.models.Category.count({
         where: { userId: member.id },
       }),
-    ).toBe(18)
+    ).toBe(20)
 
     const enabled = await admin.post(`/admin/users/${member.id}/enable`)
 

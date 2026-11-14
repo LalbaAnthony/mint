@@ -45,6 +45,18 @@ export type TestContext = {
 
 export type TestClient = ReturnType<typeof createClient>
 
+export type IsolationResources = {
+  accountId: string
+  paymentMethodId: string
+  categoryId: string
+}
+
+export type IsolationSnapshot = {
+  overview: unknown
+  paymentMethods: unknown
+  categories: unknown
+}
+
 export type IsolationActors = {
   context: TestContext
   alice: UserModel
@@ -52,6 +64,8 @@ export type IsolationActors = {
   aliceClient: TestClient
   bobClient: TestClient
   anonymous: TestClient
+  bobResources: IsolationResources
+  bobSnapshot: IsolationSnapshot
 }
 
 export type IsolationScenario = (actors: IsolationActors) => Promise<void>

@@ -7,10 +7,95 @@ import {
 } from '../tests/context.js'
 import type {
   IsolationActors as Actors,
+  IsolationResources,
   IsolationScenario as Scenario,
+  IsolationSnapshot,
   TestClient as Client,
 } from '../types/tests.js'
 import { apiRoutes } from './index.js'
+
+async function snapshotOf(client: Client): Promise<IsolationSnapshot> {
+  return {
+    overview: (await client.get('/accounts/overview')).body,
+    paymentMethods: (await client.get('/payment-methods')).body,
+    categories: (await client.get('/categories')).body,
+  }
+}
+
+async function expectBobDataUntouched(actors: Actors) {
+  expect(await snapshotOf(actors.bobClient)).toEqual(actors.bobSnapshot)
+}
+
+function crossAccess(
+  method: 'post' | 'patch' | 'delete',
+  path: (resources: IsolationResources) => string,
+  body?: (resources: IsolationResources) => object,
+): Scenario {
+  return async (actors) => {
+    const url = path(actors.bobResources)
+    const payload = body?.(actors.bobResources)
+    const response =
+      method === 'post'
+        ? await actors.aliceClient.post(url, payload)
+        : method === 'patch'
+          ? await actors.aliceClient.patch(url, payload)
+          : await actors.aliceClient.delete(url)
+    expect(response.status).toBe(404)
+    expect(response.body).toEqual({ error: 'not_found' })
+    await expectBobDataUntouched(actors)
+  }
+}
+
+function collectIds(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(collectIds)
+  }
+  if (typeof value !== 'object' || value === null) {
+    return []
+  }
+  return Object.entries(value).flatMap(([key, item]) =>
+    key === 'id' && typeof item === 'string' ? [item] : collectIds(item),
+  )
+}
+
+function ownListOnly(path: string): Scenario {
+  return async (actors) => {
+    const response = await actors.aliceClient.get(path)
+    expect(response.status).toBe(200)
+    const bobIds = collectIds(actors.bobSnapshot)
+    expect(
+      collectIds(response.body).filter((id) => bobIds.includes(id)),
+    ).toEqual([])
+  }
+}
+
+const aliceAccountInput = {
+  name: 'Compte courant',
+  nature: 'current_account',
+  regulatedProduct: null,
+  usage: 'current',
+  institution: null,
+  initialBalanceCents: 1_000,
+  initialBalanceDate: '2026-11-01',
+  lowBalanceThresholdCents: null,
+}
+
+async function createAliceAccount(actors: Actors): Promise<string> {
+  const response = await actors.aliceClient.post('/accounts', aliceAccountInput)
+  expect(response.status).toBe(201)
+  return response.body.id
+}
+
+async function findAliceCategory(actors: Actors, name: string) {
+  const categories: { id: string; name: string }[] = (
+    await actors.aliceClient.get('/categories')
+  ).body
+  const category = categories.find((candidate) => candidate.name === name)
+  if (category === undefined) {
+    throw new Error(`Alice has no category ${name}`)
+  }
+  return category
+}
 
 async function expectBobUntouched({ context, bob, bobClient }: Actors) {
   const session = await bobClient.get('/auth/session')
@@ -191,6 +276,163 @@ const scenarios: Record<string, Scenario> = {
     'post',
     ({ bob }) => `/admin/users/${bob.id}/password-reset`,
   ),
+  'get /accounts/overview': ownListOnly('/accounts/overview'),
+  'post /accounts': async (actors) => {
+    await createAliceAccount(actors)
+    await expectBobDataUntouched(actors)
+  },
+  'post /accounts/reorder': async (actors) => {
+    const aliceAccount = await createAliceAccount(actors)
+    const response = await actors.aliceClient.post('/accounts/reorder', {
+      usage: 'current',
+      accountIds: [actors.bobResources.accountId],
+    })
+    const mixed = await actors.aliceClient.post('/accounts/reorder', {
+      usage: 'current',
+      accountIds: [aliceAccount, actors.bobResources.accountId],
+    })
+    expect(response.status).toBe(409)
+    expect(mixed.status).toBe(409)
+    await expectBobDataUntouched(actors)
+  },
+  'patch /accounts/:id': crossAccess(
+    'patch',
+    ({ accountId }) => `/accounts/${accountId}`,
+    () => ({ name: 'Taken over', initialBalanceCents: 0 }),
+  ),
+  'post /accounts/:id/archive': crossAccess(
+    'post',
+    ({ accountId }) => `/accounts/${accountId}/archive`,
+  ),
+  'post /accounts/:id/restore': crossAccess(
+    'post',
+    ({ accountId }) => `/accounts/${accountId}/restore`,
+  ),
+  'delete /accounts/:id': crossAccess(
+    'delete',
+    ({ accountId }) => `/accounts/${accountId}`,
+  ),
+  'get /payment-methods': ownListOnly('/payment-methods'),
+  'post /payment-methods': crossAccess(
+    'post',
+    () => '/payment-methods',
+    ({ accountId }) => ({
+      label: 'Intruder card',
+      kind: 'card',
+      accountId,
+    }),
+  ),
+  'patch /payment-methods/:id': async (actors) => {
+    await crossAccess(
+      'patch',
+      ({ paymentMethodId }) => `/payment-methods/${paymentMethodId}`,
+      () => ({ label: 'Taken over' }),
+    )(actors)
+    const aliceAccount = await createAliceAccount(actors)
+    const own = await actors.aliceClient.post('/payment-methods', {
+      label: 'Carte',
+      kind: 'card',
+      accountId: aliceAccount,
+    })
+    const moved = await actors.aliceClient.patch(
+      `/payment-methods/${own.body.id}`,
+      { accountId: actors.bobResources.accountId },
+    )
+    expect(moved.status).toBe(404)
+    await expectBobDataUntouched(actors)
+  },
+  'post /payment-methods/:id/archive': crossAccess(
+    'post',
+    ({ paymentMethodId }) => `/payment-methods/${paymentMethodId}/archive`,
+  ),
+  'post /payment-methods/:id/restore': crossAccess(
+    'post',
+    ({ paymentMethodId }) => `/payment-methods/${paymentMethodId}/restore`,
+  ),
+  'delete /payment-methods/:id': crossAccess(
+    'delete',
+    ({ paymentMethodId }) => `/payment-methods/${paymentMethodId}`,
+  ),
+  'get /categories': ownListOnly('/categories'),
+  'post /categories': crossAccess(
+    'post',
+    () => '/categories',
+    ({ categoryId }) => ({
+      kind: 'expense',
+      name: 'Intruder',
+      parentId: categoryId,
+      expenseGroup: null,
+    }),
+  ),
+  'post /categories/reorder': async (actors) => {
+    const response = await actors.aliceClient.post('/categories/reorder', {
+      categoryIds: [actors.bobResources.categoryId],
+    })
+    expect(response.status).toBe(409)
+    await expectBobDataUntouched(actors)
+  },
+  'patch /categories/:id': async (actors) => {
+    await crossAccess(
+      'patch',
+      ({ categoryId }) => `/categories/${categoryId}`,
+      () => ({ name: 'Taken over' }),
+    )(actors)
+    const housing = await findAliceCategory(actors, 'Logement')
+    const own = await actors.aliceClient.post('/categories', {
+      kind: 'expense',
+      name: 'Loyer',
+      parentId: housing.id,
+      expenseGroup: null,
+    })
+    const moved = await actors.aliceClient.patch(`/categories/${own.body.id}`, {
+      parentId: actors.bobResources.categoryId,
+    })
+    expect(moved.status).toBe(404)
+    await expectBobDataUntouched(actors)
+  },
+  'post /categories/:id/archive': crossAccess(
+    'post',
+    ({ categoryId }) => `/categories/${categoryId}/archive`,
+  ),
+  'post /categories/:id/restore': crossAccess(
+    'post',
+    ({ categoryId }) => `/categories/${categoryId}/restore`,
+  ),
+  'delete /categories/:id': crossAccess(
+    'delete',
+    ({ categoryId }) => `/categories/${categoryId}`,
+  ),
+}
+
+async function createBobResources(
+  bobClient: Client,
+): Promise<IsolationResources> {
+  const account = await bobClient.post('/accounts', {
+    ...aliceAccountInput,
+    name: 'Bob account',
+    initialBalanceCents: 123_456,
+  })
+  const paymentMethod = await bobClient.post('/payment-methods', {
+    label: 'Bob card',
+    kind: 'card',
+    accountId: account.body.id,
+  })
+  const categories: { id: string; name: string }[] = (
+    await bobClient.get('/categories')
+  ).body
+  const category = categories.find((candidate) => candidate.name === 'Logement')
+  if (
+    account.status !== 201 ||
+    paymentMethod.status !== 201 ||
+    category === undefined
+  ) {
+    throw new Error('Bob resources could not be created')
+  }
+  return {
+    accountId: account.body.id,
+    paymentMethodId: paymentMethod.body.id,
+    categoryId: category.id,
+  }
 }
 
 let actors: Actors
@@ -203,6 +445,7 @@ beforeAll(async () => {
   const bobClient = createClient(context.server)
   await aliceClient.login(alice.email)
   await bobClient.login(bob.email)
+  const bobResources = await createBobResources(bobClient)
   actors = {
     context,
     alice,
@@ -210,6 +453,8 @@ beforeAll(async () => {
     aliceClient,
     bobClient,
     anonymous: createClient(context.server),
+    bobResources,
+    bobSnapshot: await snapshotOf(bobClient),
   }
 })
 

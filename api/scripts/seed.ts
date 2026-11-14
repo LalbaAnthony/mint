@@ -30,7 +30,7 @@ async function main(): Promise<string> {
     return [
       `${summary.users} users created, all with the password ${summary.password}`,
       `Administrator: ${summary.administratorEmail}`,
-      `Customized categories: ${summary.customizedUserEmail}`,
+      `Customized categories, accounts and payment methods: ${summary.customizedUserEmail}`,
     ].join('\n')
   } finally {
     await sequelize.close()

@@ -1,6 +1,6 @@
 import type { Transaction } from 'sequelize'
 import type { Locale } from '@mint/shared/types/user'
-import type { DefaultCategory } from '../types/categories.js'
+import type { DefaultCategory, SystemCategory } from '../types/categories.js'
 import type { Models } from '../types/models.js'
 
 export const defaultCategories: DefaultCategory[] = [
@@ -96,6 +96,11 @@ export const defaultCategories: DefaultCategory[] = [
   },
 ]
 
+export const systemCategories: SystemCategory[] = [
+  { kind: 'income', names: { fr: 'Intérêts', en: 'Interest' } },
+  { kind: 'adjustment', names: { fr: 'Ajustement', en: 'Adjustment' } },
+]
+
 export async function createDefaultCategories(
   models: Models,
   userId: string,
@@ -103,13 +108,23 @@ export async function createDefaultCategories(
   transaction: Transaction,
 ): Promise<void> {
   await models.Category.bulkCreate(
-    defaultCategories.map((category, index) => ({
-      userId,
-      kind: category.kind,
-      expenseGroup: category.expenseGroup,
-      name: category.names[locale],
-      sortOrder: index,
-    })),
+    [
+      ...defaultCategories.map((category, index) => ({
+        userId,
+        kind: category.kind,
+        expenseGroup: category.expenseGroup,
+        name: category.names[locale],
+        sortOrder: index,
+      })),
+      ...systemCategories.map((category, index) => ({
+        userId,
+        kind: category.kind,
+        expenseGroup: null,
+        name: category.names[locale],
+        isSystem: true,
+        sortOrder: defaultCategories.length + index,
+      })),
+    ],
     { transaction },
   )
 }

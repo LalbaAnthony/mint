@@ -1,5 +1,14 @@
 import type { ApiRoute } from '../types/http.js'
 import {
+  accountOverviewRoute,
+  archiveAccountRoute,
+  createAccountRoute,
+  deleteAccountRoute,
+  reorderAccountsRoute,
+  restoreAccountRoute,
+  updateAccountRoute,
+} from './accounts.js'
+import {
   createInvitationRoute,
   disableUserRoute,
   enableUserRoute,
@@ -19,8 +28,25 @@ import {
   requestPasswordResetRoute,
   sessionRoute,
 } from './auth.js'
+import {
+  archiveCategoryRoute,
+  createCategoryRoute,
+  deleteCategoryRoute,
+  listCategoriesRoute,
+  reorderCategoriesRoute,
+  restoreCategoryRoute,
+  updateCategoryRoute,
+} from './categories.js'
 import { csrfRoute } from './csrf.js'
 import { healthRoute } from './health.js'
+import {
+  archivePaymentMethodRoute,
+  createPaymentMethodRoute,
+  deletePaymentMethodRoute,
+  listPaymentMethodsRoute,
+  restorePaymentMethodRoute,
+  updatePaymentMethodRoute,
+} from './payment-methods.js'
 import {
   changePasswordRoute,
   listSessionsRoute,
@@ -53,4 +79,24 @@ export const apiRoutes: ApiRoute[] = [
   disableUserRoute,
   enableUserRoute,
   sendPasswordResetRoute,
+  accountOverviewRoute,
+  createAccountRoute,
+  reorderAccountsRoute,
+  updateAccountRoute,
+  archiveAccountRoute,
+  restoreAccountRoute,
+  deleteAccountRoute,
+  listPaymentMethodsRoute,
+  createPaymentMethodRoute,
+  updatePaymentMethodRoute,
+  archivePaymentMethodRoute,
+  restorePaymentMethodRoute,
+  deletePaymentMethodRoute,
+  listCategoriesRoute,
+  createCategoryRoute,
+  reorderCategoriesRoute,
+  updateCategoryRoute,
+  archiveCategoryRoute,
+  restoreCategoryRoute,
+  deleteCategoryRoute,
 ]

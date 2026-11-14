@@ -262,7 +262,271 @@
           "lastLoginAt"
         ]
       },
-      "UserStatus": { "type": "string", "enum": ["active", "disabled"] }
+      "UserStatus": { "type": "string", "enum": ["active", "disabled"] },
+      "AccountOverview": {
+        "type": "object",
+        "properties": {
+          "totalCents": { "type": "integer" },
+          "groups": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AccountUsageGroup" }
+          },
+          "archived": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Account" }
+          }
+        },
+        "required": ["totalCents", "groups", "archived"]
+      },
+      "AccountUsageGroup": {
+        "type": "object",
+        "properties": {
+          "usage": { "$ref": "#/components/schemas/AccountUsage" },
+          "subtotalCents": { "type": "integer" },
+          "accounts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Account" }
+          }
+        },
+        "required": ["usage", "subtotalCents", "accounts"]
+      },
+      "AccountUsage": {
+        "type": "string",
+        "enum": ["current", "emergency", "savings", "investment"]
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "nature": { "$ref": "#/components/schemas/AccountNature" },
+          "regulatedProduct": {
+            "$ref": "#/components/schemas/RegulatedProduct"
+          },
+          "usage": { "$ref": "#/components/schemas/AccountUsage" },
+          "institution": { "type": ["string", "null"] },
+          "initialBalanceCents": { "type": "integer" },
+          "initialBalanceDate": { "type": "string", "format": "date" },
+          "lowBalanceThresholdCents": { "type": ["integer", "null"] },
+          "sortOrder": { "type": "integer" },
+          "archivedAt": { "type": ["string", "null"], "format": "date-time" },
+          "currentBalanceCents": { "type": "integer" }
+        },
+        "required": [
+          "id",
+          "name",
+          "nature",
+          "regulatedProduct",
+          "usage",
+          "institution",
+          "initialBalanceCents",
+          "initialBalanceDate",
+          "lowBalanceThresholdCents",
+          "sortOrder",
+          "archivedAt",
+          "currentBalanceCents"
+        ]
+      },
+      "AccountNature": {
+        "type": "string",
+        "enum": [
+          "current_account",
+          "regulated_savings",
+          "housing_savings",
+          "life_insurance",
+          "securities_account",
+          "crypto_wallet",
+          "meal_vouchers",
+          "e_wallet",
+          "other"
+        ]
+      },
+      "RegulatedProduct": {
+        "type": ["string", "null"],
+        "enum": ["livret_a", "ldds", "lep", "pel", "cel", null]
+      },
+      "CreateAccountRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "nature": { "$ref": "#/components/schemas/AccountNature" },
+          "regulatedProduct": {
+            "$ref": "#/components/schemas/RegulatedProduct"
+          },
+          "usage": { "$ref": "#/components/schemas/AccountUsage" },
+          "institution": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "initialBalanceCents": {
+            "type": "integer",
+            "minimum": -99999999999,
+            "maximum": 99999999999
+          },
+          "initialBalanceDate": { "type": "string", "format": "date" },
+          "lowBalanceThresholdCents": {
+            "type": ["integer", "null"],
+            "minimum": -99999999999,
+            "maximum": 99999999999
+          }
+        },
+        "required": [
+          "name",
+          "nature",
+          "regulatedProduct",
+          "usage",
+          "institution",
+          "initialBalanceCents",
+          "initialBalanceDate",
+          "lowBalanceThresholdCents"
+        ]
+      },
+      "ReorderAccountsRequest": {
+        "type": "object",
+        "properties": {
+          "usage": { "$ref": "#/components/schemas/AccountUsage" },
+          "accountIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": ["usage", "accountIds"]
+      },
+      "UpdateAccountRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "nature": { "$ref": "#/components/schemas/AccountNature" },
+          "regulatedProduct": {
+            "$ref": "#/components/schemas/RegulatedProduct"
+          },
+          "usage": { "$ref": "#/components/schemas/AccountUsage" },
+          "institution": {
+            "type": ["string", "null"],
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "initialBalanceCents": {
+            "type": "integer",
+            "minimum": -99999999999,
+            "maximum": 99999999999
+          },
+          "initialBalanceDate": { "type": "string", "format": "date" },
+          "lowBalanceThresholdCents": {
+            "type": ["integer", "null"],
+            "minimum": -99999999999,
+            "maximum": 99999999999
+          }
+        }
+      },
+      "PaymentMethodListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/PaymentMethod" }
+      },
+      "PaymentMethod": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "label": { "type": "string" },
+          "kind": { "$ref": "#/components/schemas/PaymentMethodKind" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "archivedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["id", "label", "kind", "accountId", "archivedAt"]
+      },
+      "PaymentMethodKind": {
+        "type": "string",
+        "enum": ["card", "transfer_out", "third_party"]
+      },
+      "CreatePaymentMethodRequest": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "kind": { "$ref": "#/components/schemas/PaymentMethodKind" },
+          "accountId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["label", "kind", "accountId"]
+      },
+      "UpdatePaymentMethodRequest": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "kind": { "$ref": "#/components/schemas/PaymentMethodKind" },
+          "accountId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "CategoryListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Category" }
+      },
+      "Category": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "parentId": { "type": ["string", "null"], "format": "uuid" },
+          "kind": { "$ref": "#/components/schemas/CategoryKind" },
+          "expenseGroup": { "$ref": "#/components/schemas/ExpenseGroup" },
+          "name": { "type": "string" },
+          "isSystem": { "type": "boolean" },
+          "sortOrder": { "type": "integer" },
+          "archivedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "parentId",
+          "kind",
+          "expenseGroup",
+          "name",
+          "isSystem",
+          "sortOrder",
+          "archivedAt"
+        ]
+      },
+      "CategoryKind": {
+        "type": "string",
+        "enum": ["expense", "income", "adjustment"]
+      },
+      "ExpenseGroup": {
+        "type": ["string", "null"],
+        "enum": ["needs", "wants", null]
+      },
+      "CreateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "kind": { "$ref": "#/components/schemas/EditableCategoryKind" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "parentId": { "type": ["string", "null"], "format": "uuid" },
+          "expenseGroup": { "$ref": "#/components/schemas/ExpenseGroup" }
+        },
+        "required": ["kind", "name", "parentId", "expenseGroup"]
+      },
+      "EditableCategoryKind": {
+        "type": "string",
+        "enum": ["expense", "income"]
+      },
+      "ReorderCategoriesRequest": {
+        "type": "object",
+        "properties": {
+          "categoryIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": ["categoryIds"]
+      },
+      "UpdateCategoryRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "expenseGroup": { "$ref": "#/components/schemas/ExpenseGroup" },
+          "parentId": { "type": "string", "format": "uuid" }
+        }
+      }
     },
     "parameters": {}
   },
@@ -1461,6 +1725,1101 @@
           },
           "502": {
             "description": "The reset email could not be sent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/overview": {
+      "get": {
+        "summary": "Active accounts grouped by usage with subtotals and total, then archived accounts (CPT-08)",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Where my money is",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AccountOverview" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts": {
+      "post": {
+        "summary": "Create an account, placed last in its usage",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAccountRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Account" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or initial balance dated in the future",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/reorder": {
+      "post": {
+        "summary": "Set the display order of the active accounts of one usage (CPT-01)",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderAccountsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Order saved" },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "The list is not exactly the active accounts of this usage",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}": {
+      "patch": {
+        "summary": "Modify an active account; a new usage places it last",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAccountRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Account" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or initial balance dated in the future",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an account without operations, with its payment methods (CPT-07)",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Account and its payment methods deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/archive": {
+      "post": {
+        "summary": "Archive an account and its active payment methods (CPT-07)",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Account" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Account already archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/restore": {
+      "post": {
+        "summary": "Restore an archived account, placed last in its usage; its payment methods stay archived",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account restored",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Account" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Account not archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payment-methods": {
+      "get": {
+        "summary": "List every payment method, archived ones included (PAY-05)",
+        "tags": ["payment-methods"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Payment methods",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentMethodListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a payment method on an active account (PAY-01)",
+        "tags": ["payment-methods"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentMethodRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payment method created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentMethod" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown payment method or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payment-methods/{id}": {
+      "patch": {
+        "summary": "Modify an active payment method",
+        "tags": ["payment-methods"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentMethodRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payment method modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentMethod" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown payment method or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived payment method or archived target account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a payment method that nothing references",
+        "tags": ["payment-methods"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Payment method deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown payment method or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payment-methods/{id}/archive": {
+      "post": {
+        "summary": "Archive a payment method, no longer offered for input (PAY-05)",
+        "tags": ["payment-methods"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment method archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentMethod" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown payment method or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment method already archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payment-methods/{id}/restore": {
+      "post": {
+        "summary": "Restore an archived payment method whose account is active",
+        "tags": ["payment-methods"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment method restored",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentMethod" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown payment method or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Payment method not archived, or archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "summary": "List every category, archived and system ones included, with the inherited group of subcategories",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Categories",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a first-level category or a subcategory of an active first-level category of the same kind (CAT-02, CAT-04)",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateCategoryRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Category created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Name already used at this level, invalid or archived parent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/reorder": {
+      "post": {
+        "summary": "Set the display order of sibling categories: one group or kind at the first level, one parent below",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderCategoriesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Order saved" },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "The list is not exactly a set of sibling categories",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/{id}": {
+      "patch": {
+        "summary": "Rename a category, change the group of a first-level expense category or move a subcategory to another parent",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateCategoryRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Category modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or change not allowed at this level",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "System or archived category, name already used, invalid or archived parent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a category and its subcategories, system ones excepted",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Category and its subcategories deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "System category (CAT-08)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/{id}/archive": {
+      "post": {
+        "summary": "Archive a category and its active subcategories; it is no longer offered for input",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "System or already archived category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/{id}/restore": {
+      "post": {
+        "summary": "Restore an archived category alone; a subcategory needs an active parent",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category restored",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Category" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "System or active category, or archived parent",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

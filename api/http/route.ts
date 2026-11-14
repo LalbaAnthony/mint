@@ -7,20 +7,16 @@ import type {
   RouteDefinition,
   RouteResponse,
   RouteResult,
-  ValidationIssueDetails,
 } from '../types/http.js'
 import type { UserModel } from '../types/models.js'
 import { endSession } from '../auth/session.js'
-import { HttpError, notFound, unauthenticated } from './http-error.js'
-
-function toIssues(error: z.ZodError): ValidationIssueDetails[] {
-  return error.issues.map((issue) => ({
-    path: issue.path.map((segment) =>
-      typeof segment === 'symbol' ? String(segment) : segment,
-    ),
-    message: issue.message,
-  }))
-}
+import {
+  HttpError,
+  notFound,
+  toIssues,
+  unauthenticated,
+  validationFailed,
+} from './http-error.js'
 
 function sendResult(
   response: Response,
@@ -101,11 +97,7 @@ function buildRoute<
       }
       const body = definition.body.safeParse(request.body)
       if (!body.success) {
-        throw new HttpError({
-          status: 400,
-          code: 'validation_failed',
-          details: { issues: toIssues(body.error) },
-        })
+        throw validationFailed(toIssues(body.error))
       }
       const result = await definition.handle({
         request,

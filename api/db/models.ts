@@ -1,11 +1,13 @@
 import { DataTypes } from 'sequelize'
 import type { Sequelize } from 'sequelize'
 import type {
+  AccountModel,
   CategoryModel,
   EmailChangeTokenModel,
   InvitationModel,
   Models,
   PasswordResetTokenModel,
+  PaymentMethodModel,
   SessionModel,
   UserModel,
 } from '../types/models.js'
@@ -142,6 +144,53 @@ export function createModels(sequelize: Sequelize): Models {
     options('categories'),
   )
 
+  const Account = sequelize.define<AccountModel>(
+    'Account',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      name: { type: DataTypes.TEXT, allowNull: false },
+      nature: { type: DataTypes.TEXT, allowNull: false },
+      regulatedProduct: { type: DataTypes.TEXT, allowNull: true },
+      usage: { type: DataTypes.TEXT, allowNull: false },
+      institution: { type: DataTypes.TEXT, allowNull: true },
+      initialBalanceCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: AccountModel) {
+          return Number(this.getDataValue('initialBalanceCents'))
+        },
+      },
+      initialBalanceDate: { type: DataTypes.DATEONLY, allowNull: false },
+      lowBalanceThresholdCents: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        get(this: AccountModel) {
+          const stored = this.getDataValue('lowBalanceThresholdCents')
+          return stored === null ? null : Number(stored)
+        },
+      },
+      sortOrder: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+      archivedAt: { type: DataTypes.DATE, allowNull: true },
+      ...timestamps,
+    },
+    options('accounts'),
+  )
+
+  const PaymentMethod = sequelize.define<PaymentMethodModel>(
+    'PaymentMethod',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      label: { type: DataTypes.TEXT, allowNull: false },
+      kind: { type: DataTypes.TEXT, allowNull: false },
+      archivedAt: { type: DataTypes.DATE, allowNull: true },
+      ...timestamps,
+    },
+    options('payment_methods'),
+  )
+
   return {
     User,
     Session,
@@ -149,5 +198,7 @@ export function createModels(sequelize: Sequelize): Models {
     PasswordResetToken,
     EmailChangeToken,
     Category,
+    Account,
+    PaymentMethod,
   }
 }

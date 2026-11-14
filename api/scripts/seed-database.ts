@@ -1,14 +1,20 @@
 import type { Transaction } from 'sequelize'
 import { hashPassword } from '../auth/passwords.js'
+import { parisDate } from '../clock.js'
 import type { CliDatabase } from '../types/cli.js'
 import type { CategoryModel, Models } from '../types/models.js'
 import type {
+  SeedAccount,
+  SeedPaymentMethod,
   SeedSubcategoryGroup,
   SeedSummary,
   SeedTopLevelCategory,
   SeedUser,
 } from '../types/seed.js'
-import { defaultCategories } from '../users/default-categories.js'
+import {
+  defaultCategories,
+  systemCategories,
+} from '../users/default-categories.js'
 import { createUserWithDefaults } from '../users/users.js'
 
 export const seedPassword = 'mint-dev-only-password'
@@ -69,6 +75,92 @@ export const seedSubcategoryGroups: SeedSubcategoryGroup[] = [
   },
 ]
 
+export const seedAccounts: SeedAccount[] = [
+  {
+    name: 'Compte courant',
+    nature: 'current_account',
+    regulatedProduct: null,
+    usage: 'current',
+    institution: 'Crédit Agricole',
+    initialBalanceCents: 200_000,
+    lowBalanceThresholdCents: 20_000,
+    archived: false,
+  },
+  {
+    name: 'LEP',
+    nature: 'regulated_savings',
+    regulatedProduct: 'lep',
+    usage: 'emergency',
+    institution: 'Crédit Agricole',
+    initialBalanceCents: 500_000,
+    lowBalanceThresholdCents: null,
+    archived: false,
+  },
+  {
+    name: 'Livret A',
+    nature: 'regulated_savings',
+    regulatedProduct: 'livret_a',
+    usage: 'savings',
+    institution: 'Crédit Agricole',
+    initialBalanceCents: 1_200_000,
+    lowBalanceThresholdCents: null,
+    archived: false,
+  },
+  {
+    name: 'PEA',
+    nature: 'securities_account',
+    regulatedProduct: null,
+    usage: 'investment',
+    institution: null,
+    initialBalanceCents: 300_000,
+    lowBalanceThresholdCents: null,
+    archived: false,
+  },
+  {
+    name: 'Compte Revolut',
+    nature: 'current_account',
+    regulatedProduct: null,
+    usage: 'current',
+    institution: 'Revolut',
+    initialBalanceCents: 0,
+    lowBalanceThresholdCents: null,
+    archived: true,
+  },
+]
+
+export const seedPaymentMethods: SeedPaymentMethod[] = [
+  {
+    label: 'Carte CA',
+    kind: 'card',
+    accountName: 'Compte courant',
+    archived: false,
+  },
+  {
+    label: 'Virement CA',
+    kind: 'transfer_out',
+    accountName: 'Compte courant',
+    archived: false,
+  },
+  {
+    label: 'Prélèvements CA',
+    kind: 'third_party',
+    accountName: 'Compte courant',
+    archived: false,
+  },
+  {
+    label: 'Ancienne carte CA',
+    kind: 'card',
+    accountName: 'Compte courant',
+    archived: true,
+  },
+  {
+    label: 'Carte Revolut',
+    kind: 'card',
+    accountName: 'Compte Revolut',
+    archived: true,
+  },
+]
+
 function daysBefore(now: Date, days: number): Date {
   return new Date(now.getTime() - days * dayMs)
 }
@@ -82,6 +174,7 @@ function extraUser(index: number, now: Date): SeedUser {
     status: 'active',
     lastLoginAt: index % 3 === 0 ? null : daysBefore(now, index),
     customizedCategories: false,
+    withAccounts: false,
   }
 }
 
@@ -94,6 +187,7 @@ export function seedUsers(now: Date): SeedUser[] {
       status: 'active',
       lastLoginAt: daysBefore(now, 1),
       customizedCategories: false,
+      withAccounts: false,
     },
     {
       email: seedCustomizedUserEmail,
@@ -102,6 +196,7 @@ export function seedUsers(now: Date): SeedUser[] {
       status: 'active',
       lastLoginAt: daysBefore(now, 2),
       customizedCategories: true,
+      withAccounts: true,
     },
     {
       email: 'user-en@mint.localhost',
@@ -110,6 +205,7 @@ export function seedUsers(now: Date): SeedUser[] {
       status: 'active',
       lastLoginAt: null,
       customizedCategories: false,
+      withAccounts: false,
     },
     {
       email: 'disabled@mint.localhost',
@@ -118,6 +214,7 @@ export function seedUsers(now: Date): SeedUser[] {
       status: 'disabled',
       lastLoginAt: daysBefore(now, 40),
       customizedCategories: false,
+      withAccounts: false,
     },
   ]
   const extraUsers = Array.from({ length: seedExtraUserCount }, (_, index) =>
@@ -162,7 +259,7 @@ async function customizeCategories(
       kind: category.kind,
       expenseGroup: category.expenseGroup,
       name: category.name,
-      sortOrder: defaultCategories.length + index,
+      sortOrder: defaultCategories.length + systemCategories.length + index,
       archivedAt: category.archived ? now : null,
     })),
     { transaction },
@@ -184,6 +281,52 @@ async function customizeCategories(
         sortOrder: index,
         archivedAt: child.archived ? now : null,
       })),
+      { transaction },
+    )
+  }
+}
+
+async function createAccounts(
+  models: Models,
+  userId: string,
+  now: Date,
+  transaction: Transaction,
+): Promise<void> {
+  const accountIds = new Map<string, string>()
+  for (const [index, seedAccount] of seedAccounts.entries()) {
+    const account = await models.Account.create(
+      {
+        userId,
+        name: seedAccount.name,
+        nature: seedAccount.nature,
+        regulatedProduct: seedAccount.regulatedProduct,
+        usage: seedAccount.usage,
+        institution: seedAccount.institution,
+        initialBalanceCents: seedAccount.initialBalanceCents,
+        initialBalanceDate: parisDate(now),
+        lowBalanceThresholdCents: seedAccount.lowBalanceThresholdCents,
+        sortOrder: index,
+        archivedAt: seedAccount.archived ? now : null,
+      },
+      { transaction },
+    )
+    accountIds.set(seedAccount.name, account.id)
+  }
+  for (const seedPaymentMethod of seedPaymentMethods) {
+    const accountId = accountIds.get(seedPaymentMethod.accountName)
+    if (accountId === undefined) {
+      throw new Error(
+        `Seed account ${seedPaymentMethod.accountName} does not exist`,
+      )
+    }
+    await models.PaymentMethod.create(
+      {
+        userId,
+        accountId,
+        label: seedPaymentMethod.label,
+        kind: seedPaymentMethod.kind,
+        archivedAt: seedPaymentMethod.archived ? now : null,
+      },
       { transaction },
     )
   }
@@ -214,6 +357,9 @@ export async function seedDatabase(
       )
       if (seedUser.customizedCategories) {
         await customizeCategories(models, user.id, now, transaction)
+      }
+      if (seedUser.withAccounts) {
+        await createAccounts(models, user.id, now, transaction)
       }
     }
   })

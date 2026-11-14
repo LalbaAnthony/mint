@@ -1,4 +1,11 @@
 import type { Model, ModelStatic, Optional } from 'sequelize'
+import type {
+  AccountNature,
+  AccountUsage,
+  RegulatedProduct,
+} from '@mint/shared/types/accounts'
+import type { CategoryKind, ExpenseGroup } from '@mint/shared/types/categories'
+import type { PaymentMethodKind } from '@mint/shared/types/payment-methods'
 import type { Locale, UserRole, UserStatus } from '@mint/shared/types/user'
 
 export type UserAttributes = {
@@ -120,10 +127,6 @@ export type EmailChangeTokenModel = Model<
 > &
   EmailChangeTokenAttributes
 
-export type CategoryKind = 'expense' | 'income'
-
-export type ExpenseGroup = 'needs' | 'wants'
-
 export type CategoryAttributes = {
   id: string
   userId: string
@@ -156,6 +159,60 @@ export type CategoryModel = Model<
 > &
   CategoryAttributes
 
+export type AccountAttributes = {
+  id: string
+  userId: string
+  name: string
+  nature: AccountNature
+  regulatedProduct: RegulatedProduct | null
+  usage: AccountUsage
+  institution: string | null
+  initialBalanceCents: number
+  initialBalanceDate: string
+  lowBalanceThresholdCents: number | null
+  sortOrder: number
+  archivedAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AccountCreationAttributes = Optional<
+  AccountAttributes,
+  | 'id'
+  | 'regulatedProduct'
+  | 'institution'
+  | 'lowBalanceThresholdCents'
+  | 'sortOrder'
+  | 'archivedAt'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type AccountModel = Model<AccountAttributes, AccountCreationAttributes> &
+  AccountAttributes
+
+export type PaymentMethodAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  label: string
+  kind: PaymentMethodKind
+  archivedAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type PaymentMethodCreationAttributes = Optional<
+  PaymentMethodAttributes,
+  'id' | 'archivedAt' | 'createdAt' | 'updatedAt'
+>
+
+export type PaymentMethodModel = Model<
+  PaymentMethodAttributes,
+  PaymentMethodCreationAttributes
+> &
+  PaymentMethodAttributes
+
 export type Models = {
   User: ModelStatic<UserModel>
   Session: ModelStatic<SessionModel>
@@ -163,4 +220,6 @@ export type Models = {
   PasswordResetToken: ModelStatic<PasswordResetTokenModel>
   EmailChangeToken: ModelStatic<EmailChangeTokenModel>
   Category: ModelStatic<CategoryModel>
+  Account: ModelStatic<AccountModel>
+  PaymentMethod: ModelStatic<PaymentMethodModel>
 }
