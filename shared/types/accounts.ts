@@ -1,0 +1,34 @@
+import type { z } from 'zod'
+import type {
+  accountNatureSchema,
+  accountOverviewSchema,
+  accountSchema,
+  accountUsageGroupSchema,
+  accountUsageSchema,
+  createAccountRequestSchema,
+  regulatedProductSchema,
+  reorderAccountsRequestSchema,
+  updateAccountRequestSchema,
+} from '../schemas/accounts.js'
+
+export type AccountNature = z.infer<typeof accountNatureSchema>
+
+export type AccountUsage = z.infer<typeof accountUsageSchema>
+
+export type RegulatedProduct = z.infer<typeof regulatedProductSchema>
+
+export type RegulatedProductIssue = 'product_required' | 'product_mismatch'
+
+export type CreateAccountRequest = z.infer<typeof createAccountRequestSchema>
+
+export type UpdateAccountRequest = z.infer<typeof updateAccountRequestSchema>
+
+export type Account = z.infer<typeof accountSchema>
+
+export type AccountUsageGroup = z.infer<typeof accountUsageGroupSchema>
+
+export type AccountOverview = z.infer<typeof accountOverviewSchema>
+
+export type ReorderAccountsRequest = z.infer<
+  typeof reorderAccountsRequestSchema
+>

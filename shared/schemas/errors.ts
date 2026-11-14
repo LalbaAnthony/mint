@@ -21,6 +21,14 @@ export const apiErrorCodes = [
   'cannot_disable_self',
   'user_disabled',
   'mail_delivery_failed',
+  'archived',
+  'not_archived',
+  'account_archived',
+  'parent_archived',
+  'category_name_taken',
+  'system_category',
+  'invalid_parent',
+  'order_mismatch',
   'internal_error',
 ] as const
 
