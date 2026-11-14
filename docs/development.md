@@ -36,6 +36,24 @@ Premier administrateur local :
 docker compose --profile dev exec api-dev npm run admin -- create-admin --email admin@mint.localhost --locale fr
 ```
 
+Jeu de données de développement, à la place du premier administrateur :
+
+```sh
+docker compose --profile dev exec api-dev npm run seed -- --wipe
+```
+
+`--wipe` est obligatoire, même sur une base vide : le script supprime tous les utilisateurs et toutes les invitations, donc par cascade les sessions, les jetons et les catégories, puis crée 34 comptes au mot de passe `mint-dev-only-password`, chacun avec les catégories par défaut (CAT-05) dans sa langue.
+
+| Compte                                              | Rôle et particularités                                                                                                        |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `admin@mint.localhost`                              | administrateur, français                                                                                                      |
+| `user@mint.localhost`                               | utilisateur, français ; catégories ajoutées au premier niveau, sous-catégories, une catégorie et une sous-catégorie archivées |
+| `user-en@mint.localhost`                            | utilisateur, anglais, jamais connecté                                                                                         |
+| `disabled@mint.localhost`                           | utilisateur désactivé                                                                                                         |
+| `user-01@mint.localhost` à `user-30@mint.localhost` | utilisateurs, langues alternées, pour les listes de la console d'administration                                               |
+
+Une sous-catégorie de dépense a `expense_group` à `NULL` : son groupe se lit sur son parent. Le script vit dans `api/scripts/`, exclu du build de production : il n'existe pas dans l'image `mint-api`. Une table ajoutée sans suppression en cascade depuis `users` doit être ajoutée à la suppression du script.
+
 ## 2. Tests
 
 | Commande                                | Portée                                                                      |

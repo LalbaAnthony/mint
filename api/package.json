@@ -11,6 +11,7 @@
     "start": "node dist/server.js",
     "migrate": "tsx --conditions=source db/migrate.ts",
     "admin": "tsx --conditions=source cli/admin.ts",
+    "seed": "tsx --conditions=source scripts/seed.ts",
     "openapi": "tsx --conditions=source scripts/generate-openapi.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },

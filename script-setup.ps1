@@ -12,3 +12,4 @@ Copy-Item ".env.example" ".env"
 Invoke-Step { npm install }
 Invoke-Step { docker compose --profile dev up -d --build --wait }
 Invoke-Step { docker compose --profile dev exec -T api-dev npm run migrate -- up }
+Invoke-Step { docker compose --profile dev exec api-dev npm run seed -- --wipe }

@@ -5,6 +5,7 @@
     "dist",
     "tests",
     "scripts",
+    "types/seed.ts",
     "types/tests.ts",
     "types/vitest.d.ts",
     "**/*.test.ts"
