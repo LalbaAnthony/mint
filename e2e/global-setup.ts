@@ -49,6 +49,16 @@ async function seedAdministrator(): Promise<void> {
         await hash(administratorPassword, { type: argon2id }),
       ],
     )
+    await client.query(
+      `DELETE FROM payment_methods
+       WHERE user_id = (SELECT id FROM users WHERE email = $1)`,
+      [administratorEmail],
+    )
+    await client.query(
+      `DELETE FROM accounts
+       WHERE user_id = (SELECT id FROM users WHERE email = $1)`,
+      [administratorEmail],
+    )
   } finally {
     await client.end()
   }
