@@ -30,7 +30,22 @@
   },
   "common": {
     "cancel": "Annuler",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "optional": "Facultatif",
+    "edit": "Modifier",
+    "archive": "Archiver",
+    "restore": "Restaurer",
+    "delete": "Supprimer",
+    "archived": "Archivé",
+    "reorder": "Réorganiser",
+    "doneReordering": "Terminer",
+    "moveUp": "Monter {name}",
+    "moveDown": "Descendre {name}",
+    "actionsFor": "Actions pour {name}"
+  },
+  "money": {
+    "symbol": "€",
+    "belowThreshold": "sous le seuil d'alerte"
   },
   "locales": {
     "fr": "Français",
@@ -40,6 +55,114 @@
     "needs": "Besoins",
     "wants": "Envies",
     "save": "Épargne"
+  },
+  "accounts": {
+    "total": "Total",
+    "add": "Ajouter un compte",
+    "emptyTitle": "Aucun compte",
+    "emptyText": "Ajoutez vos comptes et placements pour voir où est votre argent.",
+    "createTitle": "Nouveau compte",
+    "editTitle": "Modifier le compte",
+    "saved": "{name} enregistré.",
+    "deleted": "{name} supprimé.",
+    "archivedNotice": "{name} archivé. | {name} archivé, ainsi que son moyen de paiement. | {name} archivé, ainsi que ses {n} moyens de paiement.",
+    "restoredNotice": "{name} restauré.",
+    "archivedSection": "Comptes archivés ({n})",
+    "deleteTitle": "Supprimer le compte",
+    "deleteEffect": "{name} sera supprimé définitivement. | {name} sera supprimé définitivement, ainsi que son moyen de paiement. | {name} sera supprimé définitivement, ainsi que ses {n} moyens de paiement.",
+    "natureWithProduct": "{nature} ({product})",
+    "fields": {
+      "name": "Nom",
+      "nature": "Nature",
+      "product": "Produit",
+      "productPlaceholder": "Choisir le produit",
+      "usage": "Usage",
+      "institution": "Établissement",
+      "initialBalance": "Solde initial",
+      "initialBalanceDate": "Date du solde initial",
+      "lowBalanceThreshold": "Seuil d'alerte de solde bas"
+    },
+    "natures": {
+      "current_account": "Compte courant",
+      "regulated_savings": "Livret réglementé",
+      "housing_savings": "Épargne logement",
+      "life_insurance": "Assurance-vie",
+      "securities_account": "PEA ou compte-titres",
+      "crypto_wallet": "Portefeuille crypto",
+      "meal_vouchers": "Titres-restaurant",
+      "e_wallet": "Portefeuille électronique",
+      "other": "Autre"
+    },
+    "products": {
+      "livret_a": "Livret A",
+      "ldds": "LDDS",
+      "lep": "LEP",
+      "pel": "PEL",
+      "cel": "CEL"
+    },
+    "usages": {
+      "current": "Courant",
+      "emergency": "Épargne de précaution",
+      "savings": "Épargne",
+      "investment": "Investissement"
+    }
+  },
+  "paymentMethods": {
+    "add": "Ajouter un moyen de paiement",
+    "toggle": "Moyens de paiement de {name}",
+    "of": "Moyens de paiement de {name}",
+    "count": "aucun moyen de paiement | {n} moyen de paiement | {n} moyens de paiement",
+    "none": "Aucun moyen de paiement rattaché.",
+    "createTitle": "Nouveau moyen de paiement",
+    "editTitle": "Modifier le moyen de paiement",
+    "saved": "{label} enregistré.",
+    "deleteTitle": "Supprimer le moyen de paiement",
+    "deleteEffect": "{label} sera supprimé définitivement.",
+    "fields": {
+      "label": "Libellé",
+      "kind": "Type",
+      "account": "Compte rattaché"
+    },
+    "kinds": {
+      "card": "Carte bancaire",
+      "transfer_out": "Virement émis",
+      "third_party": "Prélèvement ou virement tiers"
+    }
+  },
+  "categories": {
+    "title": "Catégories",
+    "add": "Ajouter une catégorie",
+    "addChild": "Ajouter une sous-catégorie",
+    "archived": "Archivée",
+    "createTitle": "Nouvelle catégorie",
+    "createChildTitle": "Nouvelle sous-catégorie de {parent}",
+    "editTitle": "Modifier la catégorie",
+    "saved": "{name} enregistrée.",
+    "deleted": "{name} supprimée.",
+    "archivedNotice": "{name} archivée. | {name} archivée, ainsi que sa sous-catégorie. | {name} archivée, ainsi que ses {n} sous-catégories.",
+    "restoredNotice": "{name} restaurée.",
+    "deleteTitle": "Supprimer la catégorie",
+    "deleteEffect": "{name} sera supprimée définitivement. | {name} sera supprimée définitivement, ainsi que sa sous-catégorie. | {name} sera supprimée définitivement, ainsi que ses {n} sous-catégories.",
+    "fields": {
+      "name": "Nom",
+      "kind": "Type",
+      "group": "Groupe",
+      "parent": "Catégorie parente"
+    },
+    "kinds": {
+      "expense": "Dépense",
+      "income": "Revenu"
+    },
+    "sections": {
+      "income": "Revenus",
+      "system": "Catégories système"
+    },
+    "system": {
+      "interest": "Intérêts",
+      "adjustment": "Ajustement",
+      "badge": "Système",
+      "help": "Créées par Mint, elles ne peuvent être ni modifiées ni supprimées."
+    }
   },
   "auth": {
     "login": "Connexion",
@@ -148,7 +271,16 @@
     "horizon_out_of_range": "Entre 1 et 12 mois",
     "percentage_out_of_range": "Entre 0 et 100",
     "targets_sum_not_100": "La somme des cibles doit faire 100",
-    "invalid_token": "Lien invalide"
+    "invalid_token": "Lien invalide",
+    "invalid_amount": "Montant invalide",
+    "amount_out_of_range": "Montant hors limites",
+    "invalid_date": "Date invalide",
+    "date_in_future": "La date ne peut pas être dans le futur",
+    "product_required": "Choisissez le produit",
+    "product_mismatch": "Produit incompatible avec la nature",
+    "group_required": "Choisissez le groupe",
+    "group_not_allowed": "Groupe non applicable",
+    "parent_not_allowed": "Catégorie parente non applicable"
   },
   "errors": {
     "validation_failed": "Certaines valeurs sont invalides.",
@@ -171,6 +303,14 @@
     "cannot_disable_self": "Vous ne pouvez pas désactiver votre propre compte.",
     "user_disabled": "Cet utilisateur est désactivé.",
     "mail_delivery_failed": "L'email n'a pas pu être envoyé : réessayez plus tard.",
+    "archived": "Cet élément est archivé.",
+    "not_archived": "Cet élément n'est pas archivé.",
+    "account_archived": "Le compte rattaché est archivé.",
+    "parent_archived": "La catégorie parente est archivée.",
+    "category_name_taken": "Une catégorie porte déjà ce nom à ce niveau.",
+    "system_category": "Les catégories système ne peuvent pas être modifiées.",
+    "invalid_parent": "Cette catégorie ne peut pas recevoir de sous-catégorie.",
+    "order_mismatch": "La liste a changé entre-temps : elle vient d'être rechargée.",
     "network_error": "Serveur injoignable : vérifiez votre connexion.",
     "internal_error": "Une erreur est survenue : réessayez plus tard."
   }

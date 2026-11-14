@@ -137,7 +137,10 @@ describe('profile (AUTH-05, AUTH-07)', () => {
 
   it('lists the sessions and flags the current one', async () => {
     signIn('user')
-    installFakeApi(fetchMock, { 'GET /profile/sessions': () => sessions })
+    installFakeApi(fetchMock, {
+      'GET /profile/sessions': () => sessions,
+      'GET /categories': () => [],
+    })
 
     const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
 
@@ -158,6 +161,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     signIn('user')
     const api = installFakeApi(fetchMock, {
       'GET /profile/sessions': () => sessions,
+      'GET /categories': () => [],
       'PATCH /profile': () => ({ ...testProfile, forecastHorizonMonths: 6 }),
     })
     const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })

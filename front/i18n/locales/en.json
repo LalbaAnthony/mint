@@ -30,7 +30,22 @@
   },
   "common": {
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "optional": "Optional",
+    "edit": "Edit",
+    "archive": "Archive",
+    "restore": "Restore",
+    "delete": "Delete",
+    "archived": "Archived",
+    "reorder": "Reorder",
+    "doneReordering": "Done",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "actionsFor": "Actions for {name}"
+  },
+  "money": {
+    "symbol": "€",
+    "belowThreshold": "below the alert threshold"
   },
   "locales": {
     "fr": "Français",
@@ -40,6 +55,114 @@
     "needs": "Needs",
     "wants": "Wants",
     "save": "Save"
+  },
+  "accounts": {
+    "total": "Total",
+    "add": "Add an account",
+    "emptyTitle": "No account",
+    "emptyText": "Add your accounts and investments to see where your money is.",
+    "createTitle": "New account",
+    "editTitle": "Edit the account",
+    "saved": "{name} saved.",
+    "deleted": "{name} deleted.",
+    "archivedNotice": "{name} archived. | {name} archived, with its payment method. | {name} archived, with its {n} payment methods.",
+    "restoredNotice": "{name} restored.",
+    "archivedSection": "Archived accounts ({n})",
+    "deleteTitle": "Delete the account",
+    "deleteEffect": "{name} will be deleted for good. | {name} will be deleted for good, with its payment method. | {name} will be deleted for good, with its {n} payment methods.",
+    "natureWithProduct": "{nature} ({product})",
+    "fields": {
+      "name": "Name",
+      "nature": "Kind",
+      "product": "Product",
+      "productPlaceholder": "Choose the product",
+      "usage": "Usage",
+      "institution": "Institution",
+      "initialBalance": "Initial balance",
+      "initialBalanceDate": "Initial balance date",
+      "lowBalanceThreshold": "Low balance alert threshold"
+    },
+    "natures": {
+      "current_account": "Current account",
+      "regulated_savings": "Regulated savings account",
+      "housing_savings": "Home savings",
+      "life_insurance": "Life insurance",
+      "securities_account": "PEA or securities account",
+      "crypto_wallet": "Crypto wallet",
+      "meal_vouchers": "Meal vouchers",
+      "e_wallet": "E-wallet",
+      "other": "Other"
+    },
+    "products": {
+      "livret_a": "Livret A",
+      "ldds": "LDDS",
+      "lep": "LEP",
+      "pel": "PEL",
+      "cel": "CEL"
+    },
+    "usages": {
+      "current": "Current",
+      "emergency": "Emergency savings",
+      "savings": "Savings",
+      "investment": "Investment"
+    }
+  },
+  "paymentMethods": {
+    "add": "Add a payment method",
+    "toggle": "Payment methods of {name}",
+    "of": "Payment methods of {name}",
+    "count": "no payment method | {n} payment method | {n} payment methods",
+    "none": "No payment method attached.",
+    "createTitle": "New payment method",
+    "editTitle": "Edit the payment method",
+    "saved": "{label} saved.",
+    "deleteTitle": "Delete the payment method",
+    "deleteEffect": "{label} will be deleted for good.",
+    "fields": {
+      "label": "Label",
+      "kind": "Type",
+      "account": "Attached account"
+    },
+    "kinds": {
+      "card": "Bank card",
+      "transfer_out": "Outgoing transfer",
+      "third_party": "Direct debit or third-party transfer"
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "add": "Add a category",
+    "addChild": "Add a subcategory",
+    "archived": "Archived",
+    "createTitle": "New category",
+    "createChildTitle": "New subcategory of {parent}",
+    "editTitle": "Edit the category",
+    "saved": "{name} saved.",
+    "deleted": "{name} deleted.",
+    "archivedNotice": "{name} archived. | {name} archived, with its subcategory. | {name} archived, with its {n} subcategories.",
+    "restoredNotice": "{name} restored.",
+    "deleteTitle": "Delete the category",
+    "deleteEffect": "{name} will be deleted for good. | {name} will be deleted for good, with its subcategory. | {name} will be deleted for good, with its {n} subcategories.",
+    "fields": {
+      "name": "Name",
+      "kind": "Type",
+      "group": "Group",
+      "parent": "Parent category"
+    },
+    "kinds": {
+      "expense": "Expense",
+      "income": "Income"
+    },
+    "sections": {
+      "income": "Income",
+      "system": "System categories"
+    },
+    "system": {
+      "interest": "Interest",
+      "adjustment": "Adjustment",
+      "badge": "System",
+      "help": "Created by Mint, they can be neither edited nor deleted."
+    }
   },
   "auth": {
     "login": "Log in",
@@ -148,7 +271,16 @@
     "horizon_out_of_range": "Between 1 and 12 months",
     "percentage_out_of_range": "Between 0 and 100",
     "targets_sum_not_100": "The targets must add up to 100",
-    "invalid_token": "Invalid link"
+    "invalid_token": "Invalid link",
+    "invalid_amount": "Invalid amount",
+    "amount_out_of_range": "Amount out of range",
+    "invalid_date": "Invalid date",
+    "date_in_future": "The date cannot be in the future",
+    "product_required": "Choose the product",
+    "product_mismatch": "Product incompatible with the kind",
+    "group_required": "Choose the group",
+    "group_not_allowed": "Group not applicable",
+    "parent_not_allowed": "Parent category not applicable"
   },
   "errors": {
     "validation_failed": "Some values are invalid.",
@@ -171,6 +303,14 @@
     "cannot_disable_self": "You cannot disable your own account.",
     "user_disabled": "This user is disabled.",
     "mail_delivery_failed": "The email could not be sent: try again later.",
+    "archived": "This item is archived.",
+    "not_archived": "This item is not archived.",
+    "account_archived": "The attached account is archived.",
+    "parent_archived": "The parent category is archived.",
+    "category_name_taken": "A category already has this name at this level.",
+    "system_category": "System categories cannot be changed.",
+    "invalid_parent": "This category cannot hold subcategories.",
+    "order_mismatch": "The list changed in the meantime: it has just been reloaded.",
     "network_error": "Server unreachable: check your connection.",
     "internal_error": "Something went wrong: try again later."
   }

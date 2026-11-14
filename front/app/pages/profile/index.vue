@@ -223,6 +223,8 @@ onMounted(loadSessions)
         </UForm>
       </UCard>
 
+      <CategoryManager />
+
       <UCard>
         <template #header>
           <h2 class="text-base font-semibold text-highlighted">
