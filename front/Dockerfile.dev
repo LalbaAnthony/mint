@@ -1,0 +1,15 @@
+FROM node:24-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json tsconfig.base.json ./
+COPY api/package.json api/
+COPY front/package.json front/
+COPY shared/package.json shared/
+RUN npm ci --workspace @mint/front --ignore-scripts \
+  && mkdir -p front/node_modules front/.nuxt \
+  && chown node:node front/node_modules front/.nuxt
+
+USER node
+WORKDIR /app/front
+CMD ["npm", "run", "dev"]

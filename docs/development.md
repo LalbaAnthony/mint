@@ -10,14 +10,25 @@ Copier `.env.example` en `.env` à la racine : Docker Compose et les tests de l'
 | ---------------------- | ------------------------------------------------------------------ | -------------------------------------------- |
 | `db-dev`               | PostgreSQL de développement et des tests de l'API                  | `127.0.0.1:${DB_HOST_PORT}`                  |
 | `api-dev`              | API en `tsx watch`, sources `api/` et `shared/` montées            | `127.0.0.1:${API_HOST_PORT}`                 |
+| `web-dev`              | front en `nuxt dev`, sources `front/` et `shared/` montées         | `http://localhost:${WEB_HOST_PORT}`          |
 | `mailpit`              | serveur SMTP de développement, reçoit tous les emails de `api-dev` | interface web `127.0.0.1:${MAILPIT_UI_PORT}` |
 
 ```sh
 docker compose --profile dev up -d
+```
+
+Le front de développement écoute sur `http://localhost:${WEB_HOST_PORT}` (8080 dans `.env.example`), valeur d'`APP_ORIGIN` de `api-dev` et donc base des liens envoyés par email. Il relaie `/api` vers `api-dev`. `WEB_HOST_PORT` sert aussi au conteneur `web` du profil `prod`, comme `API_HOST_PORT` pour `api` et `api-dev` : les deux profils ne tournent pas en même temps.
+
+Dans `web-dev`, les sources sont surveillées par scrutation (`CHOKIDAR_USEPOLLING`), car les notifications du système de fichiers ne traversent pas un montage depuis Windows. `front/node_modules` et `front/.nuxt` restent propres au conteneur (volumes anonymes) : ceux de l'hôte gardent leurs binaires et leurs chemins pour l'éditeur et le typecheck. Une modification de `nuxt.config.ts` n'est pas détectée dans le conteneur et demande `docker compose --profile dev restart web-dev`.
+
+Front lancé sur l'hôte, à la place de `web-dev` :
+
+```sh
+docker compose --profile dev up -d db-dev api-dev mailpit
 npm run dev --workspace @mint/front
 ```
 
-Le front de développement écoute sur `http://localhost:3001` (valeur d'`APP_ORIGIN` de `api-dev`, base des liens envoyés par email) et relaie `/api` vers `http://127.0.0.1:3000`. Si `API_HOST_PORT` diffère, exporter `MINT_DEV_API_ORIGIN` avant de lancer Nuxt.
+Nuxt écoute alors sur le port 8080 (`devServer.port`) et relaie `/api` vers `http://127.0.0.1:3000`. Si `WEB_HOST_PORT` diffère, exporter `NUXT_PORT` à la même valeur pour que les liens envoyés par email restent justes ; si `API_HOST_PORT` diffère, exporter `MINT_DEV_API_ORIGIN`.
 
 Premier administrateur local :
 

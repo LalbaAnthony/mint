@@ -114,7 +114,7 @@ services:
     environment:
       <<: *api-environment
       DATABASE_HOST: db-dev
-      APP_ORIGIN: http://localhost:3001
+      APP_ORIGIN: http://localhost:${WEB_HOST_PORT}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_TLS_MODE: none
@@ -134,6 +134,37 @@ services:
       mailpit:
         condition: service_started
     healthcheck: *api-healthcheck
+
+  web-dev:
+    profiles: [dev]
+    build:
+      context: .
+      dockerfile: front/Dockerfile.dev
+    environment:
+      NUXT_HOST: 0.0.0.0
+      NUXT_PORT: ${WEB_HOST_PORT}
+      MINT_DEV_API_ORIGIN: http://api-dev:3000
+      CHOKIDAR_USEPOLLING: 'true'
+    ports:
+      - 127.0.0.1:${WEB_HOST_PORT}:${WEB_HOST_PORT}
+    volumes:
+      - ./front:/app/front
+      - ./shared:/app/shared
+      - /app/front/node_modules
+      - /app/front/.nuxt
+    depends_on:
+      api-dev:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:${WEB_HOST_PORT}/').then((response) => process.exit(response.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
 
   mailpit:
     profiles: [dev]
