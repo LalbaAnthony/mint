@@ -32,3 +32,12 @@ export type AccountOverview = z.infer<typeof accountOverviewSchema>
 export type ReorderAccountsRequest = z.infer<
   typeof reorderAccountsRequestSchema
 >
+
+export type AccountInput = {
+  id: string
+  usage: AccountUsage
+  initialBalanceCents: number
+  initialBalanceDate: string
+  lowBalanceThresholdCents: number | null
+  archived: boolean
+}

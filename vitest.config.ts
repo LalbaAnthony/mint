@@ -72,8 +72,17 @@ export default defineConfig({
         '**/*.d.ts',
         'api/tests/**',
         'api/dist/**',
+        'shared/tests/**',
         'shared/dist/**',
       ],
+      thresholds: {
+        'shared/engines/**': {
+          statements: 90,
+          branches: 90,
+          functions: 90,
+          lines: 90,
+        },
+      },
       reporter: ['text', 'html', 'lcov'],
     },
   },

@@ -26,3 +26,10 @@ export type Category = z.infer<typeof categorySchema>
 export type ReorderCategoriesRequest = z.infer<
   typeof reorderCategoriesRequestSchema
 >
+
+export type CategoryInput = {
+  id: string
+  parentId: string | null
+  kind: CategoryKind
+  expenseGroup: ExpenseGroup | null
+}
