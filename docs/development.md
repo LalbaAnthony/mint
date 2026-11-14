@@ -59,6 +59,8 @@ Une sous-catégorie de dépense a `expense_group` à `NULL` : son groupe se lit 
 | Commande                                | Portée                                                                      |
 | --------------------------------------- | --------------------------------------------------------------------------- |
 | `npm test`                              | Vitest : scripts, `shared`, API (intégration avec PostgreSQL), front (Nuxt) |
+| `npm run test:coverage`                 | Vitest avec couverture ; échoue sous 90 % sur `shared/engines/`             |
+| `npx vitest run --project shared`       | moteurs de calcul et schémas partagés, sans base de données                 |
 | `npm run openapi --workspace @mint/api` | régénère `docs/openapi.json` ; un test échoue s'il n'est pas à jour         |
 | `npm run test:e2e`                      | Playwright, sur la pile `e2e/compose.yml` déjà démarrée                     |
 
