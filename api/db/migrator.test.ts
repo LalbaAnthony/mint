@@ -120,10 +120,15 @@ describe('createMigrator', () => {
       'accounts',
       'categories',
       'email_change_tokens',
+      'envelope_categories',
+      'envelopes',
       'invitations',
       'password_reset_tokens',
       'payment_methods',
+      'schedule_occurrences',
+      'schedules',
       'sessions',
+      'transactions',
       'users',
     ])
 

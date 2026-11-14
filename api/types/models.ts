@@ -6,6 +6,17 @@ import type {
 } from '@mint/shared/types/accounts'
 import type { CategoryKind, ExpenseGroup } from '@mint/shared/types/categories'
 import type { PaymentMethodKind } from '@mint/shared/types/payment-methods'
+import type {
+  BusinessDayRule,
+  OccurrenceState,
+  ScheduleFrequency,
+  ScheduleKind,
+  TriggerMode,
+} from '@mint/shared/types/schedules'
+import type {
+  TransactionOrigin,
+  TransactionStatus,
+} from '@mint/shared/types/transactions'
 import type { Locale, UserRole, UserStatus } from '@mint/shared/types/user'
 
 export type UserAttributes = {
@@ -213,6 +224,165 @@ export type PaymentMethodModel = Model<
 > &
   PaymentMethodAttributes
 
+export type ScheduleAttributes = {
+  id: string
+  userId: string
+  kind: ScheduleKind
+  label: string
+  amountCents: number
+  paymentMethodId: string | null
+  accountId: string | null
+  sourceAccountId: string | null
+  targetAccountId: string | null
+  categoryId: string | null
+  isSubscription: boolean
+  triggerMode: TriggerMode
+  frequency: ScheduleFrequency
+  interval: number
+  startDate: string
+  anchorLastDay: boolean
+  endDate: string | null
+  maxOccurrences: number | null
+  businessDayRule: BusinessDayRule
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ScheduleCreationAttributes = Optional<
+  ScheduleAttributes,
+  | 'id'
+  | 'paymentMethodId'
+  | 'accountId'
+  | 'sourceAccountId'
+  | 'targetAccountId'
+  | 'categoryId'
+  | 'isSubscription'
+  | 'triggerMode'
+  | 'interval'
+  | 'anchorLastDay'
+  | 'endDate'
+  | 'maxOccurrences'
+  | 'businessDayRule'
+  | 'active'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type ScheduleModel = Model<
+  ScheduleAttributes,
+  ScheduleCreationAttributes
+> &
+  ScheduleAttributes
+
+export type ScheduleOccurrenceAttributes = {
+  id: string
+  scheduleId: string
+  originalDate: string
+  effectiveDate: string | null
+  amountCents: number | null
+  state: OccurrenceState
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ScheduleOccurrenceCreationAttributes = Optional<
+  ScheduleOccurrenceAttributes,
+  'id' | 'effectiveDate' | 'amountCents' | 'createdAt' | 'updatedAt'
+>
+
+export type ScheduleOccurrenceModel = Model<
+  ScheduleOccurrenceAttributes,
+  ScheduleOccurrenceCreationAttributes
+> &
+  ScheduleOccurrenceAttributes
+
+export type TransactionAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  paymentMethodId: string | null
+  date: string
+  amountCents: number
+  label: string
+  note: string | null
+  categoryId: string | null
+  status: TransactionStatus
+  origin: TransactionOrigin
+  transferGroupId: string | null
+  occurrenceId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type TransactionCreationAttributes = Optional<
+  TransactionAttributes,
+  | 'id'
+  | 'paymentMethodId'
+  | 'note'
+  | 'categoryId'
+  | 'transferGroupId'
+  | 'occurrenceId'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type TransactionModel = Model<
+  TransactionAttributes,
+  TransactionCreationAttributes
+> &
+  TransactionAttributes
+
+export type EnvelopeAttributes = {
+  id: string
+  userId: string
+  label: string
+  monthlyAmountCents: number
+  paymentMethodId: string | null
+  accountId: string | null
+  carryOver: boolean
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type EnvelopeCreationAttributes = Optional<
+  EnvelopeAttributes,
+  | 'id'
+  | 'paymentMethodId'
+  | 'accountId'
+  | 'carryOver'
+  | 'active'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type EnvelopeModel = Model<
+  EnvelopeAttributes,
+  EnvelopeCreationAttributes
+> &
+  EnvelopeAttributes
+
+export type EnvelopeCategoryAttributes = {
+  id: string
+  userId: string
+  envelopeId: string
+  categoryId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type EnvelopeCategoryCreationAttributes = Optional<
+  EnvelopeCategoryAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>
+
+export type EnvelopeCategoryModel = Model<
+  EnvelopeCategoryAttributes,
+  EnvelopeCategoryCreationAttributes
+> &
+  EnvelopeCategoryAttributes
+
 export type Models = {
   User: ModelStatic<UserModel>
   Session: ModelStatic<SessionModel>
@@ -222,4 +392,9 @@ export type Models = {
   Category: ModelStatic<CategoryModel>
   Account: ModelStatic<AccountModel>
   PaymentMethod: ModelStatic<PaymentMethodModel>
+  Schedule: ModelStatic<ScheduleModel>
+  ScheduleOccurrence: ModelStatic<ScheduleOccurrenceModel>
+  Transaction: ModelStatic<TransactionModel>
+  Envelope: ModelStatic<EnvelopeModel>
+  EnvelopeCategory: ModelStatic<EnvelopeCategoryModel>
 }

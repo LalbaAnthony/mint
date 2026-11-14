@@ -4,11 +4,16 @@ import type {
   AccountModel,
   CategoryModel,
   EmailChangeTokenModel,
+  EnvelopeCategoryModel,
+  EnvelopeModel,
   InvitationModel,
   Models,
   PasswordResetTokenModel,
   PaymentMethodModel,
+  ScheduleModel,
+  ScheduleOccurrenceModel,
   SessionModel,
+  TransactionModel,
   UserModel,
 } from '../types/models.js'
 
@@ -191,6 +196,142 @@ export function createModels(sequelize: Sequelize): Models {
     options('payment_methods'),
   )
 
+  const Schedule = sequelize.define<ScheduleModel>(
+    'Schedule',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      kind: { type: DataTypes.TEXT, allowNull: false },
+      label: { type: DataTypes.TEXT, allowNull: false },
+      amountCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: ScheduleModel) {
+          return Number(this.getDataValue('amountCents'))
+        },
+      },
+      paymentMethodId: { type: DataTypes.UUID, allowNull: true },
+      accountId: { type: DataTypes.UUID, allowNull: true },
+      sourceAccountId: { type: DataTypes.UUID, allowNull: true },
+      targetAccountId: { type: DataTypes.UUID, allowNull: true },
+      categoryId: { type: DataTypes.UUID, allowNull: true },
+      isSubscription: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      triggerMode: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: 'auto',
+      },
+      frequency: { type: DataTypes.TEXT, allowNull: false },
+      interval: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 1 },
+      startDate: { type: DataTypes.DATEONLY, allowNull: false },
+      anchorLastDay: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      endDate: { type: DataTypes.DATEONLY, allowNull: true },
+      maxOccurrences: { type: DataTypes.INTEGER, allowNull: true },
+      businessDayRule: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: 'exact',
+      },
+      active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      ...timestamps,
+    },
+    options('schedules'),
+  )
+
+  const ScheduleOccurrence = sequelize.define<ScheduleOccurrenceModel>(
+    'ScheduleOccurrence',
+    {
+      id: primaryKey,
+      scheduleId: { type: DataTypes.UUID, allowNull: false },
+      originalDate: { type: DataTypes.DATEONLY, allowNull: false },
+      effectiveDate: { type: DataTypes.DATEONLY, allowNull: true },
+      amountCents: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        get(this: ScheduleOccurrenceModel) {
+          const stored = this.getDataValue('amountCents')
+          return stored === null ? null : Number(stored)
+        },
+      },
+      state: { type: DataTypes.TEXT, allowNull: false },
+      ...timestamps,
+    },
+    options('schedule_occurrences'),
+  )
+
+  const Transaction = sequelize.define<TransactionModel>(
+    'Transaction',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      paymentMethodId: { type: DataTypes.UUID, allowNull: true },
+      date: { type: DataTypes.DATEONLY, allowNull: false },
+      amountCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: TransactionModel) {
+          return Number(this.getDataValue('amountCents'))
+        },
+      },
+      label: { type: DataTypes.TEXT, allowNull: false },
+      note: { type: DataTypes.TEXT, allowNull: true },
+      categoryId: { type: DataTypes.UUID, allowNull: true },
+      status: { type: DataTypes.TEXT, allowNull: false },
+      origin: { type: DataTypes.TEXT, allowNull: false },
+      transferGroupId: { type: DataTypes.UUID, allowNull: true },
+      occurrenceId: { type: DataTypes.UUID, allowNull: true },
+      ...timestamps,
+    },
+    options('transactions'),
+  )
+
+  const Envelope = sequelize.define<EnvelopeModel>(
+    'Envelope',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      label: { type: DataTypes.TEXT, allowNull: false },
+      monthlyAmountCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: EnvelopeModel) {
+          return Number(this.getDataValue('monthlyAmountCents'))
+        },
+      },
+      paymentMethodId: { type: DataTypes.UUID, allowNull: true },
+      accountId: { type: DataTypes.UUID, allowNull: true },
+      carryOver: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      ...timestamps,
+    },
+    options('envelopes'),
+  )
+
+  const EnvelopeCategory = sequelize.define<EnvelopeCategoryModel>(
+    'EnvelopeCategory',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      envelopeId: { type: DataTypes.UUID, allowNull: false },
+      categoryId: { type: DataTypes.UUID, allowNull: false },
+      ...timestamps,
+    },
+    options('envelope_categories'),
+  )
+
   return {
     User,
     Session,
@@ -200,5 +341,10 @@ export function createModels(sequelize: Sequelize): Models {
     Category,
     Account,
     PaymentMethod,
+    Schedule,
+    ScheduleOccurrence,
+    Transaction,
+    Envelope,
+    EnvelopeCategory,
   }
 }

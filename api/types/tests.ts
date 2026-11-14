@@ -69,3 +69,8 @@ export type IsolationActors = {
 }
 
 export type IsolationScenario = (actors: IsolationActors) => Promise<void>
+
+export type DatabaseRejection = {
+  code: string
+  constraint: string | null
+}
