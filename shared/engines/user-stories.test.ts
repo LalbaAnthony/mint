@@ -190,7 +190,7 @@ describe('US-10 - monthly savings transfer (ECH-01, CAT-03, PRV-05)', () => {
     const executions = planExecutions({
       today: '2026-12-06',
       schedules: [transfer],
-      activeAccountIds: new Set(['current', 'livret-a']),
+      accounts,
     })
     const movements = executions.flatMap((execution) =>
       execution.movements.map((movement, index) =>

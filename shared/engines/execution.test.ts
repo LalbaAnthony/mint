@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  account,
   exception,
   expensePosting,
   incomePosting,
@@ -8,9 +9,16 @@ import {
   transferPosting,
 } from '../tests/engine-fixtures.js'
 import { planExecutions } from './execution.js'
-import { isPostable, postingAccountIds } from './postings.js'
+import {
+  activeAccountsById,
+  postingAccountIds,
+  postingStartDate,
+} from './postings.js'
 
-const activeAccountIds = new Set(['current', 'livret-a'])
+const accounts = [
+  account({ id: 'current' }),
+  account({ id: 'livret-a', usage: 'savings' }),
+]
 
 describe('planExecutions (EXE-01 to EXE-04)', () => {
   it('turns the occurrence of the day into a definitive income operation (US-09)', () => {
@@ -26,14 +34,14 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
       planExecutions({
         today: '2026-12-04',
         schedules: [income],
-        activeAccountIds,
+        accounts,
       }),
     ).toEqual([])
     expect(
       planExecutions({
         today: '2026-12-05',
         schedules: [income],
-        activeAccountIds,
+        accounts,
       }),
     ).toEqual([
       {
@@ -67,7 +75,7 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
           posting: transferPosting(),
         }),
       ],
-      activeAccountIds,
+      accounts,
     })
 
     expect(expense?.movements).toEqual([
@@ -104,7 +112,7 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
       planExecutions({
         today: '2026-12-06',
         schedules: [reentered],
-        activeAccountIds,
+        accounts,
       }).map((execution) => execution.originalDate),
     ).toEqual(['2026-12-06'])
   })
@@ -122,7 +130,7 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
           recurrence: recurrence({ startDate: '2026-11-06' }),
         }),
       ],
-      activeAccountIds,
+      accounts,
     })
 
     expect(
@@ -156,7 +164,7 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
         }),
         schedule({ id: 'a', createdOn: '2026-11-05' }),
       ],
-      activeAccountIds,
+      accounts,
     })
 
     expect(
@@ -188,7 +196,7 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
       planExecutions({
         today: '2026-12-31',
         schedules: [done],
-        activeAccountIds,
+        accounts,
       }),
     ).toEqual([])
   })
@@ -209,14 +217,14 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
       planExecutions({
         today: '2027-01-03',
         schedules: [rent],
-        activeAccountIds,
+        accounts,
       }).map((execution) => execution.effectiveDate),
     ).toEqual(['2026-12-01'])
     expect(
       planExecutions({
         today: '2027-02-01',
         schedules: [rent],
-        activeAccountIds,
+        accounts,
       }).map((execution) => [execution.effectiveDate, execution.amountCents]),
     ).toEqual([
       ['2026-12-01', 10_000],
@@ -230,7 +238,7 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
       planExecutions({
         today: '2026-12-31',
         schedules: [schedule({ active: false })],
-        activeAccountIds,
+        accounts,
       }),
     ).toEqual([])
   })
@@ -240,16 +248,36 @@ describe('planExecutions (EXE-01 to EXE-04)', () => {
       planExecutions({
         today: '2026-12-31',
         schedules: [
-          schedule({ posting: expensePosting({ accountId: 'archived' }) }),
-          schedule({ posting: transferPosting('current', 'archived') }),
+          schedule({ posting: expensePosting({ accountId: 'closed' }) }),
+          schedule({ posting: transferPosting('current', 'closed') }),
+          schedule({ posting: expensePosting({ accountId: 'missing' }) }),
         ],
-        activeAccountIds,
+        accounts: [...accounts, account({ id: 'closed', archived: true })],
       }),
     ).toEqual([])
+  })
+
+  it('never executes occurrences dated before the initial balance of a touched account', () => {
+    expect(
+      planExecutions({
+        today: '2026-12-31',
+        schedules: [schedule({ posting: transferPosting() })],
+        accounts: [
+          account({ id: 'current' }),
+          account({ id: 'livret-a', initialBalanceDate: '2026-11-20' }),
+        ],
+      }).map((execution) => execution.originalDate),
+    ).toEqual(['2026-12-05'])
   })
 })
 
 describe('postings', () => {
+  const activeAccounts = activeAccountsById([
+    account({ id: 'current', initialBalanceDate: '2026-10-01' }),
+    account({ id: 'livret-a', initialBalanceDate: '2026-11-20' }),
+    account({ id: 'closed', archived: true }),
+  ])
+
   it('lists the accounts a schedule touches', () => {
     expect(postingAccountIds(expensePosting())).toEqual(['current'])
     expect(postingAccountIds(transferPosting('current', 'livret-a'))).toEqual([
@@ -258,16 +286,25 @@ describe('postings', () => {
     ])
   })
 
-  it('requires an active schedule on active accounts', () => {
-    expect(isPostable(schedule(), activeAccountIds)).toBe(true)
-    expect(isPostable(schedule({ active: false }), activeAccountIds)).toBe(
-      false,
+  it('starts at the creation of the schedule or the latest initial balance of its accounts', () => {
+    expect(postingStartDate(schedule(), activeAccounts)).toBe('2026-11-01')
+    expect(
+      postingStartDate(
+        schedule({ posting: transferPosting() }),
+        activeAccounts,
+      ),
+    ).toBe('2026-11-20')
+  })
+
+  it('has no start for an inactive schedule or an archived account', () => {
+    expect(postingStartDate(schedule({ active: false }), activeAccounts)).toBe(
+      null,
     )
     expect(
-      isPostable(
-        schedule({ posting: transferPosting('archived', 'current') }),
-        activeAccountIds,
+      postingStartDate(
+        schedule({ posting: transferPosting('closed', 'current') }),
+        activeAccounts,
       ),
-    ).toBe(false)
+    ).toBeNull()
   })
 })

@@ -20,7 +20,11 @@ import {
   monthEnd,
 } from './dates.js'
 import { envelopeCategoryIndex, envelopeDailyShares } from './envelopes.js'
-import { isPostable, postingMovements } from './postings.js'
+import {
+  activeAccountsById,
+  postingMovements,
+  postingStartDate,
+} from './postings.js'
 import { occurrencesBetween } from './recurrence.js'
 
 export function forecastEndDate(today: string, horizonMonths: number): string {
@@ -32,22 +36,24 @@ export function forecastEndDate(today: string, horizonMonths: number): string {
 
 export function projectOccurrences(
   schedules: readonly ScheduleInput[],
-  activeAccountIds: ReadonlySet<string>,
+  activeAccounts: ReadonlyMap<string, AccountInput>,
   today: string,
   until: string,
 ): ProjectedOccurrence[] {
-  return schedules
-    .filter((schedule) => isPostable(schedule, activeAccountIds))
-    .flatMap((schedule) =>
-      occurrencesBetween(schedule, schedule.createdOn, until)
-        .filter((occurrence) => occurrence.status === 'pending')
-        .map((occurrence) => ({
-          schedule,
-          occurrence,
-          projectedDate: laterDate(occurrence.effectiveDate, today),
-          movements: postingMovements(schedule.posting, occurrence.amountCents),
-        })),
-    )
+  return schedules.flatMap((schedule) => {
+    const start = postingStartDate(schedule, activeAccounts)
+    if (start === null) {
+      return []
+    }
+    return occurrencesBetween(schedule, start, until)
+      .filter((occurrence) => occurrence.status === 'pending')
+      .map((occurrence) => ({
+        schedule,
+        occurrence,
+        projectedDate: laterDate(occurrence.effectiveDate, today),
+        movements: postingMovements(schedule.posting, occurrence.amountCents),
+      }))
+  })
 }
 
 export function forecastIndicators(
@@ -159,7 +165,7 @@ export function computeForecast(input: ForecastInput): Forecast {
 
   const projected = projectOccurrences(
     input.schedules,
-    activeAccountIds,
+    activeAccountsById(input.accounts),
     startDate,
     monthEnd(endDate),
   )

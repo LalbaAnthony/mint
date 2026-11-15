@@ -29,6 +29,17 @@ export const apiErrorCodes = [
   'system_category',
   'invalid_parent',
   'order_mismatch',
+  'account_has_operations',
+  'account_in_use',
+  'payment_method_in_use',
+  'payment_method_archived',
+  'category_archived',
+  'category_in_use',
+  'category_in_envelope',
+  'invalid_replacement',
+  'operations_before_initial_balance',
+  'occurrence_not_editable',
+  'operation_is_transfer',
   'internal_error',
 ] as const
 

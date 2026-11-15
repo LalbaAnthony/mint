@@ -115,6 +115,24 @@ describe('computeForecast (PRV-01 to PRV-03)', () => {
     expect(forecast.days[0]?.balanceCents).toBe(40_000)
   })
 
+  it('does not project due occurrences dated before the initial balance of the account', () => {
+    const forecast = onlyAccount(
+      computeForecast(
+        forecastInput({
+          accounts: [account({ initialBalanceDate: '2026-11-08' })],
+          schedules: [
+            schedule({
+              createdOn: '2026-11-01',
+              recurrence: recurrence({ startDate: '2026-11-05' }),
+            }),
+          ],
+        }),
+      ),
+    )
+
+    expect(forecast.days[0]?.flows).toEqual([])
+  })
+
   it('ignores occurrences dated before the creation of the schedule, executed or skipped ones', () => {
     const forecast = onlyAccount(
       computeForecast(

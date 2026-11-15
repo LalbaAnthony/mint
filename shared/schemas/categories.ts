@@ -86,3 +86,7 @@ export const categoryListResponseSchema = z
 export const reorderCategoriesRequestSchema = z
   .object({ categoryIds: orderedIdsSchema })
   .meta({ id: 'ReorderCategoriesRequest' })
+
+export const deleteCategoryQuerySchema = z
+  .object({ replacementId: z.uuid({ error: 'invalid' }).optional() })
+  .meta({ id: 'DeleteCategoryQuery' })

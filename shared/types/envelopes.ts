@@ -1,3 +1,13 @@
+import type { z } from 'zod'
+import type {
+  createEnvelopeRequestSchema,
+  envelopeMonthLineSchema,
+  envelopeMonthQuerySchema,
+  envelopeMonthResponseSchema,
+  envelopeMonthStatusSchema,
+  envelopeSchema,
+  updateEnvelopeRequestSchema,
+} from '../schemas/envelopes.js'
 import type { CategorizedMovement } from './transactions.js'
 
 export type EnvelopeMonthOverride = {
@@ -42,3 +52,17 @@ export type EnvelopeSharesInput = {
   operations: readonly CategorizedMovement[]
   commitments: readonly CategorizedMovement[]
 }
+
+export type CreateEnvelopeRequest = z.infer<typeof createEnvelopeRequestSchema>
+
+export type UpdateEnvelopeRequest = z.infer<typeof updateEnvelopeRequestSchema>
+
+export type Envelope = z.infer<typeof envelopeSchema>
+
+export type EnvelopeMonthQuery = z.infer<typeof envelopeMonthQuerySchema>
+
+export type EnvelopeMonthStatusView = z.infer<typeof envelopeMonthStatusSchema>
+
+export type EnvelopeMonthLine = z.infer<typeof envelopeMonthLineSchema>
+
+export type EnvelopeMonthResponse = z.infer<typeof envelopeMonthResponseSchema>

@@ -3,6 +3,7 @@ import type {
   categoryKindSchema,
   categorySchema,
   createCategoryRequestSchema,
+  deleteCategoryQuerySchema,
   editableCategoryKindSchema,
   expenseGroupSchema,
   reorderCategoriesRequestSchema,
@@ -33,3 +34,5 @@ export type CategoryInput = {
   kind: CategoryKind
   expenseGroup: ExpenseGroup | null
 }
+
+export type DeleteCategoryQuery = z.infer<typeof deleteCategoryQuerySchema>

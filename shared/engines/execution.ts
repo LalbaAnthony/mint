@@ -1,6 +1,10 @@
 import type { ExecutionInput, PlannedExecution } from '../types/schedules.js'
 import { compareCodeUnits } from './ordering.js'
-import { isPostable, postingMovements } from './postings.js'
+import {
+  activeAccountsById,
+  postingMovements,
+  postingStartDate,
+} from './postings.js'
 import { occurrencesBetween } from './recurrence.js'
 
 function compareExecutions(
@@ -15,10 +19,14 @@ function compareExecutions(
 }
 
 export function planExecutions(input: ExecutionInput): PlannedExecution[] {
+  const activeAccounts = activeAccountsById(input.accounts)
   return input.schedules
-    .filter((schedule) => isPostable(schedule, input.activeAccountIds))
-    .flatMap((schedule) =>
-      occurrencesBetween(schedule, schedule.createdOn, input.today)
+    .flatMap((schedule) => {
+      const start = postingStartDate(schedule, activeAccounts)
+      if (start === null) {
+        return []
+      }
+      return occurrencesBetween(schedule, start, input.today)
         .filter((occurrence) => occurrence.status === 'pending')
         .map((occurrence) => ({
           scheduleId: schedule.id,
@@ -28,7 +36,7 @@ export function planExecutions(input: ExecutionInput): PlannedExecution[] {
           effectiveDate: occurrence.effectiveDate,
           amountCents: occurrence.amountCents,
           movements: postingMovements(schedule.posting, occurrence.amountCents),
-        })),
-    )
+        }))
+    })
     .sort(compareExecutions)
 }

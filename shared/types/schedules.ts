@@ -1,10 +1,22 @@
 import type { z } from 'zod'
+import type { AccountInput } from './accounts.js'
 import type {
   businessDayRuleSchema,
+  createScheduleRequestSchema,
   occurrenceStateSchema,
+  occurrenceStatusSchema,
+  overrideOccurrenceRequestSchema,
+  scheduleFieldsSchema,
   scheduleFrequencySchema,
   scheduleKindSchema,
+  scheduleListResponseSchema,
+  scheduleOccurrenceListResponseSchema,
+  scheduleOccurrenceSchema,
+  scheduleSchema,
+  scheduleTotalsSchema,
   triggerModeSchema,
+  updateScheduleRequestSchema,
+  updateScheduleResponseSchema,
 } from '../schemas/schedules.js'
 
 export type ScheduleKind = z.infer<typeof scheduleKindSchema>
@@ -108,7 +120,7 @@ export type PlannedExecution = {
 export type ExecutionInput = {
   today: string
   schedules: ScheduleInput[]
-  activeAccountIds: ReadonlySet<string>
+  accounts: AccountInput[]
 }
 
 export type ProjectedOccurrence = {
@@ -117,3 +129,36 @@ export type ProjectedOccurrence = {
   projectedDate: string
   movements: PlannedMovement[]
 }
+
+export type ScheduleFields = z.output<typeof scheduleFieldsSchema>
+
+export type ScheduleFieldIssue = {
+  path: string[]
+  message: string
+}
+
+export type CreateScheduleRequest = z.input<typeof createScheduleRequestSchema>
+
+export type UpdateScheduleRequest = z.input<typeof updateScheduleRequestSchema>
+
+export type ScheduleOccurrenceStatus = z.infer<typeof occurrenceStatusSchema>
+
+export type ScheduleOccurrence = z.infer<typeof scheduleOccurrenceSchema>
+
+export type Schedule = z.infer<typeof scheduleSchema>
+
+export type ScheduleTotals = z.infer<typeof scheduleTotalsSchema>
+
+export type ScheduleListResponse = z.infer<typeof scheduleListResponseSchema>
+
+export type UpdateScheduleResponse = z.infer<
+  typeof updateScheduleResponseSchema
+>
+
+export type ScheduleOccurrenceListResponse = z.infer<
+  typeof scheduleOccurrenceListResponseSchema
+>
+
+export type OverrideOccurrenceRequest = z.infer<
+  typeof overrideOccurrenceRequestSchema
+>
