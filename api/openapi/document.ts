@@ -46,7 +46,15 @@ function registerRoute(registry: OpenAPIRegistry, route: ApiRoute): void {
         : {
             body: {
               required: true,
-              content: { 'application/json': { schema: route.body } },
+              content:
+                route.requestBody.format === 'binary'
+                  ? Object.fromEntries(
+                      route.requestBody.mediaTypes.map((mediaType) => [
+                        mediaType,
+                        { schema: { type: 'string', format: 'binary' } },
+                      ]),
+                    )
+                  : { 'application/json': { schema: route.body } },
             },
           }),
     },

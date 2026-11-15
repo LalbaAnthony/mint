@@ -5,6 +5,7 @@ import type {
   ApiRoute,
   RouteAccess,
   RouteDefinition,
+  RouteRequestBody,
   RouteResponse,
   RouteResult,
 } from '../types/http.js'
@@ -18,6 +19,11 @@ import {
   unauthenticated,
   validationFailed,
 } from './http-error.js'
+
+export const defaultRequestBody: RouteRequestBody = {
+  format: 'json',
+  limit: '16kb',
+}
 
 function sendResult(
   response: Response,
@@ -90,6 +96,7 @@ function buildRoute<
     summary: definition.summary,
     tag: definition.tag,
     body: definition.body,
+    requestBody: definition.requestBody ?? defaultRequestBody,
     params: definition.params,
     query: querySchema,
     responses: definition.responses,

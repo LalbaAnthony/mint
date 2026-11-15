@@ -24,6 +24,10 @@ export type RouteContext<
   query: z.output<Query>
 }
 
+export type RouteRequestBody =
+  | { format: 'json'; limit: string }
+  | { format: 'binary'; limit: string; mediaTypes: string[] }
+
 export type RouteResult = {
   status: number
   body?: unknown
@@ -45,6 +49,7 @@ export type RouteDefinition<
   summary: string
   tag: string
   body: Body
+  requestBody?: RouteRequestBody
   params: Params
   query?: Query
   responses: Record<number, RouteResponse>
@@ -60,6 +65,7 @@ export type ApiRoute = {
   summary: string
   tag: string
   body: z.ZodType
+  requestBody: RouteRequestBody
   params: z.ZodObject
   query: z.ZodObject
   responses: Record<number, RouteResponse>
