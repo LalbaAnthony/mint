@@ -62,14 +62,7 @@ const actions = computed<DropdownMenuItem[][]>(() => [
         <p class="flex items-center gap-2 truncate text-xs text-muted">
           <span class="tabular-nums">{{ formatDate(operation.date) }}</span>
           <span v-if="detail !== ''" class="truncate">{{ detail }}</span>
-          <UBadge
-            v-if="operation.status === 'to_categorize'"
-            :label="t('operations.statuses.to_categorize')"
-            :icon="icons.uncategorized"
-            color="secondary"
-            variant="solid"
-            size="sm"
-          />
+          <OperationBadges :operation="operation" />
         </p>
       </div>
       <MoneyAmount

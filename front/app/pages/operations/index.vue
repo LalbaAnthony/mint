@@ -18,7 +18,11 @@ const referentials = useReferentialsStore()
 const editor = useOperationEditorStore()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 
-const filters = ref<OperationFilterState>(emptyOperationFilters())
+const route = useRoute()
+const filters = ref<OperationFilterState>({
+  ...emptyOperationFilters(),
+  status: route.query.status === 'to_categorize' ? 'to_categorize' : undefined,
+})
 const sorting = ref<OperationSorting>({ sort: 'date', order: 'desc' })
 const page = ref(1)
 const result = ref<OperationListResponse | null>(null)
@@ -268,14 +272,7 @@ async function deleteOperation(): Promise<void> {
                   :aria-label="t(`operations.origins.${row.original.origin}`)"
                 />
                 {{ row.original.label }}
-                <UBadge
-                  v-if="row.original.status === 'to_categorize'"
-                  :label="t('operations.statuses.to_categorize')"
-                  :icon="icons.uncategorized"
-                  color="secondary"
-                  variant="solid"
-                  size="sm"
-                />
+                <OperationBadges :operation="row.original" />
               </span>
               <span class="text-xs text-muted">{{
                 detailOf(row.original)

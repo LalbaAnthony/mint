@@ -88,6 +88,23 @@ const statusModel = computed({
   },
 })
 
+const reconciledItems = computed(() => [
+  { label: t('operations.filters.anyReconciliation'), value: anyValue },
+  { label: t('operations.filters.reconciledOnly'), value: 'true' },
+  { label: t('operations.filters.notReconciled'), value: 'false' },
+])
+
+const reconciledModel = computed({
+  get: () =>
+    filters.value.reconciled === undefined
+      ? anyValue
+      : String(filters.value.reconciled),
+  set: (value: string) => {
+    filters.value.reconciled =
+      value === 'true' ? true : value === 'false' ? false : undefined
+  },
+})
+
 function reset(): void {
   filters.value = emptyOperationFilters()
 }
@@ -169,6 +186,23 @@ function reset(): void {
       <AppFormField :label="t('operations.filters.status')" name="status">
         <USelect v-model="statusModel" :items="statusItems" class="w-full" />
       </AppFormField>
+      <AppFormField
+        :label="t('operations.filters.reconciliation')"
+        name="reconciled"
+      >
+        <USelect
+          v-model="reconciledModel"
+          :items="reconciledItems"
+          class="w-full"
+          data-testid="filter-reconciled"
+        />
+      </AppFormField>
+      <USwitch
+        v-model="filters.unconfirmed"
+        :label="t('operations.filters.unconfirmedOnly')"
+        class="self-end"
+        data-testid="filter-unconfirmed"
+      />
     </div>
     <div class="flex justify-end">
       <UButton

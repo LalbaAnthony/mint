@@ -14,6 +14,8 @@ export function emptyOperationFilters(): OperationFilterState {
     direction: undefined,
     origins: [],
     status: undefined,
+    reconciled: undefined,
+    unconfirmed: false,
   }
 }
 
@@ -69,6 +71,12 @@ export function operationQuery(
   if (filters.status !== undefined) {
     params.set('status', filters.status)
   }
+  if (filters.reconciled !== undefined) {
+    params.set('reconciled', String(filters.reconciled))
+  }
+  if (filters.unconfirmed) {
+    params.set('unconfirmed', 'true')
+  }
   return params.toString()
 }
 
@@ -84,6 +92,8 @@ export function activeFilterCount(filters: OperationFilterState): number {
     filters.direction !== undefined,
     filters.origins.length > 0,
     filters.status !== undefined,
+    filters.reconciled !== undefined,
+    filters.unconfirmed,
   ].filter(Boolean).length
 }
 

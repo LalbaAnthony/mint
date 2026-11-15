@@ -4,6 +4,7 @@ import type { OperationEditorRequest } from '~~/types/planning'
 
 export const useOperationEditorStore = defineStore('operationEditor', () => {
   const request = ref<OperationEditorRequest | null>(null)
+  const proposal = ref<Operation | null>(null)
   const savedVersion = ref(0)
 
   const isOpen = computed({
@@ -11,6 +12,15 @@ export const useOperationEditorStore = defineStore('operationEditor', () => {
     set: (open: boolean) => {
       if (!open) {
         request.value = null
+      }
+    },
+  })
+
+  const proposalOpen = computed({
+    get: () => proposal.value !== null,
+    set: (open: boolean) => {
+      if (!open) {
+        proposal.value = null
       }
     },
   })
@@ -28,5 +38,19 @@ export const useOperationEditorStore = defineStore('operationEditor', () => {
     request.value = null
   }
 
-  return { request, isOpen, savedVersion, create, edit, markSaved }
+  function propose(operation: Operation): void {
+    proposal.value = operation
+  }
+
+  return {
+    request,
+    isOpen,
+    proposal,
+    proposalOpen,
+    savedVersion,
+    create,
+    edit,
+    markSaved,
+    propose,
+  }
 })

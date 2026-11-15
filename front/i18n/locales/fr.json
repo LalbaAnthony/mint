@@ -418,7 +418,17 @@
       "status": "Statut",
       "anyDirection": "Tous les sens",
       "anyStatus": "Tous les statuts",
+      "reconciliation": "Rapprochement",
+      "anyReconciliation": "Rapprochées ou non",
+      "reconciledOnly": "Rapprochées",
+      "notReconciled": "Non rapprochées",
+      "unconfirmedOnly": "Non confirmées par la banque",
       "reset": "Effacer les filtres"
+    },
+    "badges": {
+      "adjustment": "Ajustement",
+      "unconfirmed": "Non confirmée par la banque",
+      "reconciled": "Rapprochée d'une échéance"
     },
     "sort": {
       "label": "Tri",
@@ -570,6 +580,22 @@
     "emptyTitle": "Aucun abonnement",
     "emptyText": "Marquez une échéance de dépense comme abonnement pour la suivre ici.",
     "goToSchedules": "Voir les échéances"
+  },
+  "reconciliation": {
+    "bankLabel": "Libellé bancaire :",
+    "reconciledWith": "Rapprochée de l'occurrence du {date}",
+    "dissociate": "Dissocier",
+    "dissociated": "Occurrence dissociée.",
+    "candidates": "Occurrences candidates",
+    "associate": "Rapprocher",
+    "associated": "Opération rapprochée.",
+    "convertTo": "Convertir en transfert avec",
+    "convert": "Convertir",
+    "converted": "Opération convertie en transfert.",
+    "createRule": "Créer une règle depuis ce libellé",
+    "proposalTitle": "Rapprocher d'une échéance ?",
+    "proposalHelp": "{label} correspond peut-être à une occurrence prévue. Rien n'est rapproché sans votre confirmation.",
+    "ignore": "Ignorer"
   },
   "dashboard": {
     "wealth": "Patrimoine total",

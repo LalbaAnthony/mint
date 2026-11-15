@@ -5,6 +5,7 @@ import {
   operationSchema,
   transferSchema,
 } from '@mint/shared/schemas/operations'
+import { candidateListResponseSchema } from '@mint/shared/schemas/reconciliation'
 import type { Operation } from '@mint/shared/types/operations'
 import { operationFormSchema, transferFormSchema } from '~~/schemas/forms'
 import type { SelectItem } from '~~/types/forms'
@@ -192,6 +193,20 @@ async function saveTransfer(): Promise<void> {
   }
 }
 
+async function proposeReconciliation(created: Operation): Promise<void> {
+  try {
+    const { candidates } = await apiGet(
+      `/operations/${created.id}/candidates`,
+      candidateListResponseSchema,
+    )
+    if (candidates.length > 0) {
+      editor.propose(created)
+    }
+  } catch (error) {
+    toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
+  }
+}
+
 async function saveOperation(): Promise<void> {
   const parsed = operationFormSchema.safeParse(state)
   if (!parsed.success || state.source === undefined) {
@@ -212,7 +227,8 @@ async function saveOperation(): Promise<void> {
     categoryId: state.categoryId ?? null,
   }
   if (edited.value === null) {
-    await apiCall('POST', '/operations', operationSchema, body)
+    const created = await apiCall('POST', '/operations', operationSchema, body)
+    await proposeReconciliation(created)
   } else {
     await apiCall(
       'PATCH',
@@ -350,6 +366,10 @@ async function submit(): Promise<void> {
         >
           <UTextarea v-model="state.note" :rows="2" class="w-full" />
         </AppFormField>
+        <OperationLinksPanel
+          v-if="edited !== null && edited.transferGroupId === null"
+          :operation="edited"
+        />
         <UButton
           type="submit"
           :label="t('common.save')"

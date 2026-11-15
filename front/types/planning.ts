@@ -74,6 +74,8 @@ export type OperationFilterState = {
   direction: OperationDirection | undefined
   origins: TransactionOrigin[]
   status: TransactionStatus | undefined
+  reconciled: boolean | undefined
+  unconfirmed: boolean
 }
 
 export type OperationSorting = {
@@ -137,6 +139,14 @@ export type UsageNotice = {
 }
 
 export interface OperationRowProps {
+  operation: Operation
+}
+
+export interface OperationBadgesProps {
+  operation: Operation
+}
+
+export interface OperationLinksPanelProps {
   operation: Operation
 }
 

@@ -2,6 +2,7 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import OperationFormModal from '~/components/OperationFormModal.vue'
 import OperationRow from '~/components/OperationRow.vue'
+import ReconciliationProposalModal from '~/components/ReconciliationProposalModal.vue'
 import OperationsPage from '~/pages/operations/index.vue'
 import { installFakeApi } from '../fake-api'
 import {
@@ -261,5 +262,149 @@ describe('operation form (OPE-01, OPE-02)', () => {
         }),
       )
     })
+  })
+})
+
+describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () => {
+  async function openEditor(open: () => void, ready: string) {
+    await mountForm()
+    open()
+    await vi.waitFor(() => {
+      expect(findInBody(ready)).not.toBeNull()
+    })
+  }
+
+  it('shows the to-categorize, unconfirmed and reconciled marks of CHG-61', async () => {
+    installFakeApi(fetchMock, referentialHandlers())
+    const unconfirmed = await mountSuspended(OperationRow, {
+      props: {
+        operation: operation({ origin: 'schedule', unconfirmed: true }),
+      },
+    })
+    const reconciled = await mountSuspended(OperationRow, {
+      props: {
+        operation: operation({
+          origin: 'import',
+          reconciled: true,
+          status: 'to_categorize',
+          categoryId: null,
+        }),
+      },
+    })
+    mounted.push(unconfirmed, reconciled)
+
+    expect(unconfirmed.find('[data-testid="badge-unconfirmed"]').text()).toBe(
+      'Non confirmée par la banque',
+    )
+    expect(reconciled.find('[data-testid="badge-reconciled"]').exists()).toBe(
+      true,
+    )
+    expect(
+      reconciled.find('[data-testid="badge-to-categorize"]').exists(),
+    ).toBe(true)
+  })
+
+  it('proposes the best occurrence after a manual entry and reconciles it on confirmation', async () => {
+    const created = operation({ id: '00000000-0000-4000-8000-0000000000d9' })
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'POST /operations': () => created,
+      [`GET /operations/${created.id}/candidates`]: () => ({
+        candidates: [
+          {
+            scheduleId: ids.schedule,
+            scheduleLabel: 'Loyer',
+            originalDate: '2026-11-15',
+            effectiveDate: '2026-11-15',
+            amountCents: -60_000,
+            operationId: null,
+            score: 0.9,
+          },
+        ],
+      }),
+      [`POST /operations/${created.id}/reconcile`]: () =>
+        operation({ ...created, reconciled: true }),
+    })
+    const proposal = await mountSuspended(ReconciliationProposalModal)
+    mounted.push(proposal)
+    await openEditor(
+      () => useOperationEditorStore().create('expense'),
+      '[data-testid="operation-source"]',
+    )
+    await vi.waitFor(() => {
+      expect(
+        api.requests.some((request) => request.path === '/categories'),
+      ).toBe(true)
+    })
+    await fillInput('[data-testid="operation-amount"]', '600')
+    await fillInput('[data-testid="operation-label"]', 'Loyer')
+    submit('[data-testid="operation-form"]')
+
+    await vi.waitFor(() => {
+      expect(
+        findInBody('[data-testid="reconciliation-proposal"]'),
+      ).not.toBeNull()
+    })
+    await vi.waitFor(() => {
+      const button = findInBody('[data-testid="reconciliation-confirm"]')
+      expect(button instanceof HTMLButtonElement && !button.disabled).toBe(true)
+    })
+    findInBody('[data-testid="reconciliation-confirm"]')?.click()
+
+    await vi.waitFor(() => {
+      expect(
+        api.requests.find(
+          (request) => request.path === `/operations/${created.id}/reconcile`,
+        )?.body,
+      ).toEqual({ scheduleId: ids.schedule, originalDate: '2026-11-15' })
+    })
+  })
+
+  it('dissociates a reconciled operation from its edit form', async () => {
+    const reconciled = operation({
+      origin: 'import',
+      reconciled: true,
+      scheduleId: ids.schedule,
+      occurrenceDate: '2026-11-15',
+      bankLabel: 'PRLV LOYER',
+    })
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      [`GET /operations/${reconciled.id}/candidates`]: () => ({
+        candidates: [],
+      }),
+      [`DELETE /operations/${reconciled.id}/reconcile`]: () =>
+        operation({ ...reconciled, reconciled: false, scheduleId: null }),
+    })
+    await openEditor(
+      () => useOperationEditorStore().edit(reconciled),
+      '[data-testid="operation-links"]',
+    )
+
+    expect(document.body.textContent).toContain('PRLV LOYER')
+    findInBody('[data-testid="operation-dissociate"]')?.click()
+
+    await vi.waitFor(() => {
+      expect(
+        api.requests.some(
+          (request) =>
+            request.method === 'DELETE' &&
+            request.path === `/operations/${reconciled.id}/reconcile`,
+        ),
+      ).toBe(true)
+    })
+  })
+
+  it('sends the reconciliation filters in the list query', () => {
+    expect(
+      operationQuery(
+        { ...emptyOperationFilters(), reconciled: false, unconfirmed: true },
+        { sort: 'date', order: 'desc' },
+        1,
+        50,
+      ),
+    ).toBe(
+      'page=1&pageSize=50&sort=date&order=desc&reconciled=false&unconfirmed=true',
+    )
   })
 })

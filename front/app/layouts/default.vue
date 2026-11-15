@@ -7,5 +7,6 @@
     <AppBottomBar />
     <AppFab />
     <OperationFormModal />
+    <ReconciliationProposalModal />
   </UDashboardGroup>
 </template>

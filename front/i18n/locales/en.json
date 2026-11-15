@@ -418,7 +418,17 @@
       "status": "Status",
       "anyDirection": "All directions",
       "anyStatus": "All statuses",
+      "reconciliation": "Reconciliation",
+      "anyReconciliation": "Reconciled or not",
+      "reconciledOnly": "Reconciled",
+      "notReconciled": "Not reconciled",
+      "unconfirmedOnly": "Not confirmed by the bank",
       "reset": "Clear the filters"
+    },
+    "badges": {
+      "adjustment": "Adjustment",
+      "unconfirmed": "Not confirmed by the bank",
+      "reconciled": "Reconciled with a schedule"
     },
     "sort": {
       "label": "Sort",
@@ -570,6 +580,22 @@
     "emptyTitle": "No subscription",
     "emptyText": "Mark an expense schedule as a subscription to follow it here.",
     "goToSchedules": "Go to schedules"
+  },
+  "reconciliation": {
+    "bankLabel": "Bank label:",
+    "reconciledWith": "Reconciled with the occurrence of {date}",
+    "dissociate": "Dissociate",
+    "dissociated": "Occurrence dissociated.",
+    "candidates": "Candidate occurrences",
+    "associate": "Reconcile",
+    "associated": "Operation reconciled.",
+    "convertTo": "Convert into a transfer with",
+    "convert": "Convert",
+    "converted": "Operation converted into a transfer.",
+    "createRule": "Create a rule from this label",
+    "proposalTitle": "Reconcile with a schedule?",
+    "proposalHelp": "{label} may match a planned occurrence. Nothing is reconciled without your confirmation.",
+    "ignore": "Ignore"
   },
   "dashboard": {
     "wealth": "Total wealth",
