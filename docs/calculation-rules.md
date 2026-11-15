@@ -2,20 +2,24 @@
 
 Les moteurs de calcul vivent dans `shared/engines/`. Ce sont des fonctions pures : aucune entrée-sortie, aucune horloge, la date du jour (Europe/Paris) est toujours un paramètre. Leurs entrées et sorties sont typées dans `shared/types/`, indépendamment des modèles Sequelize : l'API construit ces entrées depuis la base. Les décisions qui fondent ces règles sont motivées dans l'ADR 0013.
 
-| Module             | Rôle                                                              | Exigences                      |
-| ------------------ | ----------------------------------------------------------------- | ------------------------------ |
-| `dates.ts`         | dates civiles ISO `AAAA-MM-JJ`, mois, jours de semaine            | toutes                         |
-| `holidays.ts`      | date de Pâques, jours fériés de France métropolitaine             | ECH-06                         |
-| `business-days.ts` | jours ouvrés, règle de jours non ouvrés                           | ECH-06                         |
-| `recurrence.ts`    | dates d'origine, occurrences, prochaine occurrence, exceptions    | ECH-04, ECH-07, ECH-08, ECH-11 |
-| `equivalents.ts`   | équivalent mensuel et totaux                                      | ECH-05, ECH-09, ECH-10         |
-| `postings.ts`      | mouvements d'une occurrence sur les comptes                       | ECH-03, PAY-04                 |
-| `execution.ts`     | occurrences à exécuter par la tâche planifiée                     | EXE-01 à EXE-04                |
-| `balances.ts`      | solde calculé, soldes réels de fin de journée                     | CPT-04, PRV-09                 |
-| `envelopes.ts`     | catégories d'une enveloppe, consommé, disponible, report, lissage | ENV-01 à ENV-05, PRV-04        |
-| `forecast.ts`      | solde prévisionnel par compte et agrégé, indicateurs              | PRV-01 à PRV-08                |
-| `reports.ts`       | répartition Needs / Wants / Save, revenus et dépenses par mois    | CAT-03, DSH-02, DSH-03         |
-| `amounts.ts`       | divisions arrondies, répartition au centime                       | ECH-05, PRV-04                 |
+| Module              | Rôle                                                              | Exigences                      |
+| ------------------- | ----------------------------------------------------------------- | ------------------------------ |
+| `dates.ts`          | dates civiles ISO `AAAA-MM-JJ`, mois, jours de semaine            | toutes                         |
+| `holidays.ts`       | date de Pâques, jours fériés de France métropolitaine             | ECH-06                         |
+| `business-days.ts`  | jours ouvrés, règle de jours non ouvrés                           | ECH-06                         |
+| `recurrence.ts`     | dates d'origine, occurrences, prochaine occurrence, exceptions    | ECH-04, ECH-07, ECH-08, ECH-11 |
+| `equivalents.ts`    | équivalent mensuel et totaux                                      | ECH-05, ECH-09, ECH-10         |
+| `postings.ts`       | mouvements d'une occurrence sur les comptes                       | ECH-03, PAY-04                 |
+| `execution.ts`      | occurrences à exécuter par la tâche planifiée                     | EXE-01 à EXE-04                |
+| `balances.ts`       | solde calculé, soldes réels de fin de journée                     | CPT-04, PRV-09                 |
+| `envelopes.ts`      | catégories d'une enveloppe, consommé, disponible, report, lissage | ENV-01 à ENV-05, PRV-04        |
+| `forecast.ts`       | solde prévisionnel par compte et agrégé, indicateurs              | PRV-01 à PRV-08                |
+| `reports.ts`        | répartition Needs / Wants / Save, revenus et dépenses par mois    | CAT-03, DSH-02, DSH-03         |
+| `amounts.ts`        | divisions arrondies, répartition au centime                       | ECH-05, PRV-04                 |
+| `labels.ts`         | normalisation des libellés bancaires, similarité des libellés     | IMP-05, REG-01, REG-03, RAP-02 |
+| `csv-lines.ts`      | dates, montants et lignes d'un CSV, clés de doublon               | IMP-02, IMP-04, IMP-05         |
+| `rules.ts`          | règle satisfaite par une ligne                                    | REG-01, REG-02                 |
+| `reconciliation.ts` | occurrences candidates et score                                   | RAP-01, RAP-02                 |
 
 Tous les montants sont des entiers en centimes. Un débit est négatif, un crédit positif.
 
@@ -138,8 +142,38 @@ Répartition d'une période (DSH-02, `spendingBreakdown`) :
 
 Les deux mouvements de chaque transfert doivent figurer dans les opérations fournies ; un transfert incomplet est une erreur.
 
-Revenus et dépenses par mois (DSH-03, partie réelle, `monthlyIncomeExpenses`) : transferts internes exclus ; une opération catégorisée compte selon le type de sa catégorie, signée (un crédit sur une catégorie de dépenses diminue les dépenses) ; une opération à catégoriser compte en dépense si c'est un débit, en revenu si c'est un crédit. Solde mensuel = revenus - dépenses. La partie prévisionnelle (occurrences et enveloppes des mois de l'horizon) arrive avec DSH-03 au lot 2.
+Revenus et dépenses par mois (DSH-03, partie réelle, `monthlyIncomeExpenses`) : transferts internes exclus ; une opération catégorisée compte selon le type de sa catégorie, signée (un crédit sur une catégorie de dépenses diminue les dépenses) ; une opération à catégoriser compte en dépense si c'est un débit, en revenu si c'est un crédit. Solde mensuel = revenus - dépenses.
 
-## 9. Tests
+Partie prévisionnelle (`forecastMonthlyIncomeExpenses`, ADR 0017) : les flux de la prévision de la section 7 regroupés par mois, d'aujourd'hui à la fin de l'horizon : occurrences de dépense et de revenu (transferts exclus), parts d'enveloppe comptées en dépenses, opérations futures déjà saisies selon les mêmes règles que la partie réelle. Le mois en cours additionne sa partie réelle à date et sa partie prévue.
+
+## 9. Lecture des CSV et doublons
+
+Le fichier est décodé selon l'encodage choisi (marque d'ordre des octets retirée), découpé par csv-parse, puis chaque ligne de données (hors lignes ignorées en début et en fin, hors en-tête, hors lignes vides) est interprétée :
+
+- date selon le format choisi, refusée si elle n'existe pas (JJ/MM/AA est lu en 20AA) ;
+- montant : espaces, espaces insécables et symbole € ignorés, signe moins final accepté, séparateur de milliers retiré selon le séparateur décimal, deux décimales au plus ; en colonnes débit et crédit, le débit est négatif, le crédit positif, et une ligne qui remplit les deux ou aucun est en erreur ;
+- libellé bancaire : espaces réduits, vide refusé.
+
+Motifs d'erreur : colonne absente, date illisible, montant illisible, montant nul, débit et crédit renseignés, libellé vide, date antérieure au solde initial du compte.
+
+Clé de doublon (IMP-05) : date, montant, rang parmi les lignes identiques du même jour dans le fichier, libellé normalisé (majuscules, sans accents, espaces réduits). Une ligne dont la clé existe déjà sur une opération du compte est un doublon strict.
+
+## 10. Règles et rapprochement
+
+Règles (REG-01, REG-02) : la première règle active satisfaite, dans l'ordre de priorité, s'applique. Une règle est satisfaite si son compte (facultatif) est celui de la ligne, son sens convient, la valeur absolue du montant est dans la plage, et le libellé bancaire contient le motif ou commence par lui (casse et accents ignorés), ou correspond à l'expression régulière (accents retirés, casse ignorée, moteur RE2).
+
+Occurrences candidates d'une ligne ou d'une opération (RAP-01) : même compte, même sens, date effective à ±5 jours, écart de montant au plus égal à la tolérance de l'échéance (pourcentage du montant de l'occurrence, arrondi au centime inférieur), occurrence ni sautée ni déjà rapprochée d'une ligne bancaire, postérieure à la borne basse de la section 4. Score (RAP-02) :
+
+```math
+score = 0{,}4 \times \left(1 - \frac{|\Delta j|}{5}\right) + 0{,}4 \times \left(1 - \frac{|\Delta m|}{tolérance}\right) + 0{,}2 \times similarité
+```
+
+La similarité est le coefficient de Dice entre les mots normalisés du libellé bancaire et ceux du libellé de l'échéance ou de chacun de ses motifs appris, le plus élevé. Avec une tolérance nulle, le terme de montant vaut 1 pour un montant exact, 0 sinon. Classement par score décroissant, puis écart de jours croissant, puis date effective ; dans un lot, les occurrences sont attribuées aux lignes par score décroissant, une occurrence au plus par ligne.
+
+## 11. Relevés
+
+Écart d'un relevé (CPT-05) = solde relevé − solde calculé en fin de sa date (section 5), recalculé à chaque lecture : une opération ajoutée ou modifiée à une date antérieure change l'écart. Corriger l'écart crée une opération de la catégorie Ajustement égale à l'écart, à la date du relevé ; elle est exclue des agrégats de la section 8.
+
+## 12. Tests
 
 Les tests des moteurs tournent dans le projet Vitest `shared`, sans base de données. `shared/engines/user-stories.test.ts` transcrit US-06, US-07, US-08, US-10, US-11 et US-12 avec leurs valeurs chiffrées ; chaque module a ses tests unitaires. `npm run test:coverage` échoue sous 90 % de couverture (instructions, branches, fonctions, lignes) sur `shared/engines/` (NF-QUA-02). Sur un jeu de 20 comptes, 200 échéances, 10 enveloppes et 10 000 opérations, la prévision sur 12 mois prend environ 75 ms sur un poste de développement (NF-PERF-02 : 500 ms).
