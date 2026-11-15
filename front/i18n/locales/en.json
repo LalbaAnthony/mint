@@ -305,6 +305,10 @@
     "override_empty": "Change the amount or the date",
     "date_not_future": "Choose a date after today",
     "tolerance_out_of_range": "Between 0 and 100",
+    "invalid_regex": "Invalid regular expression",
+    "single_action": "Choose a single action",
+    "range_inverted": "The minimum exceeds the maximum",
+    "amount_columns": "Choose an amount column or the debit and credit columns",
     "duplicate": "Duplicate value",
     "invalid_month": "Invalid month",
     "month_out_of_range": "Month outside the history or the horizon"
@@ -580,6 +584,50 @@
     "emptyTitle": "No subscription",
     "emptyText": "Mark an expense schedule as a subscription to follow it here.",
     "goToSchedules": "Go to schedules"
+  },
+  "rules": {
+    "add": "Add a rule",
+    "createTitle": "New rule",
+    "editTitle": "Edit the rule",
+    "saved": "Rule \"{pattern}\" saved.",
+    "deleteTitle": "Delete the rule",
+    "deleteEffect": "The rule will be deleted; the operations already classified keep their category.",
+    "emptyTitle": "No rule",
+    "emptyText": "Classify the known bank labels automatically at import.",
+    "priorityHelp": "Only the first satisfied rule applies, in this order.",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "anyAccount": "All accounts",
+    "quoted": "\"{pattern}\"",
+    "unbounded": "…",
+    "onAccount": "on {account}",
+    "between": "between {min} and {max}",
+    "matchTypes": {
+      "contains": "Contains",
+      "starts_with": "Starts with",
+      "regex": "Regular expression"
+    },
+    "signs": {
+      "debit": "Debits",
+      "credit": "Credits",
+      "any": "Debits and credits"
+    },
+    "actions": {
+      "category": "Categorize",
+      "transfer": "Convert into a transfer"
+    },
+    "fields": {
+      "matchType": "Condition",
+      "pattern": "Bank label",
+      "account": "Account",
+      "sign": "Direction",
+      "amountMin": "Minimum amount",
+      "amountMax": "Maximum amount",
+      "action": "Action",
+      "transferAccount": "Counterpart account",
+      "active": "Active"
+    }
   },
   "reconciliation": {
     "bankLabel": "Bank label:",

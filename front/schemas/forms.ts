@@ -11,6 +11,7 @@ import {
   labelSchema,
 } from '@mint/shared/schemas/common'
 import { noteMaxLength } from '@mint/shared/schemas/operations'
+import { rulePatternMaxLength } from '@mint/shared/schemas/rules'
 import { maxScheduleInterval } from '@mint/shared/schemas/schedules'
 import {
   currentPasswordSchema,
@@ -190,4 +191,34 @@ export const scheduleFormSchema = z.object({
     .max(maxScheduleInterval, { error: 'interval_out_of_range' }),
   startDate: isoDateSchema,
   note: noteInputSchema,
+})
+
+export const ruleFormSchema = z
+  .object({
+    pattern: z
+      .string({ error: 'required' })
+      .trim()
+      .min(1, { error: 'required' })
+      .max(rulePatternMaxLength, { error: 'too_long' }),
+    amountMin: optionalAmountInputSchema,
+    amountMax: optionalAmountInputSchema,
+    action: z.enum(['category', 'transfer']),
+    categoryId: z.string().optional(),
+    transferAccountId: z.string().optional(),
+  })
+  .refine(
+    (rule) =>
+      rule.action === 'category'
+        ? rule.categoryId !== undefined
+        : rule.transferAccountId !== undefined,
+    { error: 'required', path: ['categoryId'] },
+  )
+
+export const importFileFormSchema = z.object({
+  accountId: z.string({ error: 'required' }).min(1, { error: 'required' }),
+})
+
+export const statementFormSchema = z.object({
+  date: isoDateSchema,
+  balance: amountInputSchema,
 })

@@ -305,6 +305,10 @@
     "override_empty": "Modifiez le montant ou la date",
     "date_not_future": "Choisissez une date après aujourd'hui",
     "tolerance_out_of_range": "Entre 0 et 100",
+    "invalid_regex": "Expression régulière invalide",
+    "single_action": "Choisissez une seule action",
+    "range_inverted": "Le minimum dépasse le maximum",
+    "amount_columns": "Choisissez une colonne de montant ou les colonnes débit et crédit",
     "duplicate": "Valeur en double",
     "invalid_month": "Mois invalide",
     "month_out_of_range": "Mois hors de l'historique ou de l'horizon"
@@ -580,6 +584,50 @@
     "emptyTitle": "Aucun abonnement",
     "emptyText": "Marquez une échéance de dépense comme abonnement pour la suivre ici.",
     "goToSchedules": "Voir les échéances"
+  },
+  "rules": {
+    "add": "Ajouter une règle",
+    "createTitle": "Nouvelle règle",
+    "editTitle": "Modifier la règle",
+    "saved": "Règle « {pattern} » enregistrée.",
+    "deleteTitle": "Supprimer la règle",
+    "deleteEffect": "La règle sera supprimée ; les opérations déjà classées gardent leur catégorie.",
+    "emptyTitle": "Aucune règle",
+    "emptyText": "Classez automatiquement les libellés bancaires connus à l'import.",
+    "priorityHelp": "Seule la première règle satisfaite s'applique, dans cet ordre.",
+    "inactive": "Inactive",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "anyAccount": "Tous les comptes",
+    "quoted": "« {pattern} »",
+    "unbounded": "…",
+    "onAccount": "sur {account}",
+    "between": "entre {min} et {max}",
+    "matchTypes": {
+      "contains": "Contient",
+      "starts_with": "Commence par",
+      "regex": "Expression régulière"
+    },
+    "signs": {
+      "debit": "Débits",
+      "credit": "Crédits",
+      "any": "Débits et crédits"
+    },
+    "actions": {
+      "category": "Catégoriser",
+      "transfer": "Convertir en transfert"
+    },
+    "fields": {
+      "matchType": "Condition",
+      "pattern": "Libellé bancaire",
+      "account": "Compte",
+      "sign": "Sens",
+      "amountMin": "Montant minimal",
+      "amountMax": "Montant maximal",
+      "action": "Action",
+      "transferAccount": "Compte de contrepartie",
+      "active": "Active"
+    }
   },
   "reconciliation": {
     "bankLabel": "Libellé bancaire :",
