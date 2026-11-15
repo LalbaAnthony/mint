@@ -20,7 +20,7 @@ const label = computed(() =>
     color="neutral"
     variant="ghost"
     square
-    class="relative"
+    :class="['relative', touchIconButtonClass]"
     :aria-label="label"
     data-testid="notification-bell"
     @click="store.open = true"

@@ -293,6 +293,7 @@ onMounted(() => {
                 })
               "
               :disabled="busy"
+              :class="touchIconButtonClass"
               color="neutral"
               variant="ghost"
               :data-testid="`push-device-remove-${device.id}`"

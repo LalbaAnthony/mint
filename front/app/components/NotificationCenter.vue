@@ -130,6 +130,7 @@ async function remove(view: NotificationView): Promise<void> {
             <UButton
               :icon="icons.delete"
               :aria-label="t('notifications.delete', { title: view.title })"
+              :class="touchIconButtonClass"
               color="neutral"
               variant="ghost"
               :data-testid="`notification-delete-${view.notification.id}`"

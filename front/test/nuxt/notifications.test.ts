@@ -161,6 +161,7 @@ describe('notification bell (NOTIF-04, CHG-51, CHG-56)', () => {
 
     const bell = wrapper.get('[data-testid="notification-bell"]')
     expect(bell.attributes('aria-label')).toBe('Notifications, 2 non lues')
+    expect(bell.classes()).toContain('max-lg:size-11')
     const counter = bell.get('[data-testid="notification-counter"]')
     expect(counter.text()).toBe('2')
     expect(counter.classes()).toEqual(
