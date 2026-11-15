@@ -1807,6 +1807,135 @@
           "counterpartAccountId": { "type": "string", "format": "uuid" }
         },
         "required": ["counterpartAccountId"]
+      },
+      "DashboardSummary": {
+        "type": "object",
+        "properties": {
+          "wealthCents": { "type": "integer" },
+          "alerts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BalanceAlert" }
+          },
+          "toCategorizeCount": { "type": "integer" },
+          "pendingProposalsCount": { "type": "integer" },
+          "pendingImportIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          }
+        },
+        "required": [
+          "wealthCents",
+          "alerts",
+          "toCategorizeCount",
+          "pendingProposalsCount",
+          "pendingImportIds"
+        ]
+      },
+      "BalanceAlert": {
+        "type": "object",
+        "properties": {
+          "accountId": { "type": "string", "format": "uuid" },
+          "firstBelowThresholdDate": { "type": "string", "format": "date" },
+          "minBalanceCents": { "type": "integer" },
+          "thresholdCents": { "type": "integer" }
+        },
+        "required": [
+          "accountId",
+          "firstBelowThresholdDate",
+          "minBalanceCents",
+          "thresholdCents"
+        ]
+      },
+      "BreakdownResponse": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string", "format": "date" },
+          "to": { "type": "string", "format": "date" },
+          "needs": {
+            "type": "object",
+            "properties": {
+              "totalCents": { "type": "integer" },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "categoryId": { "type": "string", "format": "uuid" },
+                    "totalCents": { "type": "integer" }
+                  },
+                  "required": ["categoryId", "totalCents"]
+                }
+              }
+            },
+            "required": ["totalCents", "categories"]
+          },
+          "wants": {
+            "type": "object",
+            "properties": {
+              "totalCents": { "type": "integer" },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "categoryId": { "type": "string", "format": "uuid" },
+                    "totalCents": { "type": "integer" }
+                  },
+                  "required": ["categoryId", "totalCents"]
+                }
+              }
+            },
+            "required": ["totalCents", "categories"]
+          },
+          "saveCents": { "type": "integer" },
+          "toCategorizeCents": { "type": "integer" },
+          "targets": { "$ref": "#/components/schemas/AllocationTargets" }
+        },
+        "required": [
+          "from",
+          "to",
+          "needs",
+          "wants",
+          "saveCents",
+          "toCategorizeCents",
+          "targets"
+        ]
+      },
+      "MonthlyReportResponse": {
+        "type": "object",
+        "properties": {
+          "today": { "type": "string", "format": "date" },
+          "currentMonth": { "type": "string", "format": "date" },
+          "months": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MonthlyReport" }
+          }
+        },
+        "required": ["today", "currentMonth", "months"]
+      },
+      "MonthlyReport": {
+        "type": "object",
+        "properties": {
+          "month": { "type": "string", "format": "date" },
+          "real": {
+            "type": "object",
+            "properties": {
+              "incomeCents": { "type": "integer" },
+              "expenseCents": { "type": "integer" }
+            },
+            "required": ["incomeCents", "expenseCents"]
+          },
+          "planned": {
+            "type": "object",
+            "properties": {
+              "incomeCents": { "type": "integer" },
+              "expenseCents": { "type": "integer" }
+            },
+            "required": ["incomeCents", "expenseCents"]
+          },
+          "balanceCents": { "type": "integer" }
+        },
+        "required": ["month", "real", "planned", "balanceCents"]
       }
     },
     "parameters": {}
@@ -6839,6 +6968,121 @@
           },
           "409": {
             "description": "Operation already a transfer, generated, reconciled or of the adjustment category, archived account, or date before the initial balance of the counterpart",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/summary": {
+      "get": {
+        "summary": "Total wealth of the active accounts, accounts whose forecast balance goes below their threshold within 7 days, operations to categorize and pending reconciliation proposals (DSH-04)",
+        "tags": ["dashboard"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DashboardSummary" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/breakdown": {
+      "get": {
+        "summary": "Spending of a period, the current month by default, by group Needs, Wants and Save and by category, compared with the allocation targets, adjustments excluded (DSH-02, CAT-03, CAT-06)",
+        "tags": ["dashboard"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Breakdown",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BreakdownResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid period",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dashboard/monthly": {
+      "get": {
+        "summary": "Incomes and expenses per month: the 12 last months in real, the current month completed by its planned rest, the months of the horizon planned (occurrences and envelopes), internal transfers excluded (DSH-03)",
+        "tags": ["dashboard"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "required": false,
+            "name": "horizonMonths",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Monthly report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthlyReportResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid horizon",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

@@ -47,6 +47,11 @@ import {
   updateEnvelopeRoute,
 } from './envelopes.js'
 import { balanceCurveRoute, calendarMonthRoute } from './forecast.js'
+import {
+  breakdownRoute,
+  dashboardSummaryRoute,
+  monthlyReportRoute,
+} from './dashboard.js'
 import { healthRoute } from './health.js'
 import {
   abandonImportRoute,
@@ -202,4 +207,7 @@ export const apiRoutes: ApiRoute[] = [
   reconcileOperationRoute,
   dissociateOperationRoute,
   convertToTransferRoute,
+  dashboardSummaryRoute,
+  breakdownRoute,
+  monthlyReportRoute,
 ]

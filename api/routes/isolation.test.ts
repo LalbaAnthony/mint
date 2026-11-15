@@ -805,6 +805,9 @@ const scenarios: Record<string, Scenario> = {
     )
     await expectBobDataUntouched(actors)
   },
+  'get /dashboard/summary': ownListOnly('/dashboard/summary'),
+  'get /dashboard/breakdown': ownListOnly('/dashboard/breakdown'),
+  'get /dashboard/monthly': ownListOnly('/dashboard/monthly'),
   'get /rules/suggestion': crossRead(
     ({ operationId }) => `/rules/suggestion?operationId=${operationId}`,
   ),

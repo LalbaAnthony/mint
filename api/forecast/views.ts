@@ -41,7 +41,7 @@ import type { DataAccess } from '../types/planning.js'
 
 export const realCurveDays = 30
 
-async function loadForecastData(
+export async function loadForecastData(
   data: DataAccess,
   userId: string,
 ): Promise<ForecastData> {
