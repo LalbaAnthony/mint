@@ -357,7 +357,8 @@
     "month_out_of_range": "Mois hors de l'historique ou de l'horizon",
     "invalid_rate": "Taux invalide",
     "rate_out_of_range": "Entre 0 et 99,9999 %",
-    "rate_too_precise": "4 décimales au plus"
+    "rate_too_precise": "4 décimales au plus",
+    "reminder_out_of_range": "Entre 0 et 30"
   },
   "errors": {
     "validation_failed": "Certaines valeurs sont invalides.",
@@ -582,7 +583,9 @@
       "active": "Active",
       "recurrence": "Récurrence",
       "monthlyEquivalent": "Équivalent mensuel",
-      "nextOccurrence": "Prochaine occurrence"
+      "nextOccurrence": "Prochaine occurrence",
+      "reminderDaysBefore": "Rappel (jours avant)",
+      "reminderDaysBeforeHint": "Un second rappel arrive le jour même"
     },
     "totals": {
       "expenses": "Dépenses par mois",
@@ -922,5 +925,56 @@
     "nothing": "Aucun mouvement ce jour-là.",
     "openSchedule": "Ouvrir l'échéance",
     "skipped": "Occurrence de {label} sautée."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bell": "Notifications | Notifications, {n} non lue | Notifications, {n} non lues",
+    "unreadSummary": "Aucune notification non lue | {n} notification non lue | {n} notifications non lues",
+    "markAllRead": "Tout marquer comme lu",
+    "emptyTitle": "Aucune notification",
+    "emptyDescription": "Les alertes de solde bas, les rappels de paiement et les dépassements de plafond apparaîtront ici.",
+    "unread": "Non lue",
+    "delete": "Supprimer la notification {title}",
+    "lowBalance": {
+      "title": "Solde bas : {account}",
+      "body": "{amount} prévus le {date}, sous le seuil de {threshold}."
+    },
+    "reminder": {
+      "title": "Paiement à faire : {label}",
+      "ahead": "{amount} à régler le {date}.",
+      "today": "{amount} à régler aujourd'hui."
+    },
+    "depositCap": {
+      "title": "Plafond dépassé : {account}",
+      "body": "Dépassement de {amount} le {date}."
+    },
+    "settings": {
+      "title": "Notifications",
+      "pushTypes": "Notifications push",
+      "lowBalancePush": "Solde bas",
+      "lowBalancePushHelp": "Quand le solde prévisionnel d'un compte passe sous son seuil dans les 7 prochains jours.",
+      "manualReminderPush": "Rappels de paiement",
+      "manualReminderPushHelp": "Avant chaque paiement en mode Manuel, puis le jour même.",
+      "inAppAlways": "Toutes les alertes restent dans le centre de notifications. Les dépassements de plafond n'y sont signalés que dans l'application.",
+      "thisDevice": "Cet appareil",
+      "serverDisabled": "Les notifications push ne sont pas configurées sur ce serveur.",
+      "iosTitle": "Installez Mint sur l'écran d'accueil",
+      "iosSteps": "Sur iPhone et iPad, les notifications push ne fonctionnent que dans l'application installée. Dans Safari, touchez Partager, puis Sur l'écran d'accueil, puis ouvrez Mint depuis la nouvelle icône pour activer les notifications.",
+      "unsupported": "Ce navigateur ne prend pas en charge les notifications push.",
+      "blocked": "Les notifications sont bloquées pour Mint dans les réglages du navigateur.",
+      "activeHere": "Les notifications push sont activées sur cet appareil.",
+      "inactiveHere": "Les notifications push ne sont pas activées sur cet appareil.",
+      "enableHere": "Activer sur cet appareil",
+      "disableHere": "Désactiver sur cet appareil",
+      "enabled": "Notifications push activées sur cet appareil.",
+      "permissionDenied": "Autorisation refusée : les notifications push restent désactivées sur cet appareil.",
+      "workerUnavailable": "Le service de notifications de l'application n'est pas prêt. Rechargez la page puis réessayez.",
+      "devices": "Appareils abonnés",
+      "noDevice": "Aucun appareil abonné.",
+      "thisDeviceBadge": "Cet appareil",
+      "deviceDetails": "Abonné le {createdAt} · dernier envoi : {lastSuccess}",
+      "neverDelivered": "aucun",
+      "removeDevice": "Retirer {name}"
+    }
   }
 }

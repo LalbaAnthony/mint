@@ -176,6 +176,7 @@ export function schedule(overrides: Partial<Schedule> = {}): Schedule {
     label: 'Musique',
     amountCents: 4_416,
     triggerMode: 'auto',
+    reminderDaysBefore: 2,
     note: null,
     active: true,
     isSubscription: true,

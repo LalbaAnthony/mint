@@ -223,6 +223,8 @@ onMounted(loadSessions)
         </UForm>
       </UCard>
 
+      <NotificationSettings />
+
       <CategoryManager />
 
       <TagManager />

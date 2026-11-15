@@ -17,12 +17,35 @@ const referentials = useReferentialsStore()
 const view = useForecastViewStore()
 const editor = useOperationEditorStore()
 const isWide = useMediaQuery('(min-width: 768px)')
+const route = useRoute()
+const router = useRouter()
 
 const currentMonth = monthStart(parisDate(new Date()))
 const month = ref(currentMonth)
 const result = ref<CalendarMonthResponse | null>(null)
 const selectedDate = ref<string | null>(null)
 const ready = ref(false)
+
+function applyDeepLink(): boolean {
+  const link = calendarDeepLink(route.query)
+  if (link === null) {
+    return false
+  }
+  if (link.accountId !== null) {
+    view.calendarAccountId = link.accountId
+  }
+  month.value = monthStart(link.day)
+  selectedDate.value = link.day
+  return true
+}
+
+async function clearDeepLink(): Promise<void> {
+  if (applyDeepLink()) {
+    await router.replace({ query: {} })
+  }
+}
+
+const openedFromLink = applyDeepLink()
 
 function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
@@ -89,8 +112,14 @@ async function load(): Promise<void> {
   ready.value = true
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  if (openedFromLink) {
+    await router.replace({ query: {} })
+  }
+})
 watch(() => editor.savedVersion, load)
+watch(() => route.query, clearDeepLink)
 watch(
   () => [month.value, view.calendarAccountId, view.horizonMonths],
   loadMonth,

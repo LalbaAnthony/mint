@@ -134,6 +134,7 @@ describe('schedule form (ECH-01 to ECH-06)', () => {
         label: 'Epargne',
         amountCents: 10_000,
         triggerMode: 'auto',
+        reminderDaysBefore: 2,
         note: null,
         active: true,
         frequency: 'monthly',

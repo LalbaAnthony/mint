@@ -32,6 +32,7 @@ useHead({ title: () => props.title })
         </template>
         <template #right>
           <slot name="actions" />
+          <NotificationBell />
         </template>
       </UDashboardNavbar>
     </template>

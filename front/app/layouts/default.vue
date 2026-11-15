@@ -1,3 +1,7 @@
+<script setup lang="ts">
+useNotificationRefresh()
+</script>
+
 <template>
   <UDashboardGroup unit="px">
     <AppSidebar />
@@ -8,5 +12,6 @@
     <AppFab />
     <OperationFormModal />
     <ReconciliationProposalModal />
+    <NotificationCenter />
   </UDashboardGroup>
 </template>

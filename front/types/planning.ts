@@ -98,6 +98,7 @@ export type ScheduleFormState = {
   categoryId: string | undefined
   isSubscription: boolean
   triggerMode: TriggerMode
+  reminderDaysBefore: number
   frequency: ScheduleFrequency
   interval: number
   startDate: string

@@ -185,12 +185,11 @@ export default defineNuxtConfig({
         },
       ],
     },
-    generateSW: {
+    strategies: 'buildSW',
+    buildSW: {
+      swSrc: workspaceDirectory('./service-worker/sw.ts'),
       globPatterns: ['**/*.{js,css,html,svg,ico,woff2}'],
       globIgnores: ['**/apple-splash-*'],
-      navigateFallback: '/200.html',
-      navigateFallbackDenylist: [/^\/api\//],
-      cleanupOutdatedCaches: true,
     },
   },
   typescript: {

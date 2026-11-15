@@ -3,6 +3,8 @@ import { useMediaQuery } from '@vueuse/core'
 import type { FormError } from '@nuxt/ui'
 import {
   businessDayRules,
+  defaultReminderDaysBefore,
+  maxReminderDaysBefore,
   scheduleFieldIssues,
   scheduleFrequencies,
   scheduleKinds,
@@ -50,6 +52,7 @@ function emptyState(): ScheduleFormState {
     categoryId: undefined,
     isSubscription: false,
     triggerMode: 'auto',
+    reminderDaysBefore: defaultReminderDaysBefore,
     frequency: 'monthly',
     interval: 1,
     startDate: parisDate(new Date()),
@@ -84,6 +87,7 @@ function stateFrom(schedule: Schedule): ScheduleFormState {
     categoryId: schedule.categoryId ?? undefined,
     isSubscription: schedule.isSubscription,
     triggerMode: schedule.triggerMode,
+    reminderDaysBefore: schedule.reminderDaysBefore,
     frequency: schedule.frequency,
     interval: schedule.interval,
     startDate: schedule.startDate,
@@ -214,6 +218,7 @@ function draftFields(): ScheduleFields | null {
     label: state.label.trim(),
     amountCents: amount,
     triggerMode: state.triggerMode,
+    reminderDaysBefore: state.reminderDaysBefore,
     note: state.note.trim() === '' ? null : state.note.trim(),
     active: state.active,
     frequency: state.frequency,
@@ -526,6 +531,20 @@ async function submit(): Promise<void> {
             :items="modeItems"
             class="w-full"
             data-testid="schedule-trigger-mode"
+          />
+        </AppFormField>
+        <AppFormField
+          v-if="state.triggerMode === 'manual'"
+          :label="t('schedules.fields.reminderDaysBefore')"
+          :hint="t('schedules.fields.reminderDaysBeforeHint')"
+          name="reminderDaysBefore"
+        >
+          <UInputNumber
+            v-model="state.reminderDaysBefore"
+            :min="0"
+            :max="maxReminderDaysBefore"
+            class="w-full"
+            data-testid="schedule-reminder-days"
           />
         </AppFormField>
         <AppFormField

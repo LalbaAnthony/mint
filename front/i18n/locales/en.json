@@ -357,7 +357,8 @@
     "month_out_of_range": "Month outside the history or the horizon",
     "invalid_rate": "Invalid rate",
     "rate_out_of_range": "Between 0 and 99.9999%",
-    "rate_too_precise": "4 decimals at most"
+    "rate_too_precise": "4 decimals at most",
+    "reminder_out_of_range": "Between 0 and 30"
   },
   "errors": {
     "validation_failed": "Some values are invalid.",
@@ -582,7 +583,9 @@
       "active": "Active",
       "recurrence": "Recurrence",
       "monthlyEquivalent": "Monthly equivalent",
-      "nextOccurrence": "Next occurrence"
+      "nextOccurrence": "Next occurrence",
+      "reminderDaysBefore": "Reminder (days before)",
+      "reminderDaysBeforeHint": "A second reminder arrives on the day itself"
     },
     "totals": {
       "expenses": "Expenses per month",
@@ -922,5 +925,56 @@
     "nothing": "No movement on that day.",
     "openSchedule": "Open the schedule",
     "skipped": "Occurrence of {label} skipped."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bell": "Notifications | Notifications, {n} unread | Notifications, {n} unread",
+    "unreadSummary": "No unread notification | {n} unread notification | {n} unread notifications",
+    "markAllRead": "Mark all as read",
+    "emptyTitle": "No notifications",
+    "emptyDescription": "Low balance alerts, payment reminders and cap overruns will appear here.",
+    "unread": "Unread",
+    "delete": "Delete notification {title}",
+    "lowBalance": {
+      "title": "Low balance: {account}",
+      "body": "{amount} expected on {date}, below the {threshold} threshold."
+    },
+    "reminder": {
+      "title": "Payment to make: {label}",
+      "ahead": "{amount} to pay on {date}.",
+      "today": "{amount} to pay today."
+    },
+    "depositCap": {
+      "title": "Cap exceeded: {account}",
+      "body": "Exceeded by {amount} on {date}."
+    },
+    "settings": {
+      "title": "Notifications",
+      "pushTypes": "Push notifications",
+      "lowBalancePush": "Low balance",
+      "lowBalancePushHelp": "When an account's forecast balance falls below its threshold within the next 7 days.",
+      "manualReminderPush": "Payment reminders",
+      "manualReminderPushHelp": "Before each payment in Manual mode, then on the day itself.",
+      "inAppAlways": "Every alert stays in the notification center. Cap overruns are only reported in the app.",
+      "thisDevice": "This device",
+      "serverDisabled": "Push notifications are not configured on this server.",
+      "iosTitle": "Add Mint to your Home Screen",
+      "iosSteps": "On iPhone and iPad, push notifications only work in the installed app. In Safari, tap Share, then Add to Home Screen, then open Mint from the new icon to enable notifications.",
+      "unsupported": "This browser does not support push notifications.",
+      "blocked": "Notifications are blocked for Mint in the browser settings.",
+      "activeHere": "Push notifications are enabled on this device.",
+      "inactiveHere": "Push notifications are not enabled on this device.",
+      "enableHere": "Enable on this device",
+      "disableHere": "Disable on this device",
+      "enabled": "Push notifications enabled on this device.",
+      "permissionDenied": "Permission denied: push notifications stay disabled on this device.",
+      "workerUnavailable": "The app notification service is not ready. Reload the page and try again.",
+      "devices": "Subscribed devices",
+      "noDevice": "No subscribed device.",
+      "thisDeviceBadge": "This device",
+      "deviceDetails": "Subscribed on {createdAt} · last delivery: {lastSuccess}",
+      "neverDelivered": "none",
+      "removeDevice": "Remove {name}"
+    }
   }
 }

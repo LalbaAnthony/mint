@@ -10,7 +10,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "typecheck": "nuxt prepare && vue-tsc -b --noEmit",
+    "typecheck": "nuxt prepare && vue-tsc -b --noEmit && tsc -p service-worker/tsconfig.json",
     "pwa:assets": "pwa-assets-generator -c pwa-assets.splash.config.ts && pwa-assets-generator -c pwa-assets.badge.config.ts && pwa-assets-generator -c pwa-assets.icons.config.ts"
   },
   "dependencies": {
@@ -35,6 +35,7 @@
     "@nuxt/test-utils": "^4.4.0",
     "@types/sortablejs": "^1.15.9",
     "@vite-pwa/assets-generator": "^2.0.0",
+    "@vite-pwa/workbox-swkit": "^8.0.15",
     "@vue/test-utils": "^2.5.1",
     "happy-dom": "^21.0.4",
     "typescript": "~6.0.3",

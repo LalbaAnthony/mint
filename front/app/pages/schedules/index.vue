@@ -16,6 +16,8 @@ const { formatDate } = useFormatters()
 const referentials = useReferentialsStore()
 const labels = usePlanningLabels()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
+const route = useRoute()
+const router = useRouter()
 
 const result = ref<ScheduleListResponse | null>(null)
 const kindFilter = ref<ScheduleKindFilter>('all')
@@ -53,7 +55,19 @@ async function load(): Promise<void> {
   }
 }
 
-onMounted(load)
+async function openFromLink(): Promise<void> {
+  const scheduleId = route.query.schedule
+  if (typeof scheduleId === 'string') {
+    selectedId.value = scheduleId
+    await router.replace({ query: {} })
+  }
+}
+
+onMounted(async () => {
+  await load()
+  await openFromLink()
+})
+watch(() => route.query, openFromLink)
 
 const kindItems = computed<SelectItem<ScheduleKindFilter>[]>(() => [
   { label: t('schedules.filters.all'), value: 'all' },

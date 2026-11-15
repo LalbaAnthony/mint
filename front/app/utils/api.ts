@@ -3,10 +3,26 @@ import { csrfTokenResponseSchema } from '@mint/shared/schemas/auth'
 import { apiErrorResponseSchema } from '@mint/shared/schemas/errors'
 import type { ValidationIssue } from '@mint/shared/types/errors'
 import type { ApiErrorInit, ApiMethod, FetchFailure } from '~~/types/api'
+import type { ApiMutationListener } from '~~/types/notifications'
 
 const apiBase = '/api/v1'
 
 let csrfToken: string | null = null
+
+const mutationListeners = new Set<ApiMutationListener>()
+
+export function onApiMutation(listener: ApiMutationListener): () => void {
+  mutationListeners.add(listener)
+  return () => {
+    mutationListeners.delete(listener)
+  }
+}
+
+function notifyMutation(path: string): void {
+  for (const listener of mutationListeners) {
+    listener(path)
+  }
+}
 
 export class ApiError extends Error {
   readonly status: number
@@ -80,14 +96,16 @@ export async function apiRequest(
     return send(method, path, undefined, null)
   }
   const token = csrfToken ?? (await refreshCsrfToken())
-  try {
-    return await send(method, path, body, token)
-  } catch (error) {
-    if (error instanceof ApiError && error.code === 'csrf_invalid') {
-      return send(method, path, body, await refreshCsrfToken())
-    }
-    throw error
-  }
+  const response = await send(method, path, body, token).catch(
+    async (error: unknown) => {
+      if (error instanceof ApiError && error.code === 'csrf_invalid') {
+        return send(method, path, body, await refreshCsrfToken())
+      }
+      throw error
+    },
+  )
+  notifyMutation(path)
+  return response
 }
 
 export async function apiGet<Schema extends z.ZodType>(
@@ -133,12 +151,14 @@ export async function apiUpload<Schema extends z.ZodType>(
   schema: Schema,
 ): Promise<z.output<Schema>> {
   const token = csrfToken ?? (await refreshCsrfToken())
-  try {
-    return schema.parse(await sendFile(path, file, token))
-  } catch (error) {
-    if (error instanceof ApiError && error.code === 'csrf_invalid') {
-      return schema.parse(await sendFile(path, file, await refreshCsrfToken()))
-    }
-    throw error
-  }
+  const response = await sendFile(path, file, token).catch(
+    async (error: unknown) => {
+      if (error instanceof ApiError && error.code === 'csrf_invalid') {
+        return sendFile(path, file, await refreshCsrfToken())
+      }
+      throw error
+    },
+  )
+  notifyMutation(path)
+  return schema.parse(response)
 }
