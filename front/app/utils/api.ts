@@ -113,3 +113,32 @@ export async function apiCommand(
 ): Promise<void> {
   await apiRequest(method, path, body)
 }
+
+async function sendFile(path: string, file: Blob, token: string) {
+  try {
+    return await $fetch(`${apiBase}${path}`, {
+      method: 'POST',
+      body: file,
+      credentials: 'same-origin',
+      headers: { 'X-CSRF-Token': token, 'Content-Type': 'text/csv' },
+    })
+  } catch (error) {
+    throw toApiError(error)
+  }
+}
+
+export async function apiUpload<Schema extends z.ZodType>(
+  path: string,
+  file: Blob,
+  schema: Schema,
+): Promise<z.output<Schema>> {
+  const token = csrfToken ?? (await refreshCsrfToken())
+  try {
+    return schema.parse(await sendFile(path, file, token))
+  } catch (error) {
+    if (error instanceof ApiError && error.code === 'csrf_invalid') {
+      return schema.parse(await sendFile(path, file, await refreshCsrfToken()))
+    }
+    throw error
+  }
+}

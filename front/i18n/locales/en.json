@@ -354,7 +354,16 @@
     "invalid_replacement": "This category cannot be used as a replacement.",
     "operations_before_initial_balance": "Operations are dated before this new initial balance date.",
     "occurrence_not_editable": "This occurrence can no longer be changed.",
-    "operation_is_transfer": "This movement belongs to a transfer: edit the transfer."
+    "operation_is_transfer": "This movement belongs to a transfer: edit the transfer.",
+    "operation_without_bank_label": "This operation has no bank label.",
+    "statement_exists": "A statement already exists at this date.",
+    "statement_balanced": "This statement has no gap to correct.",
+    "import_not_pending": "This import is no longer pending.",
+    "import_not_validated": "Only a validated import can be cancelled.",
+    "import_not_previewed": "Run the preview before validating the import.",
+    "occurrence_not_candidate": "This occurrence can no longer be reconciled.",
+    "operation_reconciled": "This operation is already reconciled.",
+    "operation_not_reconciled": "This operation is not reconciled."
   },
   "usage": {
     "checking": "Checking usage...",
@@ -584,6 +593,98 @@
     "emptyTitle": "No subscription",
     "emptyText": "Mark an expense schedule as a subscription to follow it here.",
     "goToSchedules": "Go to schedules"
+  },
+  "imports": {
+    "steps": {
+      "select": "Import a CSV statement",
+      "configure": "Reading settings",
+      "review": "Import validation"
+    },
+    "file": "CSV file",
+    "fileHint": "5 MB at most",
+    "upload": "Send the file",
+    "tooLarge": "This file exceeds 5 MB.",
+    "column": "Column {n}{title}",
+    "preview": "Preview",
+    "validate": "Validate the import",
+    "validated": "Import validated: {created} operations created, {merged} merged.",
+    "backToSettings": "Back to the settings",
+    "duplicate": "Duplicate",
+    "include": "Import {label}",
+    "noReconciliation": "Do not reconcile",
+    "reconcileWith": "Reconcile with",
+    "acceptProposals": "Accept every proposal",
+    "refuseProposals": "Refuse every proposal",
+    "history": "Import history",
+    "historyEmpty": "No import for this account.",
+    "counts": "{read} read, {created} created, {duplicates} duplicates excluded, {merged} merged",
+    "resume": "Resume",
+    "abandon": "Abandon",
+    "cancel": "Cancel the import",
+    "cancelTitle": "Cancel this import",
+    "cancelEffect": "The operations created by this import will be deleted and the merged operations will get their previous values back.",
+    "statuses": {
+      "pending": "Pending",
+      "validated": "Validated",
+      "cancelled": "Cancelled"
+    },
+    "filters": {
+      "label": "Shown lines",
+      "all": "Kept lines ({n})",
+      "toCategorize": "To categorize",
+      "proposals": "Reconciliation proposals ({n})",
+      "duplicates": "Duplicates ({n})",
+      "errors": "Lines in error ({n})"
+    },
+    "errors": {
+      "missing_column": "Missing column",
+      "invalid_date": "Unreadable date",
+      "invalid_amount": "Unreadable amount",
+      "amount_zero": "Zero amount",
+      "both_amounts": "Debit and credit both filled",
+      "missing_label": "Empty label",
+      "date_before_initial_balance": "Before the initial balance"
+    },
+    "delimiters": {
+      "semicolon": "Semicolon",
+      "comma": "Comma",
+      "tab": "Tab"
+    },
+    "encodings": {
+      "utf-8": "UTF-8",
+      "windows-1252": "Windows-1252"
+    },
+    "decimals": {
+      "comma": "Comma",
+      "dot": "Dot"
+    },
+    "dateFormats": {
+      "DD/MM/YYYY": "DD/MM/YYYY",
+      "DD/MM/YY": "DD/MM/YY",
+      "DD-MM-YYYY": "DD-MM-YYYY",
+      "DD.MM.YYYY": "DD.MM.YYYY",
+      "YYYY-MM-DD": "YYYY-MM-DD",
+      "MM/DD/YYYY": "MM/DD/YYYY"
+    },
+    "amountModes": {
+      "signed": "One signed column",
+      "split": "Debit and credit columns"
+    },
+    "fields": {
+      "delimiter": "Delimiter",
+      "encoding": "Encoding",
+      "dateFormat": "Date format",
+      "decimalSeparator": "Decimal separator",
+      "skipTop": "Lines skipped at the top",
+      "skipBottom": "Lines skipped at the bottom",
+      "hasHeader": "Header line",
+      "colDate": "Date column",
+      "colLabel": "Label column",
+      "amountMode": "Amount",
+      "colAmount": "Amount column",
+      "colDebit": "Debit column",
+      "colCredit": "Credit column"
+    }
   },
   "rules": {
     "add": "Add a rule",

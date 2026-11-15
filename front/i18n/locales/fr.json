@@ -354,7 +354,16 @@
     "invalid_replacement": "Cette catégorie ne peut pas servir de remplacement.",
     "operations_before_initial_balance": "Des opérations sont datées avant cette nouvelle date de solde initial.",
     "occurrence_not_editable": "Cette occurrence ne peut plus être modifiée.",
-    "operation_is_transfer": "Ce mouvement appartient à un transfert : modifiez le transfert."
+    "operation_is_transfer": "Ce mouvement appartient à un transfert : modifiez le transfert.",
+    "operation_without_bank_label": "Cette opération n'a pas de libellé bancaire.",
+    "statement_exists": "Un relevé existe déjà à cette date.",
+    "statement_balanced": "Ce relevé n'a pas d'écart à corriger.",
+    "import_not_pending": "Cet import n'est plus en attente.",
+    "import_not_validated": "Seul un import validé peut être annulé.",
+    "import_not_previewed": "Lancez l'aperçu avant de valider l'import.",
+    "occurrence_not_candidate": "Cette occurrence ne peut plus être rapprochée.",
+    "operation_reconciled": "Cette opération est déjà rapprochée.",
+    "operation_not_reconciled": "Cette opération n'est pas rapprochée."
   },
   "usage": {
     "checking": "Vérification des usages...",
@@ -584,6 +593,98 @@
     "emptyTitle": "Aucun abonnement",
     "emptyText": "Marquez une échéance de dépense comme abonnement pour la suivre ici.",
     "goToSchedules": "Voir les échéances"
+  },
+  "imports": {
+    "steps": {
+      "select": "Importer un relevé CSV",
+      "configure": "Réglages de lecture",
+      "review": "Validation de l'import"
+    },
+    "file": "Fichier CSV",
+    "fileHint": "5 Mo maximum",
+    "upload": "Envoyer le fichier",
+    "tooLarge": "Ce fichier dépasse 5 Mo.",
+    "column": "Colonne {n}{title}",
+    "preview": "Aperçu",
+    "validate": "Valider l'import",
+    "validated": "Import validé : {created} opérations créées, {merged} fusionnées.",
+    "backToSettings": "Revenir aux réglages",
+    "duplicate": "Doublon",
+    "include": "Importer {label}",
+    "noReconciliation": "Ne pas rapprocher",
+    "reconcileWith": "Rapprocher de",
+    "acceptProposals": "Accepter toutes les propositions",
+    "refuseProposals": "Refuser toutes les propositions",
+    "history": "Historique des imports",
+    "historyEmpty": "Aucun import pour ce compte.",
+    "counts": "{read} lues, {created} créées, {duplicates} doublons exclus, {merged} fusionnées",
+    "resume": "Reprendre",
+    "abandon": "Abandonner",
+    "cancel": "Annuler l'import",
+    "cancelTitle": "Annuler cet import",
+    "cancelEffect": "Les opérations créées par cet import seront supprimées et les opérations fusionnées retrouveront leurs valeurs précédentes.",
+    "statuses": {
+      "pending": "En attente",
+      "validated": "Validé",
+      "cancelled": "Annulé"
+    },
+    "filters": {
+      "label": "Lignes affichées",
+      "all": "Lignes retenues ({n})",
+      "toCategorize": "À catégoriser",
+      "proposals": "Propositions de rapprochement ({n})",
+      "duplicates": "Doublons ({n})",
+      "errors": "Lignes en erreur ({n})"
+    },
+    "errors": {
+      "missing_column": "Colonne absente",
+      "invalid_date": "Date illisible",
+      "invalid_amount": "Montant illisible",
+      "amount_zero": "Montant nul",
+      "both_amounts": "Débit et crédit renseignés",
+      "missing_label": "Libellé vide",
+      "date_before_initial_balance": "Antérieure au solde initial"
+    },
+    "delimiters": {
+      "semicolon": "Point-virgule",
+      "comma": "Virgule",
+      "tab": "Tabulation"
+    },
+    "encodings": {
+      "utf-8": "UTF-8",
+      "windows-1252": "Windows-1252"
+    },
+    "decimals": {
+      "comma": "Virgule",
+      "dot": "Point"
+    },
+    "dateFormats": {
+      "DD/MM/YYYY": "JJ/MM/AAAA",
+      "DD/MM/YY": "JJ/MM/AA",
+      "DD-MM-YYYY": "JJ-MM-AAAA",
+      "DD.MM.YYYY": "JJ.MM.AAAA",
+      "YYYY-MM-DD": "AAAA-MM-JJ",
+      "MM/DD/YYYY": "MM/JJ/AAAA"
+    },
+    "amountModes": {
+      "signed": "Une colonne signée",
+      "split": "Colonnes débit et crédit"
+    },
+    "fields": {
+      "delimiter": "Séparateur",
+      "encoding": "Encodage",
+      "dateFormat": "Format de date",
+      "decimalSeparator": "Séparateur décimal",
+      "skipTop": "Lignes ignorées en début",
+      "skipBottom": "Lignes ignorées en fin",
+      "hasHeader": "Ligne d'en-tête",
+      "colDate": "Colonne date",
+      "colLabel": "Colonne libellé",
+      "amountMode": "Montant",
+      "colAmount": "Colonne montant",
+      "colDebit": "Colonne débit",
+      "colCredit": "Colonne crédit"
+    }
   },
   "rules": {
     "add": "Ajouter une règle",
