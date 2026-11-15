@@ -218,6 +218,12 @@ describe('dashboard view (DSH-01)', () => {
       },
       { timeout: 10_000 },
     )
+    expect(wrapper.get('[data-testid="dashboard-negative"]').text()).toContain(
+      'Négatif à partir du',
+    )
+    expect(
+      wrapper.find('[data-testid="dashboard-below-threshold"]').exists(),
+    ).toBe(false)
     expect(wrapper.get('[data-testid="dashboard-minimum"]').text()).toContain(
       euros(-5_000),
     )

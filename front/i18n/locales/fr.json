@@ -576,6 +576,8 @@
     "threshold": "Seuil d'alerte",
     "minimum": "Minimum",
     "minimumOn": "Solde minimal prévu le {date} :",
+    "belowThresholdFrom": "Sous le seuil d'alerte à partir du {date}",
+    "negativeFrom": "Négatif à partir du {date}",
     "date": "Date",
     "balance": "Solde de fin de journée",
     "nature": "Nature",

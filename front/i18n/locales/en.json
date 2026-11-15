@@ -576,6 +576,8 @@
     "threshold": "Alert threshold",
     "minimum": "Minimum",
     "minimumOn": "Lowest forecast balance on {date}:",
+    "belowThresholdFrom": "Below the alert threshold from {date}",
+    "negativeFrom": "Negative from {date}",
     "date": "Date",
     "balance": "End-of-day balance",
     "nature": "Kind",

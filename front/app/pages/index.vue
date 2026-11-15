@@ -86,21 +86,50 @@ const indicators = computed(() => curve.value?.indicators ?? null)
         />
       </EmptyState>
       <div v-else-if="curve !== null" class="flex flex-col gap-3">
-        <p
+        <ul
           v-if="indicators !== null"
-          class="flex flex-wrap items-center gap-1 text-sm text-muted"
-          data-testid="dashboard-minimum"
+          class="flex flex-col gap-1 text-sm text-muted"
+          data-testid="dashboard-indicators"
         >
-          {{
-            t('forecast.minimumOn', {
-              date: formatDate(indicators.minBalanceDate),
-            })
-          }}
-          <MoneyAmount
-            :cents="indicators.minBalanceCents"
-            :threshold="curve.thresholdCents"
-          />
-        </p>
+          <li
+            class="flex flex-wrap items-center gap-1"
+            data-testid="dashboard-minimum"
+          >
+            {{
+              t('forecast.minimumOn', {
+                date: formatDate(indicators.minBalanceDate),
+              })
+            }}
+            <MoneyAmount
+              :cents="indicators.minBalanceCents"
+              :threshold="curve.thresholdCents"
+            />
+          </li>
+          <li
+            v-if="indicators.firstBelowThresholdDate !== null"
+            class="flex items-center gap-1 text-warning"
+            data-testid="dashboard-below-threshold"
+          >
+            <UIcon :name="icons.belowThreshold" class="size-4 shrink-0" />
+            {{
+              t('forecast.belowThresholdFrom', {
+                date: formatDate(indicators.firstBelowThresholdDate),
+              })
+            }}
+          </li>
+          <li
+            v-if="indicators.firstNegativeDate !== null"
+            class="flex items-center gap-1 text-error"
+            data-testid="dashboard-negative"
+          >
+            <UIcon :name="icons.negative" class="size-4 shrink-0" />
+            {{
+              t('forecast.negativeFrom', {
+                date: formatDate(indicators.firstNegativeDate),
+              })
+            }}
+          </li>
+        </ul>
         <LazyBalanceCurveChart :curve="curve" />
       </div>
     </UCard>
