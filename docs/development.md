@@ -4,15 +4,15 @@ Mise en route locale et exécution des tests. Les décisions sont motivées dans
 
 ## 1. Environnement
 
-Copier `.env.example` en `.env` à la racine : Docker Compose et les tests de l'API le lisent. Les valeurs `SMTP_*` y restent vides, elles ne servent qu'au service `api` de production.
+Copier `.env.example` en `.env` à la racine : Docker Compose et les tests de l'API le lisent. Les valeurs `SMTP_*` y restent vides, elles ne servent qu'au service `api` de production. Les valeurs `VAPID_*` peuvent rester vides : le Web Push est alors désactivé et le profil l'indique ; pour l'essayer, renseigner les trois avec une paire générée par `npx web-push generate-vapid-keys` et un `VAPID_SUBJECT` en `mailto:`. La réception des push demande le service worker, actif seulement dans le build de production (section 4) : sous `nuxt dev`, seuls le centre de notifications et les préférences s'essaient.
 
-| Service (profil `dev`) | Rôle                                                                                      | Accès depuis l'hôte                          |
-| ---------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `db-dev`               | PostgreSQL de développement et des tests de l'API                                         | `127.0.0.1:${DB_HOST_PORT}`                  |
-| `api-dev`              | API en `tsx watch`, sources `api/` et `shared/` montées                                   | `127.0.0.1:${API_HOST_PORT}`                 |
-| `worker-dev`           | worker en `tsx watch` : échéances à 00:05 et au démarrage, purge à 03:00, sources montées | aucun port                                   |
-| `web-dev`              | front en `nuxt dev`, sources `front/` et `shared/` montées                                | `http://localhost:${WEB_HOST_PORT}`          |
-| `mailpit`              | serveur SMTP de développement, reçoit tous les emails de `api-dev`                        | interface web `127.0.0.1:${MAILPIT_UI_PORT}` |
+| Service (profil `dev`) | Rôle                                                                                                                             | Accès depuis l'hôte                          |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `db-dev`               | PostgreSQL de développement et des tests de l'API                                                                                | `127.0.0.1:${DB_HOST_PORT}`                  |
+| `api-dev`              | API en `tsx watch`, sources `api/` et `shared/` montées                                                                          | `127.0.0.1:${API_HOST_PORT}`                 |
+| `worker-dev`           | worker en `tsx watch` : échéances à 00:05 et au démarrage, purge à 03:00, notifications à 08:00 et au démarrage, sources montées | aucun port                                   |
+| `web-dev`              | front en `nuxt dev`, sources `front/` et `shared/` montées                                                                       | `http://localhost:${WEB_HOST_PORT}`          |
+| `mailpit`              | serveur SMTP de développement, reçoit tous les emails de `api-dev`                                                               | interface web `127.0.0.1:${MAILPIT_UI_PORT}` |
 
 ```sh
 docker compose --profile dev up -d
@@ -55,7 +55,7 @@ docker compose --profile dev exec api-dev npm run seed -- --wipe
 
 Une sous-catégorie de dépense a `expense_group` à `NULL` : son groupe se lit sur son parent. Le script vit dans `api/scripts/`, exclu du build de production : il n'existe pas dans l'image `mint-api`. Une table ajoutée sans suppression en cascade depuis `users` doit être ajoutée à la suppression du script.
 
-Le service `worker-dev` exécute les occurrences dues à son démarrage puis chaque jour à 00:05 (Europe/Paris), et purge les sessions et jetons expirés ou utilisés à 03:00, sans ping de supervision. Pour relancer une exécution : `docker compose --profile dev restart worker-dev`. Sur l'hôte, `npm run worker --workspace @mint/api` demande les variables `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER` et `DATABASE_PASSWORD`. Les règles d'exécution sont dans `docs/calculation-rules.md` (section 4).
+Le service `worker-dev` exécute les occurrences dues à son démarrage puis chaque jour à 00:05 (Europe/Paris), purge les sessions et jetons expirés ou utilisés à 03:00 et évalue les notifications à son démarrage puis à 08:00, sans ping de supervision. Après une mise à jour des dépendances de l'API (`web-push` au lot 3), reconstruire les images de développement (`docker compose --profile dev build api-dev worker-dev`) puis appliquer les migrations (`docker compose --profile dev exec api-dev npm run migrate`). Pour relancer une exécution : `docker compose --profile dev restart worker-dev`. Sur l'hôte, `npm run worker --workspace @mint/api` demande les variables `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER` et `DATABASE_PASSWORD`. Les règles d'exécution sont dans `docs/calculation-rules.md` (section 4).
 
 ## 2. Tests
 

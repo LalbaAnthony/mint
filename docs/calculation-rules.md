@@ -2,26 +2,27 @@
 
 Les moteurs de calcul vivent dans `shared/engines/`. Ce sont des fonctions pures : aucune entrée-sortie, aucune horloge, la date du jour (Europe/Paris) est toujours un paramètre. Leurs entrées et sorties sont typées dans `shared/types/`, indépendamment des modèles Sequelize : l'API construit ces entrées depuis la base. Les décisions qui fondent ces règles sont motivées dans l'ADR 0013.
 
-| Module              | Rôle                                                               | Exigences                      |
-| ------------------- | ------------------------------------------------------------------ | ------------------------------ |
-| `dates.ts`          | dates civiles ISO `AAAA-MM-JJ`, mois, jours de semaine             | toutes                         |
-| `holidays.ts`       | date de Pâques, jours fériés de France métropolitaine              | ECH-06                         |
-| `business-days.ts`  | jours ouvrés, règle de jours non ouvrés                            | ECH-06                         |
-| `recurrence.ts`     | dates d'origine, occurrences, prochaine occurrence, exceptions     | ECH-04, ECH-07, ECH-08, ECH-11 |
-| `equivalents.ts`    | équivalent mensuel et totaux                                       | ECH-05, ECH-09, ECH-10         |
-| `postings.ts`       | mouvements d'une occurrence sur les comptes                        | ECH-03, PAY-04                 |
-| `execution.ts`      | occurrences à exécuter par la tâche planifiée                      | EXE-01 à EXE-04                |
-| `balances.ts`       | solde calculé, solde de référence, soldes de fin de journée        | CPT-04, CPT-06, PRV-09         |
-| `investments.ts`    | total versé, plus ou moins-value latente des placements            | CPT-06                         |
-| `envelopes.ts`      | catégories d'une enveloppe, consommé, disponible, report, lissage  | ENV-01 à ENV-05, PRV-04        |
-| `forecast.ts`       | solde prévisionnel par compte et agrégé, indicateurs               | PRV-01 à PRV-08                |
-| `reports.ts`        | répartition Needs / Wants / Save, revenus et dépenses par mois     | CAT-03, DSH-02, DSH-03         |
-| `amounts.ts`        | divisions arrondies, répartition au centime                        | ECH-05, PRV-04                 |
-| `labels.ts`         | normalisation des libellés bancaires, similarité des libellés      | IMP-05, REG-01, REG-03, RAP-02 |
-| `csv-lines.ts`      | dates, montants et lignes d'un CSV, clés de doublon                | IMP-02, IMP-04, IMP-05         |
-| `rules.ts`          | règle satisfaite par une ligne                                     | REG-01, REG-02                 |
-| `reconciliation.ts` | occurrences candidates et score                                    | RAP-01, RAP-02                 |
-| `interest.ts`       | capitalisations, intérêts estimés, solde hors intérêts capitalisés | LIV-02 à LIV-05                |
+| Module              | Rôle                                                                 | Exigences                      |
+| ------------------- | -------------------------------------------------------------------- | ------------------------------ |
+| `dates.ts`          | dates civiles ISO `AAAA-MM-JJ`, mois, jours de semaine               | toutes                         |
+| `holidays.ts`       | date de Pâques, jours fériés de France métropolitaine                | ECH-06                         |
+| `business-days.ts`  | jours ouvrés, règle de jours non ouvrés                              | ECH-06                         |
+| `recurrence.ts`     | dates d'origine, occurrences, prochaine occurrence, exceptions       | ECH-04, ECH-07, ECH-08, ECH-11 |
+| `equivalents.ts`    | équivalent mensuel et totaux                                         | ECH-05, ECH-09, ECH-10         |
+| `postings.ts`       | mouvements d'une occurrence sur les comptes                          | ECH-03, PAY-04                 |
+| `execution.ts`      | occurrences à exécuter par la tâche planifiée                        | EXE-01 à EXE-04                |
+| `balances.ts`       | solde calculé, solde de référence, soldes de fin de journée          | CPT-04, CPT-06, PRV-09         |
+| `investments.ts`    | total versé, plus ou moins-value latente des placements              | CPT-06                         |
+| `envelopes.ts`      | catégories d'une enveloppe, consommé, disponible, report, lissage    | ENV-01 à ENV-05, PRV-04        |
+| `forecast.ts`       | solde prévisionnel par compte et agrégé, indicateurs                 | PRV-01 à PRV-08                |
+| `reports.ts`        | répartition Needs / Wants / Save, revenus et dépenses par mois       | CAT-03, DSH-02, DSH-03         |
+| `amounts.ts`        | divisions arrondies, répartition au centime                          | ECH-05, PRV-04                 |
+| `labels.ts`         | normalisation des libellés bancaires, similarité des libellés        | IMP-05, REG-01, REG-03, RAP-02 |
+| `csv-lines.ts`      | dates, montants et lignes d'un CSV, clés de doublon                  | IMP-02, IMP-04, IMP-05         |
+| `rules.ts`          | règle satisfaite par une ligne                                       | REG-01, REG-02                 |
+| `reconciliation.ts` | occurrences candidates et score                                      | RAP-01, RAP-02                 |
+| `interest.ts`       | capitalisations, intérêts estimés, solde hors intérêts capitalisés   | LIV-02 à LIV-05                |
+| `notifications.ts`  | fenêtre de solde bas, épisodes, rappels dus, liens des notifications | NOTIF-01, NOTIF-02, NOTIF-04   |
 
 Tous les montants sont des entiers en centimes. Un débit est négatif, un crédit positif.
 
@@ -191,6 +192,14 @@ La somme est exacte, arrondie une fois au centime, demi vers le haut. Exemples :
 
 Intérêts acquis : quinzaines terminées ou jours écoulés de la période en cours, sur les soldes réels ; une capitalisation du jour ouvre déjà la période suivante. Montant projeté : intérêts de la période entière, calculés par la prévision sur 12 mois. Le 31 décembre, la tâche de 00:05 calcule les intérêts de l'année sur les soldes réels et génère l'opération ; une estimation nulle marque l'occurrence comme sautée.
 
-## 13. Tests
+## 13. Alertes
+
+Évaluées par la tâche de 08:00, au démarrage du worker et après chaque écriture d'un utilisateur, rappels exceptés (ADR 0021). Une clé de déduplication par utilisateur garantit une seule notification par événement.
+
+- Solde bas (NOTIF-01) : pour un compte actif avec un seuil, minimum du solde prévisionnel de fin de journée d'aujourd'hui à J+7 inclus, à sa première date. Minimum sous le seuil sans épisode ouvert : ouverture et notification. Épisode ouvert : le minimum et sa date sont mis à jour, et une nouvelle notification part seulement si le minimum est inférieur au dernier notifié. Minimum au seuil ou au-dessus, seuil retiré ou compte archivé : l'épisode se ferme ; le suivant notifiera de nouveau. US-13 : seuil de 200 € et minimum prévu de 150 € dans 4 jours, une alerte ; le lendemain sans changement, aucune ; minimum descendu à 100 €, une seconde.
+- Rappel (NOTIF-02) : pour une échéance active en mode Manuel, avec N = délai de rappel (0 à 30, 2 par défaut), rappel le jour J − N si l'occurrence de date effective J est en attente et N > 0, puis le jour J quel que soit son état. Une occurrence sautée ou rapprochée d'une opération réelle n'en reçoit aucun. US-14 : paiement manuel le 10 décembre, rappels le 8 et le 10.
+- Plafond (LIV-02) : une notification par occurrence prévue dont le dépassement (section 12) est positif dans l'horizon, et une par jour où le solde réel hors intérêts capitalisés dépasse le plafond.
+
+## 14. Tests
 
 Les tests des moteurs tournent dans le projet Vitest `shared`, sans base de données. `shared/engines/user-stories.test.ts` transcrit US-06, US-07, US-08, US-10, US-11 et US-12 avec leurs valeurs chiffrées ; chaque module a ses tests unitaires. `npm run test:coverage` échoue sous 90 % de couverture (instructions, branches, fonctions, lignes) sur `shared/engines/` (NF-QUA-02). Sur un jeu de 20 comptes, 200 échéances, 10 enveloppes et 10 000 opérations, la prévision sur 12 mois prend environ 75 ms sur un poste de développement (NF-PERF-02 : 500 ms).

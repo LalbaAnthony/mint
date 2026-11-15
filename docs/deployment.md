@@ -28,30 +28,34 @@ Le contexte de build de `mint-web` utilise `front/Dockerfile.prod.dockerignore`,
 
 Tous au niveau du dépôt (Settings, Secrets and variables, Actions). Aucune valeur de déploiement n'est versionnée ni stockée en variable. Hors clé privée, aucune valeur ne doit contenir d'apostrophe droite ni de saut de ligne : le job `deploy` le vérifie avant toute connexion.
 
-| Secret                      | Usage                                                                                                                                  |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `DOCKERHUB_USERNAME`        | compte Docker Hub, espace de noms des images                                                                                           |
-| `DOCKERHUB_TOKEN`           | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`                                                 |
-| `VPS_SSH_HOST`              | nom d'hôte ou adresse IP du VPS                                                                                                        |
-| `VPS_SSH_PORT`              | port SSH du VPS                                                                                                                        |
-| `VPS_SSH_USER`              | utilisateur SSH dédié au déploiement                                                                                                   |
-| `VPS_SSH_PRIVATE_KEY`       | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                                                                    |
-| `VPS_SSH_HOST_FINGERPRINT`  | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64                                            |
-| `VPS_DEPLOY_PATH`           | dossier de déploiement sur le VPS, chemin absolu                                                                                       |
-| `POSTGRES_DB`               | nom de la base de production                                                                                                           |
-| `POSTGRES_USER`             | utilisateur PostgreSQL de production                                                                                                   |
-| `POSTGRES_PASSWORD`         | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                                                             |
-| `API_HOST_PORT`             | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/` : `4568` (`apache.conf`)                                             |
-| `WEB_HOST_PORT`             | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/` : `4569` (`apache.conf`)                                       |
-| `SESSION_SECRET`            | secret de signature des cookies de session et des jetons CSRF, 32 caractères minimum (ADR 0006, ADR 0007)                              |
-| `SMTP_HOST`                 | serveur SMTP d'envoi des invitations et des liens de réinitialisation                                                                  |
-| `SMTP_PORT`                 | port de ce serveur                                                                                                                     |
-| `SMTP_TLS_MODE`             | `tls` (TLS implicite, port 465 en général), `starttls` (STARTTLS obligatoire, port 587) ou `none` (sans TLS, réservé au développement) |
-| `SMTP_USER`                 | identifiant SMTP                                                                                                                       |
-| `SMTP_PASSWORD`             | mot de passe SMTP                                                                                                                      |
-| `MAIL_FROM`                 | expéditeur des emails, par exemple `Mint <no-reply@dev-it.app>`                                                                        |
-| `HEALTHCHECK_EXECUTION_URL` | facultatif : URL de ping de la tâche d'exécution des échéances (type Healthchecks.io, NF-OPS-02), en `https` ; vide, aucun ping        |
-| `HEALTHCHECK_PURGE_URL`     | facultatif : URL de ping de la purge de 03:00 (sessions et jetons expirés ou utilisés, NF-OPS-02), en `https` ; vide, aucun ping       |
+| Secret                          | Usage                                                                                                                                  |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `DOCKERHUB_USERNAME`            | compte Docker Hub, espace de noms des images                                                                                           |
+| `DOCKERHUB_TOKEN`               | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`                                                 |
+| `VPS_SSH_HOST`                  | nom d'hôte ou adresse IP du VPS                                                                                                        |
+| `VPS_SSH_PORT`                  | port SSH du VPS                                                                                                                        |
+| `VPS_SSH_USER`                  | utilisateur SSH dédié au déploiement                                                                                                   |
+| `VPS_SSH_PRIVATE_KEY`           | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                                                                    |
+| `VPS_SSH_HOST_FINGERPRINT`      | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64                                            |
+| `VPS_DEPLOY_PATH`               | dossier de déploiement sur le VPS, chemin absolu                                                                                       |
+| `POSTGRES_DB`                   | nom de la base de production                                                                                                           |
+| `POSTGRES_USER`                 | utilisateur PostgreSQL de production                                                                                                   |
+| `POSTGRES_PASSWORD`             | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                                                             |
+| `API_HOST_PORT`                 | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/` : `4568` (`apache.conf`)                                             |
+| `WEB_HOST_PORT`                 | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/` : `4569` (`apache.conf`)                                       |
+| `SESSION_SECRET`                | secret de signature des cookies de session et des jetons CSRF, 32 caractères minimum (ADR 0006, ADR 0007)                              |
+| `SMTP_HOST`                     | serveur SMTP d'envoi des invitations et des liens de réinitialisation                                                                  |
+| `SMTP_PORT`                     | port de ce serveur                                                                                                                     |
+| `SMTP_TLS_MODE`                 | `tls` (TLS implicite, port 465 en général), `starttls` (STARTTLS obligatoire, port 587) ou `none` (sans TLS, réservé au développement) |
+| `SMTP_USER`                     | identifiant SMTP                                                                                                                       |
+| `SMTP_PASSWORD`                 | mot de passe SMTP                                                                                                                      |
+| `MAIL_FROM`                     | expéditeur des emails, par exemple `Mint <no-reply@dev-it.app>`                                                                        |
+| `HEALTHCHECK_EXECUTION_URL`     | facultatif : URL de ping de la tâche d'exécution des échéances (type Healthchecks.io, NF-OPS-02), en `https` ; vide, aucun ping        |
+| `HEALTHCHECK_PURGE_URL`         | facultatif : URL de ping de la purge de 03:00 (sessions et jetons expirés ou utilisés, NF-OPS-02), en `https` ; vide, aucun ping       |
+| `HEALTHCHECK_NOTIFICATIONS_URL` | facultatif : URL de ping de la tâche de notifications de 08:00 (NF-OPS-02), en `https` ; vide, aucun ping                              |
+| `VAPID_PUBLIC_KEY`              | clé publique VAPID du Web Push, base64url (ADR 0021)                                                                                   |
+| `VAPID_PRIVATE_KEY`             | clé privée VAPID associée                                                                                                              |
+| `VAPID_SUBJECT`                 | contact de l'émetteur des push, `mailto:` ou `https://`, par exemple `mailto:admin@dev-it.app`                                         |
 
 À chaque déploiement, le fichier `.env` du VPS est régénéré depuis ces secrets, avec `COMPOSE_PROFILES='prod'` et les références d'images `docker.io/<DOCKERHUB_USERNAME>/mint-api:<SHA>` et `mint-web:<SHA>`. Toute modification manuelle de ce fichier est écrasée au déploiement suivant. Un nouveau secret d'exécution (session, VAPID, SMTP) s'ajoute à la fois dans les secrets GitHub, dans `deploy.inc.yml` (déclaration, validation, écriture du `.env`), dans les deux flux et dans `docker-compose.yml`.
 
@@ -108,7 +112,7 @@ Actions, workflow `rollback`, Run workflow, puis saisir le SHA complet d'un comm
 - Changer `POSTGRES_PASSWORD` : PostgreSQL ne relit cette variable qu'à l'initialisation du volume. Modifier d'abord le mot de passe dans la base (`ALTER USER`), puis le secret. Sinon le déploiement suivant échoue à l'étape des migrations, sans interruption de la version en place.
 - Toute modification de la définition du service `db` dans `docker-compose.yml` (image, environnement) recrée le conteneur `db` dès l'étape des migrations, avant la bascule de l'API.
 - Docker Compose signale `The "DB_HOST_PORT" variable is not set` à chaque commande sur le VPS : la variable ne sert qu'au service `db-dev` du profil `dev`. Avertissement sans effet.
-- Le service `worker` (`node dist/worker.js`, image `mint-api`) exécute les échéances à 00:05 (Europe/Paris) et au démarrage, pour rattraper les jours manqués (ADR 0014), dont la capitalisation des intérêts estimés des livrets (ADR 0020). Il n'a pas de port. Un verrou consultatif PostgreSQL empêche deux exécutions simultanées. Journaux : `docker compose logs worker` (événements `execution_completed`, `execution_failed`, `occurrence_execution_failed`, sans montant ni libellé). Il purge aussi à 03:00 les sessions expirées, les jetons de réinitialisation et de changement d'email expirés ou utilisés et les imports restés en attente plus de 24 heures avec leur fichier, sous un second verrou (événements `purge_completed`, avec les nombres de lignes supprimées, et `purge_failed`) ; les invitations sont conservées pour l'historique de la console (ADM-02). Avec `HEALTHCHECK_EXECUTION_URL` et `HEALTHCHECK_PURGE_URL`, chaque tâche appelle `/start` sur sa propre URL, puis l'URL en cas de succès ou `/fail` en cas d'échec : configurer côté supervision un contrôle par tâche, d'une période d'un jour, avec une alerte vers l'administrateur. Les notifications de 08:00 ne sont pas encore livrées.
+- Le service `worker` (`node dist/worker.js`, image `mint-api`) exécute les échéances à 00:05 (Europe/Paris) et au démarrage, pour rattraper les jours manqués (ADR 0014), dont la capitalisation des intérêts estimés des livrets (ADR 0020). Il n'a pas de port. Un verrou consultatif PostgreSQL empêche deux exécutions simultanées. Journaux : `docker compose logs worker` (événements `execution_completed`, `execution_failed`, `occurrence_execution_failed`, sans montant ni libellé). Il purge aussi à 03:00 les sessions expirées, les jetons de réinitialisation et de changement d'email expirés ou utilisés et les imports restés en attente plus de 24 heures avec leur fichier, sous un second verrou (événements `purge_completed`, avec les nombres de lignes supprimées, et `purge_failed`) ; les invitations sont conservées pour l'historique de la console (ADM-02). Avec `HEALTHCHECK_EXECUTION_URL` et `HEALTHCHECK_PURGE_URL`, chaque tâche appelle `/start` sur sa propre URL, puis l'URL en cas de succès ou `/fail` en cas d'échec : configurer côté supervision un contrôle par tâche, d'une période d'un jour, avec une alerte vers l'administrateur. Il évalue aussi les notifications à 08:00 et à son démarrage, sous un troisième verrou (événements `notifications_completed`, avec les nombres d'utilisateurs, de notifications créées, de push envoyés et d'échecs, `user_notification_failed` et `notifications_failed`, sans montant ni libellé), et ping `HEALTHCHECK_NOTIFICATIONS_URL` de la même façon. La purge supprime en plus les notifications lues depuis plus de 90 jours.
 
 ## 9. Administrateurs
 
@@ -124,3 +128,5 @@ Après le premier déploiement du lot 3, vérifier les plafonds réglementaires 
 `create-admin` crée le compte, son jeu de catégories par défaut (CAT-05) et refuse une adresse déjà utilisée. `promote` donne le rôle administrateur à un compte existant. Les deux écrivent un événement d'audit (ADR 0009). Les autres comptes se créent uniquement par invitation depuis la console d'administration.
 
 Les secrets `SESSION_SECRET` et `SMTP_*` doivent exister avant le premier déploiement qui embarque l'authentification : sans eux, le job `deploy` échoue à la validation, avant toute connexion au VPS. Changer `SESSION_SECRET` déconnecte tous les utilisateurs.
+
+Les trois secrets `VAPID_*` doivent exister avant le premier déploiement du sous-lot des notifications, sous peine du même échec. Générer la paire une seule fois, hors du VPS, avec `npx web-push generate-vapid-keys` (paquet `web-push`), puis copier « Public Key » et « Private Key » dans les secrets. Changer la paire invalide tous les abonnements : chaque appareil doit réactiver le push depuis son profil.
