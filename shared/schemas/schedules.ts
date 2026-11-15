@@ -240,3 +240,17 @@ export const overrideOccurrenceRequestSchema = z
     { error: 'override_empty', path: ['amountCents'] },
   )
   .meta({ id: 'OverrideOccurrenceRequest' })
+
+export const subscriptionTotalsSchema = z
+  .object({
+    monthlyCents: z.number().int(),
+    annualCents: z.number().int(),
+  })
+  .meta({ id: 'SubscriptionTotals' })
+
+export const subscriptionListResponseSchema = z
+  .object({
+    subscriptions: z.array(scheduleSchema),
+    totals: subscriptionTotalsSchema,
+  })
+  .meta({ id: 'SubscriptionListResponse' })

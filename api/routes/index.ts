@@ -79,6 +79,7 @@ import {
   listSchedulesRoute,
   overrideOccurrenceRoute,
   restoreOccurrenceRoute,
+  listSubscriptionsRoute,
   skipOccurrenceRoute,
   updateScheduleRoute,
 } from './schedules.js'
@@ -144,6 +145,7 @@ export const apiRoutes: ApiRoute[] = [
   overrideOccurrenceRoute,
   skipOccurrenceRoute,
   restoreOccurrenceRoute,
+  listSubscriptionsRoute,
   envelopeMonthRoute,
   createEnvelopeRoute,
   updateEnvelopeRoute,

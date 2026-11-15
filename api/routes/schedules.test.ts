@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
   scheduleListResponseSchema,
   scheduleOccurrenceListResponseSchema,
+  subscriptionListResponseSchema,
 } from '@mint/shared/schemas/schedules'
 import { createTestContext } from '../tests/context.js'
 import {
@@ -385,5 +386,66 @@ describe('ECH-08, ECH-10, ECH-11 modify, list and delete', () => {
 
     expect((await user.delete(`/schedules/${scheduleId}`)).status).toBe(204)
     expect((await listSchedules(user)).schedules).toEqual([])
+  })
+})
+
+describe('ECH-09 subscriptions view', () => {
+  async function subscriptions(user: TestClient) {
+    const response = await user.get('/subscriptions')
+    expect(response.status).toBe(200)
+    return subscriptionListResponseSchema.parse(response.body)
+  }
+
+  it('lists the active subscriptions by next occurrence with their monthly and annual totals (US-06)', async () => {
+    const user = await client()
+    const accountId = await createAccount(user)
+    const digital = await categoryId(user, 'Services numériques')
+    const music = await createSchedule(
+      user,
+      expenseScheduleBody(accountId, digital, {
+        label: 'Musique',
+        amountCents: 4_416,
+        frequency: 'yearly',
+        startDate: '2027-01-25',
+        isSubscription: true,
+      }),
+    )
+    const weekly = await createSchedule(
+      user,
+      expenseScheduleBody(accountId, digital, {
+        label: 'Presse',
+        amountCents: 1_000,
+        frequency: 'weekly',
+        startDate: '2026-11-13',
+        isSubscription: true,
+      }),
+    )
+    await createSchedule(
+      user,
+      expenseScheduleBody(accountId, digital, { label: 'Loyer' }),
+    )
+    await createSchedule(
+      user,
+      expenseScheduleBody(accountId, digital, {
+        label: 'Ancien',
+        isSubscription: true,
+        active: false,
+      }),
+    )
+
+    const view = await subscriptions(user)
+
+    expect(view.subscriptions.map((schedule) => schedule.id)).toEqual([
+      weekly,
+      music,
+    ])
+    expect(view.subscriptions[1]).toMatchObject({
+      monthlyEquivalentCents: 368,
+      nextOccurrence: expect.objectContaining({ effectiveDate: '2027-01-25' }),
+    })
+    expect(view.totals).toEqual({
+      monthlyCents: 368 + 4_333,
+      annualCents: 4_416 + 52_000,
+    })
   })
 })

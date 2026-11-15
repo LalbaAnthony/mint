@@ -1029,6 +1029,25 @@
         },
         "required": ["amountCents", "effectiveDate"]
       },
+      "SubscriptionListResponse": {
+        "type": "object",
+        "properties": {
+          "subscriptions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Schedule" }
+          },
+          "totals": { "$ref": "#/components/schemas/SubscriptionTotals" }
+        },
+        "required": ["subscriptions", "totals"]
+      },
+      "SubscriptionTotals": {
+        "type": "object",
+        "properties": {
+          "monthlyCents": { "type": "integer" },
+          "annualCents": { "type": "integer" }
+        },
+        "required": ["monthlyCents", "annualCents"]
+      },
       "EnvelopeMonthResponse": {
         "type": "object",
         "properties": {
@@ -4698,6 +4717,33 @@
           },
           "409": {
             "description": "Occurrence without exception, executed, not after today, or of an inactive schedule",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions": {
+      "get": {
+        "summary": "Active subscriptions with their monthly equivalent and next occurrence, and their monthly and annual totals (ECH-09)",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Subscriptions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

@@ -1,10 +1,14 @@
 import type { Transaction } from 'sequelize'
 import { createScheduleRequestSchema } from '@mint/shared/schemas/schedules'
 import {
+  equivalentTotals,
   monthlyEquivalentCents,
   periodicAmount,
 } from '@mint/shared/engines/equivalents'
-import { postingStartDate } from '@mint/shared/engines/postings'
+import {
+  activeAccountsById,
+  postingStartDate,
+} from '@mint/shared/engines/postings'
 import {
   isOriginalDate,
   nextPendingOccurrence,
@@ -18,6 +22,7 @@ import type {
   ScheduleInput,
   ScheduleOccurrence,
   ScheduleTotals,
+  SubscriptionListResponse,
 } from '@mint/shared/types/schedules'
 import { findUserAccount } from '../accounts/accounts.js'
 import { findUserCategory } from '../categories/categories.js'
@@ -30,7 +35,12 @@ import {
 import { findUserPaymentMethod } from '../payment-methods/payment-methods.js'
 import type { ScheduleAttributes, ScheduleModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
-import type { ScheduleDraft, ScheduleUpdate } from '../types/schedules.js'
+import { loadAccountInputs, loadScheduleInputs } from '../planning/inputs.js'
+import type {
+  ScheduleDraft,
+  ScheduleUpdate,
+  ScheduleViews,
+} from '../types/schedules.js'
 
 const savingsUsages: ReadonlySet<AccountUsage> = new Set([
   'emergency',
@@ -308,14 +318,7 @@ export function scheduleTotals(
     accounts.map((account) => [account.id, account.usage]),
   )
   const counted = new Set(
-    schedules
-      .filter(
-        (schedule) =>
-          schedule.active &&
-          !schedule.ended &&
-          schedule.nextOccurrence !== null,
-      )
-      .map((schedule) => schedule.id),
+    schedules.filter(isCounted).map((schedule) => schedule.id),
   )
   const totals = { expensesCents: 0, incomesCents: 0, savingsTransfersCents: 0 }
   for (const input of inputs) {
@@ -374,4 +377,62 @@ export function currentOccurrence(
     resolveOccurrence(input, originalDate, exception),
     today,
   )
+}
+
+export function isCounted(schedule: Schedule): boolean {
+  return schedule.active && !schedule.ended && schedule.nextOccurrence !== null
+}
+
+export async function loadScheduleViews(
+  data: DataAccess,
+  userId: string,
+  today: string,
+): Promise<ScheduleViews> {
+  const schedules = await data.models.Schedule.findAll({
+    where: { userId },
+    order: [
+      ['createdAt', 'ASC'],
+      ['id', 'ASC'],
+    ],
+  })
+  const inputs = await loadScheduleInputs(data, userId)
+  const accounts = await loadAccountInputs(data, userId)
+  const activeAccounts = activeAccountsById(accounts)
+  const inputsById = new Map(inputs.map((input) => [input.id, input]))
+  const views = schedules.flatMap((schedule) => {
+    const input = inputsById.get(schedule.id)
+    return input === undefined
+      ? []
+      : [toSchedule(schedule, input, activeAccounts, today)]
+  })
+  return { views, inputs, accounts }
+}
+
+export function subscriptionList(
+  scheduleViews: ScheduleViews,
+): SubscriptionListResponse {
+  const subscriptions = scheduleViews.views
+    .filter(
+      (schedule) =>
+        schedule.kind === 'expense' &&
+        schedule.isSubscription &&
+        schedule.active &&
+        !schedule.ended,
+    )
+    .sort((first, second) =>
+      (first.nextOccurrence?.effectiveDate ?? '9999-12-31').localeCompare(
+        second.nextOccurrence?.effectiveDate ?? '9999-12-31',
+      ),
+    )
+  const counted = new Set(
+    subscriptions.filter(isCounted).map((schedule) => schedule.id),
+  )
+  return {
+    subscriptions,
+    totals: equivalentTotals(
+      scheduleViews.inputs
+        .filter((input) => counted.has(input.id))
+        .map(periodicAmount),
+    ),
+  }
 }

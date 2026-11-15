@@ -14,6 +14,8 @@ import type {
   scheduleOccurrenceSchema,
   scheduleSchema,
   scheduleTotalsSchema,
+  subscriptionListResponseSchema,
+  subscriptionTotalsSchema,
   triggerModeSchema,
   updateScheduleRequestSchema,
   updateScheduleResponseSchema,
@@ -161,4 +163,10 @@ export type ScheduleOccurrenceListResponse = z.infer<
 
 export type OverrideOccurrenceRequest = z.infer<
   typeof overrideOccurrenceRequestSchema
+>
+
+export type SubscriptionTotals = z.infer<typeof subscriptionTotalsSchema>
+
+export type SubscriptionListResponse = z.infer<
+  typeof subscriptionListResponseSchema
 >

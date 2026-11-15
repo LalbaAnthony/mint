@@ -564,6 +564,7 @@ const scenarios: Record<string, Scenario> = {
     () => ({ amountCents: 1 }),
   ),
   'get /schedules': ownListOnly('/schedules'),
+  'get /subscriptions': ownListOnly('/subscriptions'),
   'post /schedules': async (actors) => {
     const aliceAccount = await createAliceAccount(actors)
     const housing = await findAliceCategory(actors, 'Logement')

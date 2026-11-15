@@ -15,6 +15,7 @@ import {
   scheduleOccurrenceListResponseSchema,
   scheduleOccurrenceSchema,
   scheduleSchema,
+  subscriptionListResponseSchema,
   updateScheduleRequestSchema,
   updateScheduleResponseSchema,
 } from '@mint/shared/schemas/schedules'
@@ -26,7 +27,6 @@ import {
   loadAccountInputs,
   loadOccurrencesBySchedule,
   loadPaymentMethodsById,
-  loadScheduleInputs,
   scheduleRecurrence,
   toOccurrenceException,
   toScheduleInput,
@@ -35,7 +35,9 @@ import {
   currentOccurrence,
   editableOccurrence,
   findUserSchedule,
+  loadScheduleViews,
   mergeScheduleUpdate,
+  subscriptionList,
   scheduleColumns,
   scheduleTotals,
   toSchedule,
@@ -113,23 +115,11 @@ export const listSchedulesRoute = defineUserRoute({
     ...accessErrors,
   },
   handle: async ({ app, user }) => {
-    const schedules = await app.models.Schedule.findAll({
-      where: { userId: user.id },
-      order: [
-        ['createdAt', 'ASC'],
-        ['id', 'ASC'],
-      ],
-    })
-    const inputs = await loadScheduleInputs(app, user.id)
-    const accounts = await loadAccountInputs(app, user.id)
-    const activeAccounts = activeAccountsById(accounts)
-    const inputsById = new Map(inputs.map((input) => [input.id, input]))
-    const views = schedules.flatMap((schedule) => {
-      const input = inputsById.get(schedule.id)
-      return input === undefined
-        ? []
-        : [toSchedule(schedule, input, activeAccounts, today(app))]
-    })
+    const { views, inputs, accounts } = await loadScheduleViews(
+      app,
+      user.id,
+      today(app),
+    )
     return {
       status: 200,
       body: {
@@ -468,4 +458,25 @@ export const restoreOccurrenceRoute = defineUserRoute({
     })
     return { status: 200, body: occurrence }
   },
+})
+
+export const listSubscriptionsRoute = defineUserRoute({
+  method: 'get',
+  path: '/subscriptions',
+  summary:
+    'Active subscriptions with their monthly equivalent and next occurrence, and their monthly and annual totals (ECH-09)',
+  tag,
+  body: noBody,
+  params: noParams,
+  responses: {
+    200: {
+      description: 'Subscriptions',
+      schema: subscriptionListResponseSchema,
+    },
+    ...accessErrors,
+  },
+  handle: async ({ app, user }) => ({
+    status: 200,
+    body: subscriptionList(await loadScheduleViews(app, user.id, today(app))),
+  }),
 })
