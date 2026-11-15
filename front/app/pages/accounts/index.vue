@@ -161,6 +161,16 @@ function deleteAccount(): Promise<void> {
   })
 }
 
+const statementAccount = ref<Account | null>(null)
+const statementsOpen = computed({
+  get: () => statementAccount.value !== null,
+  set: (open) => {
+    if (!open) {
+      statementAccount.value = null
+    }
+  },
+})
+
 function onAccountAction({ kind, account }: AccountAction): Promise<void> {
   switch (kind) {
     case 'edit':
@@ -168,6 +178,9 @@ function onAccountAction({ kind, account }: AccountAction): Promise<void> {
       return Promise.resolve()
     case 'addPaymentMethod':
       openPaymentMethodForm(null, account.id)
+      return Promise.resolve()
+    case 'statements':
+      statementAccount.value = account
       return Promise.resolve()
     case 'delete':
       return askAccountDeletion(account)
@@ -368,6 +381,11 @@ onMounted(load)
       v-model:open="accountFormOpen"
       :account="editedAccount"
       @saved="accountSaved"
+    />
+    <StatementsModal
+      v-model:open="statementsOpen"
+      :account="statementAccount"
+      @changed="load"
     />
 
     <PaymentMethodFormModal

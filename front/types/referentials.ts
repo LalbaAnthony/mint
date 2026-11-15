@@ -17,7 +17,7 @@ export type DataTone =
   | 'save'
 
 export type AccountActionKind =
-  'edit' | 'archive' | 'restore' | 'delete' | 'addPaymentMethod'
+  'edit' | 'archive' | 'restore' | 'delete' | 'addPaymentMethod' | 'statements'
 
 export type AccountAction = {
   kind: AccountActionKind

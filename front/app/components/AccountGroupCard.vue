@@ -49,8 +49,9 @@ function details(account: Account): string {
 }
 
 function actionItems(account: Account): DropdownMenuItem[][] {
-  const select = (kind: 'edit' | 'addPaymentMethod' | 'archive' | 'delete') =>
-    emit('accountAction', { kind, account })
+  const select = (
+    kind: 'edit' | 'addPaymentMethod' | 'archive' | 'delete' | 'statements',
+  ) => emit('accountAction', { kind, account })
   return [
     [
       {
@@ -62,6 +63,11 @@ function actionItems(account: Account): DropdownMenuItem[][] {
         label: t('paymentMethods.add'),
         icon: icons.add,
         onSelect: () => select('addPaymentMethod'),
+      },
+      {
+        label: t('statements.menu'),
+        icon: icons.adjustment,
+        onSelect: () => select('statements'),
       },
       {
         label: t('common.archive'),
@@ -141,6 +147,18 @@ function actionItems(account: Account): DropdownMenuItem[][] {
             </p>
             <p class="truncate text-xs text-muted">{{ details(account) }}</p>
           </div>
+          <UBadge
+            v-if="
+              account.reconciliationGapCents !== null &&
+              account.reconciliationGapCents !== 0
+            "
+            :label="t('statements.unresolved')"
+            :icon="icons.belowThreshold"
+            color="warning"
+            variant="soft"
+            size="sm"
+            data-testid="account-gap"
+          />
           <MoneyAmount
             :cents="account.currentBalanceCents"
             :threshold="account.lowBalanceThresholdCents"

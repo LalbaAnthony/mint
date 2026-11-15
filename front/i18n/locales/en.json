@@ -594,6 +594,21 @@
     "emptyText": "Mark an expense schedule as a subscription to follow it here.",
     "goToSchedules": "Go to schedules"
   },
+  "statements": {
+    "menu": "Statements and gaps",
+    "title": "Statements of {name}",
+    "help": "Enter the balance read on a bank statement to compare it with the calculated end-of-day balance.",
+    "date": "Statement date",
+    "balance": "Statement balance",
+    "record": "Save",
+    "empty": "No statement entered.",
+    "read": "Read",
+    "calculated": "Calculated",
+    "gap": "Gap",
+    "adjust": "Correct the gap",
+    "delete": "Delete the statement",
+    "unresolved": "Unresolved gap"
+  },
   "imports": {
     "steps": {
       "select": "Import a CSV statement",

@@ -594,6 +594,21 @@
     "emptyText": "Marquez une échéance de dépense comme abonnement pour la suivre ici.",
     "goToSchedules": "Voir les échéances"
   },
+  "statements": {
+    "menu": "Relevés et écarts",
+    "title": "Relevés de {name}",
+    "help": "Saisissez le solde lu sur un relevé bancaire pour le comparer au solde calculé en fin de journée.",
+    "date": "Date du relevé",
+    "balance": "Solde relevé",
+    "record": "Enregistrer",
+    "empty": "Aucun relevé saisi.",
+    "read": "Relevé",
+    "calculated": "Calculé",
+    "gap": "Écart",
+    "adjust": "Corriger l'écart",
+    "delete": "Supprimer le relevé",
+    "unresolved": "Écart non résolu"
+  },
   "imports": {
     "steps": {
       "select": "Importer un relevé CSV",
