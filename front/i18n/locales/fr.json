@@ -556,6 +556,15 @@
       "active": "Active"
     }
   },
+  "subscriptions": {
+    "periodicity": "Périodicité",
+    "monthlyTotal": "Total par mois",
+    "annualTotal": "Total par an",
+    "perMonth": "{amount} par mois",
+    "emptyTitle": "Aucun abonnement",
+    "emptyText": "Marquez une échéance de dépense comme abonnement pour la suivre ici.",
+    "goToSchedules": "Voir les échéances"
+  },
   "forecast": {
     "curveTitle": "Solde prévisionnel",
     "scope": "Compte",

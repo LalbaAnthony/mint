@@ -556,6 +556,15 @@
       "active": "Active"
     }
   },
+  "subscriptions": {
+    "periodicity": "Frequency",
+    "monthlyTotal": "Total per month",
+    "annualTotal": "Total per year",
+    "perMonth": "{amount} per month",
+    "emptyTitle": "No subscription",
+    "emptyText": "Mark an expense schedule as a subscription to follow it here.",
+    "goToSchedules": "Go to schedules"
+  },
   "forecast": {
     "curveTitle": "Forecast balance",
     "scope": "Account",

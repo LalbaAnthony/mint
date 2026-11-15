@@ -1,7 +1,243 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
+import type { TableColumn } from '@nuxt/ui'
+import { subscriptionListResponseSchema } from '@mint/shared/schemas/schedules'
+import type {
+  Schedule,
+  SubscriptionListResponse,
+} from '@mint/shared/types/schedules'
+
 const { t } = useI18n()
+const toast = useToast()
+const { errorMessage } = useFormValidation()
+const { formatDate, formatMoney } = useFormatters()
+const referentials = useReferentialsStore()
+const labels = usePlanningLabels()
+const isDesktop = useMediaQuery('(min-width: 1024px)')
+
+const result = ref<SubscriptionListResponse | null>(null)
+
+function notifyFailure(error: unknown): void {
+  toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
+}
+
+async function load(): Promise<void> {
+  try {
+    const [subscriptions] = await Promise.all([
+      apiGet('/subscriptions', subscriptionListResponseSchema),
+      referentials.load(),
+    ])
+    result.value = subscriptions
+  } catch (error) {
+    notifyFailure(error)
+  }
+}
+
+onMounted(load)
+
+const selectedId = ref<string | null>(null)
+const selected = computed(
+  () =>
+    result.value?.subscriptions.find(
+      (schedule) => schedule.id === selectedId.value,
+    ) ?? null,
+)
+const detailOpen = computed({
+  get: () => selected.value !== null,
+  set: (open) => {
+    if (!open) {
+      selectedId.value = null
+    }
+  },
+})
+
+const formOpen = ref(false)
+const editedSchedule = ref<Schedule | null>(null)
+
+function edit(schedule: Schedule): void {
+  selectedId.value = null
+  editedSchedule.value = schedule
+  formOpen.value = true
+}
+
+async function saved(schedule: Schedule): Promise<void> {
+  toast.add({
+    title: t('schedules.saved', { label: schedule.label }),
+    icon: icons.success,
+    color: 'success',
+  })
+  await load()
+}
+
+const subscriptions = computed(() => result.value?.subscriptions ?? [])
+
+const columns = computed<TableColumn<Schedule>[]>(() => [
+  { accessorKey: 'label', header: t('schedules.fields.label') },
+  { accessorKey: 'amountCents', header: t('schedules.fields.amount') },
+  { accessorKey: 'frequency', header: t('subscriptions.periodicity') },
+  {
+    accessorKey: 'monthlyEquivalentCents',
+    header: t('schedules.fields.monthlyEquivalent'),
+  },
+  { id: 'next', header: t('schedules.fields.nextOccurrence') },
+  { id: 'source', header: t('operations.fields.source') },
+  { accessorKey: 'triggerMode', header: t('schedules.fields.triggerMode') },
+])
 </script>
 
 <template>
-  <ViewPanel :title="t('navigation.subscriptions')" />
+  <ViewPanel :title="t('navigation.subscriptions')">
+    <div v-if="result !== null" class="flex flex-col gap-4">
+      <div
+        class="grid grid-cols-1 gap-4 md:grid-cols-2"
+        data-testid="subscription-totals"
+      >
+        <UCard>
+          <p class="text-sm font-medium text-muted">
+            {{ t('subscriptions.monthlyTotal') }}
+          </p>
+          <MoneyAmount
+            :cents="result.totals.monthlyCents"
+            class="text-xl font-semibold"
+            data-testid="subscriptions-monthly"
+          />
+        </UCard>
+        <UCard>
+          <p class="text-sm font-medium text-muted">
+            {{ t('subscriptions.annualTotal') }}
+          </p>
+          <MoneyAmount
+            :cents="result.totals.annualCents"
+            class="text-xl font-semibold"
+            data-testid="subscriptions-annual"
+          />
+        </UCard>
+      </div>
+
+      <UCard data-testid="subscriptions-list">
+        <EmptyState
+          v-if="subscriptions.length === 0"
+          :icon="icons.subscriptions"
+          :title="t('subscriptions.emptyTitle')"
+          :description="t('subscriptions.emptyText')"
+        >
+          <UButton
+            :label="t('subscriptions.goToSchedules')"
+            :icon="icons.schedules"
+            to="/schedules"
+            color="primary"
+            variant="soft"
+          />
+        </EmptyState>
+        <UTable
+          v-else-if="isDesktop"
+          :data="subscriptions"
+          :columns="columns"
+          class="cursor-pointer"
+          data-testid="subscriptions-table"
+          @select="(_event, row) => (selectedId = row.original.id)"
+        >
+          <template #label-cell="{ row }">
+            <span class="text-default">{{ row.original.label }}</span>
+            <p class="text-xs text-muted">
+              {{ referentials.categoryName(row.original.categoryId) }}
+            </p>
+          </template>
+          <template #amountCents-cell="{ row }">
+            <MoneyAmount :cents="-row.original.amountCents" variant="flow" />
+          </template>
+          <template #frequency-cell="{ row }">
+            {{ labels.recurrenceLabel(row.original) }}
+          </template>
+          <template #monthlyEquivalentCents-cell="{ row }">
+            <MoneyAmount
+              v-if="row.original.monthlyEquivalentCents !== null"
+              :cents="row.original.monthlyEquivalentCents"
+            />
+            <span v-else class="text-muted">{{
+              t('schedules.notCounted')
+            }}</span>
+          </template>
+          <template #next-cell="{ row }">
+            <span class="tabular-nums">
+              {{
+                row.original.nextOccurrence === null
+                  ? ''
+                  : formatDate(row.original.nextOccurrence.effectiveDate)
+              }}
+            </span>
+          </template>
+          <template #source-cell="{ row }">
+            {{ labels.scheduleSourceLabel(row.original) }}
+          </template>
+          <template #triggerMode-cell="{ row }">
+            <span class="flex items-center gap-2">
+              <PlanningMarker
+                v-if="row.original.triggerMode === 'manual'"
+                kind="manual"
+              />
+              {{ t(`schedules.triggerModes.${row.original.triggerMode}`) }}
+            </span>
+          </template>
+        </UTable>
+        <ul v-else class="flex flex-col divide-y divide-default">
+          <li v-for="schedule in subscriptions" :key="schedule.id">
+            <button
+              type="button"
+              class="flex w-full items-center gap-3 py-2 text-left"
+              :data-testid="`subscription-${schedule.id}`"
+              @click="selectedId = schedule.id"
+            >
+              <div class="min-w-0 flex-1">
+                <p
+                  class="flex items-center gap-2 truncate text-sm text-default"
+                >
+                  <span class="truncate">{{ schedule.label }}</span>
+                  <PlanningMarker
+                    v-if="schedule.triggerMode === 'manual'"
+                    kind="manual"
+                  />
+                </p>
+                <p class="truncate text-xs text-muted">
+                  {{ labels.recurrenceLabel(schedule) }}
+                  <template v-if="schedule.nextOccurrence !== null">
+                    · {{ formatDate(schedule.nextOccurrence.effectiveDate) }}
+                  </template>
+                </p>
+              </div>
+              <div class="flex flex-col items-end">
+                <MoneyAmount
+                  :cents="-schedule.amountCents"
+                  variant="flow"
+                  class="text-sm"
+                />
+                <span
+                  v-if="schedule.monthlyEquivalentCents !== null"
+                  class="text-xs text-muted tabular-nums"
+                >
+                  {{
+                    t('subscriptions.perMonth', {
+                      amount: formatMoney(schedule.monthlyEquivalentCents),
+                    })
+                  }}
+                </span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </UCard>
+    </div>
+
+    <ScheduleFormModal
+      v-model:open="formOpen"
+      :schedule="editedSchedule"
+      @saved="saved"
+    />
+    <ScheduleDetailModal
+      v-model:open="detailOpen"
+      :schedule="selected"
+      @edit="edit"
+      @changed="load"
+    />
+  </ViewPanel>
 </template>
