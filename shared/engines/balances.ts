@@ -58,3 +58,24 @@ export function endOfDayBalances(
     return { date, balanceCents: balance }
   })
 }
+
+export function aggregateEndOfDayBalances(
+  accounts: readonly AccountInput[],
+  operations: readonly OperationInput[],
+  from: string,
+  to: string,
+): DailyBalance[] {
+  const perAccount = accounts.map((account) =>
+    endOfDayBalances(account, operations, from, to),
+  )
+  return enumerateDays(from, to).map((date, index) => {
+    let balanceCents: number | null = null
+    for (const balances of perAccount) {
+      const balance = balances[index]?.balanceCents ?? null
+      if (balance !== null) {
+        balanceCents = (balanceCents ?? 0) + balance
+      }
+    }
+    return { date, balanceCents }
+  })
+}

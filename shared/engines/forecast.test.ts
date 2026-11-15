@@ -108,6 +108,8 @@ describe('computeForecast (PRV-01 to PRV-03)', () => {
         originalDate: '2026-11-05',
         effectiveDate: '2026-11-05',
         amountCents: -10_000,
+        occurrenceAmountCents: 10_000,
+        overridden: false,
         triggerMode: 'auto',
         isSubscription: false,
       },

@@ -182,6 +182,8 @@ export function computeForecast(input: ForecastInput): Forecast {
         originalDate: occurrence.originalDate,
         effectiveDate: occurrence.effectiveDate,
         amountCents: movement.amountCents,
+        occurrenceAmountCents: occurrence.amountCents,
+        overridden: occurrence.overridden,
         triggerMode: schedule.triggerMode,
         isSubscription: schedule.isSubscription,
       })

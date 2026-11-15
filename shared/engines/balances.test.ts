@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { account, operation } from '../tests/engine-fixtures.js'
-import { calculatedBalanceCents, endOfDayBalances } from './balances.js'
+import {
+  aggregateEndOfDayBalances,
+  calculatedBalanceCents,
+  endOfDayBalances,
+} from './balances.js'
 
 const checking = account({
   initialBalanceCents: 100_000,
@@ -68,5 +72,35 @@ describe('endOfDayBalances (PRV-09)', () => {
     expect(
       endOfDayBalances(checking, operations, '2026-11-06', '2026-11-05'),
     ).toEqual([])
+  })
+})
+
+describe('aggregateEndOfDayBalances (PRV-05, PRV-09)', () => {
+  const livretA = account({
+    id: 'livret-a',
+    usage: 'savings',
+    initialBalanceCents: 50_000,
+    initialBalanceDate: '2026-11-02',
+  })
+
+  it('adds the accounts that already have a balance on each day', () => {
+    expect(
+      aggregateEndOfDayBalances(
+        [checking, livretA],
+        operations,
+        '2026-10-31',
+        '2026-11-02',
+      ),
+    ).toEqual([
+      { date: '2026-10-31', balanceCents: null },
+      { date: '2026-11-01', balanceCents: 99_000 },
+      { date: '2026-11-02', balanceCents: 156_000 },
+    ])
+  })
+
+  it('has no balance without any account', () => {
+    expect(
+      aggregateEndOfDayBalances([], operations, '2026-11-01', '2026-11-01'),
+    ).toEqual([{ date: '2026-11-01', balanceCents: null }])
   })
 })

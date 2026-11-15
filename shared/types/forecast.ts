@@ -1,3 +1,14 @@
+import type { z } from 'zod'
+import type {
+  balanceCurvePointSchema,
+  balanceCurveResponseSchema,
+  calendarDayPeriodSchema,
+  calendarDaySchema,
+  calendarEnvelopeShareSchema,
+  calendarMonthResponseSchema,
+  calendarOccurrenceSchema,
+  forecastScopeQuerySchema,
+} from '../schemas/forecast.js'
 import type { AccountInput, AccountUsage } from './accounts.js'
 import type { CategoryInput } from './categories.js'
 import type { EnvelopeInput } from './envelopes.js'
@@ -22,6 +33,8 @@ export type OccurrenceFlow = {
   originalDate: string
   effectiveDate: string
   amountCents: number
+  occurrenceAmountCents: number
+  overridden: boolean
   triggerMode: TriggerMode
   isSubscription: boolean
 }
@@ -88,3 +101,19 @@ export type DailyBalance = {
   date: string
   balanceCents: number | null
 }
+
+export type ForecastScopeQuery = z.infer<typeof forecastScopeQuerySchema>
+
+export type BalanceCurvePoint = z.infer<typeof balanceCurvePointSchema>
+
+export type BalanceCurveResponse = z.infer<typeof balanceCurveResponseSchema>
+
+export type CalendarDayPeriod = z.infer<typeof calendarDayPeriodSchema>
+
+export type CalendarOccurrence = z.infer<typeof calendarOccurrenceSchema>
+
+export type CalendarEnvelopeShare = z.infer<typeof calendarEnvelopeShareSchema>
+
+export type CalendarDay = z.infer<typeof calendarDaySchema>
+
+export type CalendarMonthResponse = z.infer<typeof calendarMonthResponseSchema>

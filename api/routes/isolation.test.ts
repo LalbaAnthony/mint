@@ -642,6 +642,12 @@ const scenarios: Record<string, Scenario> = {
     'delete',
     ({ envelopeId }) => `/envelopes/${envelopeId}`,
   ),
+  'get /forecast/curve': crossRead(
+    ({ accountId }) => `/forecast/curve?accountId=${accountId}`,
+  ),
+  'get /calendar/:month': crossRead(
+    ({ accountId }) => `/calendar/2026-11-01?accountId=${accountId}`,
+  ),
 }
 
 async function createBobResources(

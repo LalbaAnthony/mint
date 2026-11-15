@@ -1155,6 +1155,150 @@
             "maxItems": 50
           }
         }
+      },
+      "BalanceCurveResponse": {
+        "type": "object",
+        "properties": {
+          "today": { "type": "string", "format": "date" },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "thresholdCents": { "type": ["integer", "null"] },
+          "horizonMonths": { "type": "integer" },
+          "endDate": { "type": "string", "format": "date" },
+          "points": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BalanceCurvePoint" }
+          },
+          "indicators": { "$ref": "#/components/schemas/ForecastIndicators" }
+        },
+        "required": [
+          "today",
+          "accountId",
+          "thresholdCents",
+          "horizonMonths",
+          "endDate",
+          "points",
+          "indicators"
+        ]
+      },
+      "BalanceCurvePoint": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "balanceCents": { "type": ["integer", "null"] },
+          "forecast": { "type": "boolean" }
+        },
+        "required": ["date", "balanceCents", "forecast"]
+      },
+      "ForecastIndicators": {
+        "type": ["object", "null"],
+        "properties": {
+          "minBalanceCents": { "type": "integer" },
+          "minBalanceDate": { "type": "string", "format": "date" },
+          "firstBelowThresholdDate": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "firstNegativeDate": { "type": ["string", "null"], "format": "date" }
+        },
+        "required": [
+          "minBalanceCents",
+          "minBalanceDate",
+          "firstBelowThresholdDate",
+          "firstNegativeDate"
+        ]
+      },
+      "CalendarMonthResponse": {
+        "type": "object",
+        "properties": {
+          "today": { "type": "string", "format": "date" },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "thresholdCents": { "type": ["integer", "null"] },
+          "horizonMonths": { "type": "integer" },
+          "endDate": { "type": "string", "format": "date" },
+          "month": { "type": "string", "format": "date" },
+          "firstMonth": { "type": "string", "format": "date" },
+          "lastMonth": { "type": "string", "format": "date" },
+          "days": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CalendarDay" }
+          }
+        },
+        "required": [
+          "today",
+          "accountId",
+          "thresholdCents",
+          "horizonMonths",
+          "endDate",
+          "month",
+          "firstMonth",
+          "lastMonth",
+          "days"
+        ]
+      },
+      "CalendarDay": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "period": { "$ref": "#/components/schemas/CalendarDayPeriod" },
+          "balanceCents": { "type": ["integer", "null"] },
+          "operations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Operation" }
+          },
+          "occurrences": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CalendarOccurrence" }
+          },
+          "envelopeShares": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CalendarEnvelopeShare" }
+          }
+        },
+        "required": [
+          "date",
+          "period",
+          "balanceCents",
+          "operations",
+          "occurrences",
+          "envelopeShares"
+        ]
+      },
+      "CalendarDayPeriod": {
+        "type": "string",
+        "enum": ["past", "today", "future", "beyond"]
+      },
+      "CalendarOccurrence": {
+        "type": "object",
+        "properties": {
+          "scheduleId": { "type": "string", "format": "uuid" },
+          "kind": { "$ref": "#/components/schemas/ScheduleKind" },
+          "label": { "type": "string" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "amountCents": { "type": "integer" },
+          "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
+          "isSubscription": { "type": "boolean" },
+          "occurrence": { "$ref": "#/components/schemas/ScheduleOccurrence" }
+        },
+        "required": [
+          "scheduleId",
+          "kind",
+          "label",
+          "accountId",
+          "amountCents",
+          "triggerMode",
+          "isSubscription",
+          "occurrence"
+        ]
+      },
+      "CalendarEnvelopeShare": {
+        "type": "object",
+        "properties": {
+          "envelopeId": { "type": "string", "format": "uuid" },
+          "label": { "type": "string" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "amountCents": { "type": "integer" }
+        },
+        "required": ["envelopeId", "label", "accountId", "amountCents"]
       }
     },
     "parameters": {}
@@ -4781,6 +4925,142 @@
           },
           "404": {
             "description": "Unknown envelope, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forecast/curve": {
+      "get": {
+        "summary": "Real end-of-day balance of the last 30 days and forecast balance up to the end of the horizon, for one account or all active accounts (DSH-01, PRV-01 to PRV-09)",
+        "tags": ["forecast"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": false,
+            "name": "accountId",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "required": false,
+            "name": "horizonMonths",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance curve",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceCurveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid account or horizon",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/calendar/{month}": {
+      "get": {
+        "summary": "Days of one month: real operations and end-of-day balance in the past, planned occurrences, envelope shares and forecast balance up to the end of the horizon (CAL-01 to CAL-05)",
+        "tags": ["forecast"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": true,
+            "name": "month",
+            "in": "path"
+          },
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": false,
+            "name": "accountId",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "integer", "minimum": 1, "maximum": 12 },
+            "required": false,
+            "name": "horizonMonths",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Calendar month",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarMonthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid account or horizon, or month before the history or after the horizon",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
