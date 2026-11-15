@@ -1,5 +1,8 @@
 import { fileURLToPath } from 'node:url'
 import { defineNuxtConfig } from 'nuxt/config'
+import { appleSplashScreenLinks } from './pwa/splash-screens'
+
+const isVitest = process.env.VITEST !== undefined
 
 const developmentApiOrigin =
   process.env.MINT_DEV_API_ORIGIN ?? 'http://127.0.0.1:3000'
@@ -26,7 +29,7 @@ export default defineNuxtConfig({
       '/api': { target: `${developmentApiOrigin}/api`, changeOrigin: false },
     },
   },
-  modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt'],
+  modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt', '@vite-pwa/nuxt'],
   css: ['~/assets/css/main.css'],
   ui: {
     colorMode: false,
@@ -151,8 +154,43 @@ export default defineNuxtConfig({
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
       meta: [{ name: 'theme-color', content: '#FFFFFF' }],
       link: [
+        { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
         { rel: 'icon', href: '/logo.svg', sizes: 'any', type: 'image/svg+xml' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon-180x180.png' },
+        { rel: 'manifest', href: '/manifest.webmanifest' },
+        ...appleSplashScreenLinks('light'),
       ],
+    },
+  },
+  pwa: {
+    disable: isVitest,
+    client: { registerPlugin: !isVitest },
+    registerType: 'prompt',
+    manifest: {
+      name: 'Mint',
+      short_name: 'Mint',
+      lang: 'fr',
+      display: 'standalone',
+      theme_color: '#FFFFFF',
+      background_color: '#FBFBF9',
+      icons: [
+        { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+        { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+        {
+          src: 'maskable-icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'maskable',
+        },
+      ],
+    },
+    generateSW: {
+      globPatterns: ['**/*.{js,css,html,svg,ico,woff2}'],
+      globIgnores: ['**/apple-splash-*'],
+      navigateFallback: '/200.html',
+      navigateFallbackDenylist: [/^\/api\//],
+      cleanupOutdatedCaches: true,
     },
   },
   typescript: {

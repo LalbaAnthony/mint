@@ -10,7 +10,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "typecheck": "nuxt prepare && vue-tsc -b --noEmit"
+    "typecheck": "nuxt prepare && vue-tsc -b --noEmit",
+    "pwa:assets": "pwa-assets-generator -c pwa-assets.splash.config.ts && pwa-assets-generator -c pwa-assets.badge.config.ts && pwa-assets-generator -c pwa-assets.icons.config.ts"
   },
   "dependencies": {
     "@mint/shared": "^0.0.0",
