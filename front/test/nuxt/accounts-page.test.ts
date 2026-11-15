@@ -31,6 +31,7 @@ function account(overrides: Partial<Account>): Account {
     archivedAt: null,
     currentBalanceCents: 200_000,
     reconciliationGapCents: null,
+    investment: null,
     ...overrides,
   }
 }

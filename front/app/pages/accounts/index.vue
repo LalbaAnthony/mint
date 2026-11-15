@@ -171,6 +171,16 @@ const statementsOpen = computed({
   },
 })
 
+const valuationAccount = ref<Account | null>(null)
+const valuationsOpen = computed({
+  get: () => valuationAccount.value !== null,
+  set: (open) => {
+    if (!open) {
+      valuationAccount.value = null
+    }
+  },
+})
+
 function onAccountAction({ kind, account }: AccountAction): Promise<void> {
   switch (kind) {
     case 'edit':
@@ -181,6 +191,9 @@ function onAccountAction({ kind, account }: AccountAction): Promise<void> {
       return Promise.resolve()
     case 'statements':
       statementAccount.value = account
+      return Promise.resolve()
+    case 'valuations':
+      valuationAccount.value = account
       return Promise.resolve()
     case 'delete':
       return askAccountDeletion(account)
@@ -385,6 +398,11 @@ onMounted(load)
     <StatementsModal
       v-model:open="statementsOpen"
       :account="statementAccount"
+      @changed="load"
+    />
+    <ValuationsModal
+      v-model:open="valuationsOpen"
+      :account="valuationAccount"
       @changed="load"
     />
 

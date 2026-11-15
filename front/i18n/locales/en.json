@@ -382,6 +382,9 @@
     "operation_without_bank_label": "This operation has no bank label.",
     "statement_exists": "A statement already exists at this date.",
     "statement_balanced": "This statement has no gap to correct.",
+    "valuation_exists": "A valuation already exists at this date.",
+    "account_has_valuations": "This account has valuations: it must stay an investment.",
+    "account_not_investment": "This account is not an investment.",
     "import_not_pending": "This import is no longer pending.",
     "import_not_validated": "Only a validated import can be cancelled.",
     "import_not_previewed": "Run the preview before validating the import.",
@@ -634,6 +637,22 @@
     "adjust": "Correct the gap",
     "delete": "Delete the statement",
     "unresolved": "Unresolved gap"
+  },
+  "valuations": {
+    "menu": "Valuations",
+    "title": "Valuations of {name}",
+    "help": "Enter the market value of the investment at a date. The reference balance is the latest valuation plus the later flows.",
+    "paidIn": "Total paid in",
+    "lastValuation": "Latest valuation",
+    "none": "No valuation",
+    "gain": "Unrealized gain or loss",
+    "gainLabel": "Unrealized gain or loss",
+    "date": "Date",
+    "value": "Valuation",
+    "record": "Record the valuation",
+    "empty": "No valuation recorded.",
+    "editOf": "Edit the valuation of {date}",
+    "deleteOf": "Delete the valuation of {date}"
   },
   "imports": {
     "steps": {

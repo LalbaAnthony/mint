@@ -23,6 +23,7 @@ export type ChartTheme = {
   needsShades: string[]
   wantsShades: string[]
   balance: string
+  investment: string
   threshold: string
   negative: string
   income: string

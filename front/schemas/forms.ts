@@ -222,3 +222,8 @@ export const statementFormSchema = z.object({
   date: isoDateSchema,
   balance: amountInputSchema,
 })
+
+export const valuationFormSchema = z.object({
+  date: isoDateSchema,
+  value: amountInputSchema,
+})

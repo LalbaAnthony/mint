@@ -382,6 +382,9 @@
     "operation_without_bank_label": "Cette opération n'a pas de libellé bancaire.",
     "statement_exists": "Un relevé existe déjà à cette date.",
     "statement_balanced": "Ce relevé n'a pas d'écart à corriger.",
+    "valuation_exists": "Une valorisation existe déjà à cette date.",
+    "account_has_valuations": "Ce compte a des valorisations : il doit rester un placement.",
+    "account_not_investment": "Ce compte n'est pas un placement.",
     "import_not_pending": "Cet import n'est plus en attente.",
     "import_not_validated": "Seul un import validé peut être annulé.",
     "import_not_previewed": "Lancez l'aperçu avant de valider l'import.",
@@ -634,6 +637,22 @@
     "adjust": "Corriger l'écart",
     "delete": "Supprimer le relevé",
     "unresolved": "Écart non résolu"
+  },
+  "valuations": {
+    "menu": "Valorisations",
+    "title": "Valorisations de {name}",
+    "help": "Saisissez la valeur de marché du placement à une date. Le solde de référence est la dernière valorisation plus les flux postérieurs.",
+    "paidIn": "Total versé",
+    "lastValuation": "Dernière valorisation",
+    "none": "Aucune valorisation",
+    "gain": "Plus ou moins-value latente",
+    "gainLabel": "Plus ou moins-value latente",
+    "date": "Date",
+    "value": "Valorisation",
+    "record": "Enregistrer la valorisation",
+    "empty": "Aucune valorisation saisie.",
+    "editOf": "Modifier la valorisation du {date}",
+    "deleteOf": "Supprimer la valorisation du {date}"
   },
   "imports": {
     "steps": {

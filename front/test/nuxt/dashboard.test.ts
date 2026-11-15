@@ -56,6 +56,7 @@ const theme: ChartTheme = {
   expense: '#7c7c6e',
   net: '#3a3a30',
   textMuted: '#6b6b5f',
+  investment: '#7c3aed',
   borderMuted: '#ececE6',
   border: '#dcdcd2',
   background: '#ffffff',

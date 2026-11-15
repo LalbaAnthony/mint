@@ -5,6 +5,7 @@ import type {
   AccountGroupCardEmits,
   AccountGroupCardProps,
 } from '~~/types/components'
+import type { AccountActionKind } from '~~/types/referentials'
 
 const props = defineProps<AccountGroupCardProps>()
 const emit = defineEmits<AccountGroupCardEmits>()
@@ -49,9 +50,8 @@ function details(account: Account): string {
 }
 
 function actionItems(account: Account): DropdownMenuItem[][] {
-  const select = (
-    kind: 'edit' | 'addPaymentMethod' | 'archive' | 'delete' | 'statements',
-  ) => emit('accountAction', { kind, account })
+  const select = (kind: AccountActionKind) =>
+    emit('accountAction', { kind, account })
   return [
     [
       {
@@ -69,6 +69,15 @@ function actionItems(account: Account): DropdownMenuItem[][] {
         icon: icons.adjustment,
         onSelect: () => select('statements'),
       },
+      ...(account.investment === null
+        ? []
+        : [
+            {
+              label: t('valuations.menu'),
+              icon: icons.usageInvestment,
+              onSelect: () => select('valuations'),
+            },
+          ]),
       {
         label: t('common.archive'),
         icon: icons.archive,
@@ -159,12 +168,18 @@ function actionItems(account: Account): DropdownMenuItem[][] {
             size="sm"
             data-testid="account-gap"
           />
-          <MoneyAmount
-            :cents="account.currentBalanceCents"
-            :threshold="account.lowBalanceThresholdCents"
-            class="text-sm font-semibold"
-            data-testid="account-balance"
-          />
+          <div class="flex flex-col items-end">
+            <MoneyAmount
+              :cents="account.currentBalanceCents"
+              :threshold="account.lowBalanceThresholdCents"
+              class="text-sm font-semibold"
+              data-testid="account-balance"
+            />
+            <InvestmentGain
+              v-if="account.investment !== null"
+              :summary="account.investment"
+            />
+          </div>
           <template v-if="reordering">
             <UButton
               :icon="icons.moveUp"
