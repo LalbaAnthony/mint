@@ -129,4 +129,6 @@ Après le premier déploiement du lot 3, vérifier les plafonds réglementaires 
 
 Les secrets `SESSION_SECRET` et `SMTP_*` doivent exister avant le premier déploiement qui embarque l'authentification : sans eux, le job `deploy` échoue à la validation, avant toute connexion au VPS. Changer `SESSION_SECRET` déconnecte tous les utilisateurs.
 
+Les passkeys (ADR 0022) sont liées au nom d'hôte de `APP_ORIGIN` (`mint.dev-it.app`, fixé dans `docker-compose.yml`) : changer de domaine les rend toutes inutilisables, chaque utilisateur se reconnecte alors par mot de passe et réenregistre ses passkeys.
+
 Les trois secrets `VAPID_*` doivent exister avant le premier déploiement du sous-lot des notifications, sous peine du même échec. Générer la paire une seule fois, hors du VPS, avec `npx web-push generate-vapid-keys` (paquet `web-push`), puis copier « Public Key » et « Private Key » dans les secrets. Changer la paire invalide tous les abonnements : chaque appareil doit réactiver le push depuis son profil.
