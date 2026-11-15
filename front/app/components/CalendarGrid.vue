@@ -189,6 +189,13 @@ function numberClasses(cell: CalendarCell): string {
                       v-if="item.isSubscription"
                       kind="subscription"
                     />
+                    <UIcon
+                      v-if="item.capExcessCents !== null"
+                      :name="icons.belowThreshold"
+                      class="size-4 shrink-0 text-warning"
+                      :aria-label="t('caps.exceededShort')"
+                      data-testid="calendar-cap-excess"
+                    />
                     <MoneyAmount :cents="item.amountCents" variant="flow" />
                   </button>
                 </CalendarOccurrenceMenu>

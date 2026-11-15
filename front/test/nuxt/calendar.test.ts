@@ -59,6 +59,8 @@ function occurrence(
     accountId: ids.current,
     triggerMode: 'auto',
     isSubscription: false,
+    system: false,
+    capExcessCents: null,
     occurrence: {
       originalDate: '2026-11-20',
       effectiveDate: '2026-11-20',

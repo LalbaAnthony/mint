@@ -117,6 +117,10 @@ function accountSuffix(accountId: string): string {
                     color="neutral"
                     variant="soft"
                   />
+                  <CapExcessBadge
+                    v-if="item.capExcessCents !== null"
+                    :excess-cents="item.capExcessCents"
+                  />
                 </span>
                 <span
                   v-if="aggregate"

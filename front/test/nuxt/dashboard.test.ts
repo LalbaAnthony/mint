@@ -336,6 +336,9 @@ function dashboardHandlers() {
           thresholdCents: 20_000,
         },
       ],
+      capAlerts: [
+        { accountId: ids.livret, date: '2026-12-06', excessCents: 5_000 },
+      ],
       toCategorizeCount: 3,
       pendingProposalsCount: 2,
       pendingImportIds: ['00000000-0000-4000-8000-0000000000aa'],
@@ -474,6 +477,9 @@ describe('dashboard banner (DSH-04, CHG-65)', () => {
     )
     expect(wrapper.get('[data-testid="dashboard-alerts"]').text()).toContain(
       'Compte courant',
+    )
+    expect(wrapper.get('[data-testid="dashboard-cap-alert"]').text()).toContain(
+      `dépasse le plafond de ${euros(5_000)}`,
     )
     expect(
       wrapper.get('[data-testid="dashboard-to-categorize"]').text(),

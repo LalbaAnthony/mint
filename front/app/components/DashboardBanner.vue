@@ -7,6 +7,10 @@ const { t } = useI18n()
 const { formatDate } = useFormatters()
 const referentials = useReferentialsStore()
 
+const alertCount = computed(
+  () => props.summary.alerts.length + props.summary.capAlerts.length,
+)
+
 const proposalsLink = computed(() => {
   const [latest] = props.summary.pendingImportIds
   return latest === undefined ? '/import' : `/import?batch=${latest}`
@@ -40,9 +44,9 @@ const proposalsLink = computed(() => {
     <UCard data-testid="dashboard-alerts">
       <p class="flex items-center gap-2 text-sm font-medium text-muted">
         <UIcon :name="icons.belowThreshold" class="size-5 text-warning" />
-        {{ t('dashboard.alerts', summary.alerts.length) }}
+        {{ t('dashboard.alerts', alertCount) }}
       </p>
-      <ul v-if="summary.alerts.length > 0" class="mt-2 flex flex-col gap-1">
+      <ul v-if="alertCount > 0" class="mt-2 flex flex-col gap-1">
         <li
           v-for="alert in summary.alerts"
           :key="alert.accountId"
@@ -62,6 +66,20 @@ const proposalsLink = computed(() => {
             :cents="alert.minBalanceCents"
             :threshold="alert.thresholdCents"
           />
+        </li>
+        <li
+          v-for="alert in summary.capAlerts"
+          :key="`cap-${alert.accountId}`"
+          class="flex flex-wrap items-center gap-1 text-sm text-default"
+          data-testid="dashboard-cap-alert"
+        >
+          <span class="font-medium">
+            {{ referentials.accountName(alert.accountId) }}
+          </span>
+          <span class="text-muted">
+            {{ t('dashboard.capFrom', { date: formatDate(alert.date) }) }}
+          </span>
+          <CapExcessBadge :excess-cents="alert.excessCents" />
         </li>
       </ul>
       <p v-else class="mt-2 text-sm text-muted">

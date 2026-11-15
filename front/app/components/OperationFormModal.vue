@@ -2,9 +2,10 @@
 import { useMediaQuery } from '@vueuse/core'
 import type { SelectItem as UiSelectItem } from '@nuxt/ui'
 import {
-  operationSchema,
-  transferSchema,
+  operationSaveResponseSchema,
+  transferSaveResponseSchema,
 } from '@mint/shared/schemas/operations'
+import type { CapWarning } from '@mint/shared/types/interest'
 import { candidateListResponseSchema } from '@mint/shared/schemas/reconciliation'
 import type { Operation } from '@mint/shared/types/operations'
 import { operationFormSchema, transferFormSchema } from '~~/schemas/forms'
@@ -19,6 +20,7 @@ const referentials = useReferentialsStore()
 const { t, locale } = useI18n()
 const toast = useToast()
 const { validator, errorMessage } = useFormValidation()
+const { formatDate, formatMoney } = useFormatters()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 const saving = ref(false)
@@ -174,10 +176,24 @@ const title = computed(() =>
     : t('operations.editTitle'),
 )
 
-async function saveTransfer(): Promise<void> {
+function warnAboutCaps(warnings: readonly CapWarning[]): void {
+  for (const warning of warnings) {
+    toast.add({
+      title: t('caps.warning', {
+        account: referentials.accountName(warning.accountId),
+        amount: formatMoney(warning.excessCents),
+        date: formatDate(warning.date),
+      }),
+      icon: icons.belowThreshold,
+      color: 'warning',
+    })
+  }
+}
+
+async function saveTransfer(): Promise<CapWarning[]> {
   const parsed = transferFormSchema.safeParse(state)
   if (!parsed.success) {
-    return
+    return []
   }
   const body = {
     sourceAccountId: parsed.data.sourceAccountId,
@@ -189,11 +205,16 @@ async function saveTransfer(): Promise<void> {
     tagIds: state.tagIds,
   }
   const groupId = edited.value?.transferGroupId ?? null
-  if (groupId === null) {
-    await apiCall('POST', '/transfers', transferSchema, body)
-  } else {
-    await apiCall('PATCH', `/transfers/${groupId}`, transferSchema, body)
-  }
+  const saved =
+    groupId === null
+      ? await apiCall('POST', '/transfers', transferSaveResponseSchema, body)
+      : await apiCall(
+          'PATCH',
+          `/transfers/${groupId}`,
+          transferSaveResponseSchema,
+          body,
+        )
+  return saved.capWarnings
 }
 
 async function proposeReconciliation(created: Operation): Promise<void> {
@@ -210,14 +231,14 @@ async function proposeReconciliation(created: Operation): Promise<void> {
   }
 }
 
-async function saveOperation(): Promise<void> {
+async function saveOperation(): Promise<CapWarning[]> {
   const parsed = operationFormSchema.safeParse(state)
   if (!parsed.success || state.source === undefined) {
-    return
+    return []
   }
   const accountId = sourceAccountId(state.source, referentials.paymentMethods)
   if (accountId === null) {
-    return
+    return []
   }
   const body = {
     accountId,
@@ -231,27 +252,34 @@ async function saveOperation(): Promise<void> {
     tagIds: state.tagIds,
   }
   if (edited.value === null) {
-    const created = await apiCall('POST', '/operations', operationSchema, body)
-    await proposeReconciliation(created)
-  } else {
-    await apiCall(
-      'PATCH',
-      `/operations/${edited.value.id}`,
-      operationSchema,
+    const created = await apiCall(
+      'POST',
+      '/operations',
+      operationSaveResponseSchema,
       body,
     )
+    await proposeReconciliation(created)
+    return created.capWarnings
   }
+  const updated = await apiCall(
+    'PATCH',
+    `/operations/${edited.value.id}`,
+    operationSaveResponseSchema,
+    body,
+  )
+  return updated.capWarnings
 }
 
 async function submit(): Promise<void> {
   saving.value = true
   try {
-    await (isTransfer.value ? saveTransfer() : saveOperation())
+    const warnings = await (isTransfer.value ? saveTransfer() : saveOperation())
     toast.add({
       title: t('operations.saved'),
       icon: icons.success,
       color: 'success',
     })
+    warnAboutCaps(warnings)
     editor.markSaved()
   } catch (error) {
     toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })

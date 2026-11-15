@@ -232,6 +232,10 @@ async function saved(
                 v-if="row.original.isSubscription"
                 kind="subscription"
               />
+              <CapExcessBadge
+                v-if="row.original.capExcess !== null"
+                :excess-cents="row.original.capExcess.excessCents"
+              />
             </div>
             <p class="text-xs text-muted">{{ categoryLabel(row.original) }}</p>
           </template>
@@ -296,6 +300,10 @@ async function saved(
                   <PlanningMarker
                     v-if="schedule.isSubscription"
                     kind="subscription"
+                  />
+                  <CapExcessBadge
+                    v-if="schedule.capExcess !== null"
+                    :excess-cents="schedule.capExcess.excessCents"
                   />
                 </p>
                 <p class="truncate text-xs text-muted">

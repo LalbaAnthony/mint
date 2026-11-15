@@ -2,9 +2,15 @@ import { z } from 'zod'
 import {
   accountNatureSchema,
   accountUsageSchema,
+  isSavingsNature,
   regulatedProductIssue,
   regulatedProductSchema,
 } from '@mint/shared/schemas/accounts'
+import {
+  annualRatePctSchema,
+  capitalizationSchema,
+  interestMethodSchema,
+} from '@mint/shared/schemas/interest'
 import {
   amountCentsSchema,
   isoDateSchema,
@@ -85,6 +91,17 @@ const optionalLabelInputSchema = z
   .transform((text) => (text === '' ? null : text))
   .pipe(labelSchema.nullable())
 
+const optionalPositiveAmountInputSchema = optionalAmountInputSchema.refine(
+  (cents) => cents === null || cents > 0,
+  { error: 'amount_not_positive' },
+)
+
+const optionalDateInputSchema = z
+  .string({ error: 'invalid_date' })
+  .trim()
+  .transform((text) => (text === '' ? null : text))
+  .pipe(isoDateSchema.nullable())
+
 export function accountFormSchema(today: string) {
   return z
     .object({
@@ -98,6 +115,14 @@ export function accountFormSchema(today: string) {
         error: 'date_in_future',
       }),
       lowBalanceThreshold: optionalAmountInputSchema,
+      depositCap: optionalPositiveAmountInputSchema,
+      capitalizedInterest: optionalAmountInputSchema.refine(
+        (cents) => cents === null || cents >= 0,
+        { error: 'amount_out_of_range' },
+      ),
+      interestMethod: interestMethodSchema,
+      capitalization: capitalizationSchema,
+      anniversaryDate: optionalDateInputSchema,
     })
     .superRefine((account, context) => {
       const issue = regulatedProductIssue(account)
@@ -108,8 +133,42 @@ export function accountFormSchema(today: string) {
           path: ['regulatedProduct'],
         })
       }
+      if (
+        isSavingsNature(account.nature) &&
+        account.capitalization === 'anniversary' &&
+        account.anniversaryDate === null
+      ) {
+        context.addIssue({
+          code: 'custom',
+          message: 'required',
+          path: ['anniversaryDate'],
+        })
+      }
     })
 }
+
+export const interestRateFormSchema = z.object({
+  effectiveDate: isoDateSchema,
+  rate: z
+    .string({ error: 'required' })
+    .trim()
+    .min(1, { error: 'required' })
+    .transform((text, context) => {
+      const rate = Number(text.replace(/\s/g, '').replace(',', '.'))
+      if (!Number.isFinite(rate)) {
+        context.addIssue({ code: 'custom', message: 'invalid_rate' })
+        return z.NEVER
+      }
+      return rate
+    })
+    .pipe(annualRatePctSchema),
+})
+
+export const regulatedCapFormSchema = z.object({
+  cap: optionalPositiveAmountInputSchema.refine((cents) => cents !== null, {
+    error: 'required',
+  }),
+})
 
 const positiveAmountInputSchema = amountInputSchema.refine(
   (cents) => cents > 0,

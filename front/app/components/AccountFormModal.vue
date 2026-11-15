@@ -4,13 +4,21 @@ import {
   accountNatures,
   accountSchema,
   accountUsages,
+  isSavingsNature,
   productsForNature,
+  regulatedCapListResponseSchema,
 } from '@mint/shared/schemas/accounts'
+import { capitalizations, interestMethods } from '@mint/shared/schemas/interest'
+import type {
+  Capitalization,
+  InterestMethod,
+} from '@mint/shared/types/interest'
 import type {
   Account,
   AccountNature,
   AccountUsage,
   CreateAccountRequest,
+  RegulatedCap,
   RegulatedProduct,
 } from '@mint/shared/types/accounts'
 import { accountFormSchema } from '~~/schemas/forms'
@@ -42,7 +50,16 @@ function emptyState(): AccountFormState {
     initialBalance: '',
     initialBalanceDate: today.value,
     lowBalanceThreshold: '',
+    depositCap: '',
+    capitalizedInterest: '',
+    interestMethod: 'fortnight',
+    capitalization: 'dec31',
+    anniversaryDate: '',
   }
+}
+
+function centsInput(cents: number | null): string {
+  return cents === null ? '' : formatAmountInput(cents, locale.value)
 }
 
 function stateFrom(account: Account): AccountFormState {
@@ -61,10 +78,27 @@ function stateFrom(account: Account): AccountFormState {
       account.lowBalanceThresholdCents === null
         ? ''
         : formatAmountInput(account.lowBalanceThresholdCents, locale.value),
+    depositCap: centsInput(account.depositCapCents),
+    capitalizedInterest: centsInput(account.capitalizedInterestCents),
+    interestMethod: account.interestMethod ?? 'fortnight',
+    capitalization: account.capitalization ?? 'dec31',
+    anniversaryDate: account.anniversaryDate ?? '',
   }
 }
 
 const state = reactive<AccountFormState>(emptyState())
+const referenceCaps = ref<RegulatedCap[]>([])
+
+async function loadReferenceCaps(): Promise<void> {
+  try {
+    referenceCaps.value = await apiGet(
+      '/regulated-caps',
+      regulatedCapListResponseSchema,
+    )
+  } catch (error) {
+    toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
+  }
+}
 
 watch(
   open,
@@ -78,6 +112,42 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  () => state.regulatedProduct,
+  async (product, previous) => {
+    if (
+      product === previous ||
+      product === null ||
+      product === (props.account?.regulatedProduct ?? null)
+    ) {
+      return
+    }
+    if (referenceCaps.value.length === 0) {
+      await loadReferenceCaps()
+    }
+    const reference = referenceCaps.value.find((cap) => cap.product === product)
+    if (reference !== undefined) {
+      state.depositCap = formatAmountInput(reference.capCents, locale.value)
+    }
+  },
+)
+
+const isSavings = computed(() => isSavingsNature(state.nature))
+
+const methodItems = computed<SelectItem<InterestMethod>[]>(() =>
+  interestMethods.map((method) => ({
+    label: t(`accounts.interestMethods.${method}`),
+    value: method,
+  })),
+)
+
+const capitalizationItems = computed<SelectItem<Capitalization>[]>(() =>
+  capitalizations.map((capitalization) => ({
+    label: t(`accounts.capitalizations.${capitalization}`),
+    value: capitalization,
+  })),
 )
 
 watch(
@@ -137,6 +207,18 @@ async function submit(): Promise<void> {
     initialBalanceCents: parsed.data.initialBalance,
     initialBalanceDate: parsed.data.initialBalanceDate,
     lowBalanceThresholdCents: parsed.data.lowBalanceThreshold,
+    ...(isSavingsNature(parsed.data.nature)
+      ? {
+          depositCapCents: parsed.data.depositCap,
+          capitalizedInterestCents: parsed.data.capitalizedInterest ?? 0,
+          interestMethod: parsed.data.interestMethod,
+          capitalization: parsed.data.capitalization,
+          anniversaryDate:
+            parsed.data.capitalization === 'anniversary'
+              ? parsed.data.anniversaryDate
+              : null,
+        }
+      : {}),
   }
   saving.value = true
   try {
@@ -269,6 +351,85 @@ async function submit(): Promise<void> {
             </template>
           </UInput>
         </AppFormField>
+        <template v-if="isSavings">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <AppFormField
+              :label="t('accounts.fields.depositCap')"
+              :hint="t('accounts.fields.depositCapHint')"
+              name="depositCap"
+            >
+              <UInput
+                v-model="state.depositCap"
+                inputmode="decimal"
+                class="w-full"
+                :ui="{ base: 'text-right tabular-nums' }"
+                data-testid="account-deposit-cap"
+              >
+                <template #trailing>
+                  <span class="text-sm text-muted">{{
+                    t('money.symbol')
+                  }}</span>
+                </template>
+              </UInput>
+            </AppFormField>
+            <AppFormField
+              :label="t('accounts.fields.capitalizedInterest')"
+              :hint="t('accounts.fields.capitalizedInterestHint')"
+              name="capitalizedInterest"
+            >
+              <UInput
+                v-model="state.capitalizedInterest"
+                inputmode="decimal"
+                class="w-full"
+                :ui="{ base: 'text-right tabular-nums' }"
+                data-testid="account-capitalized-interest"
+              >
+                <template #trailing>
+                  <span class="text-sm text-muted">{{
+                    t('money.symbol')
+                  }}</span>
+                </template>
+              </UInput>
+            </AppFormField>
+          </div>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <AppFormField
+              :label="t('accounts.fields.interestMethod')"
+              name="interestMethod"
+            >
+              <USelect
+                v-model="state.interestMethod"
+                :items="methodItems"
+                class="w-full"
+                data-testid="account-interest-method"
+              />
+            </AppFormField>
+            <AppFormField
+              :label="t('accounts.fields.capitalization')"
+              name="capitalization"
+            >
+              <USelect
+                v-model="state.capitalization"
+                :items="capitalizationItems"
+                class="w-full"
+                data-testid="account-capitalization"
+              />
+            </AppFormField>
+          </div>
+          <AppFormField
+            v-if="state.capitalization === 'anniversary'"
+            :label="t('accounts.fields.anniversaryDate')"
+            name="anniversaryDate"
+          >
+            <UInput
+              v-model="state.anniversaryDate"
+              type="date"
+              class="w-full"
+              :ui="{ base: 'tabular-nums' }"
+              data-testid="account-anniversary-date"
+            />
+          </AppFormField>
+        </template>
         <UButton
           type="submit"
           :label="t('common.save')"

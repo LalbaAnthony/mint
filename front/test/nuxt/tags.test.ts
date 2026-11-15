@@ -173,7 +173,10 @@ describe('tags (CAT-09)', () => {
     const tagged = operation({ tagIds: [ids.holidays] })
     const api = installFakeApi(fetchMock, {
       ...referentialHandlers(),
-      [`PATCH /operations/${tagged.id}`]: () => tagged,
+      [`PATCH /operations/${tagged.id}`]: () => ({
+        ...tagged,
+        capWarnings: [],
+      }),
     })
     const wrapper = await mountSuspended(OperationFormModal)
     mounted.push(wrapper)

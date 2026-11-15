@@ -80,7 +80,14 @@
       "institution": "Établissement",
       "initialBalance": "Solde initial",
       "initialBalanceDate": "Date du solde initial",
-      "lowBalanceThreshold": "Seuil d'alerte de solde bas"
+      "lowBalanceThreshold": "Seuil d'alerte de solde bas",
+      "depositCap": "Plafond de versement",
+      "depositCapHint": "Prérempli avec le plafond réglementaire",
+      "capitalizedInterest": "Dont intérêts capitalisés",
+      "capitalizedInterestHint": "Part du solde initial venant d'intérêts, hors plafond",
+      "interestMethod": "Calcul des intérêts",
+      "capitalization": "Capitalisation",
+      "anniversaryDate": "Date anniversaire"
     },
     "natures": {
       "current_account": "Compte courant",
@@ -107,7 +114,15 @@
       "investment": "Investissement"
     },
     "deleteBlockedOperations": "{name} a des opérations : il ne peut qu'être archivé.",
-    "deleteBlockedUsage": "{name} ne peut pas être supprimé : {references} l'utilisent. Modifiez-les ou supprimez-les d'abord."
+    "deleteBlockedUsage": "{name} ne peut pas être supprimé : {references} l'utilisent. Modifiez-les ou supprimez-les d'abord.",
+    "interestMethods": {
+      "fortnight": "Par quinzaine",
+      "daily": "Au jour le jour"
+    },
+    "capitalizations": {
+      "dec31": "Au 31 décembre",
+      "anniversary": "À la date anniversaire"
+    }
   },
   "paymentMethods": {
     "add": "Ajouter un moyen de paiement",
@@ -285,7 +300,12 @@
     "disable": "Désactiver",
     "disableTitle": "Désactiver l'utilisateur",
     "disableEffect": "{email} sera déconnecté et ne pourra plus se connecter. Ses données sont conservées.",
-    "enable": "Réactiver"
+    "enable": "Réactiver",
+    "caps": {
+      "title": "Plafonds réglementaires",
+      "help": "Valeurs de référence proposées à la création d'un livret ou d'une épargne logement. Les comptes existants gardent leur propre plafond.",
+      "saved": "Plafond du {product} enregistré."
+    }
   },
   "validation": {
     "invalid": "Valeur invalide",
@@ -334,7 +354,10 @@
     "amount_columns": "Choisissez une colonne de montant ou les colonnes débit et crédit",
     "duplicate": "Valeur en double",
     "invalid_month": "Mois invalide",
-    "month_out_of_range": "Mois hors de l'historique ou de l'horizon"
+    "month_out_of_range": "Mois hors de l'historique ou de l'horizon",
+    "invalid_rate": "Taux invalide",
+    "rate_out_of_range": "Entre 0 et 99,9999 %",
+    "rate_too_precise": "4 décimales au plus"
   },
   "errors": {
     "validation_failed": "Certaines valeurs sont invalides.",
@@ -390,7 +413,10 @@
     "import_not_previewed": "Lancez l'aperçu avant de valider l'import.",
     "occurrence_not_candidate": "Cette occurrence ne peut plus être rapprochée.",
     "operation_reconciled": "Cette opération est déjà rapprochée.",
-    "operation_not_reconciled": "Cette opération n'est pas rapprochée."
+    "operation_not_reconciled": "Cette opération n'est pas rapprochée.",
+    "account_not_savings": "Ce compte n'est ni un livret réglementé ni une épargne logement.",
+    "interest_rate_exists": "Un taux existe déjà à cette date.",
+    "system_schedule": "Cette échéance est gérée par Mint et ne se modifie pas."
   },
   "usage": {
     "checking": "Vérification des usages...",
@@ -654,6 +680,27 @@
     "editOf": "Modifier la valorisation du {date}",
     "deleteOf": "Supprimer la valorisation du {date}"
   },
+  "interest": {
+    "menu": "Taux et intérêts",
+    "title": "Taux et intérêts de {name}",
+    "help": "Saisissez le taux annuel et sa date d'effet. Les intérêts sont estimés selon la méthode du compte et versés à chaque capitalisation.",
+    "currentRate": "Taux en vigueur",
+    "noRate": "Aucun",
+    "acquired": "Acquis depuis le {date}",
+    "projected": "Projetés au {date}",
+    "effectiveDate": "Date d'effet",
+    "rate": "Taux annuel (%)",
+    "record": "Ajouter le taux",
+    "empty": "Aucun taux : aucun intérêt n'est estimé.",
+    "deleteOf": "Supprimer le taux du {date}",
+    "rowLabel": "Intérêts estimés"
+  },
+  "caps": {
+    "exceeds": "dépasse le plafond de {amount}",
+    "exceededShort": "Dépasse le plafond",
+    "nextOccurrence": "L'occurrence du {date} dépasse le plafond du compte.",
+    "warning": "{account} dépasse son plafond de {amount} au {date}."
+  },
   "imports": {
     "steps": {
       "select": "Importer un relevé CSV",
@@ -812,6 +859,7 @@
     "wealth": "Patrimoine total",
     "alerts": "Aucune alerte | {n} alerte active | {n} alertes actives",
     "belowFrom": "sous le seuil le {date}",
+    "capFrom": "dépasse son plafond le {date}",
     "noAlert": "Aucun compte ne passe sous son seuil dans les 7 prochains jours.",
     "toCategorize": "Opérations à catégoriser",
     "proposals": "Rapprochements à confirmer",

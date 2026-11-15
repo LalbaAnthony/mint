@@ -153,7 +153,7 @@ describe('operation form (OPE-01, OPE-02)', () => {
   it('records an expense on the first account, typed in euros and sent as a debit in cents', async () => {
     const api = installFakeApi(fetchMock, {
       ...referentialHandlers(),
-      'POST /operations': () => operation(),
+      'POST /operations': () => ({ ...operation(), capWarnings: [] }),
     })
     await openEditor(
       () => useOperationEditorStore().create('expense'),
@@ -197,6 +197,7 @@ describe('operation form (OPE-01, OPE-02)', () => {
           amountCents: 10_000,
           transferGroupId: ids.transferGroup,
         }),
+        capWarnings: [],
       }),
     })
     await openEditor(
@@ -243,6 +244,7 @@ describe('operation form (OPE-01, OPE-02)', () => {
         transferGroupId: ids.transferGroup,
         source: operation({ transferGroupId: ids.transferGroup }),
         target: movement,
+        capWarnings: [],
       }),
     })
     await openEditor(
@@ -310,7 +312,7 @@ describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () =
     const created = operation({ id: '00000000-0000-4000-8000-0000000000d9' })
     const api = installFakeApi(fetchMock, {
       ...referentialHandlers(),
-      'POST /operations': () => created,
+      'POST /operations': () => ({ ...created, capWarnings: [] }),
       [`GET /operations/${created.id}/candidates`]: () => ({
         candidates: [
           {

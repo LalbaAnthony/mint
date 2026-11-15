@@ -171,6 +171,16 @@ const statementsOpen = computed({
   },
 })
 
+const interestAccount = ref<Account | null>(null)
+const interestOpen = computed({
+  get: () => interestAccount.value !== null,
+  set: (open) => {
+    if (!open) {
+      interestAccount.value = null
+    }
+  },
+})
+
 const valuationAccount = ref<Account | null>(null)
 const valuationsOpen = computed({
   get: () => valuationAccount.value !== null,
@@ -194,6 +204,9 @@ function onAccountAction({ kind, account }: AccountAction): Promise<void> {
       return Promise.resolve()
     case 'valuations':
       valuationAccount.value = account
+      return Promise.resolve()
+    case 'interest':
+      interestAccount.value = account
       return Promise.resolve()
     case 'delete':
       return askAccountDeletion(account)
@@ -403,6 +416,11 @@ onMounted(load)
     <ValuationsModal
       v-model:open="valuationsOpen"
       :account="valuationAccount"
+      @changed="load"
+    />
+    <InterestModal
+      v-model:open="interestOpen"
+      :account="interestAccount"
       @changed="load"
     />
 

@@ -13,6 +13,10 @@ import type {
   EditableCategoryKind,
   ExpenseGroup,
 } from '@mint/shared/types/categories'
+import type {
+  Capitalization,
+  InterestMethod,
+} from '@mint/shared/types/interest'
 import type { PaymentMethodKind } from '@mint/shared/types/payment-methods'
 import type { AllocationTargets, Locale } from '@mint/shared/types/user'
 
@@ -42,6 +46,11 @@ export type AccountFormState = {
   initialBalance: string
   initialBalanceDate: string
   lowBalanceThreshold: string
+  depositCap: string
+  capitalizedInterest: string
+  interestMethod: InterestMethod
+  capitalization: Capitalization
+  anniversaryDate: string
 }
 
 export type AccountFormOutput = z.output<ReturnType<typeof accountFormSchema>>
@@ -61,4 +70,13 @@ export type CategoryFormState = {
 
 export type TagFormState = {
   name: string
+}
+
+export type InterestRateFormState = {
+  effectiveDate: string
+  rate: string
+}
+
+export type RegulatedCapFormState = {
+  cap: string
 }

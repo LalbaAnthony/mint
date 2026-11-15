@@ -161,6 +161,18 @@ async function deleteSchedule(): Promise<void> {
         class="flex flex-col gap-6"
         data-testid="schedule-detail"
       >
+        <p
+          v-if="schedule.capExcess !== null"
+          class="flex flex-wrap items-center gap-2 text-sm text-default"
+          data-testid="schedule-cap-excess"
+        >
+          {{
+            t('caps.nextOccurrence', {
+              date: formatDate(schedule.capExcess.effectiveDate),
+            })
+          }}
+          <CapExcessBadge :excess-cents="schedule.capExcess.excessCents" />
+        </p>
         <dl class="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt class="font-medium text-muted">

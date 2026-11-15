@@ -24,6 +24,7 @@ export type AccountActionKind =
   | 'addPaymentMethod'
   | 'statements'
   | 'valuations'
+  | 'interest'
 
 export type AccountAction = {
   kind: AccountActionKind

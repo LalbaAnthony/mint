@@ -140,3 +140,15 @@ export interface TagFormModalProps {
 export type TagFormModalEmits = {
   saved: [tag: Tag]
 }
+
+export interface CapExcessBadgeProps {
+  excessCents: number
+}
+
+export interface InterestModalProps {
+  account: Account | null
+}
+
+export type InterestModalEmits = {
+  changed: []
+}

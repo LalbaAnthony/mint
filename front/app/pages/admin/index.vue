@@ -355,6 +355,8 @@ onMounted(load)
           </li>
         </ul>
       </UCard>
+
+      <RegulatedCapsCard />
     </div>
 
     <UModal v-model:open="inviteOpen" :title="t('admin.invite')">

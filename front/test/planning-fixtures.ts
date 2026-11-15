@@ -48,11 +48,18 @@ export function account(overrides: Partial<Account> = {}): Account {
     initialBalanceCents: 200_000,
     initialBalanceDate: '2026-11-01',
     lowBalanceThresholdCents: null,
+    depositCapCents: null,
+    capitalizedInterestCents: null,
+    interestMethod: null,
+    capitalization: null,
+    anniversaryDate: null,
     sortOrder: 0,
     archivedAt: null,
     currentBalanceCents: 200_000,
     reconciliationGapCents: null,
     investment: null,
+    interest: null,
+    depositCapExcessCents: null,
     ...overrides,
   }
 }
@@ -198,6 +205,7 @@ export function schedule(overrides: Partial<Schedule> = {}): Schedule {
       editable: true,
     },
     ended: false,
+    capExcess: null,
     ...overrides,
   }
 }

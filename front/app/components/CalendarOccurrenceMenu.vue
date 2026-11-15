@@ -49,7 +49,8 @@ const items = computed<DropdownMenuItem[][]>(() => {
 </script>
 
 <template>
-  <UDropdownMenu :items="items" :content="{ align: 'start' }">
+  <slot v-if="occurrence.system" />
+  <UDropdownMenu v-else :items="items" :content="{ align: 'start' }">
     <slot />
   </UDropdownMenu>
 </template>

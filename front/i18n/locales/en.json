@@ -80,7 +80,14 @@
       "institution": "Institution",
       "initialBalance": "Initial balance",
       "initialBalanceDate": "Initial balance date",
-      "lowBalanceThreshold": "Low balance alert threshold"
+      "lowBalanceThreshold": "Low balance alert threshold",
+      "depositCap": "Deposit cap",
+      "depositCapHint": "Prefilled with the regulatory cap",
+      "capitalizedInterest": "Of which capitalized interest",
+      "capitalizedInterestHint": "Part of the initial balance coming from interest, outside the cap",
+      "interestMethod": "Interest calculation",
+      "capitalization": "Capitalization",
+      "anniversaryDate": "Anniversary date"
     },
     "natures": {
       "current_account": "Current account",
@@ -107,7 +114,15 @@
       "investment": "Investment"
     },
     "deleteBlockedOperations": "{name} has operations: it can only be archived.",
-    "deleteBlockedUsage": "{name} cannot be deleted: {references} use it. Change or delete them first."
+    "deleteBlockedUsage": "{name} cannot be deleted: {references} use it. Change or delete them first.",
+    "interestMethods": {
+      "fortnight": "By fortnight",
+      "daily": "Daily"
+    },
+    "capitalizations": {
+      "dec31": "On 31 December",
+      "anniversary": "On the anniversary date"
+    }
   },
   "paymentMethods": {
     "add": "Add a payment method",
@@ -285,7 +300,12 @@
     "disable": "Disable",
     "disableTitle": "Disable the user",
     "disableEffect": "{email} will be logged out and unable to log in. Their data is kept.",
-    "enable": "Enable"
+    "enable": "Enable",
+    "caps": {
+      "title": "Regulatory caps",
+      "help": "Reference values offered when a regulated or housing savings account is created. Existing accounts keep their own cap.",
+      "saved": "{product} cap saved."
+    }
   },
   "validation": {
     "invalid": "Invalid value",
@@ -334,7 +354,10 @@
     "amount_columns": "Choose an amount column or the debit and credit columns",
     "duplicate": "Duplicate value",
     "invalid_month": "Invalid month",
-    "month_out_of_range": "Month outside the history or the horizon"
+    "month_out_of_range": "Month outside the history or the horizon",
+    "invalid_rate": "Invalid rate",
+    "rate_out_of_range": "Between 0 and 99.9999%",
+    "rate_too_precise": "4 decimals at most"
   },
   "errors": {
     "validation_failed": "Some values are invalid.",
@@ -390,7 +413,10 @@
     "import_not_previewed": "Run the preview before validating the import.",
     "occurrence_not_candidate": "This occurrence can no longer be reconciled.",
     "operation_reconciled": "This operation is already reconciled.",
-    "operation_not_reconciled": "This operation is not reconciled."
+    "operation_not_reconciled": "This operation is not reconciled.",
+    "account_not_savings": "This account is neither a regulated nor a housing savings account.",
+    "interest_rate_exists": "A rate already exists at this date.",
+    "system_schedule": "This schedule is managed by Mint and cannot be changed."
   },
   "usage": {
     "checking": "Checking usage...",
@@ -654,6 +680,27 @@
     "editOf": "Edit the valuation of {date}",
     "deleteOf": "Delete the valuation of {date}"
   },
+  "interest": {
+    "menu": "Rates and interest",
+    "title": "Rates and interest of {name}",
+    "help": "Enter the annual rate and its effective date. Interest is estimated with the method of the account and credited at each capitalization.",
+    "currentRate": "Current rate",
+    "noRate": "None",
+    "acquired": "Earned since {date}",
+    "projected": "Projected on {date}",
+    "effectiveDate": "Effective date",
+    "rate": "Annual rate (%)",
+    "record": "Add the rate",
+    "empty": "No rate: no interest is estimated.",
+    "deleteOf": "Delete the rate of {date}",
+    "rowLabel": "Estimated interest"
+  },
+  "caps": {
+    "exceeds": "exceeds the cap by {amount}",
+    "exceededShort": "Exceeds the cap",
+    "nextOccurrence": "The occurrence of {date} exceeds the cap of the account.",
+    "warning": "{account} exceeds its cap by {amount} on {date}."
+  },
   "imports": {
     "steps": {
       "select": "Import a CSV statement",
@@ -812,6 +859,7 @@
     "wealth": "Total wealth",
     "alerts": "No alert | {n} active alert | {n} active alerts",
     "belowFrom": "below the threshold on {date}",
+    "capFrom": "exceeds its cap on {date}",
     "noAlert": "No account goes below its threshold in the next 7 days.",
     "toCategorize": "Operations to categorize",
     "proposals": "Reconciliations to confirm",

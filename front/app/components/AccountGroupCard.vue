@@ -78,6 +78,15 @@ function actionItems(account: Account): DropdownMenuItem[][] {
               onSelect: () => select('valuations'),
             },
           ]),
+      ...(account.interestMethod === null
+        ? []
+        : [
+            {
+              label: t('interest.menu'),
+              icon: icons.usageSavings,
+              onSelect: () => select('interest'),
+            },
+          ]),
       {
         label: t('common.archive'),
         icon: icons.archive,
@@ -178,6 +187,23 @@ function actionItems(account: Account): DropdownMenuItem[][] {
             <InvestmentGain
               v-if="account.investment !== null"
               :summary="account.investment"
+            />
+            <span
+              v-if="
+                account.interest !== null && account.interest.acquiredCents > 0
+              "
+              class="inline-flex items-center gap-1 text-xs text-muted"
+              data-testid="account-interest"
+            >
+              {{ t('interest.rowLabel') }}
+              <MoneyAmount
+                :cents="account.interest.acquiredCents"
+                variant="flow"
+              />
+            </span>
+            <CapExcessBadge
+              v-if="account.depositCapExcessCents !== null"
+              :excess-cents="account.depositCapExcessCents"
             />
           </div>
           <template v-if="reordering">
