@@ -34,6 +34,7 @@ export type RuleInput = Pick<
   | 'amountMaxCents'
   | 'categoryId'
   | 'transferAccountId'
+  | 'tagIds'
   | 'active'
 >
 

@@ -133,6 +133,7 @@ export function operationBody(
     label: 'Courses',
     note: null,
     categoryId: null,
+    tagIds: [],
     ...overrides,
   }
 }
@@ -162,6 +163,7 @@ export function transferBody(
     amountCents: 10_000,
     label: 'Epargne',
     note: null,
+    tagIds: [],
     ...overrides,
   }
 }

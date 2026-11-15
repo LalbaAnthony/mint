@@ -5,12 +5,14 @@ import type { PlannedExecution } from '@mint/shared/types/schedules'
 import { describeError, log } from '../logger.js'
 import { loadAccountInputs, loadScheduleInputs } from '../planning/inputs.js'
 import { insertedIdRowsSchema } from '../schemas/planning.js'
+import { addOperationTags, tagIdsBySchedule } from '../tags/tags.js'
 import type { DataAccess, ExecutionSummary } from '../types/planning.js'
 
 async function executeOccurrence(
   data: DataAccess,
   userId: string,
   execution: PlannedExecution,
+  tagIds: readonly string[],
 ): Promise<boolean> {
   return data.sequelize.transaction(async (transaction) => {
     const rows = await data.sequelize.query(
@@ -40,7 +42,7 @@ async function executeOccurrence(
       return false
     }
     const transferGroupId = execution.kind === 'transfer' ? randomUUID() : null
-    await data.models.Transaction.bulkCreate(
+    const operations = await data.models.Transaction.bulkCreate(
       execution.movements.map((movement) => ({
         userId,
         accountId: movement.accountId,
@@ -59,6 +61,13 @@ async function executeOccurrence(
         occurrenceId: occurrence.id,
       })),
       { transaction },
+    )
+    await addOperationTags(
+      data,
+      userId,
+      operations.map((operation) => operation.id),
+      tagIds,
+      transaction,
     )
     return true
   })
@@ -84,9 +93,20 @@ export async function executeDueOccurrences(
       schedules: await loadScheduleInputs(data, user.id),
       accounts: await loadAccountInputs(data, user.id),
     })
+    const tagIds = await tagIdsBySchedule(
+      data,
+      executions.map((execution) => execution.scheduleId),
+    )
     for (const execution of executions) {
       try {
-        if (await executeOccurrence(data, user.id, execution)) {
+        if (
+          await executeOccurrence(
+            data,
+            user.id,
+            execution,
+            tagIds.get(execution.scheduleId) ?? [],
+          )
+        ) {
           summary.occurrences += 1
           summary.operations += execution.movements.length
         }

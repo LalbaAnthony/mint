@@ -22,10 +22,12 @@ import { findUserAccount } from '../accounts/accounts.js'
 import { findUserCategory } from '../categories/categories.js'
 import { conflict, notFound, validationFailed } from '../http/http-error.js'
 import { createRegexMatcher, loadRuleInputs } from '../rules/rules.js'
+import { addOperationTags } from '../tags/tags.js'
 import {
   linkOrCreateCounterpart,
   reconcileBankLine,
   restoreSnapshot,
+  shareTagsAcross,
 } from '../reconciliation/apply.js'
 import { loadReconciliationOccurrences } from '../reconciliation/occurrences.js'
 import {
@@ -86,6 +88,7 @@ function toImportRow(row: ImportRowModel): ImportRow {
     ruleId: row.proposedRuleId,
     categoryId: row.proposedCategoryId,
     transferAccountId: row.proposedTransferAccountId,
+    tagIds: row.proposedTagIds,
     candidates: storedCandidatesSchema.parse(row.candidates),
   }
 }
@@ -284,6 +287,7 @@ export async function previewBatch(
       ruleId: rule?.id ?? null,
       categoryId: rule?.categoryId ?? null,
       transferAccountId: rule?.transferAccountId ?? null,
+      tagIds: rule?.tagIds ?? [],
       candidates: duplicate
         ? []
         : rankCandidates(
@@ -323,6 +327,7 @@ export async function previewBatch(
           proposedTransferAccountId: plan?.transferAccountId ?? null,
           proposedScheduleId: plan?.proposed?.scheduleId ?? null,
           proposedOriginalDate: plan?.proposed?.originalDate ?? null,
+          proposedTagIds: plan?.tagIds ?? [],
           candidates: plan?.candidates ?? [],
         }
       }),
@@ -433,6 +438,7 @@ export async function validateBatch(
     let duplicates = 0
     const plain: ReturnType<typeof bankLineOf>[] = []
     const plainCategories: (string | null)[] = []
+    const plainTags: string[][] = []
     for (const row of rows) {
       if (row.error !== null) {
         continue
@@ -464,6 +470,7 @@ export async function validateBatch(
           decision.reconcile,
           batch.id,
           decision.categoryId,
+          row.proposedTagIds,
           transaction,
         )
         if (outcome === 'merged') {
@@ -490,7 +497,7 @@ export async function validateBatch(
           },
           { transaction },
         )
-        await linkOrCreateCounterpart(
+        const counterpart = await linkOrCreateCounterpart(
           data,
           userId,
           operation,
@@ -498,13 +505,21 @@ export async function validateBatch(
           batch.id,
           transaction,
         )
+        await shareTagsAcross(
+          data,
+          userId,
+          [operation, counterpart],
+          row.proposedTagIds,
+          transaction,
+        )
         created += 1
         continue
       }
       plain.push(line)
       plainCategories.push(decision.categoryId)
+      plainTags.push(row.proposedTagIds)
     }
-    await data.models.Transaction.bulkCreate(
+    const plainOperations = await data.models.Transaction.bulkCreate(
       plain.map((line, index) => {
         const categoryId = plainCategories[index] ?? null
         return {
@@ -523,6 +538,15 @@ export async function validateBatch(
       }),
       { transaction },
     )
+    for (const [index, operation] of plainOperations.entries()) {
+      await addOperationTags(
+        data,
+        userId,
+        [operation.id],
+        plainTags[index] ?? [],
+        transaction,
+      )
+    }
     created += plain.length
     await upsertMapping(
       data,

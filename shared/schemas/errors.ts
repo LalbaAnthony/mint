@@ -26,6 +26,7 @@ export const apiErrorCodes = [
   'account_archived',
   'parent_archived',
   'category_name_taken',
+  'tag_name_taken',
   'system_category',
   'invalid_parent',
   'order_mismatch',

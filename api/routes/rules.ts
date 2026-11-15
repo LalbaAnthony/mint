@@ -22,6 +22,7 @@ import {
   validateRuleReferences,
 } from '../rules/rules.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
+import { operationTagIds } from '../tags/tags.js'
 
 const tag = 'rules'
 
@@ -29,7 +30,7 @@ const accessErrors = { 401: errorResponse('No valid session') }
 
 const resourceErrors = {
   ...accessErrors,
-  404: errorResponse('Unknown rule, account or category'),
+  404: errorResponse('Unknown rule, account, category or tag'),
 }
 
 export const listRulesRoute = defineUserRoute({
@@ -163,7 +164,7 @@ export const suggestRuleRoute = defineUserRoute({
   method: 'get',
   path: '/rules/suggestion',
   summary:
-    'Rule prefilled from an imported operation: its bank label without digits nor dates, its sign and its category (REG-03)',
+    'Rule prefilled from an imported operation: its bank label without digits nor dates, its sign, its category and its tags (REG-03)',
   tag,
   body: noBody,
   params: noParams,
@@ -177,6 +178,9 @@ export const suggestRuleRoute = defineUserRoute({
   },
   handle: async ({ app, user, query }) => {
     const operation = await findUserOperation(app, user.id, query.operationId)
-    return { status: 200, body: suggestRule(operation) }
+    return {
+      status: 200,
+      body: suggestRule(operation, await operationTagIds(app, operation.id)),
+    }
   },
 })

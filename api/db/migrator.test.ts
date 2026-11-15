@@ -131,8 +131,11 @@ describe('createMigrator', () => {
       'password_reset_tokens',
       'payment_methods',
       'schedule_occurrences',
+      'schedule_tags',
       'schedules',
       'sessions',
+      'tags',
+      'transaction_tags',
       'transactions',
       'users',
     ])

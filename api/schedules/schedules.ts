@@ -33,6 +33,7 @@ import {
   validationFailed,
 } from '../http/http-error.js'
 import { findUserPaymentMethod } from '../payment-methods/payment-methods.js'
+import { ensureUserTags, tagIdsBySchedule } from '../tags/tags.js'
 import type { ScheduleAttributes, ScheduleModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
 import { loadAccountInputs, loadScheduleInputs } from '../planning/inputs.js'
@@ -64,7 +65,10 @@ export async function findUserSchedule(
   return schedule
 }
 
-export function scheduleFieldsOf(schedule: ScheduleModel): ScheduleDraft {
+export function scheduleFieldsOf(
+  schedule: ScheduleModel,
+  tagIds: string[],
+): ScheduleDraft {
   return {
     kind: schedule.kind,
     label: schedule.label,
@@ -81,6 +85,7 @@ export function scheduleFieldsOf(schedule: ScheduleModel): ScheduleDraft {
     businessDayRule: schedule.businessDayRule,
     amountTolerancePct: schedule.amountTolerancePct,
     bankLabelPatterns: schedule.bankLabelPatterns,
+    tagIds,
     ...(schedule.kind === 'transfer'
       ? {
           sourceAccountId: schedule.sourceAccountId ?? undefined,
@@ -127,6 +132,7 @@ function notApplicableFields(
 
 export function mergeScheduleUpdate(
   schedule: ScheduleModel,
+  tagIds: string[],
   update: ScheduleUpdate,
 ): ScheduleFields {
   const misplaced = notApplicableFields(schedule.kind, update)
@@ -135,7 +141,10 @@ export function mergeScheduleUpdate(
       misplaced.map((field) => ({ path: [field], message: 'not_allowed' })),
     )
   }
-  return parseScheduleFields({ ...scheduleFieldsOf(schedule), ...update })
+  return parseScheduleFields({
+    ...scheduleFieldsOf(schedule, tagIds),
+    ...update,
+  })
 }
 
 async function ensureAccountUsable(
@@ -158,6 +167,7 @@ export async function validateScheduleReferences(
   previous: ScheduleModel | null,
   transaction?: Transaction,
 ): Promise<void> {
+  await ensureUserTags(data, userId, fields.tagIds, transaction)
   if (fields.kind === 'transfer') {
     await ensureAccountUsable(
       data,
@@ -279,6 +289,7 @@ export function toScheduleOccurrence(
 export function toSchedule(
   schedule: ScheduleModel,
   input: ScheduleInput,
+  tagIds: string[],
   activeAccounts: ReadonlyMap<string, AccountInput>,
   today: string,
 ): Schedule {
@@ -307,6 +318,7 @@ export function toSchedule(
     businessDayRule: schedule.businessDayRule,
     amountTolerancePct: schedule.amountTolerancePct,
     bankLabelPatterns: schedule.bankLabelPatterns,
+    tagIds,
     createdAt: schedule.createdAt.toISOString(),
     monthlyEquivalentCents: monthlyEquivalentCents(periodicAmount(input)),
     nextOccurrence:
@@ -405,11 +417,23 @@ export async function loadScheduleViews(
   const accounts = await loadAccountInputs(data, userId)
   const activeAccounts = activeAccountsById(accounts)
   const inputsById = new Map(inputs.map((input) => [input.id, input]))
+  const tagIds = await tagIdsBySchedule(
+    data,
+    schedules.map((schedule) => schedule.id),
+  )
   const views = schedules.flatMap((schedule) => {
     const input = inputsById.get(schedule.id)
     return input === undefined
       ? []
-      : [toSchedule(schedule, input, activeAccounts, today)]
+      : [
+          toSchedule(
+            schedule,
+            input,
+            tagIds.get(schedule.id) ?? [],
+            activeAccounts,
+            today,
+          ),
+        ]
   })
   return { views, inputs, accounts }
 }

@@ -58,9 +58,11 @@ export type IsolationResources = {
   ruleId: string
   statementId: string
   importBatchId: string
+  tagId: string
 }
 
 export type IsolationSnapshot = {
+  tags: unknown
   rules: unknown
   statements: unknown
   imports: unknown

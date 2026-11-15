@@ -72,6 +72,7 @@ describe('OPE-01 record an expense or an income', () => {
       label: 'Marché',
       note: 'bio',
       categoryId: groceries,
+      tagIds: [],
       status: 'categorized',
       origin: 'manual',
       transferGroupId: null,

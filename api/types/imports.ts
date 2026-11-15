@@ -20,6 +20,7 @@ export type RowPlan = {
   ruleId: string | null
   categoryId: string | null
   transferAccountId: string | null
+  tagIds: string[]
   candidates: ImportCandidate[]
   proposed: ImportCandidate | null
 }

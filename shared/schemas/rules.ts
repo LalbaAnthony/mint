@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { maxAmountCents, orderedIdsSchema } from './common.js'
+import { tagIdsSchema } from './tags.js'
 
 export const ruleMatchTypes = ['contains', 'starts_with', 'regex'] as const
 
@@ -37,6 +38,7 @@ export const ruleFieldsSchema = z.object({
   amountMaxCents: boundSchema,
   categoryId: optionalIdSchema,
   transferAccountId: optionalIdSchema,
+  tagIds: tagIdsSchema.default([]),
   active: z.boolean({ error: 'invalid' }),
 })
 
@@ -55,6 +57,7 @@ export const createRuleRequestSchema = ruleFieldsSchema
   .meta({ id: 'CreateRuleRequest' })
 
 export const updateRuleRequestSchema = ruleFieldsSchema
+  .extend({ tagIds: tagIdsSchema })
   .partial()
   .meta({ id: 'UpdateRuleRequest' })
 
@@ -70,6 +73,7 @@ export const ruleSchema = z
     amountMaxCents: z.number().int().nullable(),
     categoryId: z.uuid().nullable(),
     transferAccountId: z.uuid().nullable(),
+    tagIds: z.array(z.uuid()),
     active: z.boolean(),
   })
   .meta({ id: 'Rule' })
@@ -94,5 +98,6 @@ export const ruleSuggestionSchema = z
     sign: ruleSignSchema,
     categoryId: z.uuid().nullable(),
     transferAccountId: z.uuid().nullable(),
+    tagIds: z.array(z.uuid()),
   })
   .meta({ id: 'RuleSuggestion' })

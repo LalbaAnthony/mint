@@ -97,6 +97,7 @@ export const importRowSchema = z
     ruleId: z.uuid().nullable(),
     categoryId: z.uuid().nullable(),
     transferAccountId: z.uuid().nullable(),
+    tagIds: z.array(z.uuid()),
     candidates: z.array(importCandidateSchema),
   })
   .meta({ id: 'ImportRow' })

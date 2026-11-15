@@ -23,6 +23,7 @@ import {
   dissociateOperation,
   linkOrCreateCounterpart,
   reconcileOperation,
+  shareTagsAcross,
 } from '../reconciliation/apply.js'
 import { rankedCandidatesFor } from '../reconciliation/occurrences.js'
 import { errorResponse, noBody } from '../schemas/http.js'
@@ -231,6 +232,13 @@ export const convertToTransferRoute = defineUserRoute({
         operation,
         counterpartAccount.id,
         null,
+        transaction,
+      )
+      await shareTagsAcross(
+        app,
+        user.id,
+        [operation, counterpart],
+        [],
         transaction,
       )
       const [source, target] =

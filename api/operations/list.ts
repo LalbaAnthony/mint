@@ -133,6 +133,18 @@ export async function listOperations(
       })
     }
   }
+  if (query.tagIds !== undefined) {
+    const tagIds = query.tagIds.map((id) => data.sequelize.escape(id))
+    conditions.push({
+      id: {
+        [Op.in]: Sequelize.literal(
+          `(SELECT tt.transaction_id FROM transaction_tags tt
+            WHERE tt.user_id = ${data.sequelize.escape(userId)}
+              AND tt.tag_id IN (${tagIds.length === 0 ? 'NULL' : tagIds.join(', ')}))`,
+        ),
+      },
+    })
+  }
   if (query.minCents !== undefined) {
     conditions.push(
       Sequelize.where(absoluteAmount(), { [Op.gte]: query.minCents }),

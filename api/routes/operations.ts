@@ -30,6 +30,7 @@ import {
   validateTransferAccounts,
 } from '../operations/operations.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
+import { operationTagIds, replaceOperationTags } from '../tags/tags.js'
 
 const tag = 'operations'
 
@@ -38,7 +39,7 @@ const accessErrors = { 401: errorResponse('No valid session') }
 const resourceErrors = {
   ...accessErrors,
   404: errorResponse(
-    'Unknown operation, transfer, account, payment method or category',
+    'Unknown operation, transfer, account, payment method, category or tag',
   ),
 }
 
@@ -88,12 +89,26 @@ export const createOperationRoute = defineUserRoute({
     409: referenceConflicts,
   },
   handle: async ({ app, user, body }) => {
-    await validateOperationReferences(app, user.id, body, null)
-    const row = await app.models.Transaction.create({
-      ...body,
-      userId: user.id,
-      status: statusFor(body.categoryId),
-      origin: 'manual',
+    const row = await app.sequelize.transaction(async (transaction) => {
+      await validateOperationReferences(app, user.id, body, null, transaction)
+      const { tagIds, ...columns } = body
+      const created = await app.models.Transaction.create(
+        {
+          ...columns,
+          userId: user.id,
+          status: statusFor(body.categoryId),
+          origin: 'manual',
+        },
+        { transaction },
+      )
+      await replaceOperationTags(
+        app,
+        user.id,
+        [created.id],
+        tagIds,
+        transaction,
+      )
+      return created
     })
     return { status: 201, body: await toOperation(app, row) }
   },
@@ -127,7 +142,10 @@ export const updateOperationRoute = defineUserRoute({
       )
       ensureNotTransfer(found)
       const fields = parseOperationFields({
-        ...operationFieldsOf(found),
+        ...operationFieldsOf(
+          found,
+          await operationTagIds(app, found.id, transaction),
+        ),
         ...body,
       })
       await validateOperationReferences(
@@ -137,10 +155,12 @@ export const updateOperationRoute = defineUserRoute({
         found,
         transaction,
       )
+      const { tagIds, ...columns } = fields
       await found.update(
-        { ...fields, status: statusFor(fields.categoryId) },
+        { ...columns, status: statusFor(fields.categoryId) },
         { transaction },
       )
+      await replaceOperationTags(app, user.id, [found.id], tagIds, transaction)
       await syncExecutedOccurrence(app, found, transaction)
       return found
     })
@@ -219,7 +239,10 @@ export const updateTransferRoute = defineUserRoute({
         transaction,
       )
       const parsed = createTransferRequestSchema.safeParse({
-        ...transferFieldsOf(found),
+        ...transferFieldsOf(
+          found,
+          await operationTagIds(app, found.source.id, transaction),
+        ),
         ...body,
       })
       if (!parsed.success) {
@@ -247,6 +270,13 @@ export const updateTransferRoute = defineUserRoute({
           amountCents: fields.amountCents,
         },
         { transaction },
+      )
+      await replaceOperationTags(
+        app,
+        user.id,
+        [found.source.id, found.target.id],
+        fields.tagIds,
+        transaction,
       )
       await syncExecutedOccurrence(app, found.target, transaction)
       return found

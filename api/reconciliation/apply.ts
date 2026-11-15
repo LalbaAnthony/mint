@@ -8,6 +8,13 @@ import { conflict } from '../http/http-error.js'
 import { syncExecutedOccurrence } from '../operations/operations.js'
 import { loadScheduleInputs } from '../planning/inputs.js'
 import { operationSnapshotSchema } from '../schemas/imports.js'
+import {
+  addOperationTags,
+  replaceOperationTags,
+  tagIdsByOperation,
+  tagIdsBySchedule,
+  unionOf,
+} from '../tags/tags.js'
 import type { BankLine } from '../types/imports.js'
 import type { TransactionModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
@@ -25,7 +32,31 @@ import {
 
 const transferPairingDays = 3
 
-export function snapshotOf(operation: TransactionModel): OperationSnapshot {
+export async function shareTagsAcross(
+  data: DataAccess,
+  userId: string,
+  operations: readonly TransactionModel[],
+  extraTagIds: readonly string[],
+  transaction: Transaction,
+): Promise<void> {
+  const current = await tagIdsByOperation(
+    data,
+    operations.map((operation) => operation.id),
+    transaction,
+  )
+  await addOperationTags(
+    data,
+    userId,
+    operations.map((operation) => operation.id),
+    unionOf(extraTagIds, ...current.values()),
+    transaction,
+  )
+}
+
+export function snapshotOf(
+  operation: TransactionModel,
+  tagIds: string[],
+): OperationSnapshot {
   return {
     date: operation.date,
     amountCents: operation.amountCents,
@@ -37,7 +68,17 @@ export function snapshotOf(operation: TransactionModel): OperationSnapshot {
     categoryId: operation.categoryId,
     status: operation.status,
     transferGroupId: operation.transferGroupId,
+    tagIds,
   }
+}
+
+async function snapshotWithTags(
+  data: DataAccess,
+  operation: TransactionModel,
+  transaction: Transaction,
+): Promise<OperationSnapshot> {
+  const tagIds = await tagIdsByOperation(data, [operation.id], transaction)
+  return snapshotOf(operation, tagIds.get(operation.id) ?? [])
 }
 
 export async function restoreSnapshot(
@@ -45,11 +86,22 @@ export async function restoreSnapshot(
   operation: TransactionModel,
   transaction: Transaction,
 ): Promise<void> {
-  const snapshot = operationSnapshotSchema.parse(operation.preMergeSnapshot)
+  const { tagIds, ...columns } = operationSnapshotSchema.parse(
+    operation.preMergeSnapshot,
+  )
   await operation.update(
-    { ...snapshot, preMergeSnapshot: null },
+    { ...columns, preMergeSnapshot: null },
     { transaction },
   )
+  if (tagIds !== undefined) {
+    await replaceOperationTags(
+      data,
+      operation.userId,
+      [operation.id],
+      tagIds,
+      transaction,
+    )
+  }
   await syncExecutedOccurrence(data, operation, transaction)
 }
 
@@ -60,6 +112,7 @@ export async function reconcileBankLine(
   target: OccurrenceTarget,
   batchId: string,
   categoryId: string | null,
+  lineTagIds: readonly string[],
   transaction: Transaction,
 ): Promise<'merged' | 'created'> {
   const occurrence = await requireCandidate(
@@ -86,7 +139,7 @@ export async function reconcileBankLine(
     }
     await linked.update(
       {
-        preMergeSnapshot: snapshotOf(linked),
+        preMergeSnapshot: await snapshotWithTags(data, linked, transaction),
         date: line.date,
         amountCents: line.amountCents,
         bankLabel: line.bankLabel,
@@ -96,9 +149,15 @@ export async function reconcileBankLine(
       },
       { transaction },
     )
+    await addOperationTags(data, userId, [linked.id], lineTagIds, transaction)
     await syncExecutedOccurrence(data, linked, transaction)
     return 'merged'
   }
+  const scheduleTagIds =
+    (await tagIdsBySchedule(data, [schedule.id], transaction)).get(
+      schedule.id,
+    ) ?? []
+  const createdTagIds = unionOf(scheduleTagIds, lineTagIds)
   const row = await markExecuted(
     data,
     target,
@@ -122,7 +181,7 @@ export async function reconcileBankLine(
     if (counterpartAccountId === null) {
       throw conflict('occurrence_not_candidate')
     }
-    await data.models.Transaction.bulkCreate(
+    const movements = await data.models.Transaction.bulkCreate(
       [
         {
           ...common,
@@ -145,10 +204,17 @@ export async function reconcileBankLine(
       ],
       { transaction },
     )
+    await addOperationTags(
+      data,
+      userId,
+      movements.map((movement) => movement.id),
+      createdTagIds,
+      transaction,
+    )
     return 'created'
   }
   const chosenCategory = categoryId ?? schedule.categoryId
-  await data.models.Transaction.create(
+  const created = await data.models.Transaction.create(
     {
       ...common,
       accountId: line.accountId,
@@ -162,6 +228,7 @@ export async function reconcileBankLine(
     },
     { transaction },
   )
+  await addOperationTags(data, userId, [created.id], createdTagIds, transaction)
   return 'created'
 }
 
@@ -201,7 +268,14 @@ export async function linkOrCreateCounterpart(
       {
         ...(batchId === null
           ? {}
-          : { preMergeSnapshot: snapshotOf(closest), importBatchId: batchId }),
+          : {
+              preMergeSnapshot: await snapshotWithTags(
+                data,
+                closest,
+                transaction,
+              ),
+              importBatchId: batchId,
+            }),
         transferGroupId,
         categoryId: null,
         status: 'categorized',
@@ -279,6 +353,7 @@ export async function reconcileOperation(
       throw conflict('occurrence_not_candidate')
     }
     const row = await executedRow(data, target, transaction)
+    await shareTagsAcross(data, userId, [operation, linked], [], transaction)
     await linked.destroy({ transaction })
     await operation.update({ occurrenceId: row.id }, { transaction })
     await syncExecutedOccurrence(data, operation, transaction)
@@ -291,6 +366,15 @@ export async function reconcileOperation(
       transaction,
     )
     await operation.update({ occurrenceId: row.id }, { transaction })
+    await addOperationTags(
+      data,
+      userId,
+      [operation.id],
+      (await tagIdsBySchedule(data, [schedule.id], transaction)).get(
+        schedule.id,
+      ) ?? [],
+      transaction,
+    )
   }
   if (operation.bankLabel !== null) {
     await learnBankLabel(schedule, operation.bankLabel, transaction)

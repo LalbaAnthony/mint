@@ -539,6 +539,34 @@
           "parentId": { "type": "string", "format": "uuid" }
         }
       },
+      "TagListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Tag" }
+      },
+      "Tag": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "operationCount": { "type": "integer" },
+          "scheduleCount": { "type": "integer" },
+          "ruleCount": { "type": "integer" }
+        },
+        "required": [
+          "id",
+          "name",
+          "operationCount",
+          "scheduleCount",
+          "ruleCount"
+        ]
+      },
+      "TagRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 }
+        },
+        "required": ["name"]
+      },
       "OperationListResponse": {
         "type": "object",
         "properties": {
@@ -563,6 +591,10 @@
           "label": { "type": "string" },
           "note": { "type": ["string", "null"] },
           "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          },
           "status": { "$ref": "#/components/schemas/TransactionStatus" },
           "origin": { "$ref": "#/components/schemas/TransactionOrigin" },
           "transferGroupId": { "type": ["string", "null"], "format": "uuid" },
@@ -585,6 +617,7 @@
           "label",
           "note",
           "categoryId",
+          "tagIds",
           "status",
           "origin",
           "transferGroupId",
@@ -632,7 +665,13 @@
           },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
           "note": { "type": ["string", "null"], "maxLength": 1000 },
-          "categoryId": { "type": ["string", "null"], "format": "uuid" }
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 20,
+            "default": []
+          }
         },
         "required": [
           "accountId",
@@ -657,7 +696,12 @@
           },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
           "note": { "type": ["string", "null"], "maxLength": 1000 },
-          "categoryId": { "type": ["string", "null"], "format": "uuid" }
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 20
+          }
         }
       },
       "Transfer": {
@@ -681,7 +725,13 @@
             "maximum": 99999999999
           },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
-          "note": { "type": ["string", "null"], "maxLength": 1000 }
+          "note": { "type": ["string", "null"], "maxLength": 1000 },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 20,
+            "default": []
+          }
         },
         "required": [
           "sourceAccountId",
@@ -704,7 +754,12 @@
             "maximum": 99999999999
           },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
-          "note": { "type": ["string", "null"], "maxLength": 1000 }
+          "note": { "type": ["string", "null"], "maxLength": 1000 },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 20
+          }
         }
       },
       "ScheduleListResponse": {
@@ -746,6 +801,10 @@
             "type": "array",
             "items": { "type": "string" }
           },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          },
           "createdAt": { "type": "string", "format": "date-time" },
           "monthlyEquivalentCents": { "type": ["integer", "null"] },
           "nextOccurrence": {
@@ -776,6 +835,7 @@
           "businessDayRule",
           "amountTolerancePct",
           "bankLabelPatterns",
+          "tagIds",
           "createdAt",
           "monthlyEquivalentCents",
           "nextOccurrence",
@@ -854,6 +914,12 @@
                 "maxItems": 50,
                 "default": []
               },
+              "tagIds": {
+                "type": "array",
+                "items": { "type": "string", "format": "uuid" },
+                "maxItems": 20,
+                "default": []
+              },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
               "startDate": { "type": "string", "format": "date" },
@@ -920,6 +986,12 @@
                 "maxItems": 50,
                 "default": []
               },
+              "tagIds": {
+                "type": "array",
+                "items": { "type": "string", "format": "uuid" },
+                "maxItems": 20,
+                "default": []
+              },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
               "startDate": { "type": "string", "format": "date" },
@@ -982,6 +1054,12 @@
                 "type": "array",
                 "items": { "type": "string", "minLength": 1, "maxLength": 200 },
                 "maxItems": 50,
+                "default": []
+              },
+              "tagIds": {
+                "type": "array",
+                "items": { "type": "string", "format": "uuid" },
+                "maxItems": 20,
                 "default": []
               },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
@@ -1049,6 +1127,11 @@
             "type": "array",
             "items": { "type": "string", "minLength": 1, "maxLength": 200 },
             "maxItems": 50
+          },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 20
           },
           "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
           "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
@@ -1400,6 +1483,10 @@
           "amountMaxCents": { "type": ["integer", "null"] },
           "categoryId": { "type": ["string", "null"], "format": "uuid" },
           "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          },
           "active": { "type": "boolean" }
         },
         "required": [
@@ -1413,6 +1500,7 @@
           "amountMaxCents",
           "categoryId",
           "transferAccountId",
+          "tagIds",
           "active"
         ]
       },
@@ -1440,6 +1528,12 @@
           },
           "categoryId": { "type": ["string", "null"], "format": "uuid" },
           "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 20,
+            "default": []
+          },
           "active": { "type": "boolean" }
         },
         "required": [
@@ -1474,7 +1568,11 @@
           "accountId": { "type": ["string", "null"], "format": "uuid" },
           "sign": { "$ref": "#/components/schemas/RuleSign" },
           "categoryId": { "type": ["string", "null"], "format": "uuid" },
-          "transferAccountId": { "type": ["string", "null"], "format": "uuid" }
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          }
         },
         "required": [
           "matchType",
@@ -1482,7 +1580,8 @@
           "accountId",
           "sign",
           "categoryId",
-          "transferAccountId"
+          "transferAccountId",
+          "tagIds"
         ]
       },
       "UpdateRuleRequest": {
@@ -1504,6 +1603,11 @@
           },
           "categoryId": { "type": ["string", "null"], "format": "uuid" },
           "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "maxItems": 20
+          },
           "active": { "type": "boolean" }
         }
       },
@@ -1677,6 +1781,10 @@
           "ruleId": { "type": ["string", "null"], "format": "uuid" },
           "categoryId": { "type": ["string", "null"], "format": "uuid" },
           "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          },
           "candidates": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/ImportCandidate" }
@@ -1693,6 +1801,7 @@
           "ruleId",
           "categoryId",
           "transferAccountId",
+          "tagIds",
           "candidates"
         ]
       },
@@ -4392,6 +4501,207 @@
         }
       }
     },
+    "/api/v1/tags": {
+      "get": {
+        "summary": "List the tags by name, with the number of operations (a transfer counts once), schedules and rules carrying each (CAT-09)",
+        "tags": ["tags"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Tags",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TagListResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a tag, or return the existing one whose name matches regardless of case (CAT-09)",
+        "tags": ["tags"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TagRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Existing tag of that name",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tag" }
+              }
+            }
+          },
+          "201": {
+            "description": "Tag created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tag" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/tags/{id}": {
+      "patch": {
+        "summary": "Rename a tag (CAT-09)",
+        "tags": ["tags"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TagRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tag renamed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tag" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown tag",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Another tag already has this name",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a tag: it is removed from the operations, schedules and rules carrying it (CAT-09)",
+        "tags": ["tags"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Tag deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown tag",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/operations": {
       "get": {
         "summary": "List the operations with pagination, sorting, full-text search and combinable filters (OPE-05)",
@@ -4468,6 +4778,16 @@
             },
             "required": false,
             "name": "categoryIds",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "format": "uuid" },
+              "maxItems": 200
+            },
+            "required": false,
+            "name": "tagIds",
             "in": "query"
           },
           {
@@ -4606,7 +4926,7 @@
             }
           },
           "404": {
-            "description": "Unknown operation, transfer, account, payment method or category",
+            "description": "Unknown operation, transfer, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -4683,7 +5003,7 @@
             }
           },
           "404": {
-            "description": "Unknown operation, transfer, account, payment method or category",
+            "description": "Unknown operation, transfer, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -4733,7 +5053,7 @@
             }
           },
           "404": {
-            "description": "Unknown operation, transfer, account, payment method or category",
+            "description": "Unknown operation, transfer, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -4794,7 +5114,7 @@
             }
           },
           "404": {
-            "description": "Unknown operation, transfer, account, payment method or category",
+            "description": "Unknown operation, transfer, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -4869,7 +5189,7 @@
             }
           },
           "404": {
-            "description": "Unknown operation, transfer, account, payment method or category",
+            "description": "Unknown operation, transfer, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -4963,7 +5283,7 @@
             }
           },
           "404": {
-            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "description": "Unknown schedule, occurrence, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5040,7 +5360,7 @@
             }
           },
           "404": {
-            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "description": "Unknown schedule, occurrence, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5090,7 +5410,7 @@
             }
           },
           "404": {
-            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "description": "Unknown schedule, occurrence, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5133,7 +5453,7 @@
             }
           },
           "404": {
-            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "description": "Unknown schedule, occurrence, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5208,7 +5528,7 @@
             }
           },
           "404": {
-            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "description": "Unknown schedule, occurrence, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5273,7 +5593,7 @@
             }
           },
           "404": {
-            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "description": "Unknown schedule, occurrence, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5338,7 +5658,7 @@
             }
           },
           "404": {
-            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "description": "Unknown schedule, occurrence, account, payment method, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5820,7 +6140,7 @@
             }
           },
           "404": {
-            "description": "Unknown rule, account or category",
+            "description": "Unknown rule, account, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -5894,7 +6214,7 @@
     },
     "/api/v1/rules/suggestion": {
       "get": {
-        "summary": "Rule prefilled from an imported operation: its bank label without digits nor dates, its sign and its category (REG-03)",
+        "summary": "Rule prefilled from an imported operation: its bank label without digits nor dates, its sign, its category and its tags (REG-03)",
         "tags": ["rules"],
         "security": [{ "session": [] }],
         "parameters": [
@@ -6006,7 +6326,7 @@
             }
           },
           "404": {
-            "description": "Unknown rule, account or category",
+            "description": "Unknown rule, account, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -6056,7 +6376,7 @@
             }
           },
           "404": {
-            "description": "Unknown rule, account or category",
+            "description": "Unknown rule, account, category or tag",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

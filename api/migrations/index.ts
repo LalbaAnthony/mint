@@ -18,6 +18,7 @@ import * as createImportTables from './0016-create-import-tables.js'
 import * as addBankColumns from './0017-add-bank-columns.js'
 import * as createCategorizationRules from './0018-create-categorization-rules.js'
 import * as createAccountStatements from './0019-create-account-statements.js'
+import * as createTags from './0020-create-tags.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -39,4 +40,5 @@ export const migrations: Migration[] = [
   { name: '0017-add-bank-columns', ...addBankColumns },
   { name: '0018-create-categorization-rules', ...createCategorizationRules },
   { name: '0019-create-account-statements', ...createAccountStatements },
+  { name: '0020-create-tags', ...createTags },
 ]

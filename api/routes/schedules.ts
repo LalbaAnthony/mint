@@ -45,6 +45,7 @@ import {
   validateScheduleReferences,
 } from '../schedules/schedules.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
+import { replaceScheduleTags, tagIdsBySchedule } from '../tags/tags.js'
 import type { AppDependencies } from '../types/app.js'
 import type {
   ScheduleModel,
@@ -58,7 +59,7 @@ const accessErrors = { 401: errorResponse('No valid session') }
 const resourceErrors = {
   ...accessErrors,
   404: errorResponse(
-    'Unknown schedule, occurrence, account, payment method or category',
+    'Unknown schedule, occurrence, account, payment method, category or tag',
   ),
 }
 
@@ -94,9 +95,11 @@ async function scheduleView(
   transaction?: Transaction,
 ): Promise<Schedule> {
   const accounts = await loadAccountInputs(app, schedule.userId, transaction)
+  const tagIds = await tagIdsBySchedule(app, [schedule.id], transaction)
   return toSchedule(
     schedule,
     await scheduleInputOf(app, schedule, transaction),
+    tagIds.get(schedule.id) ?? [],
     activeAccountsById(accounts),
     today(app),
   )
@@ -148,10 +151,20 @@ export const createScheduleRoute = defineUserRoute({
     ),
   },
   handle: async ({ app, user, body }) => {
-    await validateScheduleReferences(app, user.id, body, null)
-    const schedule = await app.models.Schedule.create({
-      ...scheduleColumns(body),
-      userId: user.id,
+    const schedule = await app.sequelize.transaction(async (transaction) => {
+      await validateScheduleReferences(app, user.id, body, null, transaction)
+      const created = await app.models.Schedule.create(
+        { ...scheduleColumns(body), userId: user.id },
+        { transaction },
+      )
+      await replaceScheduleTags(
+        app,
+        user.id,
+        created.id,
+        body.tagIds,
+        transaction,
+      )
+      return created
     })
     return { status: 201, body: await scheduleView(app, schedule) }
   },
@@ -186,7 +199,12 @@ export const updateScheduleRoute = defineUserRoute({
         params.id,
         transaction,
       )
-      const fields = mergeScheduleUpdate(schedule, body)
+      const tagIds = await tagIdsBySchedule(app, [schedule.id], transaction)
+      const fields = mergeScheduleUpdate(
+        schedule,
+        tagIds.get(schedule.id) ?? [],
+        body,
+      )
       await validateScheduleReferences(
         app,
         user.id,
@@ -195,6 +213,13 @@ export const updateScheduleRoute = defineUserRoute({
         transaction,
       )
       await schedule.update(scheduleColumns(fields), { transaction })
+      await replaceScheduleTags(
+        app,
+        user.id,
+        schedule.id,
+        fields.tagIds,
+        transaction,
+      )
       const rows = await app.models.ScheduleOccurrence.findAll({
         where: { scheduleId: schedule.id },
         transaction,

@@ -13,6 +13,7 @@ function rule(overrides: Partial<RuleInput> = {}): RuleInput {
     amountMaxCents: null,
     categoryId: 'digital',
     transferAccountId: null,
+    tagIds: [],
     active: true,
     ...overrides,
   }

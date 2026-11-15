@@ -29,6 +29,7 @@ async function snapshotOf(
     ).body,
     envelopes: (await client.get('/envelopes')).body,
     rules: (await client.get('/rules')).body,
+    tags: (await client.get('/tags')).body,
     statements: (
       await client.get(`/accounts/${resources.accountId}/statements`)
     ).body,
@@ -536,6 +537,10 @@ const scenarios: Record<string, Scenario> = {
       `/operations?accountIds=${actors.bobResources.accountId}&categoryIds=${actors.bobResources.categoryId}`,
     )
     expect(filtered.body.items).toEqual([])
+    const tagged = await actors.aliceClient.get(
+      `/operations?tagIds=${actors.bobResources.tagId}`,
+    )
+    expect(tagged.body.items).toEqual([])
   },
   'post /operations': async (actors) => {
     const aliceAccount = await createAliceAccount(actors)
@@ -553,6 +558,12 @@ const scenarios: Record<string, Scenario> = {
       await actors.aliceClient.post('/operations', {
         ...aliceOperation(aliceAccount),
         categoryId,
+      }),
+    )
+    expectNotFound(
+      await actors.aliceClient.post('/operations', {
+        ...aliceOperation(aliceAccount),
+        tagIds: [actors.bobResources.tagId],
       }),
     )
     await expectBobDataUntouched(actors)
@@ -591,6 +602,18 @@ const scenarios: Record<string, Scenario> = {
         note: null,
       }),
     )
+    const aliceSavings = await createAliceAccount(actors)
+    expectNotFound(
+      await actors.aliceClient.post('/transfers', {
+        sourceAccountId: aliceAccount,
+        targetAccountId: aliceSavings,
+        date: '2026-11-06',
+        amountCents: 1_000,
+        label: 'Leak',
+        note: null,
+        tagIds: [actors.bobResources.tagId],
+      }),
+    )
     await expectBobDataUntouched(actors)
   },
   'patch /transfers/:id': crossAccess(
@@ -621,6 +644,12 @@ const scenarios: Record<string, Scenario> = {
         ...aliceSchedule(aliceAccount, housing.id),
         accountId: null,
         paymentMethodId,
+      }),
+    )
+    expectNotFound(
+      await actors.aliceClient.post('/schedules', {
+        ...aliceSchedule(aliceAccount, housing.id),
+        tagIds: [actors.bobResources.tagId],
       }),
     )
     await expectBobDataUntouched(actors)
@@ -705,6 +734,12 @@ const scenarios: Record<string, Scenario> = {
         ...aliceRule(aliceAccount, leisure.id),
         categoryId: null,
         transferAccountId: actors.bobResources.accountId,
+      }),
+    )
+    expectNotFound(
+      await actors.aliceClient.post('/rules', {
+        ...aliceRule(aliceAccount, leisure.id),
+        tagIds: [actors.bobResources.tagId],
       }),
     )
     await expectBobDataUntouched(actors)
@@ -811,6 +846,21 @@ const scenarios: Record<string, Scenario> = {
   'get /rules/suggestion': crossRead(
     ({ operationId }) => `/rules/suggestion?operationId=${operationId}`,
   ),
+  'get /tags': ownListOnly('/tags'),
+  'post /tags': async (actors) => {
+    const response = await actors.aliceClient.post('/tags', {
+      name: 'Bob tag',
+    })
+    expect(response.status).toBe(201)
+    expect(response.body.id).not.toBe(actors.bobResources.tagId)
+    await expectBobDataUntouched(actors)
+  },
+  'patch /tags/:id': crossAccess(
+    'patch',
+    ({ tagId }) => `/tags/${tagId}`,
+    () => ({ name: 'Taken over' }),
+  ),
+  'delete /tags/:id': crossAccess('delete', ({ tagId }) => `/tags/${tagId}`),
 }
 
 async function createBobResources(
@@ -845,10 +895,15 @@ async function createBobResources(
   ) {
     throw new Error('Bob resources could not be created')
   }
+  const tag = await bobClient.post('/tags', { name: 'Bob tag' })
+  if (tag.status !== 201) {
+    throw new Error('Bob tag could not be created')
+  }
   const operation = await bobClient.post('/operations', {
     ...aliceOperation(account.body.id),
     label: 'Bob operation',
     categoryId: category.id,
+    tagIds: [tag.body.id],
   })
   const transfer = await bobClient.post('/transfers', {
     sourceAccountId: account.body.id,
@@ -901,6 +956,7 @@ async function createBobResources(
     ruleId: rule.body.id,
     statementId: statement.body.id,
     importBatchId: batch.body.batch.id,
+    tagId: tag.body.id,
   }
 }
 

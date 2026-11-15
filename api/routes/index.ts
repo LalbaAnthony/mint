@@ -107,6 +107,12 @@ import {
   updateProfileRoute,
 } from './profile.js'
 import {
+  createTagRoute,
+  deleteTagRoute,
+  listTagsRoute,
+  updateTagRoute,
+} from './tags.js'
+import {
   createScheduleRoute,
   deleteScheduleRoute,
   listScheduleOccurrencesRoute,
@@ -165,6 +171,10 @@ export const apiRoutes: ApiRoute[] = [
   restoreCategoryRoute,
   categoryUsageRoute,
   deleteCategoryRoute,
+  listTagsRoute,
+  createTagRoute,
+  updateTagRoute,
+  deleteTagRoute,
   listOperationsRoute,
   createOperationRoute,
   updateOperationRoute,

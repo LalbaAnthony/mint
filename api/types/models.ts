@@ -422,6 +422,9 @@ export type Models = {
   ImportRow: ModelStatic<ImportRowModel>
   CategorizationRule: ModelStatic<CategorizationRuleModel>
   AccountStatement: ModelStatic<AccountStatementModel>
+  Tag: ModelStatic<TagModel>
+  TransactionTag: ModelStatic<TransactionTagModel>
+  ScheduleTag: ModelStatic<ScheduleTagModel>
 }
 
 export type ImportMappingAttributes = {
@@ -508,6 +511,7 @@ export type ImportRowAttributes = {
   proposedTransferAccountId: string | null
   proposedScheduleId: string | null
   proposedOriginalDate: string | null
+  proposedTagIds: string[]
   candidates: unknown
   createdAt: Date
   updatedAt: Date
@@ -527,6 +531,7 @@ export type ImportRowCreationAttributes = Optional<
   | 'proposedTransferAccountId'
   | 'proposedScheduleId'
   | 'proposedOriginalDate'
+  | 'proposedTagIds'
   | 'candidates'
   | 'createdAt'
   | 'updatedAt'
@@ -550,6 +555,7 @@ export type CategorizationRuleAttributes = {
   amountMaxCents: number | null
   actionCategoryId: string | null
   actionTransferAccountId: string | null
+  actionTagIds: string[]
   active: boolean
   createdAt: Date
   updatedAt: Date
@@ -563,6 +569,7 @@ export type CategorizationRuleCreationAttributes = Optional<
   | 'amountMaxCents'
   | 'actionCategoryId'
   | 'actionTransferAccountId'
+  | 'actionTagIds'
   | 'active'
   | 'createdAt'
   | 'updatedAt'
@@ -595,3 +602,57 @@ export type AccountStatementModel = Model<
   AccountStatementCreationAttributes
 > &
   AccountStatementAttributes
+
+export type TagAttributes = {
+  id: string
+  userId: string
+  name: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type TagCreationAttributes = Optional<
+  TagAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>
+
+export type TagModel = Model<TagAttributes, TagCreationAttributes> &
+  TagAttributes
+
+export type TransactionTagAttributes = {
+  transactionId: string
+  tagId: string
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type TransactionTagCreationAttributes = Optional<
+  TransactionTagAttributes,
+  'createdAt' | 'updatedAt'
+>
+
+export type TransactionTagModel = Model<
+  TransactionTagAttributes,
+  TransactionTagCreationAttributes
+> &
+  TransactionTagAttributes
+
+export type ScheduleTagAttributes = {
+  scheduleId: string
+  tagId: string
+  userId: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ScheduleTagCreationAttributes = Optional<
+  ScheduleTagAttributes,
+  'createdAt' | 'updatedAt'
+>
+
+export type ScheduleTagModel = Model<
+  ScheduleTagAttributes,
+  ScheduleTagCreationAttributes
+> &
+  ScheduleTagAttributes

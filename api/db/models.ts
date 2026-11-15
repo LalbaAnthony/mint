@@ -17,8 +17,11 @@ import type {
   PaymentMethodModel,
   ScheduleModel,
   ScheduleOccurrenceModel,
+  ScheduleTagModel,
   SessionModel,
+  TagModel,
   TransactionModel,
+  TransactionTagModel,
   UserModel,
 } from '../types/models.js'
 
@@ -438,6 +441,11 @@ export function createModels(sequelize: Sequelize): Models {
       proposedTransferAccountId: { type: DataTypes.UUID, allowNull: true },
       proposedScheduleId: { type: DataTypes.UUID, allowNull: true },
       proposedOriginalDate: { type: DataTypes.DATEONLY, allowNull: true },
+      proposedTagIds: {
+        type: DataTypes.ARRAY(DataTypes.UUID),
+        allowNull: false,
+        defaultValue: [],
+      },
       candidates: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
       ...timestamps,
     },
@@ -458,6 +466,11 @@ export function createModels(sequelize: Sequelize): Models {
       amountMaxCents: bigintCents<CategorizationRuleModel>('amountMaxCents'),
       actionCategoryId: { type: DataTypes.UUID, allowNull: true },
       actionTransferAccountId: { type: DataTypes.UUID, allowNull: true },
+      actionTagIds: {
+        type: DataTypes.ARRAY(DataTypes.UUID),
+        allowNull: false,
+        defaultValue: [],
+      },
       active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
       ...timestamps,
     },
@@ -484,6 +497,43 @@ export function createModels(sequelize: Sequelize): Models {
     options('account_statements'),
   )
 
+  const Tag = sequelize.define<TagModel>(
+    'Tag',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      name: { type: DataTypes.CITEXT, allowNull: false },
+      ...timestamps,
+    },
+    options('tags'),
+  )
+
+  const TransactionTag = sequelize.define<TransactionTagModel>(
+    'TransactionTag',
+    {
+      transactionId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        primaryKey: true,
+      },
+      tagId: { type: DataTypes.UUID, allowNull: false, primaryKey: true },
+      userId: { type: DataTypes.UUID, allowNull: false },
+      ...timestamps,
+    },
+    options('transaction_tags'),
+  )
+
+  const ScheduleTag = sequelize.define<ScheduleTagModel>(
+    'ScheduleTag',
+    {
+      scheduleId: { type: DataTypes.UUID, allowNull: false, primaryKey: true },
+      tagId: { type: DataTypes.UUID, allowNull: false, primaryKey: true },
+      userId: { type: DataTypes.UUID, allowNull: false },
+      ...timestamps,
+    },
+    options('schedule_tags'),
+  )
+
   return {
     User,
     Session,
@@ -503,5 +553,8 @@ export function createModels(sequelize: Sequelize): Models {
     ImportRow,
     CategorizationRule,
     AccountStatement,
+    Tag,
+    TransactionTag,
+    ScheduleTag,
   }
 }

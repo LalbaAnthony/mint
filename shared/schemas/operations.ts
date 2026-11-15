@@ -5,6 +5,7 @@ import {
   labelSchema,
   maxAmountCents,
 } from './common.js'
+import { tagIdsSchema } from './tags.js'
 import {
   transactionOriginSchema,
   transactionStatusSchema,
@@ -66,6 +67,7 @@ export const operationFieldsSchema = z.object({
   label: labelSchema,
   note: noteSchema,
   categoryId: optionalIdSchema,
+  tagIds: tagIdsSchema.default([]),
 })
 
 export const createOperationRequestSchema = operationFieldsSchema.meta({
@@ -73,6 +75,7 @@ export const createOperationRequestSchema = operationFieldsSchema.meta({
 })
 
 export const updateOperationRequestSchema = operationFieldsSchema
+  .extend({ tagIds: tagIdsSchema })
   .partial()
   .meta({ id: 'UpdateOperationRequest' })
 
@@ -83,6 +86,7 @@ export const transferFieldsSchema = z.object({
   amountCents: positiveAmountCentsSchema,
   label: labelSchema,
   note: noteSchema,
+  tagIds: tagIdsSchema.default([]),
 })
 
 export function sameAccountIssue(transfer: {
@@ -100,6 +104,7 @@ export const createTransferRequestSchema = transferFieldsSchema
   .meta({ id: 'CreateTransferRequest' })
 
 export const updateTransferRequestSchema = transferFieldsSchema
+  .extend({ tagIds: tagIdsSchema })
   .partial()
   .meta({ id: 'UpdateTransferRequest' })
 
@@ -113,6 +118,7 @@ export const operationSchema = z
     label: z.string(),
     note: z.string().nullable(),
     categoryId: z.uuid().nullable(),
+    tagIds: z.array(z.uuid()),
     status: transactionStatusSchema,
     origin: transactionOriginSchema,
     transferGroupId: z.uuid().nullable(),
@@ -175,6 +181,7 @@ export const operationListQuerySchema = z
     accountIds: asList(z.uuid({ error: 'invalid' })),
     groups: asList(operationGroupSchema),
     categoryIds: asList(z.uuid({ error: 'invalid' })),
+    tagIds: asList(z.uuid({ error: 'invalid' })),
     minCents: centsQuerySchema,
     maxCents: centsQuerySchema,
     direction: operationDirectionSchema.optional(),

@@ -16,6 +16,7 @@ export const operationSnapshotSchema = z.object({
   categoryId: z.uuid().nullable(),
   status: transactionStatusSchema,
   transferGroupId: z.uuid().nullable(),
+  tagIds: z.array(z.uuid()).optional(),
 })
 
 export const storedCandidatesSchema = z.array(importCandidateSchema)

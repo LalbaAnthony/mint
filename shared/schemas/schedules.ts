@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type { ScheduleFieldIssue, ScheduleFields } from '../types/schedules.js'
 import { isoDateSchema, labelSchema } from './common.js'
 import { noteSchema, positiveAmountCentsSchema } from './operations.js'
+import { tagIdsSchema } from './tags.js'
 
 export const scheduleKinds = ['expense', 'income', 'transfer'] as const
 
@@ -91,6 +92,7 @@ const commonShape = {
   active: z.boolean({ error: 'invalid' }),
   amountTolerancePct: amountToleranceSchema.default(10),
   bankLabelPatterns: bankLabelPatternsSchema.default([]),
+  tagIds: tagIdsSchema.default([]),
   ...recurrenceShape,
 }
 
@@ -167,6 +169,7 @@ export const updateScheduleRequestSchema = z
     ...commonShape,
     amountTolerancePct: amountToleranceSchema,
     bankLabelPatterns: bankLabelPatternsSchema,
+    tagIds: tagIdsSchema,
     ...categorizedShape,
     ...transferShape,
     isSubscription: z.boolean({ error: 'invalid' }),
@@ -213,6 +216,7 @@ export const scheduleSchema = z
     businessDayRule: businessDayRuleSchema,
     amountTolerancePct: z.number().int(),
     bankLabelPatterns: z.array(z.string()),
+    tagIds: z.array(z.uuid()),
     createdAt: z.iso.datetime(),
     monthlyEquivalentCents: z.number().int().nullable(),
     nextOccurrence: scheduleOccurrenceSchema.nullable(),

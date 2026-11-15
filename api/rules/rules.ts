@@ -11,6 +11,7 @@ import type {
 import { findUserAccount } from '../accounts/accounts.js'
 import { findUserCategory } from '../categories/categories.js'
 import { conflict, notFound, validationFailed } from '../http/http-error.js'
+import { ensureUserTags } from '../tags/tags.js'
 import type {
   CategorizationRuleModel,
   TransactionModel,
@@ -29,6 +30,7 @@ export function toRule(rule: CategorizationRuleModel): Rule {
     amountMaxCents: rule.amountMaxCents,
     categoryId: rule.actionCategoryId,
     transferAccountId: rule.actionTransferAccountId,
+    tagIds: rule.actionTagIds,
     active: rule.active,
   }
 }
@@ -43,6 +45,7 @@ export function ruleColumns(fields: CreateRuleRequest) {
     amountMaxCents: fields.amountMaxCents,
     actionCategoryId: fields.categoryId,
     actionTransferAccountId: fields.transferAccountId,
+    actionTagIds: fields.tagIds,
     active: fields.active,
   }
 }
@@ -58,6 +61,7 @@ export function ruleFieldsOf(rule: CategorizationRuleModel): CreateRuleRequest {
     amountMaxCents: view.amountMaxCents,
     categoryId: view.categoryId,
     transferAccountId: view.transferAccountId,
+    tagIds: view.tagIds,
     active: view.active,
   }
 }
@@ -109,6 +113,7 @@ export async function validateRuleReferences(
   transaction?: Transaction,
 ): Promise<void> {
   ensureValidPattern(fields)
+  await ensureUserTags(data, userId, fields.tagIds, transaction)
   if (fields.accountId !== null) {
     const account = await findUserAccount(
       data,
@@ -185,7 +190,10 @@ export async function loadRuleInputs(
   return rules.map(toRule)
 }
 
-export function suggestRule(operation: TransactionModel): RuleSuggestion {
+export function suggestRule(
+  operation: TransactionModel,
+  tagIds: string[],
+): RuleSuggestion {
   if (operation.bankLabel === null) {
     throw conflict('operation_without_bank_label')
   }
@@ -197,5 +205,6 @@ export function suggestRule(operation: TransactionModel): RuleSuggestion {
     categoryId:
       operation.transferGroupId === null ? operation.categoryId : null,
     transferAccountId: null,
+    tagIds,
   }
 }

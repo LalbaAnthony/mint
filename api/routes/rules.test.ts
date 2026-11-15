@@ -250,6 +250,7 @@ describe('REG-03 rule suggested from an operation', () => {
       sign: 'debit',
       categoryId: digital,
       transferAccountId: null,
+      tagIds: [],
     })
   })
 })

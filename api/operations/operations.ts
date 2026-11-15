@@ -17,6 +17,11 @@ import {
   validationFailed,
 } from '../http/http-error.js'
 import { findUserPaymentMethod } from '../payment-methods/payment-methods.js'
+import {
+  addOperationTags,
+  ensureUserTags,
+  tagIdsByOperation,
+} from '../tags/tags.js'
 import type {
   AccountModel,
   TransactionAttributes,
@@ -76,6 +81,11 @@ export async function toOperations(
     [...new Set(rows.map((row) => row.accountId))],
     transaction,
   )
+  const tagIds = await tagIdsByOperation(
+    data,
+    rows.map((row) => row.id),
+    transaction,
+  )
   return rows.map((row) => {
     const occurrence =
       row.occurrenceId === null
@@ -98,6 +108,7 @@ export async function toOperations(
       label: row.label,
       note: row.note,
       categoryId: row.categoryId,
+      tagIds: tagIds.get(row.id) ?? [],
       status: row.status,
       origin: row.origin,
       transferGroupId: row.transferGroupId,
@@ -215,6 +226,7 @@ export async function validateOperationReferences(
     transaction,
   )
   ensureDateCounted(account, fields.date)
+  await ensureUserTags(data, userId, fields.tagIds, transaction)
   if (fields.paymentMethodId !== null) {
     const paymentMethod = await findUserPaymentMethod(
       data,
@@ -266,6 +278,7 @@ export function parseOperationFields(fields: unknown): OperationFields {
 
 export function operationFieldsOf(
   row: TransactionModel,
+  tagIds: string[],
 ): CreateOperationRequest {
   return {
     accountId: row.accountId,
@@ -275,6 +288,7 @@ export function operationFieldsOf(
     label: row.label,
     note: row.note,
     categoryId: row.categoryId,
+    tagIds,
   }
 }
 
@@ -324,6 +338,7 @@ export async function validateTransferAccounts(
   )
   ensureDateCounted(source, fields.date)
   ensureDateCounted(target, fields.date)
+  await ensureUserTags(data, userId, fields.tagIds, transaction)
 }
 
 export async function createTransferMovements(
@@ -359,11 +374,19 @@ export async function createTransferMovements(
     },
     { transaction },
   )
+  await addOperationTags(
+    data,
+    userId,
+    [source.id, target.id],
+    fields.tagIds,
+    transaction,
+  )
   return { source, target }
 }
 
 export function transferFieldsOf(
   movements: TransferMovements,
+  tagIds: string[],
 ): CreateTransferRequest {
   return {
     sourceAccountId: movements.source.accountId,
@@ -372,6 +395,7 @@ export function transferFieldsOf(
     amountCents: movements.target.amountCents,
     label: movements.source.label,
     note: movements.source.note,
+    tagIds,
   }
 }
 
