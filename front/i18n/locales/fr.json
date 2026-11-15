@@ -305,7 +305,8 @@
     "override_empty": "Modifiez le montant ou la date",
     "date_not_future": "Choisissez une date après aujourd'hui",
     "duplicate": "Valeur en double",
-    "invalid_month": "Mois invalide"
+    "invalid_month": "Mois invalide",
+    "month_out_of_range": "Mois hors de l'historique ou de l'horizon"
   },
   "errors": {
     "validation_failed": "Certaines valeurs sont invalides.",
@@ -554,5 +555,43 @@
       "carryOverHelp": "Le disponible restant, positif ou négatif, s'ajoute au mois suivant.",
       "active": "Active"
     }
+  },
+  "forecast": {
+    "curveTitle": "Solde prévisionnel",
+    "scope": "Compte",
+    "allAccounts": "Tous les comptes",
+    "horizon": "Horizon",
+    "real": "Réel",
+    "planned": "Prévu",
+    "today": "Aujourd'hui",
+    "threshold": "Seuil d'alerte",
+    "minimum": "Minimum",
+    "minimumOn": "Solde minimal prévu le {date} :",
+    "date": "Date",
+    "balance": "Solde de fin de journée",
+    "nature": "Nature",
+    "showData": "Afficher les données",
+    "hideData": "Masquer les données",
+    "noAccountTitle": "Aucun compte actif",
+    "noAccountText": "Créez un compte pour suivre son solde réel et prévisionnel.",
+    "goToAccounts": "Voir les comptes"
+  },
+  "calendar": {
+    "gridLabel": "Calendrier du mois",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "cellLabel": "{date}, solde {balance}",
+    "more": "+{n} autre | +{n} autres",
+    "operationCount": "{n} opération | {n} opérations",
+    "realBalance": "Solde réel",
+    "forecastBalance": "Solde prévu",
+    "occurrences": "Échéances prévues",
+    "plannedOperations": "Opérations déjà saisies",
+    "envelopeShares": "Parts d'enveloppe",
+    "beyondHorizon": "Au-delà de l'horizon de prévision.",
+    "beforeHistory": "Avant le solde initial des comptes.",
+    "nothing": "Aucun mouvement ce jour-là.",
+    "openSchedule": "Ouvrir l'échéance",
+    "skipped": "Occurrence de {label} sautée."
   }
 }

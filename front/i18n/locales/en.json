@@ -305,7 +305,8 @@
     "override_empty": "Change the amount or the date",
     "date_not_future": "Choose a date after today",
     "duplicate": "Duplicate value",
-    "invalid_month": "Invalid month"
+    "invalid_month": "Invalid month",
+    "month_out_of_range": "Month outside the history or the horizon"
   },
   "errors": {
     "validation_failed": "Some values are invalid.",
@@ -554,5 +555,43 @@
       "carryOverHelp": "The remaining amount, positive or negative, is added to the next month.",
       "active": "Active"
     }
+  },
+  "forecast": {
+    "curveTitle": "Forecast balance",
+    "scope": "Account",
+    "allAccounts": "All accounts",
+    "horizon": "Horizon",
+    "real": "Actual",
+    "planned": "Planned",
+    "today": "Today",
+    "threshold": "Alert threshold",
+    "minimum": "Minimum",
+    "minimumOn": "Lowest forecast balance on {date}:",
+    "date": "Date",
+    "balance": "End-of-day balance",
+    "nature": "Kind",
+    "showData": "Show the data",
+    "hideData": "Hide the data",
+    "noAccountTitle": "No active account",
+    "noAccountText": "Create an account to follow its actual and forecast balance.",
+    "goToAccounts": "Go to accounts"
+  },
+  "calendar": {
+    "gridLabel": "Calendar of the month",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "cellLabel": "{date}, balance {balance}",
+    "more": "+{n} more | +{n} more",
+    "operationCount": "{n} operation | {n} operations",
+    "realBalance": "Actual balance",
+    "forecastBalance": "Forecast balance",
+    "occurrences": "Planned schedules",
+    "plannedOperations": "Operations already entered",
+    "envelopeShares": "Envelope shares",
+    "beyondHorizon": "Beyond the forecast horizon.",
+    "beforeHistory": "Before the initial balance of the accounts.",
+    "nothing": "No movement on that day.",
+    "openSchedule": "Open the schedule",
+    "skipped": "Occurrence of {label} skipped."
   }
 }

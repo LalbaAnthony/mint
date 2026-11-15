@@ -142,3 +142,35 @@ test('ENV-01, ENV-06: create an envelope and see its consumption', async ({
   await expect(card.getByTestId('envelope-available')).toHaveText(euros(18_000))
   guard.assertClean()
 })
+
+test('CAL-01 to CAL-03, DSH-01: read the day in the calendar and the balance curve', async ({
+  page,
+}) => {
+  const guard = guardPage(page)
+  const account = `Courant calendrier ${Date.now()}`
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris',
+  }).format(new Date())
+  await createAccount(page, account)
+  await recordExpense(page, account, '50', 'Marché e2e')
+
+  await page.goto('/calendar')
+  await choose(page, 'forecast-account', account)
+  const cell = page.getByTestId(`calendar-day-${today}`)
+  await expect(cell).toContainText('1 opération')
+  await expect(cell.getByTestId('calendar-balance')).toHaveText(euros(195_000))
+  await expect(page.getByTestId('calendar-day-detail')).toContainText(
+    'Marché e2e',
+  )
+
+  await page.goto('/')
+  await choose(page, 'forecast-account', account)
+  await expect(
+    page.getByTestId('balance-curve-chart').locator('svg'),
+  ).toBeVisible()
+  await page.getByTestId('balance-curve-show-data').click()
+  await expect(page.getByTestId('balance-curve-table')).toContainText(
+    euros(195_000),
+  )
+  guard.assertClean()
+})
