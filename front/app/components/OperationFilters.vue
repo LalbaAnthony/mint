@@ -45,6 +45,10 @@ const categoryItems = computed<SelectItem<string>[]>(() =>
   ).flatMap((group) => group.options),
 )
 
+const tagItems = computed<SelectItem<string>[]>(() =>
+  props.tags.map((tag) => ({ label: tag.name, value: tag.id })),
+)
+
 const originItems = computed<SelectItem<TransactionOrigin>[]>(() =>
   transactionOrigins.map((origin) => ({
     label: t(`operations.origins.${origin}`),
@@ -164,6 +168,16 @@ function reset(): void {
           value-key="value"
           multiple
           class="w-full"
+        />
+      </AppFormField>
+      <AppFormField :label="t('operations.filters.tags')" name="tagIds">
+        <USelectMenu
+          v-model="filters.tagIds"
+          :items="tagItems"
+          value-key="value"
+          multiple
+          class="w-full"
+          data-testid="filter-tags"
         />
       </AppFormField>
       <AppFormField :label="t('operations.filters.origins')" name="origins">

@@ -248,6 +248,7 @@ function errorLabel(row: ImportRow): string {
               })
             }}
           </p>
+          <TagBadges :tag-ids="row.tagIds" class="mt-1" />
         </div>
         <template v-if="row.error === null && decisionOf(row).include">
           <USelect

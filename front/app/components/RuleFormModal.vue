@@ -37,6 +37,7 @@ function emptyState(): RuleFormState {
     action: 'category',
     categoryId: undefined,
     transferAccountId: undefined,
+    tagIds: [],
     active: true,
   }
 }
@@ -62,6 +63,7 @@ watch(
       action: source.transferAccountId === null ? 'category' : 'transfer',
       categoryId: source.categoryId ?? undefined,
       transferAccountId: source.transferAccountId ?? undefined,
+      tagIds: [...source.tagIds],
     })
     if (props.rule !== null) {
       Object.assign(state, {
@@ -140,6 +142,7 @@ async function submit(): Promise<void> {
     categoryId: state.action === 'category' ? (state.categoryId ?? null) : null,
     transferAccountId:
       state.action === 'transfer' ? (state.transferAccountId ?? null) : null,
+    tagIds: state.tagIds,
     active: state.active,
   }
   saving.value = true
@@ -257,6 +260,13 @@ async function submit(): Promise<void> {
             class="w-full"
             data-testid="rule-transfer-account"
           />
+        </AppFormField>
+        <AppFormField
+          :label="t('rules.fields.tags')"
+          :hint="t('rules.fields.tagsHint')"
+          name="tagIds"
+        >
+          <TagSelect v-model="state.tagIds" test-id="rule-tags" />
         </AppFormField>
         <USwitch v-model="state.active" :label="t('rules.fields.active')" />
         <UButton

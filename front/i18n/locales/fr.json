@@ -169,6 +169,28 @@
     "deleteReassign": "Elle est utilisée par {references} : choisissez la catégorie qui les reprend.",
     "replacement": "Catégorie de remplacement"
   },
+  "tags": {
+    "title": "Tags",
+    "add": "Ajouter un tag",
+    "empty": "Aucun tag. Créez-en depuis ce bouton ou directement dans une opération, une échéance ou une règle.",
+    "placeholder": "Aucun tag",
+    "search": "Rechercher ou créer un tag",
+    "listLabel": "Tags",
+    "createTitle": "Nouveau tag",
+    "editTitle": "Renommer le tag",
+    "saved": "{name} enregistré.",
+    "deleted": "{name} supprimé.",
+    "deleteTitle": "Supprimer le tag",
+    "deleteEffect": "{name} sera supprimé définitivement et retiré de ses usages ({usage}).",
+    "fields": {
+      "name": "Nom"
+    },
+    "usage": {
+      "operations": "aucune opération | 1 opération | {n} opérations",
+      "schedules": "aucune échéance | 1 échéance | {n} échéances",
+      "rules": "aucune règle | 1 règle | {n} règles"
+    }
+  },
   "auth": {
     "login": "Connexion",
     "email": "Adresse email",
@@ -270,6 +292,7 @@
     "required": "Champ obligatoire",
     "invalid_email": "Adresse email invalide",
     "too_long": "Valeur trop longue",
+    "too_many_tags": "20 tags au maximum",
     "password_too_short": "12 caractères minimum",
     "passwords_differ": "Les deux mots de passe diffèrent",
     "invalid_locale": "Langue non proposée",
@@ -339,6 +362,7 @@
     "account_archived": "Le compte rattaché est archivé.",
     "parent_archived": "La catégorie parente est archivée.",
     "category_name_taken": "Une catégorie porte déjà ce nom à ce niveau.",
+    "tag_name_taken": "Un tag porte déjà ce nom.",
     "system_category": "Les catégories système ne peuvent pas être modifiées.",
     "invalid_parent": "Cette catégorie ne peut pas recevoir de sous-catégorie.",
     "order_mismatch": "La liste a changé entre-temps : elle vient d'être rechargée.",
@@ -399,6 +423,7 @@
       "date": "Date",
       "label": "Libellé",
       "category": "Catégorie",
+      "tags": "Tags",
       "note": "Note",
       "account": "Compte"
     },
@@ -426,6 +451,7 @@
       "accounts": "Comptes",
       "groups": "Groupes",
       "categories": "Catégories",
+      "tags": "Tags",
       "origins": "Origines",
       "direction": "Sens",
       "status": "Statut",
@@ -742,6 +768,8 @@
       "amountMax": "Montant maximal",
       "action": "Action",
       "transferAccount": "Compte de contrepartie",
+      "tags": "Tags ajoutés",
+      "tagsHint": "Facultatif, en plus de la catégorie ou du transfert",
       "active": "Active"
     }
   },

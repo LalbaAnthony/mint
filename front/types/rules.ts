@@ -12,6 +12,7 @@ export type RuleFormState = {
   action: RuleActionKind
   categoryId: string | undefined
   transferAccountId: string | undefined
+  tagIds: string[]
   active: boolean
 }
 

@@ -33,6 +33,7 @@ function emptyState(kind: QuickAddKind): OperationFormState {
     amount: '',
     label: '',
     categoryId: undefined,
+    tagIds: [],
     note: '',
   }
 }
@@ -46,6 +47,7 @@ function stateFrom(operation: Operation): OperationFormState {
     date: operation.date,
     amount,
     label: operation.label,
+    tagIds: [...operation.tagIds],
     note: operation.note ?? '',
   }
   if (operation.transferGroupId !== null) {
@@ -184,6 +186,7 @@ async function saveTransfer(): Promise<void> {
     amountCents: parsed.data.amount,
     label: parsed.data.label,
     note: parsed.data.note === '' ? null : parsed.data.note,
+    tagIds: state.tagIds,
   }
   const groupId = edited.value?.transferGroupId ?? null
   if (groupId === null) {
@@ -225,6 +228,7 @@ async function saveOperation(): Promise<void> {
     label: parsed.data.label,
     note: parsed.data.note === '' ? null : parsed.data.note,
     categoryId: state.categoryId ?? null,
+    tagIds: state.tagIds,
   }
   if (edited.value === null) {
     const created = await apiCall('POST', '/operations', operationSchema, body)
@@ -358,6 +362,13 @@ async function submit(): Promise<void> {
             class="w-full"
             data-testid="operation-category"
           />
+        </AppFormField>
+        <AppFormField
+          :label="t('operations.fields.tags')"
+          :hint="t('common.optional')"
+          name="tagIds"
+        >
+          <TagSelect v-model="state.tagIds" test-id="operation-tags" />
         </AppFormField>
         <AppFormField
           :label="t('operations.fields.note')"

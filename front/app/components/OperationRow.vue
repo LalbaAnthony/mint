@@ -64,6 +64,7 @@ const actions = computed<DropdownMenuItem[][]>(() => [
           <span v-if="detail !== ''" class="truncate">{{ detail }}</span>
           <OperationBadges :operation="operation" />
         </p>
+        <TagBadges :tag-ids="operation.tagIds" class="mt-1" />
       </div>
       <MoneyAmount
         :cents="operation.amountCents"

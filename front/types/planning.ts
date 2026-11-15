@@ -9,6 +9,7 @@ import type {
   SortOrder,
 } from '@mint/shared/types/operations'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
+import type { Tag } from '@mint/shared/types/tags'
 import type {
   BusinessDayRule,
   Schedule,
@@ -59,6 +60,7 @@ export type OperationFormState = {
   amount: string
   label: string
   categoryId: string | undefined
+  tagIds: string[]
   note: string
 }
 
@@ -69,6 +71,7 @@ export type OperationFilterState = {
   accountIds: string[]
   groups: OperationGroup[]
   categoryIds: string[]
+  tagIds: string[]
   minAmount: string
   maxAmount: string
   direction: OperationDirection | undefined
@@ -107,6 +110,7 @@ export type ScheduleFormState = {
   active: boolean
   amountTolerancePct: number
   bankLabelPatterns: string[]
+  tagIds: string[]
 }
 
 export type ScheduleKindFilter = ScheduleKind | 'all'
@@ -158,6 +162,7 @@ export type OperationRowEmits = {
 export interface OperationFiltersProps {
   accounts: Account[]
   categories: Category[]
+  tags: Tag[]
 }
 
 export interface ScheduleFormModalProps {

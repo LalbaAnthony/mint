@@ -225,6 +225,8 @@ onMounted(loadSessions)
 
       <CategoryManager />
 
+      <TagManager />
+
       <UCard>
         <template #header>
           <h2 class="text-base font-semibold text-highlighted">

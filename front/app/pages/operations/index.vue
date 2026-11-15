@@ -233,6 +233,7 @@ async function deleteOperation(): Promise<void> {
             v-model="filters"
             :accounts="referentials.accounts"
             :categories="referentials.categories"
+            :tags="referentials.tags"
           />
         </div>
       </UCard>
@@ -277,6 +278,7 @@ async function deleteOperation(): Promise<void> {
               <span class="text-xs text-muted">{{
                 detailOf(row.original)
               }}</span>
+              <TagBadges :tag-ids="row.original.tagIds" class="mt-1" />
             </div>
           </template>
           <template #accountId-cell="{ row }">

@@ -41,6 +41,7 @@ function rule(overrides: Partial<Rule> = {}): Rule {
     amountMaxCents: null,
     categoryId: ids.leisure,
     transferAccountId: null,
+    tagIds: [],
     active: true,
     ...overrides,
   }
@@ -88,6 +89,7 @@ describe('rules view (REG-01 to REG-03)', () => {
         sign: 'debit',
         categoryId: ids.leisure,
         transferAccountId: null,
+        tagIds: [ids.holidays],
       }),
       'POST /rules': () => rule({ pattern: 'PRLV SEPA DEEZER' }),
     })
@@ -121,6 +123,7 @@ describe('rules view (REG-01 to REG-03)', () => {
         amountMaxCents: null,
         categoryId: ids.leisure,
         transferAccountId: null,
+        tagIds: [ids.holidays],
         active: true,
       })
     })

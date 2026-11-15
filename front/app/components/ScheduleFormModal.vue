@@ -61,6 +61,7 @@ function emptyState(): ScheduleFormState {
     note: '',
     amountTolerancePct: 10,
     bankLabelPatterns: [],
+    tagIds: [],
     active: true,
   }
 }
@@ -94,6 +95,7 @@ function stateFrom(schedule: Schedule): ScheduleFormState {
     note: schedule.note ?? '',
     amountTolerancePct: schedule.amountTolerancePct,
     bankLabelPatterns: [...schedule.bankLabelPatterns],
+    tagIds: [...schedule.tagIds],
     active: schedule.active,
   }
 }
@@ -224,6 +226,7 @@ function draftFields(): ScheduleFields | null {
     businessDayRule: state.businessDayRule,
     amountTolerancePct: state.amountTolerancePct,
     bankLabelPatterns: state.bankLabelPatterns,
+    tagIds: state.tagIds,
   }
   if (state.kind === 'transfer') {
     return {
@@ -524,6 +527,13 @@ async function submit(): Promise<void> {
             class="w-full"
             data-testid="schedule-trigger-mode"
           />
+        </AppFormField>
+        <AppFormField
+          :label="t('operations.fields.tags')"
+          :hint="t('common.optional')"
+          name="tagIds"
+        >
+          <TagSelect v-model="state.tagIds" test-id="schedule-tags" />
         </AppFormField>
         <AppFormField
           :label="t('operations.fields.note')"

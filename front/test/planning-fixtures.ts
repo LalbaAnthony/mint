@@ -8,6 +8,7 @@ import type {
 import type { Operation } from '@mint/shared/types/operations'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
 import type { Schedule } from '@mint/shared/types/schedules'
+import type { Tag } from '@mint/shared/types/tags'
 import type { FakeHandler } from '~~/types/tests'
 
 export const ids = {
@@ -22,6 +23,7 @@ export const ids = {
   transferGroup: '00000000-0000-4000-8000-0000000000e1',
   schedule: '00000000-0000-4000-8000-0000000000f1',
   envelope: '00000000-0000-4000-8000-0000000000f2',
+  holidays: '00000000-0000-4000-8000-0000000000a7',
 }
 
 export function euros(
@@ -84,6 +86,14 @@ export function category(overrides: Partial<Category> = {}): Category {
   }
 }
 
+export const holidaysTag: Tag = {
+  id: ids.holidays,
+  name: 'Vacances',
+  operationCount: 1,
+  scheduleCount: 0,
+  ruleCount: 0,
+}
+
 export const categories: Category[] = [
   category(),
   category({ id: ids.food, name: 'Alimentation', sortOrder: 1 }),
@@ -123,6 +133,7 @@ export function referentialHandlers(): Record<string, FakeHandler> {
     'GET /accounts/overview': () => overview([account(), livret]),
     'GET /payment-methods': () => [card],
     'GET /categories': () => categories,
+    'GET /tags': () => [holidaysTag],
   }
 }
 
@@ -136,6 +147,7 @@ export function operation(overrides: Partial<Operation> = {}): Operation {
     label: 'Courses',
     note: null,
     categoryId: ids.groceries,
+    tagIds: [],
     status: 'categorized',
     origin: 'manual',
     transferGroupId: null,
@@ -173,6 +185,7 @@ export function schedule(overrides: Partial<Schedule> = {}): Schedule {
     businessDayRule: 'exact',
     amountTolerancePct: 10,
     bankLabelPatterns: [],
+    tagIds: [],
     createdAt: '2026-11-11T10:00:00.000Z',
     monthlyEquivalentCents: 368,
     nextOccurrence: {

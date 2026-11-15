@@ -9,6 +9,7 @@ export function emptyOperationFilters(): OperationFilterState {
     accountIds: [],
     groups: [],
     categoryIds: [],
+    tagIds: [],
     minAmount: '',
     maxAmount: '',
     direction: undefined,
@@ -54,6 +55,9 @@ export function operationQuery(
   for (const id of filters.categoryIds) {
     params.append('categoryIds', id)
   }
+  for (const id of filters.tagIds) {
+    params.append('tagIds', id)
+  }
   const min = absoluteCents(filters.minAmount)
   if (min !== null) {
     params.set('minCents', String(min))
@@ -87,6 +91,7 @@ export function activeFilterCount(filters: OperationFilterState): number {
     filters.accountIds.length > 0,
     filters.groups.length > 0,
     filters.categoryIds.length > 0,
+    filters.tagIds.length > 0,
     filters.minAmount !== '',
     filters.maxAmount !== '',
     filters.direction !== undefined,

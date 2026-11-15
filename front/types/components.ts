@@ -1,6 +1,7 @@
 import type { Account, AccountUsageGroup } from '@mint/shared/types/accounts'
 import type { Category } from '@mint/shared/types/categories'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
+import type { Tag } from '@mint/shared/types/tags'
 import type {
   AccountAction,
   CategoryAction,
@@ -122,4 +123,20 @@ export interface CategoryFormModalProps {
 
 export type CategoryFormModalEmits = {
   saved: [category: Category]
+}
+
+export interface TagBadgesProps {
+  tagIds: string[]
+}
+
+export interface TagSelectProps {
+  testId?: string
+}
+
+export interface TagFormModalProps {
+  tag: Tag | null
+}
+
+export type TagFormModalEmits = {
+  saved: [tag: Tag]
 }

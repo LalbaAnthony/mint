@@ -180,6 +180,7 @@ describe('operation form (OPE-01, OPE-02)', () => {
         label: 'Marché',
         note: null,
         categoryId: null,
+        tagIds: [],
       })
     })
   })
@@ -222,6 +223,7 @@ describe('operation form (OPE-01, OPE-02)', () => {
         amountCents: 10_000,
         label: 'Epargne',
         note: null,
+        tagIds: [],
       })
     })
   })

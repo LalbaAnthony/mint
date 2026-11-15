@@ -55,6 +55,7 @@ function row(overrides: Partial<ImportRow> & { rowIndex: number }): ImportRow {
     ruleId: null,
     categoryId: null,
     transferAccountId: null,
+    tagIds: [],
     candidates: [],
     ...overrides,
   }
@@ -119,6 +120,7 @@ function handlers() {
     'GET /accounts/overview': () => overview([account()]),
     'GET /payment-methods': () => [card],
     'GET /categories': () => categories,
+    'GET /tags': () => [],
     [`GET /accounts/${ids.current}/imports`]: () => ({
       batches: [
         {

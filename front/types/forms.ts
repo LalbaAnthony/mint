@@ -58,3 +58,7 @@ export type CategoryFormState = {
   expenseGroup: ExpenseGroup | null
   parentId: string | null
 }
+
+export type TagFormState = {
+  name: string
+}

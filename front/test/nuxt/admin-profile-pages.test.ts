@@ -140,6 +140,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     installFakeApi(fetchMock, {
       'GET /profile/sessions': () => sessions,
       'GET /categories': () => [],
+      'GET /tags': () => [],
     })
 
     const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
@@ -162,6 +163,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     const api = installFakeApi(fetchMock, {
       'GET /profile/sessions': () => sessions,
       'GET /categories': () => [],
+      'GET /tags': () => [],
       'PATCH /profile': () => ({ ...testProfile, forecastHorizonMonths: 6 }),
     })
     const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })

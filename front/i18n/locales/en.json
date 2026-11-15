@@ -169,6 +169,28 @@
     "deleteReassign": "It is used by {references}: choose the category that takes them over.",
     "replacement": "Replacement category"
   },
+  "tags": {
+    "title": "Tags",
+    "add": "Add a tag",
+    "empty": "No tag. Create one with this button or directly in a transaction, a schedule or a rule.",
+    "placeholder": "No tag",
+    "search": "Search or create a tag",
+    "listLabel": "Tags",
+    "createTitle": "New tag",
+    "editTitle": "Rename the tag",
+    "saved": "{name} saved.",
+    "deleted": "{name} deleted.",
+    "deleteTitle": "Delete the tag",
+    "deleteEffect": "{name} will be deleted for good and removed where it is used ({usage}).",
+    "fields": {
+      "name": "Name"
+    },
+    "usage": {
+      "operations": "no transaction | 1 transaction | {n} transactions",
+      "schedules": "no schedule | 1 schedule | {n} schedules",
+      "rules": "no rule | 1 rule | {n} rules"
+    }
+  },
   "auth": {
     "login": "Log in",
     "email": "Email address",
@@ -270,6 +292,7 @@
     "required": "Required field",
     "invalid_email": "Invalid email address",
     "too_long": "Value too long",
+    "too_many_tags": "20 tags at most",
     "password_too_short": "At least 12 characters",
     "passwords_differ": "The two passwords differ",
     "invalid_locale": "Language not available",
@@ -339,6 +362,7 @@
     "account_archived": "The attached account is archived.",
     "parent_archived": "The parent category is archived.",
     "category_name_taken": "A category already has this name at this level.",
+    "tag_name_taken": "A tag already has this name.",
     "system_category": "System categories cannot be changed.",
     "invalid_parent": "This category cannot hold subcategories.",
     "order_mismatch": "The list changed in the meantime: it has just been reloaded.",
@@ -399,6 +423,7 @@
       "date": "Date",
       "label": "Label",
       "category": "Category",
+      "tags": "Tags",
       "note": "Note",
       "account": "Account"
     },
@@ -426,6 +451,7 @@
       "accounts": "Accounts",
       "groups": "Groups",
       "categories": "Categories",
+      "tags": "Tags",
       "origins": "Origins",
       "direction": "Direction",
       "status": "Status",
@@ -742,6 +768,8 @@
       "amountMax": "Maximum amount",
       "action": "Action",
       "transferAccount": "Counterpart account",
+      "tags": "Added tags",
+      "tagsHint": "Optional, on top of the category or the transfer",
       "active": "Active"
     }
   },

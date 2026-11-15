@@ -145,6 +145,7 @@ describe('schedule form (ECH-01 to ECH-06)', () => {
         businessDayRule: 'exact',
         amountTolerancePct: 10,
         bankLabelPatterns: [],
+        tagIds: [],
         sourceAccountId: ids.current,
         targetAccountId: ids.livret,
       })
