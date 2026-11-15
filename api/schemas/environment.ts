@@ -63,10 +63,13 @@ export const testDatabaseEnvironmentSchema = z.object({
   DB_HOST_PORT: portSchema,
 })
 
+const healthcheckUrlSchema = z
+  .string()
+  .optional()
+  .transform((value) => (value === '' ? undefined : value))
+  .pipe(z.url({ protocol: /^https?$/ }).optional())
+
 export const workerEnvironmentSchema = databaseEnvironmentSchema.extend({
-  HEALTHCHECK_EXECUTION_URL: z
-    .string()
-    .optional()
-    .transform((value) => (value === '' ? undefined : value))
-    .pipe(z.url({ protocol: /^https?$/ }).optional()),
+  HEALTHCHECK_EXECUTION_URL: healthcheckUrlSchema,
+  HEALTHCHECK_PURGE_URL: healthcheckUrlSchema,
 })

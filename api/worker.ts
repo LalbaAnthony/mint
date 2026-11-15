@@ -9,6 +9,7 @@ import {
   runExecutionJob,
 } from './execution/job.js'
 import { describeError, log } from './logger.js'
+import { purgeCronExpression, runPurgeJob } from './maintenance/purge.js'
 import { workerEnvironmentSchema } from './schemas/environment.js'
 
 function loadEnvironment() {
@@ -23,29 +24,50 @@ function loadEnvironment() {
 const environment = loadEnvironment()
 const sequelize = createSequelize(environment)
 const data = { sequelize, models: createModels(sequelize) }
-const ping = createHealthcheckPinger(environment.HEALTHCHECK_EXECUTION_URL)
+const executionPing = createHealthcheckPinger(
+  environment.HEALTHCHECK_EXECUTION_URL,
+)
+const purgePing = createHealthcheckPinger(environment.HEALTHCHECK_PURGE_URL)
 
 async function runExecution(): Promise<void> {
   try {
-    await runExecutionJob(data, systemClock, ping)
+    await runExecutionJob(data, systemClock, executionPing)
   } catch (error) {
     log('error', 'execution_failed', { error: describeError(error) })
   }
 }
 
-log('info', 'worker_started', { execution: executionCronExpression })
+async function runPurge(): Promise<void> {
+  try {
+    await runPurgeJob(data, systemClock, purgePing)
+  } catch (error) {
+    log('error', 'purge_failed', { error: describeError(error) })
+  }
+}
+
+log('info', 'worker_started', {
+  execution: executionCronExpression,
+  purge: purgeCronExpression,
+})
 await runExecution()
 
-const task = cron.schedule(executionCronExpression, runExecution, {
-  name: 'execution',
-  timezone: 'Europe/Paris',
-  noOverlap: true,
-})
+const tasks = [
+  cron.schedule(executionCronExpression, runExecution, {
+    name: 'execution',
+    timezone: 'Europe/Paris',
+    noOverlap: true,
+  }),
+  cron.schedule(purgeCronExpression, runPurge, {
+    name: 'purge',
+    timezone: 'Europe/Paris',
+    noOverlap: true,
+  }),
+]
 
 async function shutDown(signal: NodeJS.Signals): Promise<void> {
   log('info', 'worker_stopping', { signal })
   try {
-    await task.stop()
+    await Promise.all(tasks.map((task) => task.stop()))
     await sequelize.close()
     log('info', 'worker_stopped')
   } catch (error) {

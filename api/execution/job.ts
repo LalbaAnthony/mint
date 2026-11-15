@@ -1,4 +1,5 @@
 import { QueryTypes } from 'sequelize'
+import type { Transaction } from 'sequelize'
 import { parisDate } from '../clock.js'
 import { describeError, log } from '../logger.js'
 import { lockRowsSchema } from '../schemas/planning.js'
@@ -49,21 +50,25 @@ export function createHealthcheckPinger(
   }
 }
 
+export async function acquireAdvisoryLock(
+  data: DataAccess,
+  key: number,
+  transaction: Transaction,
+): Promise<boolean> {
+  const rows = await data.sequelize.query(
+    'SELECT pg_try_advisory_xact_lock(:key) AS locked',
+    { replacements: { key }, type: QueryTypes.SELECT, transaction },
+  )
+  return lockRowsSchema.parse(rows)[0]?.locked === true
+}
+
 export async function runExecutionJob(
   data: DataAccess,
   clock: Clock,
   ping: HealthcheckPinger,
 ): Promise<ExecutionJobOutcome> {
   return data.sequelize.transaction(async (lockTransaction) => {
-    const rows = await data.sequelize.query(
-      'SELECT pg_try_advisory_xact_lock(:key) AS locked',
-      {
-        replacements: { key: executionLockKey },
-        type: QueryTypes.SELECT,
-        transaction: lockTransaction,
-      },
-    )
-    if (lockRowsSchema.parse(rows)[0]?.locked !== true) {
+    if (!(await acquireAdvisoryLock(data, executionLockKey, lockTransaction))) {
       log('info', 'execution_skipped_locked')
       return 'locked'
     }

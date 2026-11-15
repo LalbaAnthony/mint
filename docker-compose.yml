@@ -89,6 +89,7 @@ services:
       <<: *worker-environment
       DATABASE_HOST: db
       HEALTHCHECK_EXECUTION_URL: ${HEALTHCHECK_EXECUTION_URL:-}
+      HEALTHCHECK_PURGE_URL: ${HEALTHCHECK_PURGE_URL:-}
     depends_on:
       db:
         condition: service_healthy
@@ -166,6 +167,7 @@ services:
       <<: *worker-environment
       DATABASE_HOST: db-dev
       HEALTHCHECK_EXECUTION_URL: ''
+      HEALTHCHECK_PURGE_URL: ''
       CHOKIDAR_USEPOLLING: 'true'
     volumes:
       - ./api:/app/api

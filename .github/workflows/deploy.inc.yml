@@ -48,6 +48,8 @@ on:
         required: true
       HEALTHCHECK_EXECUTION_URL:
         required: false
+      HEALTHCHECK_PURGE_URL:
+        required: false
 
 permissions:
   contents: read
@@ -82,6 +84,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           HEALTHCHECK_EXECUTION_URL: ${{ secrets.HEALTHCHECK_EXECUTION_URL }}
+          HEALTHCHECK_PURGE_URL: ${{ secrets.HEALTHCHECK_PURGE_URL }}
         run: |
           failed=0
           fail() {
@@ -109,10 +112,12 @@ jobs:
             fail 'secret SESSION_SECRET must be at least 32 characters long'
           [[ "$SMTP_TLS_MODE" =~ ^(tls|starttls|none)$ ]] ||
             fail 'secret SMTP_TLS_MODE must be tls, starttls or none'
-          if [[ -n "$HEALTHCHECK_EXECUTION_URL" ]]; then
-            [[ "$HEALTHCHECK_EXECUTION_URL" =~ ^https://[^\'[:space:]]+$ ]] ||
-              fail 'secret HEALTHCHECK_EXECUTION_URL must be empty or an https URL without quote or space'
-          fi
+          for name in HEALTHCHECK_EXECUTION_URL HEALTHCHECK_PURGE_URL; do
+            if [[ -n "${!name}" ]]; then
+              [[ "${!name}" =~ ^https://[^\'[:space:]]+$ ]] ||
+                fail "secret $name must be empty or an https URL without quote or space"
+            fi
+          done
           [[ "$VPS_DEPLOY_PATH" == /* ]] ||
             fail 'secret VPS_DEPLOY_PATH must be an absolute path'
           [[ "$VPS_SSH_HOST_FINGERPRINT" =~ ^SHA256:[A-Za-z0-9+/]{43}$ ]] ||
@@ -142,6 +147,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           HEALTHCHECK_EXECUTION_URL: ${{ secrets.HEALTHCHECK_EXECUTION_URL }}
+          HEALTHCHECK_PURGE_URL: ${{ secrets.HEALTHCHECK_PURGE_URL }}
         run: |
           umask 077
           {
@@ -159,6 +165,7 @@ jobs:
             echo "SMTP_PASSWORD='$SMTP_PASSWORD'"
             echo "MAIL_FROM='$MAIL_FROM'"
             echo "HEALTHCHECK_EXECUTION_URL='$HEALTHCHECK_EXECUTION_URL'"
+            echo "HEALTHCHECK_PURGE_URL='$HEALTHCHECK_PURGE_URL'"
             echo "API_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-api:$SHA'"
             echo "WEB_IMAGE='docker.io/$DOCKERHUB_USERNAME/mint-web:$SHA'"
           } >"$RUNNER_TEMP/production.env"
