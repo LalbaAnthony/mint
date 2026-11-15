@@ -174,3 +174,58 @@ test('CAL-01 to CAL-03, DSH-01: read the day in the calendar and the balance cur
   )
   guard.assertClean()
 })
+
+test('IMP-01 to IMP-07, RAP-04: import a CSV line and confirm its reconciliation proposal', async ({
+  page,
+}) => {
+  const guard = guardPage(page)
+  const account = `Courant import ${Date.now()}`
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris',
+  }).format(new Date())
+  const inThreeDays = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris',
+  }).format(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000))
+  const [year, month, day] = today.split('-')
+  await createAccount(page, account)
+
+  await page.goto('/schedules')
+  await page.getByTestId('schedules-add').click()
+  const form = page.getByTestId('schedule-form')
+  await expect(form).toBeVisible()
+  await page.getByTestId('schedule-label').fill('Loyer import e2e')
+  await page.getByTestId('schedule-amount').fill('600')
+  await choose(page, 'schedule-source', account)
+  await choose(page, 'schedule-category', 'Logement')
+  await page.getByTestId('schedule-start-date').fill(inThreeDays)
+  await page.getByTestId('schedule-submit').click()
+  await expect(form).toBeHidden()
+
+  await page.goto('/import')
+  await choose(page, 'import-account', account)
+  await page.getByTestId('import-file').setInputFiles({
+    name: 'releve.csv',
+    mimeType: 'text/csv',
+    buffer: Buffer.from(
+      `Date;Libellé;Montant\n${day}/${month}/${year};PRLV LOYER;-600,00\n`,
+    ),
+  })
+  await page.getByTestId('import-upload').click()
+  await choose(page, 'import-amount-mode', 'Une colonne signée')
+  await page.getByTestId('import-preview').click()
+  await expect(page.getByTestId('import-review')).toContainText('PRLV LOYER')
+  await expect(page.getByTestId('import-reconcile-1')).toContainText(
+    'Loyer import e2e',
+  )
+  await page.getByTestId('import-validate').click()
+  await expect(page.getByTestId('import-history')).toContainText('Validé')
+
+  await page.goto('/operations')
+  await expect(page.getByTestId('operations-table')).toContainText(
+    'Loyer import e2e',
+  )
+  await expect(
+    page.getByTestId('operations-table').getByTestId('badge-reconciled'),
+  ).toBeVisible()
+  guard.assertClean()
+})
