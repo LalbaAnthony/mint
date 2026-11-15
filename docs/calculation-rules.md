@@ -2,25 +2,26 @@
 
 Les moteurs de calcul vivent dans `shared/engines/`. Ce sont des fonctions pures : aucune entrée-sortie, aucune horloge, la date du jour (Europe/Paris) est toujours un paramètre. Leurs entrées et sorties sont typées dans `shared/types/`, indépendamment des modèles Sequelize : l'API construit ces entrées depuis la base. Les décisions qui fondent ces règles sont motivées dans l'ADR 0013.
 
-| Module              | Rôle                                                              | Exigences                      |
-| ------------------- | ----------------------------------------------------------------- | ------------------------------ |
-| `dates.ts`          | dates civiles ISO `AAAA-MM-JJ`, mois, jours de semaine            | toutes                         |
-| `holidays.ts`       | date de Pâques, jours fériés de France métropolitaine             | ECH-06                         |
-| `business-days.ts`  | jours ouvrés, règle de jours non ouvrés                           | ECH-06                         |
-| `recurrence.ts`     | dates d'origine, occurrences, prochaine occurrence, exceptions    | ECH-04, ECH-07, ECH-08, ECH-11 |
-| `equivalents.ts`    | équivalent mensuel et totaux                                      | ECH-05, ECH-09, ECH-10         |
-| `postings.ts`       | mouvements d'une occurrence sur les comptes                       | ECH-03, PAY-04                 |
-| `execution.ts`      | occurrences à exécuter par la tâche planifiée                     | EXE-01 à EXE-04                |
-| `balances.ts`       | solde calculé, solde de référence, soldes de fin de journée       | CPT-04, CPT-06, PRV-09         |
-| `investments.ts`    | total versé, plus ou moins-value latente des placements           | CPT-06                         |
-| `envelopes.ts`      | catégories d'une enveloppe, consommé, disponible, report, lissage | ENV-01 à ENV-05, PRV-04        |
-| `forecast.ts`       | solde prévisionnel par compte et agrégé, indicateurs              | PRV-01 à PRV-08                |
-| `reports.ts`        | répartition Needs / Wants / Save, revenus et dépenses par mois    | CAT-03, DSH-02, DSH-03         |
-| `amounts.ts`        | divisions arrondies, répartition au centime                       | ECH-05, PRV-04                 |
-| `labels.ts`         | normalisation des libellés bancaires, similarité des libellés     | IMP-05, REG-01, REG-03, RAP-02 |
-| `csv-lines.ts`      | dates, montants et lignes d'un CSV, clés de doublon               | IMP-02, IMP-04, IMP-05         |
-| `rules.ts`          | règle satisfaite par une ligne                                    | REG-01, REG-02                 |
-| `reconciliation.ts` | occurrences candidates et score                                   | RAP-01, RAP-02                 |
+| Module              | Rôle                                                               | Exigences                      |
+| ------------------- | ------------------------------------------------------------------ | ------------------------------ |
+| `dates.ts`          | dates civiles ISO `AAAA-MM-JJ`, mois, jours de semaine             | toutes                         |
+| `holidays.ts`       | date de Pâques, jours fériés de France métropolitaine              | ECH-06                         |
+| `business-days.ts`  | jours ouvrés, règle de jours non ouvrés                            | ECH-06                         |
+| `recurrence.ts`     | dates d'origine, occurrences, prochaine occurrence, exceptions     | ECH-04, ECH-07, ECH-08, ECH-11 |
+| `equivalents.ts`    | équivalent mensuel et totaux                                       | ECH-05, ECH-09, ECH-10         |
+| `postings.ts`       | mouvements d'une occurrence sur les comptes                        | ECH-03, PAY-04                 |
+| `execution.ts`      | occurrences à exécuter par la tâche planifiée                      | EXE-01 à EXE-04                |
+| `balances.ts`       | solde calculé, solde de référence, soldes de fin de journée        | CPT-04, CPT-06, PRV-09         |
+| `investments.ts`    | total versé, plus ou moins-value latente des placements            | CPT-06                         |
+| `envelopes.ts`      | catégories d'une enveloppe, consommé, disponible, report, lissage  | ENV-01 à ENV-05, PRV-04        |
+| `forecast.ts`       | solde prévisionnel par compte et agrégé, indicateurs               | PRV-01 à PRV-08                |
+| `reports.ts`        | répartition Needs / Wants / Save, revenus et dépenses par mois     | CAT-03, DSH-02, DSH-03         |
+| `amounts.ts`        | divisions arrondies, répartition au centime                        | ECH-05, PRV-04                 |
+| `labels.ts`         | normalisation des libellés bancaires, similarité des libellés      | IMP-05, REG-01, REG-03, RAP-02 |
+| `csv-lines.ts`      | dates, montants et lignes d'un CSV, clés de doublon                | IMP-02, IMP-04, IMP-05         |
+| `rules.ts`          | règle satisfaite par une ligne                                     | REG-01, REG-02                 |
+| `reconciliation.ts` | occurrences candidates et score                                    | RAP-01, RAP-02                 |
+| `interest.ts`       | capitalisations, intérêts estimés, solde hors intérêts capitalisés | LIV-02 à LIV-05                |
 
 Tous les montants sont des entiers en centimes. Un débit est négatif, un crédit positif.
 
@@ -118,7 +119,7 @@ S_c(J) = S_c(J-1) + \sum_{f \in F_c(J)} m(f) - L_c(J) + I_c(J)
 - flux d'occurrence : occurrences à venir des échéances actives dont tous les comptes sont actifs, à leur date effective ; une occurrence due (date effective entre la borne basse de la section 4 et aujourd'hui) que le worker n'a pas encore exécutée est projetée aujourd'hui, pour que la prévision ne change pas au passage du worker ;
 - flux d'opération : opérations des comptes actifs datées après aujourd'hui et dans l'horizon ;
 - part d'enveloppes L : section 6 ;
-- intérêts I : nuls jusqu'au lot 3 (LIV-03).
+- intérêts I : montant de l'échéance système d'intérêts au jour de capitalisation, calculé sur les soldes réels puis prévisionnels (section 12) ; une estimation nulle n'est pas projetée.
 
 Chaque jour porte son solde de fin de journée et ses flux (occurrence avec libellé, montant signé, montant de l'occurrence, surcharge, mode de déclenchement et marqueur abonnement ; opération ; part d'enveloppe), base du calendrier (CAL-02).
 
@@ -177,6 +178,19 @@ La similarité est le coefficient de Dice entre les mots normalisés du libellé
 
 Écart d'un relevé (CPT-05) = solde relevé − solde calculé en fin de sa date (section 5), recalculé à chaque lecture : une opération ajoutée ou modifiée à une date antérieure change l'écart. Corriger l'écart crée une opération de la catégorie Ajustement égale à l'écart, à la date du relevé ; elle est exclue des agrégats de la section 8.
 
-## 12. Tests
+## 12. Plafonds et intérêts
+
+Livrets réglementés et épargne logement uniquement (ADR 0020). Solde hors intérêts capitalisés : solde − intérêts capitalisés déclarés dans le solde initial − opérations de la catégorie Intérêts. Dans la prévision, il suit les flux du jour hors intérêts. Dépassement d'un jour : solde hors intérêts de fin de journée − plafond, s'il est positif. Dépassement d'une occurrence créditrice : min(montant, dépassement du jour). US-15 : un LEP plafonné à 10 000 €, à 9 950 €, reçoit 100 € le 6 décembre (dépassement de 50 €) puis 100 € le 6 janvier (100 €).
+
+Capitalisation au 31 décembre ou à la date anniversaire (jour et mois de la date, le 29 février donnant le 28). La période d'une capitalisation C court du lendemain de la capitalisation précédente à C, et au plus tôt de la date du solde initial. Taux en vigueur : le dernier dont la date d'effet est antérieure ou égale ; aucun avant le premier.
+
+- Quinzaines (1er au 15, 16 à la fin du mois) : une quinzaine appartient à la période qui contient son début. Solde retenu = solde de fin de la veille de son début (solde initial si elle commence à sa date) + retraits datés de la quinzaine, jusqu'à C au plus ; intérêts = solde retenu positif × taux à son début / 24. Un versement produit à partir de la quinzaine suivante, un retrait cesse de produire dès sa propre quinzaine.
+- Journalière : pour chaque jour de la période, solde de fin de journée positif × taux du jour / 365, le jour C sans l'opération d'intérêts qu'il porte.
+
+La somme est exacte, arrondie une fois au centime, demi vers le haut. Exemples : 10 000 € à 2,4 % sur une année donnent 240,00 € ; un versement de 2 400 € le 10 mars et un retrait de 1 000 € le 20 juin y ajoutent 19 quinzaines de 2,40 € et retirent 13 quinzaines de 1,00 €, soit 272,60 € ; à 2,4 % puis 1,7 % à partir du 1er août, 140,00 € + 10 × 7,0833 € = 210,83 €.
+
+Intérêts acquis : quinzaines terminées ou jours écoulés de la période en cours, sur les soldes réels ; une capitalisation du jour ouvre déjà la période suivante. Montant projeté : intérêts de la période entière, calculés par la prévision sur 12 mois. Le 31 décembre, la tâche de 00:05 calcule les intérêts de l'année sur les soldes réels et génère l'opération ; une estimation nulle marque l'occurrence comme sautée.
+
+## 13. Tests
 
 Les tests des moteurs tournent dans le projet Vitest `shared`, sans base de données. `shared/engines/user-stories.test.ts` transcrit US-06, US-07, US-08, US-10, US-11 et US-12 avec leurs valeurs chiffrées ; chaque module a ses tests unitaires. `npm run test:coverage` échoue sous 90 % de couverture (instructions, branches, fonctions, lignes) sur `shared/engines/` (NF-QUA-02). Sur un jeu de 20 comptes, 200 échéances, 10 enveloppes et 10 000 opérations, la prévision sur 12 mois prend environ 75 ms sur un poste de développement (NF-PERF-02 : 500 ms).
