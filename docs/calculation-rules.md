@@ -11,7 +11,8 @@ Les moteurs de calcul vivent dans `shared/engines/`. Ce sont des fonctions pures
 | `equivalents.ts`    | équivalent mensuel et totaux                                      | ECH-05, ECH-09, ECH-10         |
 | `postings.ts`       | mouvements d'une occurrence sur les comptes                       | ECH-03, PAY-04                 |
 | `execution.ts`      | occurrences à exécuter par la tâche planifiée                     | EXE-01 à EXE-04                |
-| `balances.ts`       | solde calculé, soldes réels de fin de journée                     | CPT-04, PRV-09                 |
+| `balances.ts`       | solde calculé, solde de référence, soldes de fin de journée       | CPT-04, CPT-06, PRV-09         |
+| `investments.ts`    | total versé, plus ou moins-value latente des placements           | CPT-06                         |
 | `envelopes.ts`      | catégories d'une enveloppe, consommé, disponible, report, lissage | ENV-01 à ENV-05, PRV-04        |
 | `forecast.ts`       | solde prévisionnel par compte et agrégé, indicateurs              | PRV-01 à PRV-08                |
 | `reports.ts`        | répartition Needs / Wants / Save, revenus et dépenses par mois    | CAT-03, DSH-02, DSH-03         |
@@ -85,6 +86,8 @@ Compte archivé (CPT-07) : aucune occurrence n'est exécutée sur lui ; un trans
 
 Solde calculé d'un compte en fin de journée J (CPT-04) : solde initial, réputé en début de journée de sa date, plus les opérations datées de cette date jusqu'à J incluse. Les opérations antérieures à la date du solde initial sont ignorées. Avant la date du solde initial, le compte n'a pas de solde (`null`). Pour un jour passé, la prévision affiche ce solde réel (PRV-09, `endOfDayBalances`).
 
+Placements (CPT-06, natures Assurance-vie, PEA ou compte-titres, Portefeuille crypto ; ADR 0019) : une valorisation est la valeur de fin de journée de sa date, comprise entre la date du solde initial et aujourd'hui. Le solde de référence en fin de journée J est la dernière valorisation datée de J ou avant, plus les opérations datées après elle jusqu'à J ; sans valorisation, c'est le solde calculé. Ce solde sert pour les jours passés (`endOfDayBalances`), le point de départ de la prévision, la vue « Où est mon argent » et le patrimoine ; l'écart des relevés (section 11) reste calculé sur le solde calculé. Total versé à une date : solde initial plus les mouvements de transfert du compte, entrants moins sortants, datés de la date du solde initial à cette date. Plus ou moins-value latente : solde de référence d'aujourd'hui moins total versé d'aujourd'hui, en euros et en pourcentage du total versé ; aucune avant la première valorisation. US-16 : 1 000 € de solde initial, 1 200 € de transferts entrants et une valorisation de 2 530 € donnent 2 200 € versés et +330 € (+15,0 %).
+
 ## 6. Enveloppes
 
 Catégories d'une enveloppe : ses catégories et leurs sous-catégories. Si une sous-catégorie est explicitement dans une autre enveloppe que son parent, la plus spécifique gagne. Seules les enveloppes actives comptent.
@@ -111,11 +114,11 @@ Horizon : d'aujourd'hui à aujourd'hui + N mois (N de 1 à 12), quantième ramen
 S_c(J) = S_c(J-1) + \sum_{f \in F_c(J)} m(f) - L_c(J) + I_c(J)
 ```
 
-- point de départ : solde calculé en fin d'aujourd'hui (opérations datées d'aujourd'hui ou avant), auquel s'appliquent les flux d'aujourd'hui ;
+- point de départ : solde calculé en fin d'aujourd'hui (opérations datées d'aujourd'hui ou avant), ou solde de référence pour un placement (section 5), auquel s'appliquent les flux d'aujourd'hui ;
 - flux d'occurrence : occurrences à venir des échéances actives dont tous les comptes sont actifs, à leur date effective ; une occurrence due (date effective entre la borne basse de la section 4 et aujourd'hui) que le worker n'a pas encore exécutée est projetée aujourd'hui, pour que la prévision ne change pas au passage du worker ;
 - flux d'opération : opérations des comptes actifs datées après aujourd'hui et dans l'horizon ;
 - part d'enveloppes L : section 6 ;
-- intérêts I : nuls jusqu'au lot 3 (LIV-03) ; le solde de référence des placements (CPT-06) arrive aussi au lot 3.
+- intérêts I : nuls jusqu'au lot 3 (LIV-03).
 
 Chaque jour porte son solde de fin de journée et ses flux (occurrence avec libellé, montant signé, montant de l'occurrence, surcharge, mode de déclenchement et marqueur abonnement ; opération ; part d'enveloppe), base du calendrier (CAL-02).
 
