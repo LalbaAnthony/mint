@@ -171,7 +171,10 @@ function remove(valuation: Valuation): Promise<void> {
             </dd>
           </div>
         </dl>
-        <ValuationChart v-if="valuations.length > 0" :valuations="valuations" />
+        <LazyValuationChart
+          v-if="valuations.length > 0"
+          :valuations="valuations"
+        />
         <UForm
           v-if="!archived"
           :state="state"
