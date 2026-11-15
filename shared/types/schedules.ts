@@ -8,6 +8,7 @@ import type {
   overrideOccurrenceRequestSchema,
   scheduleFieldsSchema,
   scheduleFrequencySchema,
+  scheduleCapExcessSchema,
   scheduleKindSchema,
   scheduleListResponseSchema,
   scheduleOccurrenceListResponseSchema,
@@ -84,6 +85,7 @@ export type ScheduleInput = {
   recurrence: Recurrence
   posting: SchedulePosting
   exceptions: OccurrenceException[]
+  system: boolean
 }
 
 export type OccurrenceSource = Pick<
@@ -170,3 +172,5 @@ export type SubscriptionTotals = z.infer<typeof subscriptionTotalsSchema>
 export type SubscriptionListResponse = z.infer<
   typeof subscriptionListResponseSchema
 >
+
+export type ScheduleCapExcess = z.infer<typeof scheduleCapExcessSchema>

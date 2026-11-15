@@ -174,8 +174,11 @@ describe('seedDatabase', () => {
   it('gives the customized user the schedules, envelope and operations of US-06 to US-12', async () => {
     const user = await findUser(seedCustomizedUserEmail)
     const schedules = await cli.models.Schedule.findAll({
-      where: { userId: user.id },
+      where: { userId: user.id, isSystem: false },
       order: [['label', 'ASC']],
+    })
+    const interestSchedules = await cli.models.Schedule.count({
+      where: { userId: user.id, isSystem: true },
     })
     const operations = await cli.models.Transaction.findAll({
       where: { userId: user.id },
@@ -194,6 +197,7 @@ describe('seedDatabase', () => {
       ['Loyer', 'expense', 'monthly', '2026-10-01'],
       ['Prestation', 'income', 'monthly', '2026-10-05'],
     ])
+    expect(interestSchedules).toBe(2)
     expect(
       await cli.models.ScheduleOccurrence.findAll({
         attributes: ['originalDate', 'amountCents', 'state'],

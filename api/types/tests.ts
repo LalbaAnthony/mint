@@ -61,9 +61,12 @@ export type IsolationResources = {
   tagId: string
   investmentAccountId: string
   valuationId: string
+  savingsAccountId: string
+  interestRateId: string
 }
 
 export type IsolationSnapshot = {
+  interest: unknown
   tags: unknown
   valuations: unknown
   rules: unknown

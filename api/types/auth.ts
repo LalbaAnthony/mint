@@ -45,3 +45,4 @@ export type AuditEvent =
   | 'user_password_reset_sent'
   | 'admin_created'
   | 'admin_promoted'
+  | 'regulated_cap_updated'

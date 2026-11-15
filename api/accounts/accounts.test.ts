@@ -14,11 +14,18 @@ function account(overrides: Partial<Account>): Account {
     initialBalanceCents: 0,
     initialBalanceDate: '2026-11-11',
     lowBalanceThresholdCents: null,
+    depositCapCents: null,
+    capitalizedInterestCents: null,
+    interestMethod: null,
+    capitalization: null,
+    anniversaryDate: null,
     sortOrder: 0,
     archivedAt: null,
     currentBalanceCents: 0,
     reconciliationGapCents: null,
     investment: null,
+    interest: null,
+    depositCapExcessCents: null,
     ...overrides,
   }
 }

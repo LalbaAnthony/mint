@@ -34,6 +34,7 @@ import {
 import {
   currentOccurrence,
   editableOccurrence,
+  findEditableSchedule,
   findUserSchedule,
   loadScheduleViews,
   mergeScheduleUpdate,
@@ -45,6 +46,7 @@ import {
   validateScheduleReferences,
 } from '../schedules/schedules.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
+import { loadCapForecast, scheduleCapExcesses } from '../accounts/caps.js'
 import { replaceScheduleTags, tagIdsBySchedule } from '../tags/tags.js'
 import type { AppDependencies } from '../types/app.js'
 import type {
@@ -92,16 +94,20 @@ async function scheduleInputOf(
 async function scheduleView(
   app: AppDependencies,
   schedule: ScheduleModel,
-  transaction?: Transaction,
+  horizonMonths: number,
 ): Promise<Schedule> {
-  const accounts = await loadAccountInputs(app, schedule.userId, transaction)
-  const tagIds = await tagIdsBySchedule(app, [schedule.id], transaction)
+  const accounts = await loadAccountInputs(app, schedule.userId)
+  const tagIds = await tagIdsBySchedule(app, [schedule.id])
+  const capExcesses = scheduleCapExcesses(
+    await loadCapForecast(app, schedule.userId, today(app), horizonMonths),
+  )
   return toSchedule(
     schedule,
-    await scheduleInputOf(app, schedule, transaction),
+    await scheduleInputOf(app, schedule),
     tagIds.get(schedule.id) ?? [],
     activeAccountsById(accounts),
     today(app),
+    capExcesses.get(schedule.id) ?? null,
   )
 }
 
@@ -122,6 +128,7 @@ export const listSchedulesRoute = defineUserRoute({
       app,
       user.id,
       today(app),
+      user.forecastHorizonMonths,
     )
     return {
       status: 200,
@@ -166,7 +173,10 @@ export const createScheduleRoute = defineUserRoute({
       )
       return created
     })
-    return { status: 201, body: await scheduleView(app, schedule) }
+    return {
+      status: 201,
+      body: await scheduleView(app, schedule, user.forecastHorizonMonths),
+    }
   },
 })
 
@@ -193,7 +203,7 @@ export const updateScheduleRoute = defineUserRoute({
   },
   handle: async ({ app, user, params, body }) => {
     const result = await app.sequelize.transaction(async (transaction) => {
-      const schedule = await findUserSchedule(
+      const schedule = await findEditableSchedule(
         app,
         user.id,
         params.id,
@@ -240,12 +250,19 @@ export const updateScheduleRoute = defineUserRoute({
           transaction,
         })
       }
-      return {
-        schedule: await scheduleView(app, schedule, transaction),
-        removedExceptions: orphans.length,
-      }
+      return { schedule, removedExceptions: orphans.length }
     })
-    return { status: 200, body: result }
+    return {
+      status: 200,
+      body: {
+        schedule: await scheduleView(
+          app,
+          result.schedule,
+          user.forecastHorizonMonths,
+        ),
+        removedExceptions: result.removedExceptions,
+      },
+    }
   },
 })
 
@@ -262,7 +279,7 @@ export const deleteScheduleRoute = defineUserRoute({
     ...resourceErrors,
   },
   handle: async ({ app, user, params }) => {
-    const schedule = await findUserSchedule(app, user.id, params.id)
+    const schedule = await findEditableSchedule(app, user.id, params.id)
     await schedule.destroy()
     return { status: 204 }
   },
@@ -348,7 +365,7 @@ export const overrideOccurrenceRoute = defineUserRoute({
       ])
     }
     const occurrence = await app.sequelize.transaction(async (transaction) => {
-      const schedule = await findUserSchedule(
+      const schedule = await findEditableSchedule(
         app,
         user.id,
         params.id,
@@ -400,7 +417,7 @@ export const skipOccurrenceRoute = defineUserRoute({
   handle: async ({ app, user, params }) => {
     const from = today(app)
     const occurrence = await app.sequelize.transaction(async (transaction) => {
-      const schedule = await findUserSchedule(
+      const schedule = await findEditableSchedule(
         app,
         user.id,
         params.id,
@@ -456,7 +473,7 @@ export const restoreOccurrenceRoute = defineUserRoute({
   handle: async ({ app, user, params }) => {
     const from = today(app)
     const occurrence = await app.sequelize.transaction(async (transaction) => {
-      const schedule = await findUserSchedule(
+      const schedule = await findEditableSchedule(
         app,
         user.id,
         params.id,
@@ -502,6 +519,13 @@ export const listSubscriptionsRoute = defineUserRoute({
   },
   handle: async ({ app, user }) => ({
     status: 200,
-    body: subscriptionList(await loadScheduleViews(app, user.id, today(app))),
+    body: subscriptionList(
+      await loadScheduleViews(
+        app,
+        user.id,
+        today(app),
+        user.forecastHorizonMonths,
+      ),
+    ),
   }),
 })

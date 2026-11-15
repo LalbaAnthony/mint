@@ -122,6 +122,8 @@ describe('CAL-01 to CAL-05 calendar month', () => {
           amountCents: -5_000,
           triggerMode: 'auto',
           isSubscription: false,
+          system: false,
+          capExcessCents: null,
           occurrence: {
             originalDate: '2026-11-20',
             effectiveDate: '2026-11-20',

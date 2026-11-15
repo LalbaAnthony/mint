@@ -26,6 +26,7 @@ import {
   toOperationInput,
 } from '../planning/inputs.js'
 import { loadInvestmentSummaries } from '../accounts/investments.js'
+import { capAlertsOf, loadCapForecast } from '../accounts/caps.js'
 import { loadAccountBalances } from '../planning/usage.js'
 import type { UserModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
@@ -152,6 +153,7 @@ export async function dashboardSummary(
   data: DataAccess,
   userId: string,
   today: string,
+  horizonMonths: number,
 ): Promise<DashboardSummary> {
   const accounts = await data.models.Account.findAll({
     where: { userId, archivedAt: null },
@@ -208,6 +210,9 @@ export async function dashboardSummary(
   return {
     wealthCents,
     alerts,
+    capAlerts: capAlertsOf(
+      await loadCapForecast(data, userId, today, horizonMonths),
+    ),
     toCategorizeCount: await data.models.Transaction.count({
       where: { userId, status: 'to_categorize' },
     }),

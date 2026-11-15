@@ -1,9 +1,16 @@
 import { randomUUID } from 'node:crypto'
 import { QueryTypes } from 'sequelize'
 import { planExecutions } from '@mint/shared/engines/execution'
+import { capitalizationInterestCents } from '@mint/shared/engines/interest'
+import type { AccountInput } from '@mint/shared/types/accounts'
 import type { PlannedExecution } from '@mint/shared/types/schedules'
 import { describeError, log } from '../logger.js'
-import { loadAccountInputs, loadScheduleInputs } from '../planning/inputs.js'
+import {
+  loadAccountInputs,
+  loadInterestCategoryId,
+  loadScheduleInputs,
+  toOperationInput,
+} from '../planning/inputs.js'
 import { insertedIdRowsSchema } from '../schemas/planning.js'
 import { addOperationTags, tagIdsBySchedule } from '../tags/tags.js'
 import type { DataAccess, ExecutionSummary } from '../types/planning.js'
@@ -73,6 +80,65 @@ async function executeOccurrence(
   })
 }
 
+async function skipEmptyOccurrence(
+  data: DataAccess,
+  execution: PlannedExecution,
+): Promise<void> {
+  await data.sequelize.query(
+    `INSERT INTO schedule_occurrences (schedule_id, original_date, state)
+     VALUES (:scheduleId, :originalDate, 'skipped')
+     ON CONFLICT (schedule_id, original_date) DO NOTHING`,
+    {
+      replacements: {
+        scheduleId: execution.scheduleId,
+        originalDate: execution.originalDate,
+      },
+    },
+  )
+}
+
+async function withInterestAmounts(
+  data: DataAccess,
+  userId: string,
+  executions: readonly PlannedExecution[],
+  systemScheduleIds: ReadonlySet<string>,
+  accounts: readonly AccountInput[],
+): Promise<PlannedExecution[]> {
+  if (
+    !executions.some((execution) => systemScheduleIds.has(execution.scheduleId))
+  ) {
+    return [...executions]
+  }
+  const interestCategoryId = await loadInterestCategoryId(data, userId)
+  const operations = (
+    await data.models.Transaction.findAll({ where: { userId } })
+  ).map(toOperationInput)
+  return executions.map((execution) => {
+    const [movement] = execution.movements
+    const account = accounts.find(
+      (candidate) => candidate.id === movement?.accountId,
+    )
+    if (
+      !systemScheduleIds.has(execution.scheduleId) ||
+      movement === undefined ||
+      account === undefined
+    ) {
+      return execution
+    }
+    const amountCents = capitalizationInterestCents(
+      account,
+      operations,
+      execution.originalDate,
+      interestCategoryId,
+    )
+    return {
+      ...execution,
+      amountCents,
+      movements: [{ ...movement, amountCents }],
+    }
+  })
+}
+
 export async function executeDueOccurrences(
   data: DataAccess,
   today: string,
@@ -88,17 +154,29 @@ export async function executeDueOccurrences(
     failures: 0,
   }
   for (const user of users) {
-    const executions = planExecutions({
-      today,
-      schedules: await loadScheduleInputs(data, user.id),
-      accounts: await loadAccountInputs(data, user.id),
-    })
+    const schedules = await loadScheduleInputs(data, user.id)
+    const accounts = await loadAccountInputs(data, user.id)
+    const executions = await withInterestAmounts(
+      data,
+      user.id,
+      planExecutions({ today, schedules, accounts }),
+      new Set(
+        schedules
+          .filter((schedule) => schedule.system)
+          .map((schedule) => schedule.id),
+      ),
+      accounts,
+    )
     const tagIds = await tagIdsBySchedule(
       data,
       executions.map((execution) => execution.scheduleId),
     )
     for (const execution of executions) {
       try {
+        if (execution.amountCents === 0) {
+          await skipEmptyOccurrence(data, execution)
+          continue
+        }
         if (
           await executeOccurrence(
             data,

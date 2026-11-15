@@ -24,6 +24,8 @@ import type {
   TransactionTagModel,
   UserModel,
   ValuationModel,
+  InterestRateModel,
+  RegulatedCapModel,
 } from '../types/models.js'
 
 const primaryKey = {
@@ -184,6 +186,25 @@ export function createModels(sequelize: Sequelize): Models {
           return stored === null ? null : Number(stored)
         },
       },
+      depositCapCents: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        get(this: AccountModel) {
+          const stored = this.getDataValue('depositCapCents')
+          return stored === null ? null : Number(stored)
+        },
+      },
+      capitalizedInterestCents: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        get(this: AccountModel) {
+          const stored = this.getDataValue('capitalizedInterestCents')
+          return stored === null ? null : Number(stored)
+        },
+      },
+      interestMethod: { type: DataTypes.TEXT, allowNull: true },
+      capitalization: { type: DataTypes.TEXT, allowNull: true },
+      anniversaryDate: { type: DataTypes.DATEONLY, allowNull: true },
       sortOrder: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
       archivedAt: { type: DataTypes.DATE, allowNull: true },
       ...timestamps,
@@ -260,6 +281,11 @@ export function createModels(sequelize: Sequelize): Models {
         type: DataTypes.ARRAY(DataTypes.TEXT),
         allowNull: false,
         defaultValue: [],
+      },
+      isSystem: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       ...timestamps,
     },
@@ -554,6 +580,43 @@ export function createModels(sequelize: Sequelize): Models {
     options('valuations'),
   )
 
+  const InterestRate = sequelize.define<InterestRateModel>(
+    'InterestRate',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      effectiveDate: { type: DataTypes.DATEONLY, allowNull: false },
+      annualRate: {
+        type: DataTypes.DECIMAL(6, 4),
+        allowNull: false,
+        get(this: InterestRateModel) {
+          return Number(this.getDataValue('annualRate'))
+        },
+      },
+      ...timestamps,
+    },
+    options('interest_rates'),
+  )
+
+  const RegulatedCap = sequelize.define<RegulatedCapModel>(
+    'RegulatedCap',
+    {
+      id: primaryKey,
+      product: { type: DataTypes.TEXT, allowNull: false },
+      capCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: RegulatedCapModel) {
+          return Number(this.getDataValue('capCents'))
+        },
+      },
+      updatedBy: { type: DataTypes.UUID, allowNull: true },
+      ...timestamps,
+    },
+    options('regulated_caps'),
+  )
+
   return {
     User,
     Session,
@@ -577,5 +640,7 @@ export function createModels(sequelize: Sequelize): Models {
     TransactionTag,
     ScheduleTag,
     Valuation,
+    InterestRate,
+    RegulatedCap,
   }
 }

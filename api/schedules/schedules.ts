@@ -21,6 +21,7 @@ import type {
   ScheduleFields,
   ScheduleInput,
   ScheduleOccurrence,
+  ScheduleCapExcess,
   ScheduleTotals,
   SubscriptionListResponse,
 } from '@mint/shared/types/schedules'
@@ -34,6 +35,7 @@ import {
 } from '../http/http-error.js'
 import { findUserPaymentMethod } from '../payment-methods/payment-methods.js'
 import { ensureUserTags, tagIdsBySchedule } from '../tags/tags.js'
+import { loadCapForecast, scheduleCapExcesses } from '../accounts/caps.js'
 import type { ScheduleAttributes, ScheduleModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
 import { loadAccountInputs, loadScheduleInputs } from '../planning/inputs.js'
@@ -61,6 +63,19 @@ export async function findUserSchedule(
   })
   if (schedule === null) {
     throw notFound()
+  }
+  return schedule
+}
+
+export async function findEditableSchedule(
+  data: DataAccess,
+  userId: string,
+  id: string,
+  transaction?: Transaction,
+): Promise<ScheduleModel> {
+  const schedule = await findUserSchedule(data, userId, id, transaction)
+  if (schedule.isSystem) {
+    throw conflict('system_schedule')
   }
   return schedule
 }
@@ -231,7 +246,10 @@ export async function validateScheduleReferences(
 
 export function scheduleColumns(
   fields: ScheduleFields,
-): Omit<ScheduleAttributes, 'id' | 'userId' | 'createdAt' | 'updatedAt'> {
+): Omit<
+  ScheduleAttributes,
+  'id' | 'userId' | 'isSystem' | 'createdAt' | 'updatedAt'
+> {
   const common = {
     kind: fields.kind,
     label: fields.label,
@@ -292,6 +310,7 @@ export function toSchedule(
   tagIds: string[],
   activeAccounts: ReadonlyMap<string, AccountInput>,
   today: string,
+  capExcess: ScheduleCapExcess | null = null,
 ): Schedule {
   const next = nextPendingOccurrence(input, today)
   const postable = postingStartDate(input, activeAccounts) !== null
@@ -324,6 +343,7 @@ export function toSchedule(
     nextOccurrence:
       next === null || !postable ? null : toScheduleOccurrence(next, today),
     ended: next === null,
+    capExcess,
   }
 }
 
@@ -405,9 +425,13 @@ export async function loadScheduleViews(
   data: DataAccess,
   userId: string,
   today: string,
+  horizonMonths: number,
 ): Promise<ScheduleViews> {
+  const capExcesses = scheduleCapExcesses(
+    await loadCapForecast(data, userId, today, horizonMonths),
+  )
   const schedules = await data.models.Schedule.findAll({
-    where: { userId },
+    where: { userId, isSystem: false },
     order: [
       ['createdAt', 'ASC'],
       ['id', 'ASC'],
@@ -432,6 +456,7 @@ export async function loadScheduleViews(
             tagIds.get(schedule.id) ?? [],
             activeAccounts,
             today,
+            capExcesses.get(schedule.id) ?? null,
           ),
         ]
   })

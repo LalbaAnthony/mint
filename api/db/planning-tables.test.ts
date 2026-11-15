@@ -144,6 +144,9 @@ beforeAll(async () => {
     usage: 'savings',
     initialBalanceCents: 0,
     initialBalanceDate: '2026-11-01',
+    capitalizedInterestCents: 0,
+    interestMethod: 'fortnight',
+    capitalization: 'dec31',
   })
   aliceCard = await models.PaymentMethod.create({
     userId: alice.id,

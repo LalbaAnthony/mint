@@ -29,6 +29,7 @@ import { toOperations } from '../operations/operations.js'
 import {
   loadAccountInputs,
   loadCategoryInputs,
+  loadInterestCategoryId,
   loadEnvelopeCategoryIds,
   loadPaymentMethodsById,
   loadScheduleInputs,
@@ -72,6 +73,7 @@ export async function loadForecastData(
       ),
     ),
     categories: await loadCategoryInputs(data, userId),
+    interestCategoryId: await loadInterestCategoryId(data, userId),
   }
 }
 
@@ -279,13 +281,15 @@ function plannedContent(
         amountCents: flow.amountCents,
         triggerMode: flow.triggerMode,
         isSubscription: flow.isSubscription,
+        system: flow.system,
+        capExcessCents: flow.capExcessCents,
         occurrence: {
           originalDate: flow.originalDate,
           effectiveDate: flow.effectiveDate,
           amountCents: flow.occurrenceAmountCents,
           status: 'pending',
           overridden: flow.overridden,
-          editable: flow.effectiveDate > scope.today,
+          editable: !flow.system && flow.effectiveDate > scope.today,
         },
       })
     } else if (flow.source === 'envelope') {

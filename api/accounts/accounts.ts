@@ -17,6 +17,8 @@ import type { AccountModel } from '../types/models.js'
 import type { InvestmentSummary } from '@mint/shared/types/valuations'
 import { loadAccountBalances } from '../planning/usage.js'
 import { loadInvestmentSummaries } from './investments.js'
+import { loadSavingsSummaries } from './savings.js'
+import type { SavingsSummary } from '../types/savings.js'
 import { loadStatementGaps } from './statements.js'
 
 export function currentBalanceCents(
@@ -49,6 +51,13 @@ export async function accountWithBalance(
       today,
       transaction,
     ),
+    await loadSavingsSummaries(
+      app,
+      account.userId,
+      [account],
+      today,
+      transaction,
+    ),
   )
 }
 
@@ -57,8 +66,10 @@ export function toAccount(
   balances: ReadonlyMap<string, number>,
   gaps: ReadonlyMap<string, number> = new Map(),
   investments: ReadonlyMap<string, InvestmentSummary> = new Map(),
+  savings: ReadonlyMap<string, SavingsSummary> = new Map(),
 ): Account {
   const investment = investments.get(account.id) ?? null
+  const saving = savings.get(account.id)
   return {
     id: account.id,
     name: account.name,
@@ -69,6 +80,11 @@ export function toAccount(
     initialBalanceCents: account.initialBalanceCents,
     initialBalanceDate: account.initialBalanceDate,
     lowBalanceThresholdCents: account.lowBalanceThresholdCents,
+    depositCapCents: account.depositCapCents,
+    capitalizedInterestCents: account.capitalizedInterestCents,
+    interestMethod: account.interestMethod,
+    capitalization: account.capitalization,
+    anniversaryDate: account.anniversaryDate,
     sortOrder: account.sortOrder,
     archivedAt: account.archivedAt?.toISOString() ?? null,
     currentBalanceCents:
@@ -76,6 +92,8 @@ export function toAccount(
       currentBalanceCents(account, balances),
     reconciliationGapCents: gaps.get(account.id) ?? null,
     investment,
+    interest: saving?.interest ?? null,
+    depositCapExcessCents: saving?.depositCapExcessCents ?? null,
   }
 }
 
@@ -157,5 +175,10 @@ export function accountFields(account: AccountModel): CreateAccountRequest {
     initialBalanceCents: account.initialBalanceCents,
     initialBalanceDate: account.initialBalanceDate,
     lowBalanceThresholdCents: account.lowBalanceThresholdCents,
+    depositCapCents: account.depositCapCents,
+    capitalizedInterestCents: account.capitalizedInterestCents,
+    interestMethod: account.interestMethod,
+    capitalization: account.capitalization,
+    anniversaryDate: account.anniversaryDate,
   }
 }

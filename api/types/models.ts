@@ -6,6 +6,10 @@ import type {
 } from '@mint/shared/types/accounts'
 import type { CategoryKind, ExpenseGroup } from '@mint/shared/types/categories'
 import type {
+  Capitalization,
+  InterestMethod,
+} from '@mint/shared/types/interest'
+import type {
   CsvMapping,
   ImportBatch,
   ImportLineError,
@@ -187,6 +191,11 @@ export type AccountAttributes = {
   initialBalanceCents: number
   initialBalanceDate: string
   lowBalanceThresholdCents: number | null
+  depositCapCents: number | null
+  capitalizedInterestCents: number | null
+  interestMethod: InterestMethod | null
+  capitalization: Capitalization | null
+  anniversaryDate: string | null
   sortOrder: number
   archivedAt: Date | null
   createdAt: Date
@@ -199,6 +208,11 @@ export type AccountCreationAttributes = Optional<
   | 'regulatedProduct'
   | 'institution'
   | 'lowBalanceThresholdCents'
+  | 'depositCapCents'
+  | 'capitalizedInterestCents'
+  | 'interestMethod'
+  | 'capitalization'
+  | 'anniversaryDate'
   | 'sortOrder'
   | 'archivedAt'
   | 'createdAt'
@@ -254,6 +268,7 @@ export type ScheduleAttributes = {
   active: boolean
   amountTolerancePct: number
   bankLabelPatterns: string[]
+  isSystem: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -262,6 +277,7 @@ export type ScheduleCreationAttributes = Optional<
   ScheduleAttributes,
   | 'amountTolerancePct'
   | 'bankLabelPatterns'
+  | 'isSystem'
   | 'id'
   | 'paymentMethodId'
   | 'accountId'
@@ -426,6 +442,8 @@ export type Models = {
   TransactionTag: ModelStatic<TransactionTagModel>
   ScheduleTag: ModelStatic<ScheduleTagModel>
   Valuation: ModelStatic<ValuationModel>
+  InterestRate: ModelStatic<InterestRateModel>
+  RegulatedCap: ModelStatic<RegulatedCapModel>
 }
 
 export type ImportMappingAttributes = {
@@ -678,3 +696,44 @@ export type ValuationModel = Model<
   ValuationCreationAttributes
 > &
   ValuationAttributes
+
+export type InterestRateAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  effectiveDate: string
+  annualRate: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type InterestRateCreationAttributes = Optional<
+  InterestRateAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>
+
+export type InterestRateModel = Model<
+  InterestRateAttributes,
+  InterestRateCreationAttributes
+> &
+  InterestRateAttributes
+
+export type RegulatedCapAttributes = {
+  id: string
+  product: RegulatedProduct
+  capCents: number
+  updatedBy: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type RegulatedCapCreationAttributes = Optional<
+  RegulatedCapAttributes,
+  'id' | 'updatedBy' | 'createdAt' | 'updatedAt'
+>
+
+export type RegulatedCapModel = Model<
+  RegulatedCapAttributes,
+  RegulatedCapCreationAttributes
+> &
+  RegulatedCapAttributes

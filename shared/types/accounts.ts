@@ -7,9 +7,13 @@ import type {
   accountUsageSchema,
   createAccountRequestSchema,
   regulatedProductSchema,
+  regulatedCapListResponseSchema,
+  regulatedCapSchema,
   reorderAccountsRequestSchema,
   updateAccountRequestSchema,
+  updateRegulatedCapRequestSchema,
 } from '../schemas/accounts.js'
+import type { InterestSettings } from './interest.js'
 import type { ValuationPoint } from './valuations.js'
 
 export type AccountNature = z.infer<typeof accountNatureSchema>
@@ -42,4 +46,17 @@ export type AccountInput = {
   lowBalanceThresholdCents: number | null
   archived: boolean
   valuations: ValuationPoint[]
+  depositCapCents: number | null
+  capitalizedInterestCents: number
+  interest: InterestSettings | null
 }
+
+export type RegulatedCap = z.infer<typeof regulatedCapSchema>
+
+export type RegulatedCapListResponse = z.infer<
+  typeof regulatedCapListResponseSchema
+>
+
+export type UpdateRegulatedCapRequest = z.infer<
+  typeof updateRegulatedCapRequestSchema
+>

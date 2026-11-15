@@ -192,6 +192,14 @@ export const scheduleOccurrenceSchema = z
   })
   .meta({ id: 'ScheduleOccurrence' })
 
+export const scheduleCapExcessSchema = z
+  .object({
+    originalDate: z.iso.date(),
+    effectiveDate: z.iso.date(),
+    excessCents: z.number().int(),
+  })
+  .meta({ id: 'ScheduleCapExcess' })
+
 export const scheduleSchema = z
   .object({
     id: z.uuid(),
@@ -221,6 +229,7 @@ export const scheduleSchema = z
     monthlyEquivalentCents: z.number().int().nullable(),
     nextOccurrence: scheduleOccurrenceSchema.nullable(),
     ended: z.boolean(),
+    capExcess: scheduleCapExcessSchema.nullable(),
   })
   .meta({ id: 'Schedule' })
 

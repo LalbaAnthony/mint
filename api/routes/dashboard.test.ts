@@ -178,6 +178,7 @@ describe('DSH-04 dashboard banner', () => {
 
     expect(summary).toEqual({
       wealthCents: 99_300,
+      capAlerts: [],
       alerts: [
         {
           accountId: checking,

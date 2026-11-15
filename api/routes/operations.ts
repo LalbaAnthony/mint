@@ -5,8 +5,8 @@ import {
   createTransferRequestSchema,
   operationListQuerySchema,
   operationListResponseSchema,
-  operationSchema,
-  transferSchema,
+  operationSaveResponseSchema,
+  transferSaveResponseSchema,
   updateOperationRequestSchema,
   updateTransferRequestSchema,
 } from '@mint/shared/schemas/operations'
@@ -31,6 +31,27 @@ import {
 } from '../operations/operations.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
 import { operationTagIds, replaceOperationTags } from '../tags/tags.js'
+import { capWarnings } from '../accounts/caps.js'
+import { parisDate } from '../clock.js'
+import type { AppDependencies } from '../types/app.js'
+import type { TransactionModel } from '../types/models.js'
+
+function warningsFor(
+  app: AppDependencies,
+  userId: string,
+  rows: readonly TransactionModel[],
+) {
+  return capWarnings(
+    app,
+    userId,
+    parisDate(app.clock.now()),
+    rows.map((row) => ({
+      accountId: row.accountId,
+      date: row.date,
+      amountCents: row.amountCents,
+    })),
+  )
+}
 
 const tag = 'operations'
 
@@ -81,7 +102,11 @@ export const createOperationRoute = defineUserRoute({
   body: createOperationRequestSchema,
   params: noParams,
   responses: {
-    201: { description: 'Operation recorded', schema: operationSchema },
+    201: {
+      description:
+        'Operation recorded, with the deposit caps it exceeds (LIV-02)',
+      schema: operationSaveResponseSchema,
+    },
     400: errorResponse(
       'Invalid body, date before the initial balance, payment method of another account or adjustment category',
     ),
@@ -110,7 +135,13 @@ export const createOperationRoute = defineUserRoute({
       )
       return created
     })
-    return { status: 201, body: await toOperation(app, row) }
+    return {
+      status: 201,
+      body: {
+        ...(await toOperation(app, row)),
+        capWarnings: await warningsFor(app, user.id, [row]),
+      },
+    }
   },
 })
 
@@ -123,7 +154,11 @@ export const updateOperationRoute = defineUserRoute({
   body: updateOperationRequestSchema,
   params: resourceIdParamsSchema,
   responses: {
-    200: { description: 'Operation modified', schema: operationSchema },
+    200: {
+      description:
+        'Operation modified, with the deposit caps it exceeds (LIV-02)',
+      schema: operationSaveResponseSchema,
+    },
     400: errorResponse(
       'Invalid body, date before the initial balance, payment method of another account or adjustment category',
     ),
@@ -164,7 +199,13 @@ export const updateOperationRoute = defineUserRoute({
       await syncExecutedOccurrence(app, found, transaction)
       return found
     })
-    return { status: 200, body: await toOperation(app, row) }
+    return {
+      status: 200,
+      body: {
+        ...(await toOperation(app, row)),
+        capWarnings: await warningsFor(app, user.id, [row]),
+      },
+    }
   },
 })
 
@@ -198,7 +239,11 @@ export const createTransferRoute = defineUserRoute({
   body: createTransferRequestSchema,
   params: noParams,
   responses: {
-    201: { description: 'Transfer recorded', schema: transferSchema },
+    201: {
+      description:
+        'Transfer recorded, with the deposit caps it exceeds (LIV-02)',
+      schema: transferSaveResponseSchema,
+    },
     400: errorResponse(
       'Invalid body, same account or date before an initial balance',
     ),
@@ -210,7 +255,16 @@ export const createTransferRoute = defineUserRoute({
       await validateTransferAccounts(app, user.id, body, null, transaction)
       return createTransferMovements(app, user.id, body, transaction)
     })
-    return { status: 201, body: await toTransfer(app, movements) }
+    return {
+      status: 201,
+      body: {
+        ...(await toTransfer(app, movements)),
+        capWarnings: await warningsFor(app, user.id, [
+          movements.source,
+          movements.target,
+        ]),
+      },
+    }
   },
 })
 
@@ -223,7 +277,11 @@ export const updateTransferRoute = defineUserRoute({
   body: updateTransferRequestSchema,
   params: transferParamsSchema,
   responses: {
-    200: { description: 'Transfer modified', schema: transferSchema },
+    200: {
+      description:
+        'Transfer modified, with the deposit caps it exceeds (LIV-02)',
+      schema: transferSaveResponseSchema,
+    },
     400: errorResponse(
       'Invalid body, same account or date before an initial balance',
     ),
@@ -281,6 +339,15 @@ export const updateTransferRoute = defineUserRoute({
       await syncExecutedOccurrence(app, found.target, transaction)
       return found
     })
-    return { status: 200, body: await toTransfer(app, movements) }
+    return {
+      status: 200,
+      body: {
+        ...(await toTransfer(app, movements)),
+        capWarnings: await warningsFor(app, user.id, [
+          movements.source,
+          movements.target,
+        ]),
+      },
+    }
   },
 })

@@ -5,6 +5,7 @@ import {
   labelSchema,
   maxAmountCents,
 } from './common.js'
+import { capWarningSchema } from './interest.js'
 import { tagIdsSchema } from './tags.js'
 import {
   transactionOriginSchema,
@@ -138,6 +139,14 @@ export const transferSchema = z
     target: operationSchema,
   })
   .meta({ id: 'Transfer' })
+
+export const operationSaveResponseSchema = operationSchema
+  .extend({ capWarnings: z.array(capWarningSchema) })
+  .meta({ id: 'OperationSaveResponse' })
+
+export const transferSaveResponseSchema = transferSchema
+  .extend({ capWarnings: z.array(capWarningSchema) })
+  .meta({ id: 'TransferSaveResponse' })
 
 function asList<Schema extends z.ZodType>(item: Schema) {
   return z.preprocess(

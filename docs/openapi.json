@@ -310,9 +310,16 @@
           "lowBalanceThresholdCents": { "type": ["integer", "null"] },
           "sortOrder": { "type": "integer" },
           "archivedAt": { "type": ["string", "null"], "format": "date-time" },
+          "depositCapCents": { "type": ["integer", "null"] },
+          "capitalizedInterestCents": { "type": ["integer", "null"] },
+          "interestMethod": { "$ref": "#/components/schemas/InterestMethod" },
+          "capitalization": { "$ref": "#/components/schemas/Capitalization" },
+          "anniversaryDate": { "type": ["string", "null"], "format": "date" },
           "currentBalanceCents": { "type": "integer" },
           "reconciliationGapCents": { "type": ["integer", "null"] },
-          "investment": { "$ref": "#/components/schemas/InvestmentSummary" }
+          "investment": { "$ref": "#/components/schemas/InvestmentSummary" },
+          "interest": { "$ref": "#/components/schemas/InterestSummary" },
+          "depositCapExcessCents": { "type": ["integer", "null"] }
         },
         "required": [
           "id",
@@ -326,9 +333,16 @@
           "lowBalanceThresholdCents",
           "sortOrder",
           "archivedAt",
+          "depositCapCents",
+          "capitalizedInterestCents",
+          "interestMethod",
+          "capitalization",
+          "anniversaryDate",
           "currentBalanceCents",
           "reconciliationGapCents",
-          "investment"
+          "investment",
+          "interest",
+          "depositCapExcessCents"
         ]
       },
       "AccountNature": {
@@ -348,6 +362,14 @@
       "RegulatedProduct": {
         "type": ["string", "null"],
         "enum": ["livret_a", "ldds", "lep", "pel", "cel", null]
+      },
+      "InterestMethod": {
+        "type": ["string", "null"],
+        "enum": ["fortnight", "daily", null]
+      },
+      "Capitalization": {
+        "type": ["string", "null"],
+        "enum": ["dec31", "anniversary", null]
       },
       "InvestmentSummary": {
         "type": ["object", "null"],
@@ -371,6 +393,23 @@
           "valueCents": { "type": "integer" }
         },
         "required": ["date", "valueCents"]
+      },
+      "InterestSummary": {
+        "type": ["object", "null"],
+        "properties": {
+          "annualRatePct": { "type": ["number", "null"] },
+          "periodStart": { "type": "string", "format": "date" },
+          "acquiredCents": { "type": "integer" },
+          "nextCapitalizationDate": { "type": "string", "format": "date" },
+          "projectedCents": { "type": "integer" }
+        },
+        "required": [
+          "annualRatePct",
+          "periodStart",
+          "acquiredCents",
+          "nextCapitalizationDate",
+          "projectedCents"
+        ]
       },
       "CreateAccountRequest": {
         "type": "object",
@@ -396,7 +435,20 @@
             "type": ["integer", "null"],
             "minimum": -99999999999,
             "maximum": 99999999999
-          }
+          },
+          "depositCapCents": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "capitalizedInterestCents": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99999999999
+          },
+          "interestMethod": { "$ref": "#/components/schemas/InterestMethod" },
+          "capitalization": { "$ref": "#/components/schemas/Capitalization" },
+          "anniversaryDate": { "type": ["string", "null"], "format": "date" }
         },
         "required": [
           "name",
@@ -446,7 +498,20 @@
             "type": ["integer", "null"],
             "minimum": -99999999999,
             "maximum": 99999999999
-          }
+          },
+          "depositCapCents": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "capitalizedInterestCents": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99999999999
+          },
+          "interestMethod": { "$ref": "#/components/schemas/InterestMethod" },
+          "capitalization": { "$ref": "#/components/schemas/Capitalization" },
+          "anniversaryDate": { "type": ["string", "null"], "format": "date" }
         }
       },
       "UsageCounts": {
@@ -677,6 +742,69 @@
         "enum": ["needs", "wants", "save"]
       },
       "OperationDirection": { "type": "string", "enum": ["debit", "credit"] },
+      "OperationSaveResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "amountCents": { "type": "integer" },
+          "label": { "type": "string" },
+          "note": { "type": ["string", "null"] },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          },
+          "status": { "$ref": "#/components/schemas/TransactionStatus" },
+          "origin": { "$ref": "#/components/schemas/TransactionOrigin" },
+          "transferGroupId": { "type": ["string", "null"], "format": "uuid" },
+          "counterpartAccountId": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
+          "scheduleId": { "type": ["string", "null"], "format": "uuid" },
+          "occurrenceDate": { "type": ["string", "null"], "format": "date" },
+          "bankLabel": { "type": ["string", "null"] },
+          "reconciled": { "type": "boolean" },
+          "unconfirmed": { "type": "boolean" },
+          "capWarnings": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CapWarning" }
+          }
+        },
+        "required": [
+          "id",
+          "accountId",
+          "paymentMethodId",
+          "date",
+          "amountCents",
+          "label",
+          "note",
+          "categoryId",
+          "tagIds",
+          "status",
+          "origin",
+          "transferGroupId",
+          "counterpartAccountId",
+          "scheduleId",
+          "occurrenceDate",
+          "bankLabel",
+          "reconciled",
+          "unconfirmed",
+          "capWarnings"
+        ]
+      },
+      "CapWarning": {
+        "type": "object",
+        "properties": {
+          "accountId": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "excessCents": { "type": "integer" }
+        },
+        "required": ["accountId", "date", "excessCents"]
+      },
       "CreateOperationRequest": {
         "type": "object",
         "properties": {
@@ -729,14 +857,18 @@
           }
         }
       },
-      "Transfer": {
+      "TransferSaveResponse": {
         "type": "object",
         "properties": {
           "transferGroupId": { "type": "string", "format": "uuid" },
           "source": { "$ref": "#/components/schemas/Operation" },
-          "target": { "$ref": "#/components/schemas/Operation" }
+          "target": { "$ref": "#/components/schemas/Operation" },
+          "capWarnings": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CapWarning" }
+          }
         },
-        "required": ["transferGroupId", "source", "target"]
+        "required": ["transferGroupId", "source", "target", "capWarnings"]
       },
       "CreateTransferRequest": {
         "type": "object",
@@ -835,7 +967,8 @@
           "nextOccurrence": {
             "$ref": "#/components/schemas/ScheduleOccurrence"
           },
-          "ended": { "type": "boolean" }
+          "ended": { "type": "boolean" },
+          "capExcess": { "$ref": "#/components/schemas/ScheduleCapExcess" }
         },
         "required": [
           "id",
@@ -864,7 +997,8 @@
           "createdAt",
           "monthlyEquivalentCents",
           "nextOccurrence",
-          "ended"
+          "ended",
+          "capExcess"
         ]
       },
       "ScheduleKind": {
@@ -902,6 +1036,15 @@
       "OccurrenceStatus": {
         "type": "string",
         "enum": ["pending", "skipped", "executed"]
+      },
+      "ScheduleCapExcess": {
+        "type": ["object", "null"],
+        "properties": {
+          "originalDate": { "type": "string", "format": "date" },
+          "effectiveDate": { "type": "string", "format": "date" },
+          "excessCents": { "type": "integer" }
+        },
+        "required": ["originalDate", "effectiveDate", "excessCents"]
       },
       "ScheduleTotals": {
         "type": "object",
@@ -1468,6 +1611,8 @@
           "amountCents": { "type": "integer" },
           "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
           "isSubscription": { "type": "boolean" },
+          "system": { "type": "boolean" },
+          "capExcessCents": { "type": ["integer", "null"] },
           "occurrence": { "$ref": "#/components/schemas/ScheduleOccurrence" }
         },
         "required": [
@@ -1478,6 +1623,8 @@
           "amountCents",
           "triggerMode",
           "isSubscription",
+          "system",
+          "capExcessCents",
           "occurrence"
         ]
       },
@@ -1725,6 +1872,62 @@
             "maximum": 99999999999
           }
         }
+      },
+      "InterestResponse": {
+        "type": "object",
+        "properties": {
+          "rates": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/InterestRate" }
+          },
+          "summary": { "$ref": "#/components/schemas/InterestSummary" }
+        },
+        "required": ["rates", "summary"]
+      },
+      "InterestRate": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "effectiveDate": { "type": "string", "format": "date" },
+          "annualRatePct": { "type": "number" }
+        },
+        "required": ["id", "accountId", "effectiveDate", "annualRatePct"]
+      },
+      "CreateInterestRateRequest": {
+        "type": "object",
+        "properties": {
+          "effectiveDate": { "type": "string", "format": "date" },
+          "annualRatePct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 99.9999
+          }
+        },
+        "required": ["effectiveDate", "annualRatePct"]
+      },
+      "RegulatedCapListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/RegulatedCap" }
+      },
+      "RegulatedCap": {
+        "type": "object",
+        "properties": {
+          "product": { "$ref": "#/components/schemas/RegulatedProduct" },
+          "capCents": { "type": "integer" }
+        },
+        "required": ["product", "capCents"]
+      },
+      "UpdateRegulatedCapRequest": {
+        "type": "object",
+        "properties": {
+          "capCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          }
+        },
+        "required": ["capCents"]
       },
       "ImportBatchView": {
         "type": "object",
@@ -1979,6 +2182,15 @@
         },
         "required": ["scheduleId", "originalDate"]
       },
+      "Transfer": {
+        "type": "object",
+        "properties": {
+          "transferGroupId": { "type": "string", "format": "uuid" },
+          "source": { "$ref": "#/components/schemas/Operation" },
+          "target": { "$ref": "#/components/schemas/Operation" }
+        },
+        "required": ["transferGroupId", "source", "target"]
+      },
       "ConvertToTransferRequest": {
         "type": "object",
         "properties": {
@@ -1994,6 +2206,10 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/BalanceAlert" }
           },
+          "capAlerts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CapAlert" }
+          },
           "toCategorizeCount": { "type": "integer" },
           "pendingProposalsCount": { "type": "integer" },
           "pendingImportIds": {
@@ -2004,6 +2220,7 @@
         "required": [
           "wealthCents",
           "alerts",
+          "capAlerts",
           "toCategorizeCount",
           "pendingProposalsCount",
           "pendingImportIds"
@@ -2023,6 +2240,15 @@
           "minBalanceCents",
           "thresholdCents"
         ]
+      },
+      "CapAlert": {
+        "type": "object",
+        "properties": {
+          "accountId": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "excessCents": { "type": "integer" }
+        },
+        "required": ["accountId", "date", "excessCents"]
       },
       "BreakdownResponse": {
         "type": "object",
@@ -4971,10 +5197,12 @@
         },
         "responses": {
           "201": {
-            "description": "Operation recorded",
+            "description": "Operation recorded, with the deposit caps it exceeds (LIV-02)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Operation" }
+                "schema": {
+                  "$ref": "#/components/schemas/OperationSaveResponse"
+                }
               }
             }
           },
@@ -5048,10 +5276,12 @@
         },
         "responses": {
           "200": {
-            "description": "Operation modified",
+            "description": "Operation modified, with the deposit caps it exceeds (LIV-02)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Operation" }
+                "schema": {
+                  "$ref": "#/components/schemas/OperationSaveResponse"
+                }
               }
             }
           },
@@ -5159,10 +5389,12 @@
         },
         "responses": {
           "201": {
-            "description": "Transfer recorded",
+            "description": "Transfer recorded, with the deposit caps it exceeds (LIV-02)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Transfer" }
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSaveResponse"
+                }
               }
             }
           },
@@ -5234,10 +5466,12 @@
         },
         "responses": {
           "200": {
-            "description": "Transfer modified",
+            "description": "Transfer modified, with the deposit caps it exceeds (LIV-02)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Transfer" }
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSaveResponse"
+                }
               }
             }
           },
@@ -6920,6 +7154,288 @@
           },
           "409": {
             "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/interest": {
+      "get": {
+        "summary": "Rate history of a regulated or housing savings account, latest first, with the interest acquired since the last capitalization and the amount projected at the next one (LIV-03, LIV-04)",
+        "tags": ["interest"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rates and interest",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InterestResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Account of another nature",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/interest-rates": {
+      "post": {
+        "summary": "Record the annual rate of a savings account from an effective date (LIV-03)",
+        "tags": ["interest"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInterestRateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rate recorded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InterestRate" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Account of another nature, archived, or rate already at this date",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/interest-rates/{id}": {
+      "delete": {
+        "summary": "Delete a rate of the history (LIV-03)",
+        "tags": ["interest"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Rate deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown rate",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/regulated-caps": {
+      "get": {
+        "summary": "Reference deposit caps of the regulated products, used to prefill the cap of an account (LIV-01)",
+        "tags": ["interest"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Reference caps",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegulatedCapListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/regulated-caps/{product}": {
+      "patch": {
+        "summary": "Change the reference deposit cap of a regulated product; existing accounts keep their own cap (LIV-01)",
+        "tags": ["interest"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "$ref": "#/components/schemas/RegulatedProduct" },
+            "required": true,
+            "name": "product",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRegulatedCapRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reference cap changed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegulatedCap" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown product",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

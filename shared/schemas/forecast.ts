@@ -69,6 +69,8 @@ export const calendarOccurrenceSchema = z
     amountCents: z.number().int(),
     triggerMode: triggerModeSchema,
     isSubscription: z.boolean(),
+    system: z.boolean(),
+    capExcessCents: z.number().int().nullable(),
     occurrence: scheduleOccurrenceSchema,
   })
   .meta({ id: 'CalendarOccurrence' })

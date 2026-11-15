@@ -3,6 +3,7 @@ import type { Transaction } from 'sequelize'
 import type { AccountInput } from '@mint/shared/types/accounts'
 import type { CategoryInput } from '@mint/shared/types/categories'
 import type { EnvelopeInput } from '@mint/shared/types/envelopes'
+import type { InterestSettings } from '@mint/shared/types/interest'
 import type {
   OccurrenceException,
   Recurrence,
@@ -20,12 +21,34 @@ import type {
   ScheduleOccurrenceModel,
   TransactionModel,
   ValuationModel,
+  InterestRateModel,
 } from '../types/models.js'
 import type { DataAccess, PostingReference } from '../types/planning.js'
+
+function interestSettings(
+  account: AccountModel,
+  rates: readonly InterestRateModel[],
+): InterestSettings | null {
+  if (account.interestMethod === null || account.capitalization === null) {
+    return null
+  }
+  return {
+    method: account.interestMethod,
+    capitalization: account.capitalization,
+    anniversaryDate: account.anniversaryDate,
+    rates: rates
+      .filter((rate) => rate.accountId === account.id)
+      .map((rate) => ({
+        effectiveDate: rate.effectiveDate,
+        annualRatePct: rate.annualRate,
+      })),
+  }
+}
 
 export function toAccountInput(
   account: AccountModel,
   valuations: readonly ValuationModel[] = [],
+  rates: readonly InterestRateModel[] = [],
 ): AccountInput {
   return {
     id: account.id,
@@ -40,6 +63,9 @@ export function toAccountInput(
         date: valuation.date,
         valueCents: valuation.valueCents,
       })),
+    depositCapCents: account.depositCapCents,
+    capitalizedInterestCents: account.capitalizedInterestCents ?? 0,
+    interest: interestSettings(account, rates),
   }
 }
 
@@ -157,6 +183,7 @@ export function toScheduleInput(
     recurrence: scheduleRecurrence(schedule),
     posting: schedulePosting(schedule, paymentMethods),
     exceptions: occurrences.map(toOccurrenceException),
+    system: schedule.isSystem,
   }
 }
 
@@ -241,7 +268,24 @@ export async function loadAccountInputs(
     order: [['date', 'ASC']],
     transaction,
   })
-  return accounts.map((account) => toAccountInput(account, valuations))
+  const rates = await data.models.InterestRate.findAll({
+    where: { userId },
+    transaction,
+  })
+  return accounts.map((account) => toAccountInput(account, valuations, rates))
+}
+
+export async function loadInterestCategoryId(
+  data: Pick<DataAccess, 'models'>,
+  userId: string,
+  transaction?: Transaction,
+): Promise<string | null> {
+  const category = await data.models.Category.findOne({
+    attributes: ['id'],
+    where: { userId, isSystem: true, kind: 'income' },
+    transaction,
+  })
+  return category?.id ?? null
 }
 
 export async function loadCategoryInputs(

@@ -81,6 +81,7 @@ describe('computeForecast (PRV-01 to PRV-03)', () => {
           amountCents: -1_000,
         },
       ],
+      capExcessCents: null,
     })
   })
 
@@ -112,6 +113,8 @@ describe('computeForecast (PRV-01 to PRV-03)', () => {
         overridden: false,
         triggerMode: 'auto',
         isSubscription: false,
+        system: false,
+        capExcessCents: null,
       },
     ])
     expect(forecast.days[0]?.balanceCents).toBe(40_000)

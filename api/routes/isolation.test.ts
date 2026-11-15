@@ -30,6 +30,9 @@ async function snapshotOf(
     envelopes: (await client.get('/envelopes')).body,
     rules: (await client.get('/rules')).body,
     tags: (await client.get('/tags')).body,
+    interest: (
+      await client.get(`/accounts/${resources.savingsAccountId}/interest`)
+    ).body,
     valuations: (
       await client.get(`/accounts/${resources.investmentAccountId}/valuations`)
     ).body,
@@ -881,6 +884,33 @@ const scenarios: Record<string, Scenario> = {
     'delete',
     ({ valuationId }) => `/valuations/${valuationId}`,
   ),
+  'get /accounts/:id/interest': crossRead(
+    ({ savingsAccountId }) => `/accounts/${savingsAccountId}/interest`,
+  ),
+  'post /accounts/:id/interest-rates': crossAccess(
+    'post',
+    ({ savingsAccountId }) => `/accounts/${savingsAccountId}/interest-rates`,
+    () => ({ effectiveDate: '2026-11-01', annualRatePct: 9 }),
+  ),
+  'delete /interest-rates/:id': crossAccess(
+    'delete',
+    ({ interestRateId }) => `/interest-rates/${interestRateId}`,
+  ),
+  'get /regulated-caps': ownListOnly('/regulated-caps'),
+  'patch /admin/regulated-caps/:product': async (actors) => {
+    const asUser = await actors.aliceClient.patch(
+      '/admin/regulated-caps/livret_a',
+      { capCents: 1 },
+    )
+    const anonymously = await actors.anonymous.patch(
+      '/admin/regulated-caps/livret_a',
+      { capCents: 1 },
+    )
+    expect(asUser.status).toBe(403)
+    expect(asUser.body).toEqual({ error: 'forbidden' })
+    expect(anonymously.status).toBe(401)
+    await expectBobDataUntouched(actors)
+  },
 }
 
 async function createBobResources(
@@ -928,6 +958,20 @@ async function createBobResources(
   )
   if (investment.status !== 201 || valuation.status !== 201) {
     throw new Error('Bob investment could not be created')
+  }
+  const savingsAccount = await bobClient.post('/accounts', {
+    ...aliceAccountInput,
+    name: 'Bob livret',
+    nature: 'regulated_savings',
+    regulatedProduct: 'livret_a',
+    usage: 'savings',
+  })
+  const interestRate = await bobClient.post(
+    `/accounts/${savingsAccount.body.id}/interest-rates`,
+    { effectiveDate: '2026-01-01', annualRatePct: 2.4 },
+  )
+  if (savingsAccount.status !== 201 || interestRate.status !== 201) {
+    throw new Error('Bob savings could not be created')
   }
   if (tag.status !== 201) {
     throw new Error('Bob tag could not be created')
@@ -992,6 +1036,8 @@ async function createBobResources(
     tagId: tag.body.id,
     investmentAccountId: investment.body.id,
     valuationId: valuation.body.id,
+    savingsAccountId: savingsAccount.body.id,
+    interestRateId: interestRate.body.id,
   }
 }
 

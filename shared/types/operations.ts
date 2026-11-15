@@ -6,10 +6,12 @@ import type {
   operationGroupSchema,
   operationListQuerySchema,
   operationListResponseSchema,
+  operationSaveResponseSchema,
   operationSchema,
   operationSortFieldSchema,
   sortOrderSchema,
   transferSchema,
+  transferSaveResponseSchema,
   updateOperationRequestSchema,
   updateTransferRequestSchema,
 } from '../schemas/operations.js'
@@ -46,3 +48,7 @@ export type OperationListQueryInput = z.input<typeof operationListQuerySchema>
 export type OperationListResponse = z.infer<typeof operationListResponseSchema>
 
 export type UsageCounts = z.infer<typeof usageCountsSchema>
+
+export type OperationSaveResponse = z.infer<typeof operationSaveResponseSchema>
+
+export type TransferSaveResponse = z.infer<typeof transferSaveResponseSchema>

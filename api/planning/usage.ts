@@ -65,6 +65,7 @@ export async function accountUsage(
     schedules: await data.models.Schedule.count({
       where: {
         userId,
+        isSystem: false,
         [Op.or]: [
           { accountId },
           { sourceAccountId: accountId },

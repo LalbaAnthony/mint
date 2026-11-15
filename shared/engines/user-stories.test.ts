@@ -348,6 +348,7 @@ describe('US-12 - balance day by day (CAL-02, PRV-01)', () => {
       date: '2026-11-19',
       balanceCents: 100_000,
       flows: [],
+      capExcessCents: null,
     })
     expect(signedFlows(forecast, '2026-11-20')).toEqual([-5_000])
     expect(day(forecast, '2026-11-20').balanceCents).toBe(95_000)
@@ -387,5 +388,60 @@ describe('US-16 - investment gain (CPT-06)', () => {
     expect(summary.paidInCents).toBe(220_000)
     expect(summary.latentGainCents).toBe(33_000)
     expect((summary.latentGainCents ?? 0) / summary.paidInCents).toBe(0.15)
+  })
+})
+
+describe('US-15 - savings cap (LIV-01, LIV-02)', () => {
+  function lepForecast(capitalizedInterestCents: number) {
+    return computeForecast(
+      forecastInput({
+        accounts: [
+          account({ initialBalanceCents: 500_000 }),
+          account({
+            id: 'lep',
+            usage: 'emergency',
+            initialBalanceCents: 995_000,
+            depositCapCents: 1_000_000,
+            capitalizedInterestCents,
+          }),
+        ],
+        schedules: [
+          schedule({
+            id: 'lep-transfer',
+            amountCents: 10_000,
+            recurrence: recurrence({ startDate: '2026-12-06' }),
+            posting: transferPosting('current', 'lep'),
+          }),
+        ],
+      }),
+    )
+  }
+
+  function lepFlow(forecast: Forecast, date: string) {
+    return day(accountForecast(forecast, 'lep'), date).flows.find(
+      (flow) => flow.source === 'occurrence',
+    )
+  }
+
+  it('marks the next transfer as exceeding the cap by 50 EUR and the following one by its full 100 EUR', () => {
+    const forecast = lepForecast(0)
+
+    expect(lepFlow(forecast, '2026-12-06')).toMatchObject({
+      amountCents: 10_000,
+      capExcessCents: 5_000,
+    })
+    expect(
+      day(accountForecast(forecast, 'lep'), '2026-12-06').capExcessCents,
+    ).toBe(5_000)
+    expect(lepFlow(forecast, '2027-01-06')?.capExcessCents).toBe(10_000)
+    expect(
+      day(accountForecast(forecast, 'lep'), '2026-12-05').capExcessCents,
+    ).toBeNull()
+  })
+
+  it('leaves the capitalized interest of the initial balance out of the cap', () => {
+    expect(
+      lepFlow(lepForecast(10_000), '2026-12-06')?.capExcessCents,
+    ).toBeNull()
   })
 })

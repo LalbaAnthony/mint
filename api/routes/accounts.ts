@@ -22,6 +22,11 @@ import { parisDate } from '../clock.js'
 import { conflict } from '../http/http-error.js'
 import { loadStatementGaps } from '../accounts/statements.js'
 import { loadInvestmentSummaries } from '../accounts/investments.js'
+import {
+  loadSavingsSummaries,
+  savingsColumns,
+  syncInterestSchedule,
+} from '../accounts/savings.js'
 import { accountUsage, loadAccountBalances } from '../planning/usage.js'
 import { ensureSameMembers } from '../http/ordering.js'
 import { defineUserRoute } from '../http/route.js'
@@ -65,11 +70,12 @@ export const accountOverviewRoute = defineUserRoute({
       accounts,
       today,
     )
+    const savings = await loadSavingsSummaries(app, user.id, accounts, today)
     return {
       status: 200,
       body: buildAccountOverview(
         accounts.map((account) =>
-          toAccount(account, balances, gaps, investments),
+          toAccount(account, balances, gaps, investments, savings),
         ),
       ),
     }
@@ -90,10 +96,11 @@ export const createAccountRoute = defineUserRoute({
   },
   handle: async ({ app, user, body }) => {
     const fields = validateAccountFields(app, body)
-    const account = await app.sequelize.transaction(async (transaction) =>
-      app.models.Account.create(
+    const account = await app.sequelize.transaction(async (transaction) => {
+      const created = await app.models.Account.create(
         {
           ...fields,
+          ...(await savingsColumns(app, fields, null, transaction)),
           userId: user.id,
           sortOrder: await nextAccountSortOrder(
             app,
@@ -103,8 +110,10 @@ export const createAccountRoute = defineUserRoute({
           ),
         },
         { transaction },
-      ),
-    )
+      )
+      await syncInterestSchedule(app, created, user.locale, transaction)
+      return created
+    })
     return { status: 201, body: await accountWithBalance(app, account) }
   },
 })
@@ -129,8 +138,12 @@ export const updateAccountRoute = defineUserRoute({
     if (account.archivedAt !== null) {
       throw conflict('archived')
     }
+    const productChanged =
+      body.regulatedProduct !== undefined &&
+      body.regulatedProduct !== account.regulatedProduct
     const fields = validateAccountFields(app, {
       ...accountFields(account),
+      ...(productChanged ? { depositCapCents: undefined } : {}),
       ...body,
     })
     if (
@@ -160,7 +173,14 @@ export const updateAccountRoute = defineUserRoute({
       fields.usage === account.usage
         ? account.sortOrder
         : await nextAccountSortOrder(app, user.id, fields.usage)
-    await account.update({ ...fields, sortOrder })
+    const columns = await savingsColumns(app, fields, account)
+    await app.sequelize.transaction(async (transaction) => {
+      await account.update(
+        { ...fields, ...columns, sortOrder },
+        { transaction },
+      )
+      await syncInterestSchedule(app, account, user.locale, transaction)
+    })
     return { status: 200, body: await accountWithBalance(app, account) }
   },
 })
@@ -285,6 +305,10 @@ export const deleteAccountRoute = defineUserRoute({
       }
       await app.models.PaymentMethod.destroy({
         where: { userId: user.id, accountId: account.id },
+        transaction,
+      })
+      await app.models.Schedule.destroy({
+        where: { userId: user.id, accountId: account.id, isSystem: true },
         transaction,
       })
       await account.destroy({ transaction })

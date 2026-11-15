@@ -8,8 +8,15 @@ import {
   amountCentsSchema,
   isoDateSchema,
   labelSchema,
+  maxAmountCents,
   orderedIdsSchema,
 } from './common.js'
+import {
+  capCentsSchema,
+  capitalizationSchema,
+  interestMethodSchema,
+  interestSummarySchema,
+} from './interest.js'
 import { investmentSummarySchema } from './valuations.js'
 
 export const accountNatures = [
@@ -39,6 +46,12 @@ export const investmentNatures = [
 
 export function isInvestmentNature(nature: AccountNature): boolean {
   return investmentNatures.some((candidate) => candidate === nature)
+}
+
+export const savingsNatures = ['regulated_savings', 'housing_savings'] as const
+
+export function isSavingsNature(nature: AccountNature): boolean {
+  return savingsNatures.some((candidate) => candidate === nature)
 }
 
 export const regulatedProducts = [
@@ -94,6 +107,17 @@ const accountFieldsSchema = z.object({
   initialBalanceCents: amountCentsSchema,
   initialBalanceDate: isoDateSchema,
   lowBalanceThresholdCents: amountCentsSchema.nullable(),
+  depositCapCents: capCentsSchema.nullable().optional(),
+  capitalizedInterestCents: z
+    .number({ error: 'invalid_amount' })
+    .int({ error: 'invalid_amount' })
+    .min(0, { error: 'amount_out_of_range' })
+    .max(maxAmountCents, { error: 'amount_out_of_range' })
+    .nullable()
+    .optional(),
+  interestMethod: interestMethodSchema.nullable().optional(),
+  capitalization: capitalizationSchema.nullable().optional(),
+  anniversaryDate: isoDateSchema.nullable().optional(),
 })
 
 export const createAccountRequestSchema = accountFieldsSchema
@@ -104,6 +128,16 @@ export const createAccountRequestSchema = accountFieldsSchema
         code: 'custom',
         message: issue,
         path: ['regulatedProduct'],
+      })
+    }
+    if (
+      account.capitalization === 'anniversary' &&
+      (account.anniversaryDate ?? null) === null
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'required',
+        path: ['anniversaryDate'],
       })
     }
   })
@@ -126,9 +160,16 @@ export const accountSchema = z
     lowBalanceThresholdCents: z.number().int().nullable(),
     sortOrder: z.number().int(),
     archivedAt: z.iso.datetime().nullable(),
+    depositCapCents: z.number().int().nullable(),
+    capitalizedInterestCents: z.number().int().nullable(),
+    interestMethod: interestMethodSchema.nullable(),
+    capitalization: capitalizationSchema.nullable(),
+    anniversaryDate: z.iso.date().nullable(),
     currentBalanceCents: z.number().int(),
     reconciliationGapCents: z.number().int().nullable(),
     investment: investmentSummarySchema.nullable(),
+    interest: interestSummarySchema.nullable(),
+    depositCapExcessCents: z.number().int().nullable(),
   })
   .meta({ id: 'Account' })
 
@@ -151,3 +192,19 @@ export const accountOverviewSchema = z
 export const reorderAccountsRequestSchema = z
   .object({ usage: accountUsageSchema, accountIds: orderedIdsSchema })
   .meta({ id: 'ReorderAccountsRequest' })
+
+export const regulatedCapSchema = z
+  .object({ product: regulatedProductSchema, capCents: z.number().int() })
+  .meta({ id: 'RegulatedCap' })
+
+export const regulatedCapListResponseSchema = z
+  .array(regulatedCapSchema)
+  .meta({ id: 'RegulatedCapListResponse' })
+
+export const updateRegulatedCapRequestSchema = z
+  .object({ capCents: capCentsSchema })
+  .meta({ id: 'UpdateRegulatedCapRequest' })
+
+export const regulatedCapParamsSchema = z.object({
+  product: regulatedProductSchema,
+})

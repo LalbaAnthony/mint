@@ -116,9 +116,16 @@ describe('US-04 where my money is (CPT-01, CPT-08)', () => {
       lowBalanceThresholdCents: 20_000,
       sortOrder: 0,
       archivedAt: null,
+      depositCapCents: null,
+      capitalizedInterestCents: null,
+      interestMethod: null,
+      capitalization: null,
+      anniversaryDate: null,
       currentBalanceCents: 200_000,
       reconciliationGapCents: null,
       investment: null,
+      interest: null,
+      depositCapExcessCents: null,
     })
   })
 

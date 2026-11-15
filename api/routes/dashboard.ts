@@ -36,7 +36,12 @@ export const dashboardSummaryRoute = defineUserRoute({
   },
   handle: async ({ app, user }) => ({
     status: 200,
-    body: await dashboardSummary(app, user.id, parisDate(app.clock.now())),
+    body: await dashboardSummary(
+      app,
+      user.id,
+      parisDate(app.clock.now()),
+      user.forecastHorizonMonths,
+    ),
   }),
 })
 

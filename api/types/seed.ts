@@ -28,6 +28,7 @@ export type SeedAccount = {
   institution: string | null
   initialBalanceCents: number
   lowBalanceThresholdCents: number | null
+  annualRatePct: number | null
   archived: boolean
 }
 

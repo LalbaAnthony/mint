@@ -82,6 +82,7 @@ describe('OPE-01 record an expense or an income', () => {
       bankLabel: null,
       reconciled: false,
       unconfirmed: false,
+      capWarnings: [],
     })
     expect(await balanceOf(user, accountId)).toBe(95_500)
   })

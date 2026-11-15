@@ -1,6 +1,8 @@
 import type { AccountInput } from '../types/accounts.js'
+import type { InterestDay } from '../types/interest.js'
 import type {
   AccountForecast,
+  AccountForecastContext,
   AggregateForecast,
   AggregateForecastDay,
   BalancePoint,
@@ -9,10 +11,17 @@ import type {
   ForecastFlow,
   ForecastIndicators,
   ForecastInput,
+  OccurrenceFlow,
   UsageSubtotals,
 } from '../types/forecast.js'
 import type { ProjectedOccurrence, ScheduleInput } from '../types/schedules.js'
 import { referenceBalanceCents } from './balances.js'
+import {
+  accruedInterestCents,
+  balanceExcludingInterest,
+  previousCapitalization,
+  realInterestDays,
+} from './interest.js'
 import {
   addMonthsClamped,
   enumerateDays,
@@ -100,20 +109,123 @@ function recordFlow(
   }
 }
 
+function isSystemFlow(flow: ForecastFlow): flow is OccurrenceFlow {
+  return flow.source === 'occurrence' && flow.system
+}
+
+function interestDaysFor(
+  account: AccountInput,
+  days: readonly string[],
+  flowsByAccountDate: ReadonlyMap<string, ForecastFlow[]>,
+  context: AccountForecastContext,
+): Map<string, InterestDay> | null {
+  const settings = account.interest
+  if (settings === null) {
+    return null
+  }
+  const capitalizations = days.flatMap((date) =>
+    (flowsByAccountDate.get(flowKey(account.id, date)) ?? [])
+      .filter(isSystemFlow)
+      .map((flow) => flow.originalDate),
+  )
+  const [first] = capitalizations.sort()
+  if (first === undefined) {
+    return null
+  }
+  return realInterestDays(
+    account,
+    context.operations,
+    previousCapitalization(settings, first),
+    context.today,
+    context.interestCategoryId,
+  )
+}
+
 function accountForecast(
   account: AccountInput,
   startingBalanceCents: number,
   days: readonly string[],
   flowsByAccountDate: ReadonlyMap<string, ForecastFlow[]>,
+  context: AccountForecastContext,
 ): AccountForecast {
+  const settings = account.interest
+  const capCents = account.depositCapCents
+  const interestDays = interestDaysFor(
+    account,
+    days,
+    flowsByAccountDate,
+    context,
+  )
+  const isInterestOperation = (flow: ForecastFlow) =>
+    flow.source === 'operation' &&
+    context.interestCategoryId !== null &&
+    context.operationCategories.get(flow.operationId) ===
+      context.interestCategoryId
   let balanceCents = startingBalanceCents
+  let excludingInterestCents = balanceExcludingInterest(
+    account,
+    context.operations,
+    startingBalanceCents,
+    context.today,
+    context.interestCategoryId,
+  )
   const forecastDays: ForecastDay[] = days.map((date) => {
-    const flows = flowsByAccountDate.get(flowKey(account.id, date)) ?? []
-    balanceCents = flows.reduce(
-      (balance, flow) => balance + flow.amountCents,
-      balanceCents,
+    const planned = flowsByAccountDate.get(flowKey(account.id, date)) ?? []
+    let otherCents = 0
+    let debitsCents = 0
+    for (const flow of planned) {
+      if (isSystemFlow(flow)) {
+        continue
+      }
+      otherCents += flow.amountCents
+      debitsCents += Math.min(flow.amountCents, 0)
+      if (!isInterestOperation(flow)) {
+        excludingInterestCents += flow.amountCents
+      }
+    }
+    const beforeInterest = balanceCents + otherCents
+    let interestCents = 0
+    if (interestDays !== null && settings !== null) {
+      interestDays.set(date, {
+        balanceCents: beforeInterest,
+        debitsCents,
+        interestCreditsCents: 0,
+      })
+      for (const flow of planned.filter(isSystemFlow)) {
+        const amount = accruedInterestCents(
+          account,
+          interestDays,
+          previousCapitalization(settings, flow.originalDate),
+          flow.originalDate,
+          flow.originalDate,
+        )
+        flow.amountCents = amount
+        flow.occurrenceAmountCents = amount
+        interestCents += amount
+      }
+      interestDays.set(date, {
+        balanceCents: beforeInterest + interestCents,
+        debitsCents,
+        interestCreditsCents: interestCents,
+      })
+    }
+    balanceCents = beforeInterest + interestCents
+    const capExcessCents =
+      capCents !== null && excludingInterestCents > capCents
+        ? excludingInterestCents - capCents
+        : null
+    const flows = planned.filter(
+      (flow) => !isSystemFlow(flow) || flow.amountCents !== 0,
     )
-    return { date, balanceCents, flows }
+    for (const flow of flows) {
+      if (flow.source === 'occurrence' && !flow.system) {
+        flow.capExcessCents =
+          capExcessCents === null || flow.amountCents <= 0
+            ? null
+            : Math.min(flow.amountCents, capExcessCents)
+      }
+    }
+    return { date, balanceCents, flows, capExcessCents }
   })
   return {
     accountId: account.id,
@@ -186,6 +298,8 @@ export function computeForecast(input: ForecastInput): Forecast {
         overridden: occurrence.overridden,
         triggerMode: schedule.triggerMode,
         isSubscription: schedule.isSubscription,
+        system: schedule.system,
+        capExcessCents: null,
       })
     }
   }
@@ -232,6 +346,14 @@ export function computeForecast(input: ForecastInput): Forecast {
   }
 
   const days = enumerateDays(startDate, endDate)
+  const context: AccountForecastContext = {
+    today: startDate,
+    operations: input.operations,
+    interestCategoryId: input.interestCategoryId,
+    operationCategories: new Map(
+      input.operations.map((operation) => [operation.id, operation.categoryId]),
+    ),
+  }
   const accounts = activeAccounts.map((account) => {
     const startingBalanceCents = referenceBalanceCents(
       account,
@@ -243,7 +365,7 @@ export function computeForecast(input: ForecastInput): Forecast {
         `Account ${account.id} starts after the forecast start date`,
       )
     }
-    return accountForecast(account, startingBalanceCents, days, flows)
+    return accountForecast(account, startingBalanceCents, days, flows, context)
   })
 
   return {

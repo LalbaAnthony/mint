@@ -65,6 +65,7 @@ export function schedule(
     recurrence: recurrence(),
     posting: expensePosting(),
     exceptions: [],
+    system: false,
     ...overrides,
   }
 }
@@ -90,6 +91,9 @@ export function account(overrides: Partial<AccountInput> = {}): AccountInput {
     lowBalanceThresholdCents: null,
     archived: false,
     valuations: [],
+    depositCapCents: null,
+    capitalizedInterestCents: 0,
+    interest: null,
     ...overrides,
   }
 }
@@ -158,6 +162,7 @@ export function forecastInput(
     schedules: [],
     envelopes: [],
     categories,
+    interestCategoryId: 'interest',
     ...overrides,
   }
 }

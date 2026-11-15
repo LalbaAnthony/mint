@@ -23,6 +23,7 @@ export type ForecastInput = {
   schedules: ScheduleInput[]
   envelopes: EnvelopeInput[]
   categories: CategoryInput[]
+  interestCategoryId: string | null
 }
 
 export type OccurrenceFlow = {
@@ -37,6 +38,8 @@ export type OccurrenceFlow = {
   overridden: boolean
   triggerMode: TriggerMode
   isSubscription: boolean
+  system: boolean
+  capExcessCents: number | null
 }
 
 export type OperationFlow = {
@@ -54,6 +57,13 @@ export type EnvelopeFlow = {
 
 export type ForecastFlow = OccurrenceFlow | OperationFlow | EnvelopeFlow
 
+export type AccountForecastContext = {
+  today: string
+  operations: readonly OperationInput[]
+  interestCategoryId: string | null
+  operationCategories: ReadonlyMap<string, string | null>
+}
+
 export type BalancePoint = {
   date: string
   balanceCents: number
@@ -61,6 +71,7 @@ export type BalancePoint = {
 
 export type ForecastDay = BalancePoint & {
   flows: ForecastFlow[]
+  capExcessCents: number | null
 }
 
 export type ForecastIndicators = {

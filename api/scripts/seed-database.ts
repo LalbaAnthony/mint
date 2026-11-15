@@ -1,4 +1,7 @@
 import type { Transaction } from 'sequelize'
+import { isSavingsNature } from '@mint/shared/schemas/accounts'
+import type { Locale } from '@mint/shared/types/user'
+import { referenceCapCents, syncInterestSchedule } from '../accounts/savings.js'
 import { hashPassword } from '../auth/passwords.js'
 import { parisDate } from '../clock.js'
 import type { CliDatabase } from '../types/cli.js'
@@ -86,6 +89,7 @@ export const seedAccounts: SeedAccount[] = [
     institution: 'Crédit Agricole',
     initialBalanceCents: 200_000,
     lowBalanceThresholdCents: 20_000,
+    annualRatePct: null,
     archived: false,
   },
   {
@@ -96,6 +100,7 @@ export const seedAccounts: SeedAccount[] = [
     institution: 'Crédit Agricole',
     initialBalanceCents: 500_000,
     lowBalanceThresholdCents: null,
+    annualRatePct: 2.7,
     archived: false,
   },
   {
@@ -106,6 +111,7 @@ export const seedAccounts: SeedAccount[] = [
     institution: 'Crédit Agricole',
     initialBalanceCents: 1_200_000,
     lowBalanceThresholdCents: null,
+    annualRatePct: 1.7,
     archived: false,
   },
   {
@@ -116,6 +122,7 @@ export const seedAccounts: SeedAccount[] = [
     institution: null,
     initialBalanceCents: 300_000,
     lowBalanceThresholdCents: null,
+    annualRatePct: null,
     archived: false,
   },
   {
@@ -126,6 +133,7 @@ export const seedAccounts: SeedAccount[] = [
     institution: 'Revolut',
     initialBalanceCents: 0,
     lowBalanceThresholdCents: null,
+    annualRatePct: null,
     archived: true,
   },
 ]
@@ -291,6 +299,7 @@ async function customizeCategories(
 async function createAccounts(
   models: Models,
   userId: string,
+  locale: Locale,
   now: Date,
   transaction: Transaction,
 ): Promise<SeedReferences> {
@@ -308,11 +317,35 @@ async function createAccounts(
         initialBalanceCents: seedAccount.initialBalanceCents,
         initialBalanceDate: seedInitialBalanceDate(parisDate(now)),
         lowBalanceThresholdCents: seedAccount.lowBalanceThresholdCents,
+        ...(isSavingsNature(seedAccount.nature)
+          ? {
+              depositCapCents: await referenceCapCents(
+                { models },
+                seedAccount.regulatedProduct,
+                transaction,
+              ),
+              capitalizedInterestCents: 0,
+              interestMethod: 'fortnight' as const,
+              capitalization: 'dec31' as const,
+            }
+          : {}),
         sortOrder: index,
         archivedAt: seedAccount.archived ? now : null,
       },
       { transaction },
     )
+    await syncInterestSchedule({ models }, account, locale, transaction)
+    if (seedAccount.annualRatePct !== null) {
+      await models.InterestRate.create(
+        {
+          userId,
+          accountId: account.id,
+          effectiveDate: seedInitialBalanceDate(parisDate(now)),
+          annualRate: seedAccount.annualRatePct,
+        },
+        { transaction },
+      )
+    }
     accountIds.set(seedAccount.name, account.id)
   }
   for (const seedPaymentMethod of seedPaymentMethods) {
@@ -377,6 +410,7 @@ export async function seedDatabase(
         const references = await createAccounts(
           models,
           user.id,
+          seedUser.locale,
           now,
           transaction,
         )

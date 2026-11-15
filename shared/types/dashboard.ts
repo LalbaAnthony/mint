@@ -1,6 +1,7 @@
 import type { z } from 'zod'
 import type {
   balanceAlertSchema,
+  capAlertSchema,
   breakdownQuerySchema,
   breakdownResponseSchema,
   dashboardSummarySchema,
@@ -19,3 +20,5 @@ export type MonthlyReportResponse = z.infer<typeof monthlyReportResponseSchema>
 export type BalanceAlert = z.infer<typeof balanceAlertSchema>
 
 export type DashboardSummary = z.infer<typeof dashboardSummarySchema>
+
+export type CapAlert = z.infer<typeof capAlertSchema>

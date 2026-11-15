@@ -20,6 +20,7 @@ import * as createCategorizationRules from './0018-create-categorization-rules.j
 import * as createAccountStatements from './0019-create-account-statements.js'
 import * as createTags from './0020-create-tags.js'
 import * as createValuations from './0021-create-valuations.js'
+import * as addCapsAndInterest from './0022-add-caps-and-interest.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -43,4 +44,5 @@ export const migrations: Migration[] = [
   { name: '0019-create-account-statements', ...createAccountStatements },
   { name: '0020-create-tags', ...createTags },
   { name: '0021-create-valuations', ...createValuations },
+  { name: '0022-add-caps-and-interest', ...addCapsAndInterest },
 ]
