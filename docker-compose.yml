@@ -26,6 +26,13 @@ x-api-environment: &api-environment
   DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
   SESSION_SECRET: ${SESSION_SECRET}
 
+x-worker-environment: &worker-environment
+  TZ: Europe/Paris
+  DATABASE_PORT: 5432
+  DATABASE_NAME: ${POSTGRES_DB}
+  DATABASE_USER: ${POSTGRES_USER}
+  DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+
 x-api-healthcheck: &api-healthcheck
   test:
     - CMD
@@ -71,6 +78,20 @@ services:
       db:
         condition: service_healthy
     healthcheck: *api-healthcheck
+    logging: *json-logging
+
+  worker:
+    profiles: [prod]
+    image: ${API_IMAGE}
+    restart: unless-stopped
+    command: ['node', 'dist/worker.js']
+    environment:
+      <<: *worker-environment
+      DATABASE_HOST: db
+      HEALTHCHECK_EXECUTION_URL: ${HEALTHCHECK_EXECUTION_URL:-}
+    depends_on:
+      db:
+        condition: service_healthy
     logging: *json-logging
 
   web:
@@ -134,6 +155,25 @@ services:
       mailpit:
         condition: service_started
     healthcheck: *api-healthcheck
+
+  worker-dev:
+    profiles: [dev]
+    build:
+      context: .
+      dockerfile: api/Dockerfile.dev
+    command: ['npm', 'run', 'worker:dev']
+    environment:
+      <<: *worker-environment
+      DATABASE_HOST: db-dev
+      HEALTHCHECK_EXECUTION_URL: ''
+      CHOKIDAR_USEPOLLING: 'true'
+    volumes:
+      - ./api:/app/api
+      - ./shared:/app/shared
+      - /app/api/node_modules
+    depends_on:
+      db-dev:
+        condition: service_healthy
 
   web-dev:
     profiles: [dev]

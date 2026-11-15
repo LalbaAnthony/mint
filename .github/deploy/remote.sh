@@ -57,7 +57,7 @@ main() {
   write_release_files
 
   echo "::group::Pull images ${DEPLOY_SHA}"
-  next_compose pull --quiet api web
+  next_compose pull --quiet api web worker
   echo "::endgroup::"
 
   echo "::group::Run migrations"

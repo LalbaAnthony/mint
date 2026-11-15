@@ -240,6 +240,7 @@ export function createModels(sequelize: Sequelize): Models {
         allowNull: false,
         defaultValue: 'exact',
       },
+      note: { type: DataTypes.TEXT, allowNull: true },
       active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
       ...timestamps,
     },

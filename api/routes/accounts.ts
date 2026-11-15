@@ -5,16 +5,21 @@ import {
   reorderAccountsRequestSchema,
   updateAccountRequestSchema,
 } from '@mint/shared/schemas/accounts'
+import { Op } from 'sequelize'
 import { resourceIdParamsSchema } from '@mint/shared/schemas/admin'
+import { usageCountsSchema } from '@mint/shared/schemas/usage'
 import {
   accountFields,
+  accountWithBalance,
   buildAccountOverview,
   findUserAccount,
   nextAccountSortOrder,
   toAccount,
   validateAccountFields,
 } from '../accounts/accounts.js'
+import { parisDate } from '../clock.js'
 import { conflict } from '../http/http-error.js'
+import { accountUsage, loadAccountBalances } from '../planning/usage.js'
 import { ensureSameMembers } from '../http/ordering.js'
 import { defineUserRoute } from '../http/route.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
@@ -48,7 +53,17 @@ export const accountOverviewRoute = defineUserRoute({
         ['createdAt', 'ASC'],
       ],
     })
-    return { status: 200, body: buildAccountOverview(accounts.map(toAccount)) }
+    const balances = await loadAccountBalances(
+      app,
+      user.id,
+      parisDate(app.clock.now()),
+    )
+    return {
+      status: 200,
+      body: buildAccountOverview(
+        accounts.map((account) => toAccount(account, balances)),
+      ),
+    }
   },
 })
 
@@ -81,7 +96,7 @@ export const createAccountRoute = defineUserRoute({
         { transaction },
       ),
     )
-    return { status: 201, body: toAccount(account) }
+    return { status: 201, body: await accountWithBalance(app, account) }
   },
 })
 
@@ -96,7 +111,9 @@ export const updateAccountRoute = defineUserRoute({
     200: { description: 'Account modified', schema: accountSchema },
     400: errorResponse('Invalid body or initial balance dated in the future'),
     ...resourceErrors,
-    409: errorResponse('Archived account'),
+    409: errorResponse(
+      'Archived account, or operations dated before the new initial balance date',
+    ),
   },
   handle: async ({ app, user, params, body }) => {
     const account = await findUserAccount(app, user.id, params.id)
@@ -107,12 +124,24 @@ export const updateAccountRoute = defineUserRoute({
       ...accountFields(account),
       ...body,
     })
+    if (fields.initialBalanceDate > account.initialBalanceDate) {
+      const earlier = await app.models.Transaction.count({
+        where: {
+          userId: user.id,
+          accountId: account.id,
+          date: { [Op.lt]: fields.initialBalanceDate },
+        },
+      })
+      if (earlier > 0) {
+        throw conflict('operations_before_initial_balance')
+      }
+    }
     const sortOrder =
       fields.usage === account.usage
         ? account.sortOrder
         : await nextAccountSortOrder(app, user.id, fields.usage)
     await account.update({ ...fields, sortOrder })
-    return { status: 200, body: toAccount(account) }
+    return { status: 200, body: await accountWithBalance(app, account) }
   },
 })
 
@@ -145,7 +174,7 @@ export const archiveAccountRoute = defineUserRoute({
       )
       return found
     })
-    return { status: 200, body: toAccount(account) }
+    return { status: 200, body: await accountWithBalance(app, account) }
   },
 })
 
@@ -182,7 +211,25 @@ export const restoreAccountRoute = defineUserRoute({
       )
       return found
     })
-    return { status: 200, body: toAccount(account) }
+    return { status: 200, body: await accountWithBalance(app, account) }
+  },
+})
+
+export const accountUsageRoute = defineUserRoute({
+  method: 'get',
+  path: '/accounts/:id/usage',
+  summary:
+    'Count the operations, schedules and envelopes referencing an account or its payment methods',
+  tag,
+  body: noBody,
+  params: resourceIdParamsSchema,
+  responses: {
+    200: { description: 'Usage counts', schema: usageCountsSchema },
+    ...resourceErrors,
+  },
+  handle: async ({ app, user, params }) => {
+    const account = await findUserAccount(app, user.id, params.id)
+    return { status: 200, body: await accountUsage(app, user.id, account.id) }
   },
 })
 
@@ -190,13 +237,16 @@ export const deleteAccountRoute = defineUserRoute({
   method: 'delete',
   path: '/accounts/:id',
   summary:
-    'Delete an account without operations, with its payment methods (CPT-07)',
+    'Delete an account that no operation, schedule or envelope references, with its payment methods (CPT-07)',
   tag,
   body: noBody,
   params: resourceIdParamsSchema,
   responses: {
     204: { description: 'Account and its payment methods deleted' },
     ...resourceErrors,
+    409: errorResponse(
+      'The account has operations, or schedules or envelopes reference it',
+    ),
   },
   handle: async ({ app, user, params }) => {
     await app.sequelize.transaction(async (transaction) => {
@@ -206,6 +256,13 @@ export const deleteAccountRoute = defineUserRoute({
         params.id,
         transaction,
       )
+      const usage = await accountUsage(app, user.id, account.id, transaction)
+      if (usage.operations > 0) {
+        throw conflict('account_has_operations')
+      }
+      if (usage.schedules + usage.envelopes > 0) {
+        throw conflict('account_in_use')
+      }
       await app.models.PaymentMethod.destroy({
         where: { userId: user.id, accountId: account.id },
         transaction,

@@ -6,6 +6,7 @@ import type { CategoryModel, Models } from '../types/models.js'
 import type {
   SeedAccount,
   SeedPaymentMethod,
+  SeedReferences,
   SeedSubcategoryGroup,
   SeedSummary,
   SeedTopLevelCategory,
@@ -16,6 +17,7 @@ import {
   systemCategories,
 } from '../users/default-categories.js'
 import { createUserWithDefaults } from '../users/users.js'
+import { seedInitialBalanceDate, seedPlanning } from './seed-planning.js'
 
 export const seedPassword = 'mint-dev-only-password'
 export const seedAdministratorEmail = 'admin@mint.localhost'
@@ -291,8 +293,9 @@ async function createAccounts(
   userId: string,
   now: Date,
   transaction: Transaction,
-): Promise<void> {
+): Promise<SeedReferences> {
   const accountIds = new Map<string, string>()
+  const paymentMethodIds = new Map<string, string>()
   for (const [index, seedAccount] of seedAccounts.entries()) {
     const account = await models.Account.create(
       {
@@ -303,7 +306,7 @@ async function createAccounts(
         usage: seedAccount.usage,
         institution: seedAccount.institution,
         initialBalanceCents: seedAccount.initialBalanceCents,
-        initialBalanceDate: parisDate(now),
+        initialBalanceDate: seedInitialBalanceDate(parisDate(now)),
         lowBalanceThresholdCents: seedAccount.lowBalanceThresholdCents,
         sortOrder: index,
         archivedAt: seedAccount.archived ? now : null,
@@ -319,7 +322,7 @@ async function createAccounts(
         `Seed account ${seedPaymentMethod.accountName} does not exist`,
       )
     }
-    await models.PaymentMethod.create(
+    const paymentMethod = await models.PaymentMethod.create(
       {
         userId,
         accountId,
@@ -329,6 +332,18 @@ async function createAccounts(
       },
       { transaction },
     )
+    paymentMethodIds.set(seedPaymentMethod.label, paymentMethod.id)
+  }
+  const categories = await models.Category.findAll({
+    where: { userId, parentId: null },
+    transaction,
+  })
+  return {
+    accounts: accountIds,
+    paymentMethods: paymentMethodIds,
+    categories: new Map(
+      categories.map((category) => [category.name, category.id]),
+    ),
   }
 }
 
@@ -359,7 +374,19 @@ export async function seedDatabase(
         await customizeCategories(models, user.id, now, transaction)
       }
       if (seedUser.withAccounts) {
-        await createAccounts(models, user.id, now, transaction)
+        const references = await createAccounts(
+          models,
+          user.id,
+          now,
+          transaction,
+        )
+        await seedPlanning(
+          models,
+          user.id,
+          parisDate(now),
+          references,
+          transaction,
+        )
       }
     }
   })

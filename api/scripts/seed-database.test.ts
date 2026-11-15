@@ -118,7 +118,7 @@ describe('seedDatabase', () => {
       ),
     ).toEqual(new Set(['current', 'emergency', 'savings', 'investment']))
     expect(
-      accounts.every((account) => account.initialBalanceDate === '2026-11-11'),
+      accounts.every((account) => account.initialBalanceDate === '2026-10-01'),
     ).toBe(true)
     expect(
       accounts.find((account) => account.name === 'LEP')?.initialBalanceCents,
@@ -169,6 +169,46 @@ describe('seedDatabase', () => {
     const mainSalary = byName.get('Salaire principal')
     expect(mainSalary?.parentId).toBe(salary?.id)
     expect(mainSalary?.kind).toBe('income')
+  })
+
+  it('gives the customized user the schedules, envelope and operations of US-06 to US-12', async () => {
+    const user = await findUser(seedCustomizedUserEmail)
+    const schedules = await cli.models.Schedule.findAll({
+      where: { userId: user.id },
+      order: [['label', 'ASC']],
+    })
+    const operations = await cli.models.Transaction.findAll({
+      where: { userId: user.id },
+    })
+
+    expect(
+      schedules.map((schedule) => [
+        schedule.label,
+        schedule.kind,
+        schedule.frequency,
+        schedule.startDate,
+      ]),
+    ).toEqual([
+      ['Abonnement musique', 'expense', 'yearly', '2027-01-25'],
+      ['Epargne Livret A', 'transfer', 'monthly', '2026-10-06'],
+      ['Loyer', 'expense', 'monthly', '2026-10-01'],
+      ['Prestation', 'income', 'monthly', '2026-10-05'],
+    ])
+    expect(
+      await cli.models.ScheduleOccurrence.findAll({
+        attributes: ['originalDate', 'amountCents', 'state'],
+        raw: true,
+      }),
+    ).toEqual([
+      { originalDate: '2027-01-05', amountCents: '18000', state: 'overridden' },
+    ])
+    expect(
+      await cli.models.Envelope.count({ where: { userId: user.id } }),
+    ).toBe(1)
+    expect(operations).toHaveLength(5)
+    expect(
+      operations.every((operation) => operation.date >= '2026-10-01'),
+    ).toBe(true)
   })
 
   it('deletes every user and invitation before seeding again', async () => {

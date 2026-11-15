@@ -422,6 +422,15 @@
           }
         }
       },
+      "UsageCounts": {
+        "type": "object",
+        "properties": {
+          "operations": { "type": "integer" },
+          "schedules": { "type": "integer" },
+          "envelopes": { "type": "integer" }
+        },
+        "required": ["operations", "schedules", "envelopes"]
+      },
       "PaymentMethodListResponse": {
         "type": "array",
         "items": { "$ref": "#/components/schemas/PaymentMethod" }
@@ -525,6 +534,626 @@
           "name": { "type": "string", "minLength": 1, "maxLength": 100 },
           "expenseGroup": { "$ref": "#/components/schemas/ExpenseGroup" },
           "parentId": { "type": "string", "format": "uuid" }
+        }
+      },
+      "OperationListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Operation" }
+          },
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" }
+        },
+        "required": ["items", "total", "page", "pageSize"]
+      },
+      "Operation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "amountCents": { "type": "integer" },
+          "label": { "type": "string" },
+          "note": { "type": ["string", "null"] },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "status": { "$ref": "#/components/schemas/TransactionStatus" },
+          "origin": { "$ref": "#/components/schemas/TransactionOrigin" },
+          "transferGroupId": { "type": ["string", "null"], "format": "uuid" },
+          "counterpartAccountId": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
+          "scheduleId": { "type": ["string", "null"], "format": "uuid" }
+        },
+        "required": [
+          "id",
+          "accountId",
+          "paymentMethodId",
+          "date",
+          "amountCents",
+          "label",
+          "note",
+          "categoryId",
+          "status",
+          "origin",
+          "transferGroupId",
+          "counterpartAccountId",
+          "scheduleId"
+        ]
+      },
+      "TransactionStatus": {
+        "type": "string",
+        "enum": ["categorized", "to_categorize"]
+      },
+      "TransactionOrigin": {
+        "type": "string",
+        "enum": ["manual", "import", "schedule"]
+      },
+      "OperationSortField": {
+        "type": "string",
+        "enum": ["date", "amount"],
+        "default": "date"
+      },
+      "SortOrder": {
+        "type": "string",
+        "enum": ["asc", "desc"],
+        "default": "desc"
+      },
+      "OperationGroup": {
+        "type": "string",
+        "enum": ["needs", "wants", "save"]
+      },
+      "OperationDirection": { "type": "string", "enum": ["debit", "credit"] },
+      "CreateOperationRequest": {
+        "type": "object",
+        "properties": {
+          "accountId": { "type": "string", "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "amountCents": {
+            "type": "integer",
+            "minimum": -99999999999,
+            "maximum": 99999999999
+          },
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "note": { "type": ["string", "null"], "maxLength": 1000 },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" }
+        },
+        "required": [
+          "accountId",
+          "paymentMethodId",
+          "date",
+          "amountCents",
+          "label",
+          "note",
+          "categoryId"
+        ]
+      },
+      "UpdateOperationRequest": {
+        "type": "object",
+        "properties": {
+          "accountId": { "type": "string", "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "amountCents": {
+            "type": "integer",
+            "minimum": -99999999999,
+            "maximum": 99999999999
+          },
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "note": { "type": ["string", "null"], "maxLength": 1000 },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" }
+        }
+      },
+      "Transfer": {
+        "type": "object",
+        "properties": {
+          "transferGroupId": { "type": "string", "format": "uuid" },
+          "source": { "$ref": "#/components/schemas/Operation" },
+          "target": { "$ref": "#/components/schemas/Operation" }
+        },
+        "required": ["transferGroupId", "source", "target"]
+      },
+      "CreateTransferRequest": {
+        "type": "object",
+        "properties": {
+          "sourceAccountId": { "type": "string", "format": "uuid" },
+          "targetAccountId": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "amountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "note": { "type": ["string", "null"], "maxLength": 1000 }
+        },
+        "required": [
+          "sourceAccountId",
+          "targetAccountId",
+          "date",
+          "amountCents",
+          "label",
+          "note"
+        ]
+      },
+      "UpdateTransferRequest": {
+        "type": "object",
+        "properties": {
+          "sourceAccountId": { "type": "string", "format": "uuid" },
+          "targetAccountId": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "amountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "note": { "type": ["string", "null"], "maxLength": 1000 }
+        }
+      },
+      "ScheduleListResponse": {
+        "type": "object",
+        "properties": {
+          "schedules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Schedule" }
+          },
+          "totals": { "$ref": "#/components/schemas/ScheduleTotals" }
+        },
+        "required": ["schedules", "totals"]
+      },
+      "Schedule": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "kind": { "$ref": "#/components/schemas/ScheduleKind" },
+          "label": { "type": "string" },
+          "amountCents": { "type": "integer" },
+          "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
+          "note": { "type": ["string", "null"] },
+          "active": { "type": "boolean" },
+          "isSubscription": { "type": "boolean" },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "sourceAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "targetAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
+          "interval": { "type": "integer" },
+          "startDate": { "type": "string", "format": "date" },
+          "anchorLastDay": { "type": "boolean" },
+          "endDate": { "type": ["string", "null"], "format": "date" },
+          "maxOccurrences": { "type": ["integer", "null"] },
+          "businessDayRule": { "$ref": "#/components/schemas/BusinessDayRule" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "monthlyEquivalentCents": { "type": ["integer", "null"] },
+          "nextOccurrence": {
+            "$ref": "#/components/schemas/ScheduleOccurrence"
+          },
+          "ended": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "amountCents",
+          "triggerMode",
+          "note",
+          "active",
+          "isSubscription",
+          "accountId",
+          "paymentMethodId",
+          "categoryId",
+          "sourceAccountId",
+          "targetAccountId",
+          "frequency",
+          "interval",
+          "startDate",
+          "anchorLastDay",
+          "endDate",
+          "maxOccurrences",
+          "businessDayRule",
+          "createdAt",
+          "monthlyEquivalentCents",
+          "nextOccurrence",
+          "ended"
+        ]
+      },
+      "ScheduleKind": {
+        "type": "string",
+        "enum": ["expense", "income", "transfer"]
+      },
+      "TriggerMode": { "type": "string", "enum": ["auto", "manual"] },
+      "ScheduleFrequency": {
+        "type": "string",
+        "enum": ["once", "weekly", "monthly", "yearly"]
+      },
+      "BusinessDayRule": {
+        "type": "string",
+        "enum": ["exact", "previous", "next"]
+      },
+      "ScheduleOccurrence": {
+        "type": ["object", "null"],
+        "properties": {
+          "originalDate": { "type": "string", "format": "date" },
+          "effectiveDate": { "type": "string", "format": "date" },
+          "amountCents": { "type": "integer" },
+          "status": { "$ref": "#/components/schemas/OccurrenceStatus" },
+          "overridden": { "type": "boolean" },
+          "editable": { "type": "boolean" }
+        },
+        "required": [
+          "originalDate",
+          "effectiveDate",
+          "amountCents",
+          "status",
+          "overridden",
+          "editable"
+        ]
+      },
+      "OccurrenceStatus": {
+        "type": "string",
+        "enum": ["pending", "skipped", "executed"]
+      },
+      "ScheduleTotals": {
+        "type": "object",
+        "properties": {
+          "expensesCents": { "type": "integer" },
+          "incomesCents": { "type": "integer" },
+          "savingsTransfersCents": { "type": "integer" }
+        },
+        "required": ["expensesCents", "incomesCents", "savingsTransfersCents"]
+      },
+      "CreateScheduleRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string", "enum": ["expense"] },
+              "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+              "amountCents": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 99999999999
+              },
+              "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
+              "note": { "type": ["string", "null"], "maxLength": 1000 },
+              "active": { "type": "boolean" },
+              "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
+              "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
+              "startDate": { "type": "string", "format": "date" },
+              "anchorLastDay": { "type": "boolean" },
+              "endDate": { "type": ["string", "null"], "format": "date" },
+              "maxOccurrences": {
+                "type": ["integer", "null"],
+                "minimum": 1,
+                "maximum": 999
+              },
+              "businessDayRule": {
+                "$ref": "#/components/schemas/BusinessDayRule"
+              },
+              "accountId": { "type": ["string", "null"], "format": "uuid" },
+              "paymentMethodId": {
+                "type": ["string", "null"],
+                "format": "uuid"
+              },
+              "categoryId": { "type": "string", "format": "uuid" },
+              "isSubscription": { "type": "boolean" }
+            },
+            "required": [
+              "kind",
+              "label",
+              "amountCents",
+              "triggerMode",
+              "note",
+              "active",
+              "frequency",
+              "interval",
+              "startDate",
+              "anchorLastDay",
+              "endDate",
+              "maxOccurrences",
+              "businessDayRule",
+              "accountId",
+              "paymentMethodId",
+              "categoryId",
+              "isSubscription"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string", "enum": ["income"] },
+              "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+              "amountCents": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 99999999999
+              },
+              "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
+              "note": { "type": ["string", "null"], "maxLength": 1000 },
+              "active": { "type": "boolean" },
+              "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
+              "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
+              "startDate": { "type": "string", "format": "date" },
+              "anchorLastDay": { "type": "boolean" },
+              "endDate": { "type": ["string", "null"], "format": "date" },
+              "maxOccurrences": {
+                "type": ["integer", "null"],
+                "minimum": 1,
+                "maximum": 999
+              },
+              "businessDayRule": {
+                "$ref": "#/components/schemas/BusinessDayRule"
+              },
+              "accountId": { "type": ["string", "null"], "format": "uuid" },
+              "paymentMethodId": {
+                "type": ["string", "null"],
+                "format": "uuid"
+              },
+              "categoryId": { "type": "string", "format": "uuid" }
+            },
+            "required": [
+              "kind",
+              "label",
+              "amountCents",
+              "triggerMode",
+              "note",
+              "active",
+              "frequency",
+              "interval",
+              "startDate",
+              "anchorLastDay",
+              "endDate",
+              "maxOccurrences",
+              "businessDayRule",
+              "accountId",
+              "paymentMethodId",
+              "categoryId"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string", "enum": ["transfer"] },
+              "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+              "amountCents": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 99999999999
+              },
+              "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
+              "note": { "type": ["string", "null"], "maxLength": 1000 },
+              "active": { "type": "boolean" },
+              "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
+              "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
+              "startDate": { "type": "string", "format": "date" },
+              "anchorLastDay": { "type": "boolean" },
+              "endDate": { "type": ["string", "null"], "format": "date" },
+              "maxOccurrences": {
+                "type": ["integer", "null"],
+                "minimum": 1,
+                "maximum": 999
+              },
+              "businessDayRule": {
+                "$ref": "#/components/schemas/BusinessDayRule"
+              },
+              "sourceAccountId": { "type": "string", "format": "uuid" },
+              "targetAccountId": { "type": "string", "format": "uuid" }
+            },
+            "required": [
+              "kind",
+              "label",
+              "amountCents",
+              "triggerMode",
+              "note",
+              "active",
+              "frequency",
+              "interval",
+              "startDate",
+              "anchorLastDay",
+              "endDate",
+              "maxOccurrences",
+              "businessDayRule",
+              "sourceAccountId",
+              "targetAccountId"
+            ]
+          }
+        ]
+      },
+      "UpdateScheduleResponse": {
+        "type": "object",
+        "properties": {
+          "schedule": { "$ref": "#/components/schemas/Schedule" },
+          "removedExceptions": { "type": "integer" }
+        },
+        "required": ["schedule", "removedExceptions"]
+      },
+      "UpdateScheduleRequest": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "amountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
+          "note": { "type": ["string", "null"], "maxLength": 1000 },
+          "active": { "type": "boolean" },
+          "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
+          "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
+          "startDate": { "type": "string", "format": "date" },
+          "anchorLastDay": { "type": "boolean" },
+          "endDate": { "type": ["string", "null"], "format": "date" },
+          "maxOccurrences": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "maximum": 999
+          },
+          "businessDayRule": { "$ref": "#/components/schemas/BusinessDayRule" },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "categoryId": { "type": "string", "format": "uuid" },
+          "sourceAccountId": { "type": "string", "format": "uuid" },
+          "targetAccountId": { "type": "string", "format": "uuid" },
+          "isSubscription": { "type": "boolean" }
+        }
+      },
+      "ScheduleOccurrenceListResponse": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string", "format": "date" },
+          "to": { "type": "string", "format": "date" },
+          "occurrences": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ScheduleOccurrence" }
+          }
+        },
+        "required": ["from", "to", "occurrences"]
+      },
+      "OverrideOccurrenceRequest": {
+        "type": "object",
+        "properties": {
+          "amountCents": {
+            "type": ["integer", "null"],
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "effectiveDate": { "type": ["string", "null"], "format": "date" }
+        },
+        "required": ["amountCents", "effectiveDate"]
+      },
+      "EnvelopeMonthResponse": {
+        "type": "object",
+        "properties": {
+          "month": { "type": "string", "format": "date" },
+          "currentMonth": { "type": "string", "format": "date" },
+          "remainingDays": { "type": ["integer", "null"] },
+          "lines": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EnvelopeMonthLine" }
+          },
+          "inactive": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Envelope" }
+          }
+        },
+        "required": [
+          "month",
+          "currentMonth",
+          "remainingDays",
+          "lines",
+          "inactive"
+        ]
+      },
+      "EnvelopeMonthLine": {
+        "type": "object",
+        "properties": {
+          "envelope": { "$ref": "#/components/schemas/Envelope" },
+          "status": { "$ref": "#/components/schemas/EnvelopeMonthStatus" }
+        },
+        "required": ["envelope", "status"]
+      },
+      "Envelope": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "label": { "type": "string" },
+          "monthlyAmountCents": { "type": "integer" },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "carryOver": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "categoryIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "label",
+          "monthlyAmountCents",
+          "accountId",
+          "paymentMethodId",
+          "carryOver",
+          "active",
+          "categoryIds",
+          "createdAt"
+        ]
+      },
+      "EnvelopeMonthStatus": {
+        "type": "object",
+        "properties": {
+          "budgetCents": { "type": "integer" },
+          "carriedOverCents": { "type": "integer" },
+          "consumedCents": { "type": "integer" },
+          "availableCents": { "type": "integer" },
+          "availablePerDayCents": { "type": ["integer", "null"] }
+        },
+        "required": [
+          "budgetCents",
+          "carriedOverCents",
+          "consumedCents",
+          "availableCents",
+          "availablePerDayCents"
+        ]
+      },
+      "CreateEnvelopeRequest": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "monthlyAmountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "carryOver": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "categoryIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "label",
+          "monthlyAmountCents",
+          "accountId",
+          "paymentMethodId",
+          "carryOver",
+          "active",
+          "categoryIds"
+        ]
+      },
+      "UpdateEnvelopeRequest": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "monthlyAmountCents": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99999999999
+          },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "paymentMethodId": { "type": ["string", "null"], "format": "uuid" },
+          "carryOver": { "type": "boolean" },
+          "active": { "type": "boolean" },
+          "categoryIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 1,
+            "maxItems": 50
+          }
         }
       }
     },
@@ -1933,7 +2562,7 @@
             }
           },
           "409": {
-            "description": "Archived account",
+            "description": "Archived account, or operations dated before the new initial balance date",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -1943,7 +2572,7 @@
         }
       },
       "delete": {
-        "summary": "Delete an account without operations, with its payment methods (CPT-07)",
+        "summary": "Delete an account that no operation, schedule or envelope references, with its payment methods (CPT-07)",
         "tags": ["accounts"],
         "security": [{ "session": [] }],
         "parameters": [
@@ -1976,6 +2605,14 @@
           },
           "404": {
             "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "The account has operations, or schedules or envelopes reference it",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -2094,6 +2731,47 @@
           },
           "409": {
             "description": "Account not archived",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/usage": {
+      "get": {
+        "summary": "Count the operations, schedules and envelopes referencing an account or its payment methods",
+        "tags": ["accounts"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage counts",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UsageCounts" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -2314,6 +2992,14 @@
                 "schema": { "$ref": "#/components/schemas/ApiError" }
               }
             }
+          },
+          "409": {
+            "description": "Operations, schedules or envelopes reference the payment method",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
           }
         }
       }
@@ -2427,6 +3113,47 @@
           },
           "409": {
             "description": "Payment method not archived, or archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payment-methods/{id}/usage": {
+      "get": {
+        "summary": "Count the operations, schedules and envelopes referencing a payment method",
+        "tags": ["payment-methods"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage counts",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UsageCounts" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown payment method or account",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -2661,7 +3388,7 @@
         }
       },
       "delete": {
-        "summary": "Delete a category and its subcategories, system ones excepted",
+        "summary": "Delete a category and its subcategories, system ones excepted; a used category needs a replacement of the same kind that takes over its operations, schedules and envelope (CAT-07)",
         "tags": ["categories"],
         "security": [{ "session": [] }],
         "parameters": [
@@ -2670,6 +3397,12 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": false,
+            "name": "replacementId",
+            "in": "query"
           },
           {
             "schema": {
@@ -2684,6 +3417,14 @@
         ],
         "responses": {
           "204": { "description": "Category and its subcategories deleted" },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
           "401": {
             "description": "No valid session",
             "content": {
@@ -2701,7 +3442,7 @@
             }
           },
           "409": {
-            "description": "System category (CAT-08)",
+            "description": "System category (CAT-08), used category without replacement, or invalid replacement",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -2820,6 +3561,1226 @@
           },
           "409": {
             "description": "System or active category, or archived parent",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/categories/{id}/usage": {
+      "get": {
+        "summary": "Count the operations, schedules and envelope memberships of a category and its subcategories (CAT-07)",
+        "tags": ["categories"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage counts",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UsageCounts" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operations": {
+      "get": {
+        "summary": "List the operations with pagination, sorting, full-text search and combinable filters (OPE-05)",
+        "tags": ["operations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "integer", "minimum": 1, "default": 1 },
+            "required": false,
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "number", "default": 50 },
+            "required": false,
+            "name": "pageSize",
+            "in": "query"
+          },
+          {
+            "schema": { "$ref": "#/components/schemas/OperationSortField" },
+            "required": false,
+            "name": "sort",
+            "in": "query"
+          },
+          {
+            "schema": { "$ref": "#/components/schemas/SortOrder" },
+            "required": false,
+            "name": "order",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "string", "maxLength": 100 },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "format": "uuid" },
+              "maxItems": 200
+            },
+            "required": false,
+            "name": "accountIds",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/OperationGroup" },
+              "maxItems": 200
+            },
+            "required": false,
+            "name": "groups",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": { "type": "string", "format": "uuid" },
+              "maxItems": 200
+            },
+            "required": false,
+            "name": "categoryIds",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 99999999999
+            },
+            "required": false,
+            "name": "minCents",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 99999999999
+            },
+            "required": false,
+            "name": "maxCents",
+            "in": "query"
+          },
+          {
+            "schema": { "$ref": "#/components/schemas/OperationDirection" },
+            "required": false,
+            "name": "direction",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": { "$ref": "#/components/schemas/TransactionOrigin" },
+              "maxItems": 200
+            },
+            "required": false,
+            "name": "origins",
+            "in": "query"
+          },
+          {
+            "schema": { "$ref": "#/components/schemas/TransactionStatus" },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One page of operations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Record an expense or an income on an account, optionally through one of its payment methods (OPE-01)",
+        "tags": ["operations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOperationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operation recorded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Operation" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, date before the initial balance, payment method of another account or adjustment category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, transfer, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account, payment method or category newly referenced",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operations/{id}": {
+      "patch": {
+        "summary": "Modify an expense or an income, generated ones included (OPE-06, EXE-04)",
+        "tags": ["operations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOperationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operation modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Operation" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, date before the initial balance, payment method of another account or adjustment category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, transfer, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Movement of a transfer, or archived reference newly used",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an operation, both movements of a transfer; a generated one marks its occurrence as skipped (OPE-06, EXE-04)",
+        "tags": ["operations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Operation deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, transfer, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers": {
+      "post": {
+        "summary": "Record an internal transfer: a debit of the source and a credit of the target, linked and without category (OPE-02)",
+        "tags": ["operations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTransferRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transfer recorded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Transfer" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, same account or date before an initial balance",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, transfer, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/{id}": {
+      "patch": {
+        "summary": "Modify both movements of a transfer, identified by its transfer group (OPE-02)",
+        "tags": ["operations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateTransferRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Transfer" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, same account or date before an initial balance",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, transfer, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account newly referenced",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedules": {
+      "get": {
+        "summary": "List the schedules with their monthly equivalent and next occurrence, and the monthly totals of the active ones (ECH-10)",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Schedules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an expense, income or transfer schedule (ECH-01 to ECH-06)",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateScheduleRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Schedule created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Schedule" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, inconsistent recurrence or category of another kind",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account, payment method or category newly referenced",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{id}": {
+      "patch": {
+        "summary": "Modify a schedule, its kind excepted; only the non-executed occurrences change and exceptions whose original date no longer exists are removed (ECH-08)",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateScheduleRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Schedule modified, with the number of removed exceptions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateScheduleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, field not applicable to the kind, inconsistent recurrence or category of another kind",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account, payment method or category newly referenced",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a schedule and its occurrence exceptions; operations already generated stay",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Schedule deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{id}/occurrences": {
+      "get": {
+        "summary": "Occurrences of a schedule from today to the end of the forecast horizon of the user, skipped ones included",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Occurrences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScheduleOccurrenceListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{id}/occurrences/{originalDate}/override": {
+      "post": {
+        "summary": "Override the amount or the date of one future occurrence without changing the schedule (ECH-07)",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": true,
+            "name": "originalDate",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverrideOccurrenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Occurrence overridden",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ScheduleOccurrence" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or new date not after today",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Occurrence executed, skipped, not after today, or of an inactive schedule",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{id}/occurrences/{originalDate}/skip": {
+      "post": {
+        "summary": "Skip one future occurrence without changing the schedule (ECH-07)",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": true,
+            "name": "originalDate",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Occurrence skipped",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ScheduleOccurrence" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Occurrence executed, already skipped, not after today, or of an inactive schedule",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/schedules/{id}/occurrences/{originalDate}": {
+      "delete": {
+        "summary": "Remove the exception of one future occurrence: its amount and date come back from the schedule",
+        "tags": ["schedules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": true,
+            "name": "originalDate",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Occurrence restored",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ScheduleOccurrence" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown schedule, occurrence, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Occurrence without exception, executed, not after today, or of an inactive schedule",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/envelopes": {
+      "get": {
+        "summary": "Budget, carry-over, consumption and availability of each active envelope for one month, the current one by default (ENV-03 to ENV-06)",
+        "tags": ["envelopes"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "date" },
+            "required": false,
+            "name": "month",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Envelopes of the month",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeMonthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid month",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an envelope on expense categories, debited on a default account or payment method (ENV-01)",
+        "tags": ["envelopes"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateEnvelopeRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Envelope created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Envelope" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or category that is not an expense one",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown envelope, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account, payment method or category newly referenced, or category already in another envelope",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/envelopes/{id}": {
+      "patch": {
+        "summary": "Modify an envelope, its categories included",
+        "tags": ["envelopes"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateEnvelopeRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Envelope modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Envelope" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or category that is not an expense one",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown envelope, account, payment method or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account, payment method or category newly referenced, or category already in another envelope",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an envelope and its category memberships",
+        "tags": ["envelopes"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Envelope deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown envelope, account, payment method or category",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

@@ -3,6 +3,7 @@ import type { PaymentMethod } from '@mint/shared/types/payment-methods'
 import { findUserAccount } from '../accounts/accounts.js'
 import { conflict, notFound } from '../http/http-error.js'
 import type { AppDependencies } from '../types/app.js'
+import type { DataAccess } from '../types/planning.js'
 import type { AccountModel, PaymentMethodModel } from '../types/models.js'
 
 export function toPaymentMethod(
@@ -18,7 +19,7 @@ export function toPaymentMethod(
 }
 
 export async function findUserPaymentMethod(
-  app: AppDependencies,
+  app: DataAccess,
   userId: string,
   id: string,
   transaction?: Transaction,

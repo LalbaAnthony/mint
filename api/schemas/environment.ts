@@ -62,3 +62,11 @@ export const testDatabaseEnvironmentSchema = z.object({
   POSTGRES_PASSWORD: z.string().min(1),
   DB_HOST_PORT: portSchema,
 })
+
+export const workerEnvironmentSchema = databaseEnvironmentSchema.extend({
+  HEALTHCHECK_EXECUTION_URL: z
+    .string()
+    .optional()
+    .transform((value) => (value === '' ? undefined : value))
+    .pipe(z.url({ protocol: /^https?$/ }).optional()),
+})

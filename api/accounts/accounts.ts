@@ -12,13 +12,35 @@ import type {
 import { parisDate } from '../clock.js'
 import { notFound, toIssues, validationFailed } from '../http/http-error.js'
 import type { AppDependencies } from '../types/app.js'
+import type { DataAccess } from '../types/planning.js'
 import type { AccountModel } from '../types/models.js'
+import { loadAccountBalances } from '../planning/usage.js'
 
-export function currentBalanceCents(account: AccountModel): number {
-  return account.initialBalanceCents
+export function currentBalanceCents(
+  account: AccountModel,
+  balances: ReadonlyMap<string, number>,
+): number {
+  return account.initialBalanceCents + (balances.get(account.id) ?? 0)
 }
 
-export function toAccount(account: AccountModel): Account {
+export async function accountWithBalance(
+  app: AppDependencies,
+  account: AccountModel,
+  transaction?: Transaction,
+): Promise<Account> {
+  const balances = await loadAccountBalances(
+    app,
+    account.userId,
+    parisDate(app.clock.now()),
+    transaction,
+  )
+  return toAccount(account, balances)
+}
+
+export function toAccount(
+  account: AccountModel,
+  balances: ReadonlyMap<string, number>,
+): Account {
   return {
     id: account.id,
     name: account.name,
@@ -31,7 +53,7 @@ export function toAccount(account: AccountModel): Account {
     lowBalanceThresholdCents: account.lowBalanceThresholdCents,
     sortOrder: account.sortOrder,
     archivedAt: account.archivedAt?.toISOString() ?? null,
-    currentBalanceCents: currentBalanceCents(account),
+    currentBalanceCents: currentBalanceCents(account, balances),
   }
 }
 
@@ -58,7 +80,7 @@ export function buildAccountOverview(accounts: Account[]): AccountOverview {
 }
 
 export async function findUserAccount(
-  app: AppDependencies,
+  app: DataAccess,
   userId: string,
   id: string,
   transaction?: Transaction,

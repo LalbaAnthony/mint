@@ -14,16 +14,86 @@ import type {
 } from '../types/tests.js'
 import { apiRoutes } from './index.js'
 
-async function snapshotOf(client: Client): Promise<IsolationSnapshot> {
+async function snapshotOf(
+  client: Client,
+  resources: IsolationResources,
+): Promise<IsolationSnapshot> {
   return {
     overview: (await client.get('/accounts/overview')).body,
     paymentMethods: (await client.get('/payment-methods')).body,
     categories: (await client.get('/categories')).body,
+    operations: (await client.get('/operations')).body,
+    schedules: (await client.get('/schedules')).body,
+    occurrences: (
+      await client.get(`/schedules/${resources.scheduleId}/occurrences`)
+    ).body,
+    envelopes: (await client.get('/envelopes')).body,
   }
 }
 
 async function expectBobDataUntouched(actors: Actors) {
-  expect(await snapshotOf(actors.bobClient)).toEqual(actors.bobSnapshot)
+  expect(await snapshotOf(actors.bobClient, actors.bobResources)).toEqual(
+    actors.bobSnapshot,
+  )
+}
+
+function crossRead(path: (resources: IsolationResources) => string): Scenario {
+  return async (actors) => {
+    const response = await actors.aliceClient.get(path(actors.bobResources))
+    expect(response.status).toBe(404)
+    expect(response.body).toEqual({ error: 'not_found' })
+  }
+}
+
+function expectNotFound(response: { status: number; body: unknown }): void {
+  expect(response.status).toBe(404)
+  expect(response.body).toEqual({ error: 'not_found' })
+}
+
+function aliceOperation(accountId: string) {
+  return {
+    accountId,
+    paymentMethodId: null,
+    date: '2026-11-05',
+    amountCents: -1_000,
+    label: 'Alice',
+    note: null,
+    categoryId: null,
+  }
+}
+
+function aliceSchedule(accountId: string, categoryId: string) {
+  return {
+    kind: 'expense',
+    label: 'Alice',
+    amountCents: 1_000,
+    triggerMode: 'auto',
+    note: null,
+    active: true,
+    frequency: 'monthly',
+    interval: 1,
+    startDate: '2026-12-01',
+    anchorLastDay: false,
+    endDate: null,
+    maxOccurrences: null,
+    businessDayRule: 'exact',
+    accountId,
+    paymentMethodId: null,
+    categoryId,
+    isSubscription: false,
+  }
+}
+
+function aliceEnvelope(accountId: string, categoryIds: string[]) {
+  return {
+    label: 'Alice',
+    monthlyAmountCents: 1_000,
+    accountId,
+    paymentMethodId: null,
+    carryOver: false,
+    active: true,
+    categoryIds,
+  }
 }
 
 function crossAccess(
@@ -312,6 +382,9 @@ const scenarios: Record<string, Scenario> = {
     'delete',
     ({ accountId }) => `/accounts/${accountId}`,
   ),
+  'get /accounts/:id/usage': crossRead(
+    ({ accountId }) => `/accounts/${accountId}/usage`,
+  ),
   'get /payment-methods': ownListOnly('/payment-methods'),
   'post /payment-methods': crossAccess(
     'post',
@@ -398,9 +471,176 @@ const scenarios: Record<string, Scenario> = {
     'post',
     ({ categoryId }) => `/categories/${categoryId}/restore`,
   ),
-  'delete /categories/:id': crossAccess(
+  'delete /categories/:id': async (actors) => {
+    await crossAccess(
+      'delete',
+      ({ categoryId }) => `/categories/${categoryId}`,
+    )(actors)
+    const aliceAccount = await createAliceAccount(actors)
+    const travel = await findAliceCategory(actors, 'Voyages')
+    await actors.aliceClient.post('/operations', {
+      ...aliceOperation(aliceAccount),
+      categoryId: travel.id,
+    })
+    expectNotFound(
+      await actors.aliceClient.delete(
+        `/categories/${travel.id}?replacementId=${actors.bobResources.categoryId}`,
+      ),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'get /categories/:id/usage': crossRead(
+    ({ categoryId }) => `/categories/${categoryId}/usage`,
+  ),
+  'get /payment-methods/:id/usage': crossRead(
+    ({ paymentMethodId }) => `/payment-methods/${paymentMethodId}/usage`,
+  ),
+  'get /operations': async (actors) => {
+    await ownListOnly('/operations')(actors)
+    const filtered = await actors.aliceClient.get(
+      `/operations?accountIds=${actors.bobResources.accountId}&categoryIds=${actors.bobResources.categoryId}`,
+    )
+    expect(filtered.body.items).toEqual([])
+  },
+  'post /operations': async (actors) => {
+    const aliceAccount = await createAliceAccount(actors)
+    const { accountId, paymentMethodId, categoryId } = actors.bobResources
+    expectNotFound(
+      await actors.aliceClient.post('/operations', aliceOperation(accountId)),
+    )
+    expectNotFound(
+      await actors.aliceClient.post('/operations', {
+        ...aliceOperation(aliceAccount),
+        paymentMethodId,
+      }),
+    )
+    expectNotFound(
+      await actors.aliceClient.post('/operations', {
+        ...aliceOperation(aliceAccount),
+        categoryId,
+      }),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'patch /operations/:id': async (actors) => {
+    await crossAccess(
+      'patch',
+      ({ operationId }) => `/operations/${operationId}`,
+      () => ({ label: 'Taken over' }),
+    )(actors)
+    const aliceAccount = await createAliceAccount(actors)
+    const own = await actors.aliceClient.post(
+      '/operations',
+      aliceOperation(aliceAccount),
+    )
+    expectNotFound(
+      await actors.aliceClient.patch(`/operations/${own.body.id}`, {
+        accountId: actors.bobResources.accountId,
+      }),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'delete /operations/:id': crossAccess(
     'delete',
-    ({ categoryId }) => `/categories/${categoryId}`,
+    ({ operationId }) => `/operations/${operationId}`,
+  ),
+  'post /transfers': async (actors) => {
+    const aliceAccount = await createAliceAccount(actors)
+    expectNotFound(
+      await actors.aliceClient.post('/transfers', {
+        sourceAccountId: aliceAccount,
+        targetAccountId: actors.bobResources.accountId,
+        date: '2026-11-06',
+        amountCents: 1_000,
+        label: 'Leak',
+        note: null,
+      }),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'patch /transfers/:id': crossAccess(
+    'patch',
+    ({ transferGroupId }) => `/transfers/${transferGroupId}`,
+    () => ({ amountCents: 1 }),
+  ),
+  'get /schedules': ownListOnly('/schedules'),
+  'post /schedules': async (actors) => {
+    const aliceAccount = await createAliceAccount(actors)
+    const housing = await findAliceCategory(actors, 'Logement')
+    const { accountId, paymentMethodId, categoryId } = actors.bobResources
+    expectNotFound(
+      await actors.aliceClient.post(
+        '/schedules',
+        aliceSchedule(accountId, housing.id),
+      ),
+    )
+    expectNotFound(
+      await actors.aliceClient.post(
+        '/schedules',
+        aliceSchedule(aliceAccount, categoryId),
+      ),
+    )
+    expectNotFound(
+      await actors.aliceClient.post('/schedules', {
+        ...aliceSchedule(aliceAccount, housing.id),
+        accountId: null,
+        paymentMethodId,
+      }),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'patch /schedules/:id': crossAccess(
+    'patch',
+    ({ scheduleId }) => `/schedules/${scheduleId}`,
+    () => ({ label: 'Taken over' }),
+  ),
+  'delete /schedules/:id': crossAccess(
+    'delete',
+    ({ scheduleId }) => `/schedules/${scheduleId}`,
+  ),
+  'get /schedules/:id/occurrences': crossRead(
+    ({ scheduleId }) => `/schedules/${scheduleId}/occurrences`,
+  ),
+  'post /schedules/:id/occurrences/:originalDate/override': crossAccess(
+    'post',
+    ({ scheduleId }) =>
+      `/schedules/${scheduleId}/occurrences/2026-12-01/override`,
+    () => ({ amountCents: 1, effectiveDate: null }),
+  ),
+  'post /schedules/:id/occurrences/:originalDate/skip': crossAccess(
+    'post',
+    ({ scheduleId }) => `/schedules/${scheduleId}/occurrences/2026-12-01/skip`,
+  ),
+  'delete /schedules/:id/occurrences/:originalDate': crossAccess(
+    'delete',
+    ({ scheduleId }) => `/schedules/${scheduleId}/occurrences/2026-12-01`,
+  ),
+  'get /envelopes': ownListOnly('/envelopes'),
+  'post /envelopes': async (actors) => {
+    const aliceAccount = await createAliceAccount(actors)
+    const restaurants = await findAliceCategory(actors, 'Restaurants')
+    expectNotFound(
+      await actors.aliceClient.post(
+        '/envelopes',
+        aliceEnvelope(actors.bobResources.accountId, [restaurants.id]),
+      ),
+    )
+    expectNotFound(
+      await actors.aliceClient.post(
+        '/envelopes',
+        aliceEnvelope(aliceAccount, [actors.bobResources.envelopeCategoryId]),
+      ),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'patch /envelopes/:id': crossAccess(
+    'patch',
+    ({ envelopeId }) => `/envelopes/${envelopeId}`,
+    () => ({ label: 'Taken over' }),
+  ),
+  'delete /envelopes/:id': crossAccess(
+    'delete',
+    ({ envelopeId }) => `/envelopes/${envelopeId}`,
   ),
 }
 
@@ -421,17 +661,59 @@ async function createBobResources(
     await bobClient.get('/categories')
   ).body
   const category = categories.find((candidate) => candidate.name === 'Logement')
+  const groceries = categories.find((candidate) => candidate.name === 'Courses')
+  const savings = await bobClient.post('/accounts', {
+    ...aliceAccountInput,
+    name: 'Bob savings',
+    initialBalanceCents: 0,
+  })
   if (
     account.status !== 201 ||
     paymentMethod.status !== 201 ||
-    category === undefined
+    savings.status !== 201 ||
+    category === undefined ||
+    groceries === undefined
   ) {
     throw new Error('Bob resources could not be created')
+  }
+  const operation = await bobClient.post('/operations', {
+    ...aliceOperation(account.body.id),
+    label: 'Bob operation',
+    categoryId: category.id,
+  })
+  const transfer = await bobClient.post('/transfers', {
+    sourceAccountId: account.body.id,
+    targetAccountId: savings.body.id,
+    date: '2026-11-06',
+    amountCents: 5_000,
+    label: 'Bob transfer',
+    note: null,
+  })
+  const schedule = await bobClient.post(
+    '/schedules',
+    aliceSchedule(account.body.id, category.id),
+  )
+  const envelope = await bobClient.post(
+    '/envelopes',
+    aliceEnvelope(account.body.id, [groceries.id]),
+  )
+  if (
+    operation.status !== 201 ||
+    transfer.status !== 201 ||
+    schedule.status !== 201 ||
+    envelope.status !== 201
+  ) {
+    throw new Error('Bob planning resources could not be created')
   }
   return {
     accountId: account.body.id,
     paymentMethodId: paymentMethod.body.id,
     categoryId: category.id,
+    envelopeCategoryId: groceries.id,
+    operationId: operation.body.id,
+    transferGroupId: transfer.body.transferGroupId,
+    scheduleId: schedule.body.id,
+    envelopeId: envelope.body.id,
   }
 }
 
@@ -454,7 +736,7 @@ beforeAll(async () => {
     bobClient,
     anonymous: createClient(context.server),
     bobResources,
-    bobSnapshot: await snapshotOf(bobClient),
+    bobSnapshot: await snapshotOf(bobClient, bobResources),
   }
 })
 

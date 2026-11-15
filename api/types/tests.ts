@@ -6,6 +6,7 @@ import type { DatabaseEnvironment } from './environment.js'
 import type { createClient } from '../tests/context.js'
 import type { Mailer, MailMessage } from './mail.js'
 import type { UserModel } from './models.js'
+import type { CreateScheduleRequest } from '@mint/shared/types/schedules'
 
 export type TestDatabaseServer = Omit<DatabaseEnvironment, 'DATABASE_NAME'> & {
   maintenanceDatabase: string
@@ -49,12 +50,21 @@ export type IsolationResources = {
   accountId: string
   paymentMethodId: string
   categoryId: string
+  envelopeCategoryId: string
+  operationId: string
+  transferGroupId: string
+  scheduleId: string
+  envelopeId: string
 }
 
 export type IsolationSnapshot = {
   overview: unknown
   paymentMethods: unknown
   categories: unknown
+  operations: unknown
+  schedules: unknown
+  occurrences: unknown
+  envelopes: unknown
 }
 
 export type IsolationActors = {
@@ -74,3 +84,8 @@ export type DatabaseRejection = {
   code: string
   constraint: string | null
 }
+
+export type ExpenseScheduleRequest = Extract<
+  CreateScheduleRequest,
+  { kind: 'expense' }
+>

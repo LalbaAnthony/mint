@@ -3,6 +3,7 @@ import type { z } from 'zod'
 import type { ApiErrorCode } from '@mint/shared/types/errors'
 import type { AppDependencies } from './app.js'
 import type { UserModel } from './models.js'
+import type { noQuery } from '../schemas/http.js'
 
 export type RouteAccess = 'public' | 'user' | 'admin'
 
@@ -12,6 +13,7 @@ export type RouteContext<
   User extends UserModel | null,
   Body extends z.ZodType,
   Params extends z.ZodObject,
+  Query extends z.ZodObject = typeof noQuery,
 > = {
   request: Request
   response: Response
@@ -19,6 +21,7 @@ export type RouteContext<
   user: User
   body: z.output<Body>
   params: z.output<Params>
+  query: z.output<Query>
 }
 
 export type RouteResult = {
@@ -35,6 +38,7 @@ export type RouteDefinition<
   User extends UserModel | null,
   Body extends z.ZodType,
   Params extends z.ZodObject,
+  Query extends z.ZodObject = typeof noQuery,
 > = {
   method: HttpMethod
   path: string
@@ -42,9 +46,10 @@ export type RouteDefinition<
   tag: string
   body: Body
   params: Params
+  query?: Query
   responses: Record<number, RouteResponse>
   handle: (
-    context: RouteContext<User, Body, Params>,
+    context: RouteContext<User, Body, Params, Query>,
   ) => Promise<RouteResult> | RouteResult
 }
 
@@ -56,6 +61,7 @@ export type ApiRoute = {
   tag: string
   body: z.ZodType
   params: z.ZodObject
+  query: z.ZodObject
   responses: Record<number, RouteResponse>
   createHandler: (app: AppDependencies) => RequestHandler
 }

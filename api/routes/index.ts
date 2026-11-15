@@ -1,6 +1,7 @@
 import type { ApiRoute } from '../types/http.js'
 import {
   accountOverviewRoute,
+  accountUsageRoute,
   archiveAccountRoute,
   createAccountRoute,
   deleteAccountRoute,
@@ -30,6 +31,7 @@ import {
 } from './auth.js'
 import {
   archiveCategoryRoute,
+  categoryUsageRoute,
   createCategoryRoute,
   deleteCategoryRoute,
   listCategoriesRoute,
@@ -38,12 +40,27 @@ import {
   updateCategoryRoute,
 } from './categories.js'
 import { csrfRoute } from './csrf.js'
+import {
+  createEnvelopeRoute,
+  deleteEnvelopeRoute,
+  envelopeMonthRoute,
+  updateEnvelopeRoute,
+} from './envelopes.js'
 import { healthRoute } from './health.js'
+import {
+  createOperationRoute,
+  createTransferRoute,
+  deleteOperationRoute,
+  listOperationsRoute,
+  updateOperationRoute,
+  updateTransferRoute,
+} from './operations.js'
 import {
   archivePaymentMethodRoute,
   createPaymentMethodRoute,
   deletePaymentMethodRoute,
   listPaymentMethodsRoute,
+  paymentMethodUsageRoute,
   restorePaymentMethodRoute,
   updatePaymentMethodRoute,
 } from './payment-methods.js'
@@ -54,6 +71,16 @@ import {
   revokeSessionsRoute,
   updateProfileRoute,
 } from './profile.js'
+import {
+  createScheduleRoute,
+  deleteScheduleRoute,
+  listScheduleOccurrencesRoute,
+  listSchedulesRoute,
+  overrideOccurrenceRoute,
+  restoreOccurrenceRoute,
+  skipOccurrenceRoute,
+  updateScheduleRoute,
+} from './schedules.js'
 
 export const apiRoutes: ApiRoute[] = [
   healthRoute,
@@ -85,12 +112,14 @@ export const apiRoutes: ApiRoute[] = [
   updateAccountRoute,
   archiveAccountRoute,
   restoreAccountRoute,
+  accountUsageRoute,
   deleteAccountRoute,
   listPaymentMethodsRoute,
   createPaymentMethodRoute,
   updatePaymentMethodRoute,
   archivePaymentMethodRoute,
   restorePaymentMethodRoute,
+  paymentMethodUsageRoute,
   deletePaymentMethodRoute,
   listCategoriesRoute,
   createCategoryRoute,
@@ -98,5 +127,24 @@ export const apiRoutes: ApiRoute[] = [
   updateCategoryRoute,
   archiveCategoryRoute,
   restoreCategoryRoute,
+  categoryUsageRoute,
   deleteCategoryRoute,
+  listOperationsRoute,
+  createOperationRoute,
+  updateOperationRoute,
+  deleteOperationRoute,
+  createTransferRoute,
+  updateTransferRoute,
+  listSchedulesRoute,
+  createScheduleRoute,
+  updateScheduleRoute,
+  deleteScheduleRoute,
+  listScheduleOccurrencesRoute,
+  overrideOccurrenceRoute,
+  skipOccurrenceRoute,
+  restoreOccurrenceRoute,
+  envelopeMonthRoute,
+  createEnvelopeRoute,
+  updateEnvelopeRoute,
+  deleteEnvelopeRoute,
 ]

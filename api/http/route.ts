@@ -10,6 +10,7 @@ import type {
 } from '../types/http.js'
 import type { UserModel } from '../types/models.js'
 import { endSession } from '../auth/session.js'
+import { noQuery } from '../schemas/http.js'
 import {
   HttpError,
   notFound,
@@ -71,6 +72,7 @@ function buildRoute<
   User extends UserModel | null,
   Body extends z.ZodType,
   Params extends z.ZodObject,
+  Query extends z.ZodObject,
 >(
   access: RouteAccess,
   resolveUser: (
@@ -78,7 +80,8 @@ function buildRoute<
     response: Response,
     app: AppDependencies,
   ) => Promise<User>,
-  definition: RouteDefinition<User, Body, Params>,
+  definition: RouteDefinition<User, Body, Params, Query>,
+  querySchema: Query,
 ): ApiRoute {
   return {
     method: definition.method,
@@ -88,12 +91,17 @@ function buildRoute<
     tag: definition.tag,
     body: definition.body,
     params: definition.params,
+    query: querySchema,
     responses: definition.responses,
     createHandler: (app) => async (request, response) => {
       const user = await resolveUser(request, response, app)
       const params = definition.params.safeParse(request.params)
       if (!params.success) {
         throw notFound()
+      }
+      const query = querySchema.safeParse(request.query)
+      if (!query.success) {
+        throw validationFailed(toIssues(query.error))
       }
       const body = definition.body.safeParse(request.body)
       if (!body.success) {
@@ -106,6 +114,7 @@ function buildRoute<
         user,
         body: body.data,
         params: params.data,
+        query: query.data,
       })
       sendResult(response, definition.responses, result)
     },
@@ -115,20 +124,38 @@ function buildRoute<
 export function definePublicRoute<
   Body extends z.ZodType,
   Params extends z.ZodObject,
->(definition: RouteDefinition<null, Body, Params>): ApiRoute {
-  return buildRoute('public', resolveAnonymous, definition)
+  Query extends z.ZodObject = typeof noQuery,
+>(definition: RouteDefinition<null, Body, Params, Query>): ApiRoute {
+  return buildRoute(
+    'public',
+    resolveAnonymous,
+    definition,
+    definition.query ?? noQuery,
+  )
 }
 
 export function defineUserRoute<
   Body extends z.ZodType,
   Params extends z.ZodObject,
->(definition: RouteDefinition<UserModel, Body, Params>): ApiRoute {
-  return buildRoute('user', resolveActiveUser, definition)
+  Query extends z.ZodObject = typeof noQuery,
+>(definition: RouteDefinition<UserModel, Body, Params, Query>): ApiRoute {
+  return buildRoute(
+    'user',
+    resolveActiveUser,
+    definition,
+    definition.query ?? noQuery,
+  )
 }
 
 export function defineAdminRoute<
   Body extends z.ZodType,
   Params extends z.ZodObject,
->(definition: RouteDefinition<UserModel, Body, Params>): ApiRoute {
-  return buildRoute('admin', resolveAdministrator, definition)
+  Query extends z.ZodObject = typeof noQuery,
+>(definition: RouteDefinition<UserModel, Body, Params, Query>): ApiRoute {
+  return buildRoute(
+    'admin',
+    resolveAdministrator,
+    definition,
+    definition.query ?? noQuery,
+  )
 }

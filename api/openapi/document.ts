@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { apiPrefix } from '../app.js'
 import { csrfHeaderName } from '../auth/csrf.js'
 import { sessionCookieName } from '../auth/session.js'
-import { noBody, noParams } from '../schemas/http.js'
+import { noBody, noParams, noQuery } from '../schemas/http.js'
 import type { ApiRoute, RouteResponse } from '../types/http.js'
 
 const csrfHeaders = z.object({
@@ -39,6 +39,7 @@ function registerRoute(registry: OpenAPIRegistry, route: ApiRoute): void {
     security: route.access === 'public' ? [] : [{ session: [] }],
     request: {
       ...(route.params === noParams ? {} : { params: route.params }),
+      ...(route.query === noQuery ? {} : { query: route.query }),
       ...(route.method === 'get' ? {} : { headers: csrfHeaders }),
       ...(route.body === noBody
         ? {}

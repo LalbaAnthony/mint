@@ -244,6 +244,7 @@ export type ScheduleAttributes = {
   endDate: string | null
   maxOccurrences: number | null
   businessDayRule: BusinessDayRule
+  note: string | null
   active: boolean
   createdAt: Date
   updatedAt: Date
@@ -264,6 +265,7 @@ export type ScheduleCreationAttributes = Optional<
   | 'endDate'
   | 'maxOccurrences'
   | 'businessDayRule'
+  | 'note'
   | 'active'
   | 'createdAt'
   | 'updatedAt'

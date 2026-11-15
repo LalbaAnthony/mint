@@ -3,20 +3,26 @@ import {
   categoryListResponseSchema,
   categorySchema,
   createCategoryRequestSchema,
+  deleteCategoryQuerySchema,
   reorderCategoriesRequestSchema,
   updateCategoryRequestSchema,
 } from '@mint/shared/schemas/categories'
+import { usageCountsSchema } from '@mint/shared/schemas/usage'
 import {
   ensureEditable,
   findAvailableParent,
   findParentOf,
+  findReplacement,
   findSiblings,
   findUserCategory,
   nextCategorySortOrder,
+  reassignCategories,
   siblingScope,
+  subtreeIds,
   toCategory,
   withUniqueName,
 } from '../categories/categories.js'
+import { categoryUsage, isUsed } from '../planning/usage.js'
 import { conflict, validationFailed } from '../http/http-error.js'
 import { ensureSameMembers } from '../http/ordering.js'
 import { defineUserRoute } from '../http/route.js'
@@ -245,19 +251,43 @@ export const restoreCategoryRoute = defineUserRoute({
   },
 })
 
-export const deleteCategoryRoute = defineUserRoute({
-  method: 'delete',
-  path: '/categories/:id',
-  summary: 'Delete a category and its subcategories, system ones excepted',
+export const categoryUsageRoute = defineUserRoute({
+  method: 'get',
+  path: '/categories/:id/usage',
+  summary:
+    'Count the operations, schedules and envelope memberships of a category and its subcategories (CAT-07)',
   tag,
   body: noBody,
   params: resourceIdParamsSchema,
   responses: {
-    204: { description: 'Category and its subcategories deleted' },
+    200: { description: 'Usage counts', schema: usageCountsSchema },
     ...resourceErrors,
-    409: errorResponse('System category (CAT-08)'),
   },
   handle: async ({ app, user, params }) => {
+    const category = await findUserCategory(app, user.id, params.id)
+    const ids = await subtreeIds(app, category)
+    return { status: 200, body: await categoryUsage(app, user.id, ids) }
+  },
+})
+
+export const deleteCategoryRoute = defineUserRoute({
+  method: 'delete',
+  path: '/categories/:id',
+  summary:
+    'Delete a category and its subcategories, system ones excepted; a used category needs a replacement of the same kind that takes over its operations, schedules and envelope (CAT-07)',
+  tag,
+  body: noBody,
+  params: resourceIdParamsSchema,
+  query: deleteCategoryQuerySchema,
+  responses: {
+    204: { description: 'Category and its subcategories deleted' },
+    400: errorResponse('Invalid query'),
+    ...resourceErrors,
+    409: errorResponse(
+      'System category (CAT-08), used category without replacement, or invalid replacement',
+    ),
+  },
+  handle: async ({ app, user, params, query }) => {
     await app.sequelize.transaction(async (transaction) => {
       const category = await findUserCategory(
         app,
@@ -267,6 +297,27 @@ export const deleteCategoryRoute = defineUserRoute({
       )
       if (category.isSystem) {
         throw conflict('system_category')
+      }
+      const removedIds = await subtreeIds(app, category, transaction)
+      const usage = await categoryUsage(app, user.id, removedIds, transaction)
+      if (isUsed(usage)) {
+        if (query.replacementId === undefined) {
+          throw conflict('category_in_use')
+        }
+        const replacement = await findReplacement(
+          app,
+          category,
+          query.replacementId,
+          removedIds,
+          transaction,
+        )
+        await reassignCategories(
+          app,
+          user.id,
+          removedIds,
+          replacement,
+          transaction,
+        )
       }
       await app.models.Category.destroy({
         where: { userId: user.id, parentId: category.id },

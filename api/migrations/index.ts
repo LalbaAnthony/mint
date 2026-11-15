@@ -13,6 +13,7 @@ import * as createSchedules from './0011-create-schedules.js'
 import * as createScheduleOccurrences from './0012-create-schedule-occurrences.js'
 import * as createTransactions from './0013-create-transactions.js'
 import * as createEnvelopes from './0014-create-envelopes.js'
+import * as addScheduleNote from './0015-add-schedule-note.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -29,4 +30,5 @@ export const migrations: Migration[] = [
   { name: '0012-create-schedule-occurrences', ...createScheduleOccurrences },
   { name: '0013-create-transactions', ...createTransactions },
   { name: '0014-create-envelopes', ...createEnvelopes },
+  { name: '0015-add-schedule-note', ...addScheduleNote },
 ]

@@ -61,3 +61,9 @@ export type SeedSummary = {
   customizedUserEmail: string
   password: string
 }
+
+export type SeedReferences = {
+  accounts: Map<string, string>
+  paymentMethods: Map<string, string>
+  categories: Map<string, string>
+}

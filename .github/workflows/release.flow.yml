@@ -51,3 +51,4 @@ jobs:
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
       MAIL_FROM: ${{ secrets.MAIL_FROM }}
+      HEALTHCHECK_EXECUTION_URL: ${{ secrets.HEALTHCHECK_EXECUTION_URL }}

@@ -1,4 +1,4 @@
-import { UniqueConstraintError } from 'sequelize'
+import { Op, UniqueConstraintError } from 'sequelize'
 import type { Transaction } from 'sequelize'
 import type {
   Category,
@@ -6,6 +6,7 @@ import type {
 } from '@mint/shared/types/categories'
 import { conflict, notFound } from '../http/http-error.js'
 import type { AppDependencies } from '../types/app.js'
+import type { DataAccess } from '../types/planning.js'
 import type { CategorySiblingScope } from '../types/categories.js'
 import type { CategoryModel } from '../types/models.js'
 
@@ -26,7 +27,7 @@ export function toCategory(
 }
 
 export async function findUserCategory(
-  app: AppDependencies,
+  app: DataAccess,
   userId: string,
   id: string,
   transaction?: Transaction,
@@ -135,5 +136,86 @@ export async function withUniqueName<Result>(
       throw conflict('category_name_taken')
     }
     throw error
+  }
+}
+
+export async function subtreeIds(
+  app: AppDependencies,
+  category: CategoryModel,
+  transaction?: Transaction,
+): Promise<string[]> {
+  const children = await app.models.Category.findAll({
+    attributes: ['id'],
+    where: { userId: category.userId, parentId: category.id },
+    order: [
+      ['sortOrder', 'ASC'],
+      ['createdAt', 'ASC'],
+    ],
+    transaction,
+  })
+  return [category.id, ...children.map((child) => child.id)]
+}
+
+export async function findReplacement(
+  app: AppDependencies,
+  category: CategoryModel,
+  replacementId: string,
+  removedIds: readonly string[],
+  transaction?: Transaction,
+): Promise<CategoryModel> {
+  const replacement = await findUserCategory(
+    app,
+    category.userId,
+    replacementId,
+    transaction,
+  )
+  if (
+    removedIds.includes(replacement.id) ||
+    replacement.kind !== category.kind ||
+    replacement.isSystem ||
+    replacement.archivedAt !== null
+  ) {
+    throw conflict('invalid_replacement')
+  }
+  return replacement
+}
+
+export async function reassignCategories(
+  app: AppDependencies,
+  userId: string,
+  removedIds: readonly string[],
+  replacement: CategoryModel,
+  transaction: Transaction,
+): Promise<void> {
+  const where = { userId, categoryId: { [Op.in]: [...removedIds] } }
+  await app.models.Transaction.update(
+    { categoryId: replacement.id },
+    { where, transaction },
+  )
+  await app.models.Schedule.update(
+    { categoryId: replacement.id },
+    { where, transaction },
+  )
+  const memberships = await app.models.EnvelopeCategory.findAll({
+    where,
+    transaction,
+  })
+  const inherited = removedIds
+    .map((id) => memberships.find((membership) => membership.categoryId === id))
+    .find((membership) => membership !== undefined)
+  const replacementMembership = await app.models.EnvelopeCategory.findOne({
+    where: { userId, categoryId: replacement.id },
+    transaction,
+  })
+  await app.models.EnvelopeCategory.destroy({ where, transaction })
+  if (inherited !== undefined && replacementMembership === null) {
+    await app.models.EnvelopeCategory.create(
+      {
+        userId,
+        envelopeId: inherited.envelopeId,
+        categoryId: replacement.id,
+      },
+      { transaction },
+    )
   }
 }
