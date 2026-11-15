@@ -59,10 +59,13 @@ export type IsolationResources = {
   statementId: string
   importBatchId: string
   tagId: string
+  investmentAccountId: string
+  valuationId: string
 }
 
 export type IsolationSnapshot = {
   tags: unknown
+  valuations: unknown
   rules: unknown
   statements: unknown
   imports: unknown

@@ -30,6 +30,9 @@ async function snapshotOf(
     envelopes: (await client.get('/envelopes')).body,
     rules: (await client.get('/rules')).body,
     tags: (await client.get('/tags')).body,
+    valuations: (
+      await client.get(`/accounts/${resources.investmentAccountId}/valuations`)
+    ).body,
     statements: (
       await client.get(`/accounts/${resources.accountId}/statements`)
     ).body,
@@ -861,6 +864,23 @@ const scenarios: Record<string, Scenario> = {
     () => ({ name: 'Taken over' }),
   ),
   'delete /tags/:id': crossAccess('delete', ({ tagId }) => `/tags/${tagId}`),
+  'get /accounts/:id/valuations': crossRead(
+    ({ investmentAccountId }) => `/accounts/${investmentAccountId}/valuations`,
+  ),
+  'post /accounts/:id/valuations': crossAccess(
+    'post',
+    ({ investmentAccountId }) => `/accounts/${investmentAccountId}/valuations`,
+    () => ({ date: '2026-11-09', valueCents: 1 }),
+  ),
+  'patch /valuations/:id': crossAccess(
+    'patch',
+    ({ valuationId }) => `/valuations/${valuationId}`,
+    () => ({ valueCents: 1 }),
+  ),
+  'delete /valuations/:id': crossAccess(
+    'delete',
+    ({ valuationId }) => `/valuations/${valuationId}`,
+  ),
 }
 
 async function createBobResources(
@@ -896,6 +916,19 @@ async function createBobResources(
     throw new Error('Bob resources could not be created')
   }
   const tag = await bobClient.post('/tags', { name: 'Bob tag' })
+  const investment = await bobClient.post('/accounts', {
+    ...aliceAccountInput,
+    name: 'Bob PEA',
+    nature: 'securities_account',
+    usage: 'investment',
+  })
+  const valuation = await bobClient.post(
+    `/accounts/${investment.body.id}/valuations`,
+    { date: '2026-11-10', valueCents: 2_000 },
+  )
+  if (investment.status !== 201 || valuation.status !== 201) {
+    throw new Error('Bob investment could not be created')
+  }
   if (tag.status !== 201) {
     throw new Error('Bob tag could not be created')
   }
@@ -957,6 +990,8 @@ async function createBobResources(
     statementId: statement.body.id,
     importBatchId: batch.body.batch.id,
     tagId: tag.body.id,
+    investmentAccountId: investment.body.id,
+    valuationId: valuation.body.id,
   }
 }
 

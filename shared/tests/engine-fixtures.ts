@@ -89,6 +89,7 @@ export function account(overrides: Partial<AccountInput> = {}): AccountInput {
     initialBalanceDate: '2026-11-01',
     lowBalanceThresholdCents: null,
     archived: false,
+    valuations: [],
     ...overrides,
   }
 }

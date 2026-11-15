@@ -311,7 +311,8 @@
           "sortOrder": { "type": "integer" },
           "archivedAt": { "type": ["string", "null"], "format": "date-time" },
           "currentBalanceCents": { "type": "integer" },
-          "reconciliationGapCents": { "type": ["integer", "null"] }
+          "reconciliationGapCents": { "type": ["integer", "null"] },
+          "investment": { "$ref": "#/components/schemas/InvestmentSummary" }
         },
         "required": [
           "id",
@@ -326,7 +327,8 @@
           "sortOrder",
           "archivedAt",
           "currentBalanceCents",
-          "reconciliationGapCents"
+          "reconciliationGapCents",
+          "investment"
         ]
       },
       "AccountNature": {
@@ -346,6 +348,29 @@
       "RegulatedProduct": {
         "type": ["string", "null"],
         "enum": ["livret_a", "ldds", "lep", "pel", "cel", null]
+      },
+      "InvestmentSummary": {
+        "type": ["object", "null"],
+        "properties": {
+          "paidInCents": { "type": "integer" },
+          "referenceBalanceCents": { "type": "integer" },
+          "lastValuation": { "$ref": "#/components/schemas/ValuationPoint" },
+          "latentGainCents": { "type": ["integer", "null"] }
+        },
+        "required": [
+          "paidInCents",
+          "referenceBalanceCents",
+          "lastValuation",
+          "latentGainCents"
+        ]
+      },
+      "ValuationPoint": {
+        "type": ["object", "null"],
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "valueCents": { "type": "integer" }
+        },
+        "required": ["date", "valueCents"]
       },
       "CreateAccountRequest": {
         "type": "object",
@@ -1656,6 +1681,50 @@
           }
         },
         "required": ["date", "balanceCents"]
+      },
+      "ValuationListResponse": {
+        "type": "object",
+        "properties": {
+          "valuations": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Valuation" }
+          },
+          "summary": { "$ref": "#/components/schemas/InvestmentSummary" }
+        },
+        "required": ["valuations", "summary"]
+      },
+      "Valuation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "valueCents": { "type": "integer" }
+        },
+        "required": ["id", "accountId", "date", "valueCents"]
+      },
+      "CreateValuationRequest": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "valueCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999999999
+          }
+        },
+        "required": ["date", "valueCents"]
+      },
+      "UpdateValuationRequest": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "valueCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99999999999
+          }
+        }
       },
       "ImportBatchView": {
         "type": "object",
@@ -3452,7 +3521,7 @@
             }
           },
           "409": {
-            "description": "Archived account, or operations dated before the new initial balance date",
+            "description": "Archived account, operations dated before the new initial balance date, or valuations kept by a non-investment nature",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -6598,6 +6667,259 @@
           },
           "404": {
             "description": "Unknown statement",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/valuations": {
+      "get": {
+        "summary": "Valuations of an investment account, latest first, with the amount paid in, the reference balance and the latent gain (CPT-06)",
+        "tags": ["valuations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valuations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValuationListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Account of a non-investment nature",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Record the market value of an investment account at a date, from its initial balance date to today (CPT-06)",
+        "tags": ["valuations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateValuationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Valuation recorded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Valuation" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, date in the future or before the initial balance",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived or non-investment account, or valuation already at this date",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/valuations/{id}": {
+      "patch": {
+        "summary": "Modify the date or the value of a valuation (CPT-06)",
+        "tags": ["valuations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateValuationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Valuation modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Valuation" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, date in the future or before the initial balance",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown valuation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account or valuation already at this date",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a valuation (CPT-06)",
+        "tags": ["valuations"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Valuation deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown valuation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

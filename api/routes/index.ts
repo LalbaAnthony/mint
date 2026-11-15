@@ -107,6 +107,12 @@ import {
   updateProfileRoute,
 } from './profile.js'
 import {
+  createValuationRoute,
+  deleteValuationRoute,
+  listValuationsRoute,
+  updateValuationRoute,
+} from './valuations.js'
+import {
   createTagRoute,
   deleteTagRoute,
   listTagsRoute,
@@ -206,6 +212,10 @@ export const apiRoutes: ApiRoute[] = [
   createStatementRoute,
   adjustStatementRoute,
   deleteStatementRoute,
+  listValuationsRoute,
+  createValuationRoute,
+  updateValuationRoute,
+  deleteValuationRoute,
   createImportRoute,
   importHistoryRoute,
   getImportRoute,

@@ -138,6 +138,7 @@ describe('createMigrator', () => {
       'transaction_tags',
       'transactions',
       'users',
+      'valuations',
     ])
 
     await migrator.down({ to: 0 })

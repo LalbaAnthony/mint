@@ -12,7 +12,7 @@ import type {
   UsageSubtotals,
 } from '../types/forecast.js'
 import type { ProjectedOccurrence, ScheduleInput } from '../types/schedules.js'
-import { calculatedBalanceCents } from './balances.js'
+import { referenceBalanceCents } from './balances.js'
 import {
   addMonthsClamped,
   enumerateDays,
@@ -233,7 +233,7 @@ export function computeForecast(input: ForecastInput): Forecast {
 
   const days = enumerateDays(startDate, endDate)
   const accounts = activeAccounts.map((account) => {
-    const startingBalanceCents = calculatedBalanceCents(
+    const startingBalanceCents = referenceBalanceCents(
       account,
       input.operations,
       startDate,

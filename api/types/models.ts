@@ -425,6 +425,7 @@ export type Models = {
   Tag: ModelStatic<TagModel>
   TransactionTag: ModelStatic<TransactionTagModel>
   ScheduleTag: ModelStatic<ScheduleTagModel>
+  Valuation: ModelStatic<ValuationModel>
 }
 
 export type ImportMappingAttributes = {
@@ -656,3 +657,24 @@ export type ScheduleTagModel = Model<
   ScheduleTagCreationAttributes
 > &
   ScheduleTagAttributes
+
+export type ValuationAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  date: string
+  valueCents: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ValuationCreationAttributes = Optional<
+  ValuationAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>
+
+export type ValuationModel = Model<
+  ValuationAttributes,
+  ValuationCreationAttributes
+> &
+  ValuationAttributes

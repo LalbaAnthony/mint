@@ -14,7 +14,9 @@ import { notFound, toIssues, validationFailed } from '../http/http-error.js'
 import type { AppDependencies } from '../types/app.js'
 import type { DataAccess } from '../types/planning.js'
 import type { AccountModel } from '../types/models.js'
+import type { InvestmentSummary } from '@mint/shared/types/valuations'
 import { loadAccountBalances } from '../planning/usage.js'
+import { loadInvestmentSummaries } from './investments.js'
 import { loadStatementGaps } from './statements.js'
 
 export function currentBalanceCents(
@@ -29,16 +31,24 @@ export async function accountWithBalance(
   account: AccountModel,
   transaction?: Transaction,
 ): Promise<Account> {
+  const today = parisDate(app.clock.now())
   const balances = await loadAccountBalances(
     app,
     account.userId,
-    parisDate(app.clock.now()),
+    today,
     transaction,
   )
   return toAccount(
     account,
     balances,
     await loadStatementGaps(app, account.userId, transaction),
+    await loadInvestmentSummaries(
+      app,
+      account.userId,
+      [account],
+      today,
+      transaction,
+    ),
   )
 }
 
@@ -46,7 +56,9 @@ export function toAccount(
   account: AccountModel,
   balances: ReadonlyMap<string, number>,
   gaps: ReadonlyMap<string, number> = new Map(),
+  investments: ReadonlyMap<string, InvestmentSummary> = new Map(),
 ): Account {
+  const investment = investments.get(account.id) ?? null
   return {
     id: account.id,
     name: account.name,
@@ -59,8 +71,11 @@ export function toAccount(
     lowBalanceThresholdCents: account.lowBalanceThresholdCents,
     sortOrder: account.sortOrder,
     archivedAt: account.archivedAt?.toISOString() ?? null,
-    currentBalanceCents: currentBalanceCents(account, balances),
+    currentBalanceCents:
+      investment?.referenceBalanceCents ??
+      currentBalanceCents(account, balances),
     reconciliationGapCents: gaps.get(account.id) ?? null,
+    investment,
   }
 }
 

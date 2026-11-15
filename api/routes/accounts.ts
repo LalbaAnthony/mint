@@ -2,6 +2,7 @@ import {
   accountOverviewSchema,
   accountSchema,
   createAccountRequestSchema,
+  isInvestmentNature,
   reorderAccountsRequestSchema,
   updateAccountRequestSchema,
 } from '@mint/shared/schemas/accounts'
@@ -20,6 +21,7 @@ import {
 import { parisDate } from '../clock.js'
 import { conflict } from '../http/http-error.js'
 import { loadStatementGaps } from '../accounts/statements.js'
+import { loadInvestmentSummaries } from '../accounts/investments.js'
 import { accountUsage, loadAccountBalances } from '../planning/usage.js'
 import { ensureSameMembers } from '../http/ordering.js'
 import { defineUserRoute } from '../http/route.js'
@@ -54,16 +56,21 @@ export const accountOverviewRoute = defineUserRoute({
         ['createdAt', 'ASC'],
       ],
     })
-    const balances = await loadAccountBalances(
+    const today = parisDate(app.clock.now())
+    const balances = await loadAccountBalances(app, user.id, today)
+    const gaps = await loadStatementGaps(app, user.id)
+    const investments = await loadInvestmentSummaries(
       app,
       user.id,
-      parisDate(app.clock.now()),
+      accounts,
+      today,
     )
-    const gaps = await loadStatementGaps(app, user.id)
     return {
       status: 200,
       body: buildAccountOverview(
-        accounts.map((account) => toAccount(account, balances, gaps)),
+        accounts.map((account) =>
+          toAccount(account, balances, gaps, investments),
+        ),
       ),
     }
   },
@@ -114,7 +121,7 @@ export const updateAccountRoute = defineUserRoute({
     400: errorResponse('Invalid body or initial balance dated in the future'),
     ...resourceErrors,
     409: errorResponse(
-      'Archived account, or operations dated before the new initial balance date',
+      'Archived account, operations dated before the new initial balance date, or valuations kept by a non-investment nature',
     ),
   },
   handle: async ({ app, user, params, body }) => {
@@ -126,6 +133,17 @@ export const updateAccountRoute = defineUserRoute({
       ...accountFields(account),
       ...body,
     })
+    if (
+      isInvestmentNature(account.nature) &&
+      !isInvestmentNature(fields.nature)
+    ) {
+      const valuations = await app.models.Valuation.count({
+        where: { userId: user.id, accountId: account.id },
+      })
+      if (valuations > 0) {
+        throw conflict('account_has_valuations')
+      }
+    }
     if (fields.initialBalanceDate > account.initialBalanceDate) {
       const earlier = await app.models.Transaction.count({
         where: {

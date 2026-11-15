@@ -19,10 +19,14 @@ import type {
   ScheduleModel,
   ScheduleOccurrenceModel,
   TransactionModel,
+  ValuationModel,
 } from '../types/models.js'
 import type { DataAccess, PostingReference } from '../types/planning.js'
 
-export function toAccountInput(account: AccountModel): AccountInput {
+export function toAccountInput(
+  account: AccountModel,
+  valuations: readonly ValuationModel[] = [],
+): AccountInput {
   return {
     id: account.id,
     usage: account.usage,
@@ -30,6 +34,12 @@ export function toAccountInput(account: AccountModel): AccountInput {
     initialBalanceDate: account.initialBalanceDate,
     lowBalanceThresholdCents: account.lowBalanceThresholdCents,
     archived: account.archivedAt !== null,
+    valuations: valuations
+      .filter((valuation) => valuation.accountId === account.id)
+      .map((valuation) => ({
+        date: valuation.date,
+        valueCents: valuation.valueCents,
+      })),
   }
 }
 
@@ -226,7 +236,12 @@ export async function loadAccountInputs(
     where: { userId },
     transaction,
   })
-  return accounts.map(toAccountInput)
+  const valuations = await data.models.Valuation.findAll({
+    where: { userId },
+    order: [['date', 'ASC']],
+    transaction,
+  })
+  return accounts.map((account) => toAccountInput(account, valuations))
 }
 
 export async function loadCategoryInputs(

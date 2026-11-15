@@ -18,6 +18,7 @@ import { isoWeekday } from './dates.js'
 import { monthlyEquivalentCents, periodicAmount } from './equivalents.js'
 import { planExecutions } from './execution.js'
 import { computeForecast } from './forecast.js'
+import { investmentSummary } from './investments.js'
 import { nextPendingOccurrence, occurrencesBetween } from './recurrence.js'
 import { monthlyIncomeExpenses, spendingBreakdown } from './reports.js'
 
@@ -352,5 +353,39 @@ describe('US-12 - balance day by day (CAL-02, PRV-01)', () => {
     expect(day(forecast, '2026-11-20').balanceCents).toBe(95_000)
     expect(signedFlows(forecast, '2026-11-28')).toEqual([150_000])
     expect(day(forecast, '2026-11-28').balanceCents).toBe(245_000)
+  })
+})
+
+describe('US-16 - investment gain (CPT-06)', () => {
+  it('shows 2 200 EUR paid in and a latent gain of +330 EUR (+15.0 %)', () => {
+    const pea = account({
+      id: 'pea',
+      usage: 'investment',
+      initialBalanceCents: 100_000,
+      initialBalanceDate: '2026-11-01',
+      valuations: [{ date: '2026-11-30', valueCents: 253_000 }],
+    })
+    const transfersIn = [
+      operation({
+        id: 'pea-in-1',
+        accountId: 'pea',
+        date: '2026-11-06',
+        amountCents: 70_000,
+        transferGroupId: 'savings-1',
+      }),
+      operation({
+        id: 'pea-in-2',
+        accountId: 'pea',
+        date: '2026-11-20',
+        amountCents: 50_000,
+        transferGroupId: 'savings-2',
+      }),
+    ]
+
+    const summary = investmentSummary(pea, transfersIn, '2026-11-30')
+
+    expect(summary.paidInCents).toBe(220_000)
+    expect(summary.latentGainCents).toBe(33_000)
+    expect((summary.latentGainCents ?? 0) / summary.paidInCents).toBe(0.15)
   })
 })

@@ -10,6 +10,7 @@ import {
   labelSchema,
   orderedIdsSchema,
 } from './common.js'
+import { investmentSummarySchema } from './valuations.js'
 
 export const accountNatures = [
   'current_account',
@@ -29,6 +30,16 @@ export const accountUsages = [
   'savings',
   'investment',
 ] as const
+
+export const investmentNatures = [
+  'life_insurance',
+  'securities_account',
+  'crypto_wallet',
+] as const
+
+export function isInvestmentNature(nature: AccountNature): boolean {
+  return investmentNatures.some((candidate) => candidate === nature)
+}
 
 export const regulatedProducts = [
   'livret_a',
@@ -117,6 +128,7 @@ export const accountSchema = z
     archivedAt: z.iso.datetime().nullable(),
     currentBalanceCents: z.number().int(),
     reconciliationGapCents: z.number().int().nullable(),
+    investment: investmentSummarySchema.nullable(),
   })
   .meta({ id: 'Account' })
 

@@ -23,6 +23,7 @@ import type {
   TransactionModel,
   TransactionTagModel,
   UserModel,
+  ValuationModel,
 } from '../types/models.js'
 
 const primaryKey = {
@@ -534,6 +535,25 @@ export function createModels(sequelize: Sequelize): Models {
     options('schedule_tags'),
   )
 
+  const Valuation = sequelize.define<ValuationModel>(
+    'Valuation',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      date: { type: DataTypes.DATEONLY, allowNull: false },
+      valueCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: ValuationModel) {
+          return Number(this.getDataValue('valueCents'))
+        },
+      },
+      ...timestamps,
+    },
+    options('valuations'),
+  )
+
   return {
     User,
     Session,
@@ -556,5 +576,6 @@ export function createModels(sequelize: Sequelize): Models {
     Tag,
     TransactionTag,
     ScheduleTag,
+    Valuation,
   }
 }

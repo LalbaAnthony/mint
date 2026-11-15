@@ -25,6 +25,7 @@ import {
   loadCategoryInputs,
   toOperationInput,
 } from '../planning/inputs.js'
+import { loadInvestmentSummaries } from '../accounts/investments.js'
 import { loadAccountBalances } from '../planning/usage.js'
 import type { UserModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
@@ -156,9 +157,17 @@ export async function dashboardSummary(
     where: { userId, archivedAt: null },
   })
   const balances = await loadAccountBalances(data, userId, today)
+  const investments = await loadInvestmentSummaries(
+    data,
+    userId,
+    accounts,
+    today,
+  )
   const wealthCents = accounts.reduce(
     (total, account) =>
-      total + account.initialBalanceCents + (balances.get(account.id) ?? 0),
+      total +
+      (investments.get(account.id)?.referenceBalanceCents ??
+        account.initialBalanceCents + (balances.get(account.id) ?? 0)),
     0,
   )
   const alerts: BalanceAlert[] = []

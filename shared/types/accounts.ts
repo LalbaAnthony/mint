@@ -10,6 +10,7 @@ import type {
   reorderAccountsRequestSchema,
   updateAccountRequestSchema,
 } from '../schemas/accounts.js'
+import type { ValuationPoint } from './valuations.js'
 
 export type AccountNature = z.infer<typeof accountNatureSchema>
 
@@ -40,4 +41,5 @@ export type AccountInput = {
   initialBalanceDate: string
   lowBalanceThresholdCents: number | null
   archived: boolean
+  valuations: ValuationPoint[]
 }
