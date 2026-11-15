@@ -17,10 +17,12 @@ import {
   labelSchema,
 } from '@mint/shared/schemas/common'
 import { noteMaxLength } from '@mint/shared/schemas/operations'
+import { passkeyNameSchema } from '@mint/shared/schemas/passkeys'
 import { rulePatternMaxLength } from '@mint/shared/schemas/rules'
 import { maxScheduleInterval } from '@mint/shared/schemas/schedules'
 import {
   currentPasswordSchema,
+  emailSchema,
   localeSchema,
   newPasswordSchema,
 } from '@mint/shared/schemas/user'
@@ -285,4 +287,20 @@ export const statementFormSchema = z.object({
 export const valuationFormSchema = z.object({
   date: isoDateSchema,
   value: amountInputSchema,
+})
+
+export const passkeyFormSchema = z.object({
+  name: passkeyNameSchema,
+  password: currentPasswordSchema,
+})
+
+export const passkeyRenameFormSchema = z.object({ name: passkeyNameSchema })
+
+export const exportFormSchema = z.object({ password: currentPasswordSchema })
+
+export const accountDeletionEmailSchema = z.object({ email: emailSchema })
+
+export const accountDeletionFormSchema = z.object({
+  email: emailSchema,
+  password: currentPasswordSchema,
 })

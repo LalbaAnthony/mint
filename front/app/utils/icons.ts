@@ -50,6 +50,7 @@ export const icons = {
   archive: 'lucide:archive',
   restore: 'lucide:archive-restore',
   delete: 'lucide:trash-2',
+  download: 'lucide:download',
   reorder: 'lucide:arrow-up-down',
   moveUp: 'lucide:arrow-up',
   moveDown: 'lucide:arrow-down',

@@ -224,7 +224,9 @@
     "resetPasswordTitle": "Nouveau mot de passe",
     "savePassword": "Enregistrer le mot de passe",
     "passwordChanged": "Mot de passe modifié : reconnectez-vous.",
-    "requestNewLink": "Demander un nouveau lien"
+    "requestNewLink": "Demander un nouveau lien",
+    "or": "ou",
+    "passkeyLogin": "Se connecter avec une passkey"
   },
   "invitation": {
     "title": "Créer votre compte",
@@ -391,6 +393,12 @@
     "invalid_parent": "Cette catégorie ne peut pas recevoir de sous-catégorie.",
     "order_mismatch": "La liste a changé entre-temps : elle vient d'être rechargée.",
     "network_error": "Serveur injoignable : vérifiez votre connexion.",
+    "passkey_invalid": "Passkey refusée : elle est inconnue, supprimée ou la vérification a expiré.",
+    "passkey_limit": "Vous avez atteint le nombre maximal de passkeys.",
+    "passkey_exists": "Cette passkey est déjà enregistrée.",
+    "no_passkey": "Aucune passkey enregistrée sur ce compte.",
+    "email_mismatch": "L'adresse saisie ne correspond pas à votre compte.",
+    "last_admin": "Vous êtes le dernier administrateur actif : désignez-en un autre avant de supprimer votre compte.",
     "internal_error": "Une erreur est survenue : réessayez plus tard.",
     "account_has_operations": "Ce compte a des opérations : il ne peut qu'être archivé.",
     "account_in_use": "Des échéances ou des enveloppes utilisent ce compte.",
@@ -976,5 +984,45 @@
       "neverDelivered": "aucun",
       "removeDevice": "Retirer {name}"
     }
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "add": "Ajouter une passkey",
+    "help": "Connexion sans mot de passe, par la biométrie ou le code de l'appareil. Votre mot de passe reste valable en recours.",
+    "unsupported": "Ce navigateur ne prend pas en charge les passkeys.",
+    "limit": "Limite de {n} passkeys atteinte.",
+    "empty": "Aucune passkey enregistrée.",
+    "details": "Ajoutée le {createdAt} · dernière utilisation : {lastUsed}",
+    "neverUsed": "jamais",
+    "rename": "Renommer",
+    "addTitle": "Ajouter une passkey",
+    "addHelp": "Confirmez votre mot de passe, puis suivez les instructions de votre appareil.",
+    "name": "Nom",
+    "create": "Créer la passkey",
+    "alreadyRegistered": "Cet appareil a déjà une passkey pour votre compte.",
+    "added": "Passkey {name} ajoutée.",
+    "renameTitle": "Renommer la passkey",
+    "deleteTitle": "Supprimer la passkey",
+    "deleteEffect": "{name} ne permettra plus de se connecter.",
+    "deleted": "Passkey {name} supprimée."
+  },
+  "personalData": {
+    "title": "Mes données",
+    "exportHelp": "Archive ZIP : un fichier JSON complet et un fichier CSV par type de données.",
+    "export": "Exporter mes données",
+    "exportTitle": "Exporter mes données",
+    "exportContent": "Confirmez votre mot de passe pour télécharger l'archive.",
+    "download": "Télécharger l'archive",
+    "exported": "Export téléchargé.",
+    "deleteHelp": "Effacement définitif et immédiat de votre compte et de toutes vos données.",
+    "delete": "Supprimer mon compte",
+    "deleteTitle": "Supprimer mon compte",
+    "deleteEffect": "Votre compte, toutes vos données et vos sessions seront effacés immédiatement et définitivement. Exportez vos données avant si besoin.",
+    "emailConfirmation": "Saisissez l'adresse email du compte",
+    "deleteForever": "Supprimer définitivement",
+    "deleteWithPasskey": "Confirmer avec une passkey",
+    "emailFirst": "Saisissez d'abord l'adresse email du compte.",
+    "deleted": "Votre compte et toutes vos données ont été supprimés.",
+    "pushNotDisabled": "Les notifications push n'ont pas pu être désactivées sur cet appareil : bloquez-les dans les réglages du navigateur."
   }
 }

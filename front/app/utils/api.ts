@@ -162,3 +162,55 @@ export async function apiUpload<Schema extends z.ZodType>(
   notifyMutation(path)
   return schema.parse(response)
 }
+
+async function readDownloadError(error: unknown): Promise<ApiError> {
+  if (!isFetchFailure(error) || !(error.data instanceof Blob)) {
+    return toApiError(error)
+  }
+  const text = await error.data.text()
+  const parsed = apiErrorResponseSchema.safeParse(parseJson(text))
+  return new ApiError({
+    status: error.statusCode ?? 0,
+    code: parsed.success ? parsed.data.error : 'internal_error',
+    issues: parsed.success ? (parsed.data.issues ?? []) : [],
+    retryAfterSeconds: parsed.success
+      ? parsed.data.retryAfterSeconds
+      : undefined,
+  })
+}
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return undefined
+  }
+}
+
+async function sendDownload(
+  path: string,
+  body: object,
+  token: string,
+): Promise<Blob> {
+  try {
+    return await $fetch(`${apiBase}${path}`, {
+      method: 'POST',
+      body,
+      credentials: 'same-origin',
+      headers: { 'X-CSRF-Token': token },
+      responseType: 'blob',
+    })
+  } catch (error) {
+    throw await readDownloadError(error)
+  }
+}
+
+export async function apiDownload(path: string, body: object): Promise<Blob> {
+  const token = csrfToken ?? (await refreshCsrfToken())
+  return sendDownload(path, body, token).catch(async (error: unknown) => {
+    if (error instanceof ApiError && error.code === 'csrf_invalid') {
+      return sendDownload(path, body, await refreshCsrfToken())
+    }
+    throw error
+  })
+}

@@ -39,10 +39,31 @@ export const useSessionStore = defineStore('session', () => {
     setUser(profile)
   }
 
+  async function loginWithPasskey(): Promise<boolean> {
+    const result = await signInWithPasskey()
+    if (typeof result === 'string') {
+      return false
+    }
+    resetCsrfToken()
+    setUser(result)
+    return true
+  }
+
   async function logout(): Promise<void> {
     await apiCommand('POST', '/auth/logout')
     clear()
   }
 
-  return { user, status, role, isAdmin, setUser, clear, load, login, logout }
+  return {
+    user,
+    status,
+    role,
+    isAdmin,
+    setUser,
+    clear,
+    load,
+    login,
+    loginWithPasskey,
+    logout,
+  }
 })

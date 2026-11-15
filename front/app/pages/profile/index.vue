@@ -267,6 +267,8 @@ onMounted(loadSessions)
         </div>
       </UCard>
 
+      <PasskeyManager />
+
       <UCard>
         <template #header>
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -311,6 +313,8 @@ onMounted(loadSessions)
           </li>
         </ul>
       </UCard>
+
+      <PersonalDataCard />
     </div>
 
     <UModal v-model:open="emailOpen" :title="t('profile.changeEmail')">

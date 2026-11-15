@@ -224,7 +224,9 @@
     "resetPasswordTitle": "New password",
     "savePassword": "Save the password",
     "passwordChanged": "Password changed: log in again.",
-    "requestNewLink": "Request a new link"
+    "requestNewLink": "Request a new link",
+    "or": "or",
+    "passkeyLogin": "Sign in with a passkey"
   },
   "invitation": {
     "title": "Create your account",
@@ -391,6 +393,12 @@
     "invalid_parent": "This category cannot hold subcategories.",
     "order_mismatch": "The list changed in the meantime: it has just been reloaded.",
     "network_error": "Server unreachable: check your connection.",
+    "passkey_invalid": "Passkey refused: it is unknown, deleted or the check expired.",
+    "passkey_limit": "You have reached the maximum number of passkeys.",
+    "passkey_exists": "This passkey is already registered.",
+    "no_passkey": "No passkey registered on this account.",
+    "email_mismatch": "The address does not match your account.",
+    "last_admin": "You are the last active administrator: appoint another one before deleting your account.",
     "internal_error": "Something went wrong: try again later.",
     "account_has_operations": "This account has operations: it can only be archived.",
     "account_in_use": "Schedules or envelopes use this account.",
@@ -976,5 +984,45 @@
       "neverDelivered": "none",
       "removeDevice": "Remove {name}"
     }
+  },
+  "passkeys": {
+    "title": "Passkeys",
+    "add": "Add a passkey",
+    "help": "Sign in without a password, with the device's biometrics or code. Your password remains valid as a fallback.",
+    "unsupported": "This browser does not support passkeys.",
+    "limit": "Limit of {n} passkeys reached.",
+    "empty": "No passkey registered.",
+    "details": "Added on {createdAt} · last used: {lastUsed}",
+    "neverUsed": "never",
+    "rename": "Rename",
+    "addTitle": "Add a passkey",
+    "addHelp": "Confirm your password, then follow the instructions of your device.",
+    "name": "Name",
+    "create": "Create the passkey",
+    "alreadyRegistered": "This device already has a passkey for your account.",
+    "added": "Passkey {name} added.",
+    "renameTitle": "Rename the passkey",
+    "deleteTitle": "Delete the passkey",
+    "deleteEffect": "{name} will no longer sign you in.",
+    "deleted": "Passkey {name} deleted."
+  },
+  "personalData": {
+    "title": "My data",
+    "exportHelp": "ZIP archive: a complete JSON file and one CSV file per data type.",
+    "export": "Export my data",
+    "exportTitle": "Export my data",
+    "exportContent": "Confirm your password to download the archive.",
+    "download": "Download the archive",
+    "exported": "Export downloaded.",
+    "deleteHelp": "Permanent and immediate erasure of your account and all your data.",
+    "delete": "Delete my account",
+    "deleteTitle": "Delete my account",
+    "deleteEffect": "Your account, all your data and your sessions will be erased immediately and permanently. Export your data first if needed.",
+    "emailConfirmation": "Type the email address of the account",
+    "deleteForever": "Delete permanently",
+    "deleteWithPasskey": "Confirm with a passkey",
+    "emailFirst": "Type the email address of the account first.",
+    "deleted": "Your account and all your data have been deleted.",
+    "pushNotDisabled": "Push notifications could not be disabled on this device: block them in the browser settings."
   }
 }

@@ -67,6 +67,7 @@ export default defineNuxtConfig({
         'lucide:wifi-off',
         'lucide:refresh-cw',
         'lucide:key-round',
+        'lucide:download',
         'lucide:table',
         'lucide:log-out',
         'lucide:house',

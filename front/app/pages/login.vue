@@ -14,6 +14,27 @@ const state = reactive({ email: '', password: '' })
 const pending = ref(false)
 const failure = ref<string | null>(null)
 
+const passkeyAvailable = ref(false)
+const passkeyPending = ref(false)
+
+onMounted(() => {
+  passkeyAvailable.value = passkeysSupported()
+})
+
+async function submitPasskey(): Promise<void> {
+  passkeyPending.value = true
+  failure.value = null
+  try {
+    if (await session.loginWithPasskey()) {
+      await navigateTo(safeRedirect(route.query.redirect))
+    }
+  } catch (error) {
+    failure.value = errorMessage(error)
+  } finally {
+    passkeyPending.value = false
+  }
+}
+
 async function submit(): Promise<void> {
   pending.value = true
   failure.value = null
@@ -76,6 +97,19 @@ async function submit(): Promise<void> {
         data-testid="login-submit"
       />
     </UForm>
+    <template v-if="passkeyAvailable">
+      <USeparator :label="t('auth.or')" />
+      <UButton
+        :label="t('auth.passkeyLogin')"
+        :icon="icons.passkey"
+        :loading="passkeyPending"
+        color="neutral"
+        variant="outline"
+        block
+        data-testid="login-passkey"
+        @click="submitPasskey"
+      />
+    </template>
     <NuxtLink
       to="/forgot-password"
       class="text-sm text-primary underline"
