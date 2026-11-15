@@ -28,14 +28,21 @@ export type RouteRequestBody =
   | { format: 'json'; limit: string | number }
   | { format: 'binary'; limit: string | number; mediaTypes: string[] }
 
+export type RouteDownload = {
+  filename: string
+  stream: NodeJS.ReadableStream
+}
+
 export type RouteResult = {
   status: number
   body?: unknown
+  download?: RouteDownload
 }
 
 export type RouteResponse = {
   description: string
   schema?: z.ZodType
+  mediaType?: string
 }
 
 export type RouteDefinition<

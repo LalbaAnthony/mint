@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { passkeyAuthenticationResponseSchema } from './passkeys.js'
 import {
   allocationTargetsSchema,
   currentPasswordSchema,
@@ -41,3 +42,22 @@ export const sessionSummarySchema = z
 export const sessionListResponseSchema = z
   .array(sessionSummarySchema)
   .meta({ id: 'SessionListResponse' })
+
+export const exportRequestSchema = z
+  .object({ password: currentPasswordSchema })
+  .meta({ id: 'ExportRequest' })
+
+export const accountDeletionRequestSchema = z
+  .discriminatedUnion('method', [
+    z.object({
+      method: z.literal('password'),
+      email: emailSchema,
+      password: currentPasswordSchema,
+    }),
+    z.object({
+      method: z.literal('passkey'),
+      email: emailSchema,
+      response: passkeyAuthenticationResponseSchema,
+    }),
+  ])
+  .meta({ id: 'AccountDeletionRequest' })

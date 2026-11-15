@@ -21,6 +21,14 @@ function toOpenApiPath(path: string): string {
 }
 
 function toResponseConfig(response: RouteResponse): ResponseConfig {
+  if (response.mediaType !== undefined) {
+    return {
+      description: response.description,
+      content: {
+        [response.mediaType]: { schema: { type: 'string', format: 'binary' } },
+      },
+    }
+  }
   if (response.schema === undefined) {
     return { description: response.description }
   }

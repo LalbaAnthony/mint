@@ -101,6 +101,129 @@
         },
         "required": ["email", "password"]
       },
+      "PasskeyAuthenticationOptions": {
+        "type": "object",
+        "properties": {
+          "challenge": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "timeout": { "type": "integer" },
+          "rpId": { "type": "string" },
+          "allowCredentials": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "type": { "type": "string" },
+                "transports": {
+                  "type": "array",
+                  "items": { "type": "string", "maxLength": 32 },
+                  "maxItems": 10
+                }
+              },
+              "required": ["id", "type"]
+            }
+          },
+          "userVerification": {
+            "type": "string",
+            "enum": ["discouraged", "preferred", "required"]
+          },
+          "hints": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["hybrid", "security-key", "client-device"]
+            }
+          }
+        },
+        "required": ["challenge"]
+      },
+      "PasskeyLoginRequest": {
+        "type": "object",
+        "properties": {
+          "response": {
+            "$ref": "#/components/schemas/PasskeyAuthenticationResponse"
+          }
+        },
+        "required": ["response"]
+      },
+      "PasskeyAuthenticationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "rawId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "response": {
+            "type": "object",
+            "properties": {
+              "clientDataJSON": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "authenticatorData": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "signature": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "userHandle": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              }
+            },
+            "required": ["clientDataJSON", "authenticatorData", "signature"]
+          },
+          "authenticatorAttachment": {
+            "type": "string",
+            "enum": ["cross-platform", "platform"]
+          },
+          "clientExtensionResults": {
+            "type": "object",
+            "properties": {
+              "credProps": {
+                "type": "object",
+                "properties": { "rk": { "type": "boolean" } }
+              }
+            }
+          },
+          "type": { "type": "string", "enum": ["public-key"] }
+        },
+        "required": [
+          "id",
+          "rawId",
+          "response",
+          "clientExtensionResults",
+          "type"
+        ]
+      },
       "InvitationStatusResponse": {
         "type": "object",
         "properties": {
@@ -199,6 +322,248 @@
           "userAgent",
           "ip",
           "current"
+        ]
+      },
+      "PasskeyListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Passkey" }
+      },
+      "Passkey": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastUsedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["id", "name", "createdAt", "lastUsedAt"]
+      },
+      "PasskeyRegistrationOptions": {
+        "type": "object",
+        "properties": {
+          "rp": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "id": { "type": "string" }
+            },
+            "required": ["name"]
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "displayName": { "type": "string" }
+            },
+            "required": ["id", "name", "displayName"]
+          },
+          "challenge": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "pubKeyCredParams": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "alg": { "type": "integer" },
+                "type": { "type": "string", "enum": ["public-key"] }
+              },
+              "required": ["alg", "type"]
+            }
+          },
+          "timeout": { "type": "integer" },
+          "excludeCredentials": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4096,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "type": { "type": "string" },
+                "transports": {
+                  "type": "array",
+                  "items": { "type": "string", "maxLength": 32 },
+                  "maxItems": 10
+                }
+              },
+              "required": ["id", "type"]
+            }
+          },
+          "authenticatorSelection": {
+            "type": "object",
+            "properties": {
+              "authenticatorAttachment": {
+                "type": "string",
+                "enum": ["cross-platform", "platform"]
+              },
+              "requireResidentKey": { "type": "boolean" },
+              "residentKey": {
+                "type": "string",
+                "enum": ["discouraged", "preferred", "required"]
+              },
+              "userVerification": {
+                "type": "string",
+                "enum": ["discouraged", "preferred", "required"]
+              }
+            }
+          },
+          "hints": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["hybrid", "security-key", "client-device"]
+            }
+          },
+          "attestation": {
+            "type": "string",
+            "enum": ["direct", "enterprise", "indirect", "none"]
+          }
+        },
+        "required": ["rp", "user", "challenge", "pubKeyCredParams"]
+      },
+      "PasskeyRegistrationOptionsRequest": {
+        "type": "object",
+        "properties": {
+          "password": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "required": ["password"]
+      },
+      "PasskeyRegistrationRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "response": {
+            "$ref": "#/components/schemas/PasskeyRegistrationResponse"
+          }
+        },
+        "required": ["name", "response"]
+      },
+      "PasskeyRegistrationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "rawId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "response": {
+            "type": "object",
+            "properties": {
+              "clientDataJSON": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "attestationObject": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "authenticatorData": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "transports": {
+                "type": "array",
+                "items": { "type": "string", "maxLength": 32 },
+                "maxItems": 10
+              },
+              "publicKeyAlgorithm": { "type": "integer" },
+              "publicKey": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              }
+            },
+            "required": ["clientDataJSON", "attestationObject"]
+          },
+          "authenticatorAttachment": {
+            "type": "string",
+            "enum": ["cross-platform", "platform"]
+          },
+          "clientExtensionResults": {
+            "type": "object",
+            "properties": {
+              "credProps": {
+                "type": "object",
+                "properties": { "rk": { "type": "boolean" } }
+              }
+            }
+          },
+          "type": { "type": "string", "enum": ["public-key"] }
+        },
+        "required": [
+          "id",
+          "rawId",
+          "response",
+          "clientExtensionResults",
+          "type"
+        ]
+      },
+      "RenamePasskeyRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 60 }
+        },
+        "required": ["name"]
+      },
+      "ExportRequest": {
+        "type": "object",
+        "properties": {
+          "password": { "type": "string", "minLength": 1, "maxLength": 256 }
+        },
+        "required": ["password"]
+      },
+      "AccountDeletionRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "method": { "type": "string", "enum": ["password"] },
+              "email": {
+                "type": "string",
+                "maxLength": 254,
+                "format": "email"
+              },
+              "password": { "type": "string", "minLength": 1, "maxLength": 256 }
+            },
+            "required": ["method", "email", "password"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "method": { "type": "string", "enum": ["passkey"] },
+              "email": {
+                "type": "string",
+                "maxLength": 254,
+                "format": "email"
+              },
+              "response": {
+                "$ref": "#/components/schemas/PasskeyAuthenticationResponse"
+              }
+            },
+            "required": ["method", "email", "response"]
+          }
         ]
       },
       "AdminInvitationListResponse": {
@@ -2652,6 +3017,114 @@
         }
       }
     },
+    "/api/v1/auth/passkey/options": {
+      "post": {
+        "summary": "Start a passkey login without email (AUTH-03)",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "WebAuthn request options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAuthenticationOptions"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts from this address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/passkey/login": {
+      "post": {
+        "summary": "Log in with a passkey (AUTH-03, US-03)",
+        "tags": ["auth"],
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PasskeyLoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logged in",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unknown, deleted or invalid passkey",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Disabled account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many failed attempts from this address",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/logout": {
       "post": {
         "summary": "Log out the current session",
@@ -3252,6 +3725,446 @@
           "204": { "description": "Logged out everywhere" },
           "401": {
             "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/passkeys": {
+      "get": {
+        "summary": "List the passkeys of the logged in user (AUTH-03)",
+        "tags": ["passkeys"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Passkeys",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PasskeyListResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Register a named passkey (AUTH-03)",
+        "tags": ["passkeys"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyRegistrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Passkey registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Passkey" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, expired ceremony or invalid passkey",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Passkey limit reached or passkey already registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/passkeys/options": {
+      "post": {
+        "summary": "Confirm the password and start a passkey registration",
+        "tags": ["passkeys"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyRegistrationOptionsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "WebAuthn creation options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyRegistrationOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or wrong current password",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Passkey limit reached",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Account temporarily locked",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/passkeys/{id}": {
+      "patch": {
+        "summary": "Rename a passkey",
+        "tags": ["passkeys"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RenamePasskeyRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Passkey renamed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Passkey" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown passkey",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a passkey: any later login with it is refused (US-03)",
+        "tags": ["passkeys"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Passkey deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown passkey",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/export": {
+      "post": {
+        "summary": "Confirm the password and download a ZIP with a full JSON and one CSV per entity (AUTH-08)",
+        "tags": ["personal-data"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ExportRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Export archive",
+            "content": {
+              "application/zip": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or wrong current password",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Account temporarily locked",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/delete/options": {
+      "post": {
+        "summary": "Start a passkey confirmation of the account deletion (AUTH-09)",
+        "tags": ["personal-data"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "WebAuthn request options for the passkeys of the user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyAuthenticationOptions"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "The user has no passkey",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile/delete": {
+      "post": {
+        "summary": "Delete the account and all its data at once, after the email and a password or passkey confirmation (AUTH-09)",
+        "tags": ["personal-data"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountDeletionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Account deleted, logged out" },
+          "400": {
+            "description": "Invalid body, email mismatch, wrong password or invalid passkey",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Last active administrator",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "429": {
+            "description": "Account temporarily locked",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

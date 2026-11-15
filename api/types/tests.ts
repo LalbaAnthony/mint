@@ -67,9 +67,12 @@ export type IsolationResources = {
   interestRateId: string
   notificationId: string
   pushSubscriptionId: string
+  passkeyId: string
+  passkeyCredentialId: string
 }
 
 export type IsolationSnapshot = {
+  passkeys: unknown
   notifications: unknown
   notificationPreferences: unknown
   pushDevices: unknown
@@ -110,3 +113,13 @@ export type ExpenseScheduleRequest = Extract<
   CreateScheduleRequest,
   { kind: 'expense' }
 >
+
+export type CborValue =
+  number | string | Uint8Array | Map<number | string, CborValue>
+
+export type SoftAuthenticatorOptions = {
+  origin: string
+  userVerified?: boolean
+}
+
+export type ZipEntries = Map<string, Buffer>

@@ -145,6 +145,7 @@ describe('createMigrator', () => {
       'transactions',
       'users',
       'valuations',
+      'webauthn_credentials',
     ])
 
     await migrator.down({ to: 0 })

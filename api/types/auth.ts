@@ -46,3 +46,28 @@ export type AuditEvent =
   | 'admin_created'
   | 'admin_promoted'
   | 'regulated_cap_updated'
+  | 'passkey_registered'
+  | 'passkey_renamed'
+  | 'passkey_deleted'
+  | 'data_exported'
+  | 'account_deleted'
+
+export type ChallengePurpose = 'login' | 'registration' | 'deletion'
+
+export type ChallengeEntry = {
+  challenge: string
+  purpose: ChallengePurpose
+  userId: string | null
+  expiresAt: number
+}
+
+export type ChallengeStore = {
+  issue: (entry: Omit<ChallengeEntry, 'expiresAt'>) => string
+  consume: (key: string, purpose: ChallengePurpose) => ChallengeEntry | null
+}
+
+export type RelyingParty = {
+  rpID: string
+  rpName: string
+  origin: string
+}

@@ -56,6 +56,12 @@ export const apiErrorCodes = [
   'occurrence_not_candidate',
   'operation_reconciled',
   'operation_not_reconciled',
+  'passkey_invalid',
+  'passkey_limit',
+  'passkey_exists',
+  'no_passkey',
+  'email_mismatch',
+  'last_admin',
   'internal_error',
 ] as const
 

@@ -41,6 +41,20 @@ import {
 } from './categories.js'
 import { csrfRoute } from './csrf.js'
 import {
+  deletePasskeyRoute,
+  listPasskeysRoute,
+  passkeyLoginOptionsRoute,
+  passkeyLoginRoute,
+  passkeyRegistrationOptionsRoute,
+  registerPasskeyRoute,
+  renamePasskeyRoute,
+} from './passkeys.js'
+import {
+  deleteAccountDataRoute,
+  deletionPasskeyOptionsRoute,
+  exportDataRoute,
+} from './personal-data.js'
+import {
   createEnvelopeRoute,
   deleteEnvelopeRoute,
   envelopeMonthRoute,
@@ -153,6 +167,8 @@ export const apiRoutes: ApiRoute[] = [
   healthRoute,
   csrfRoute,
   loginRoute,
+  passkeyLoginOptionsRoute,
+  passkeyLoginRoute,
   logoutRoute,
   sessionRoute,
   checkInvitationRoute,
@@ -165,6 +181,14 @@ export const apiRoutes: ApiRoute[] = [
   requestEmailChangeRoute,
   listSessionsRoute,
   revokeSessionsRoute,
+  listPasskeysRoute,
+  passkeyRegistrationOptionsRoute,
+  registerPasskeyRoute,
+  renamePasskeyRoute,
+  deletePasskeyRoute,
+  exportDataRoute,
+  deletionPasskeyOptionsRoute,
+  deleteAccountDataRoute,
   listInvitationsRoute,
   createInvitationRoute,
   resendInvitationRoute,

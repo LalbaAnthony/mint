@@ -5,6 +5,7 @@ import type { Express } from 'express'
 import { csrfTokenResponseSchema } from '@mint/shared/schemas/auth'
 import type { Locale, UserRole } from '@mint/shared/types/user'
 import { apiPrefix, createApp } from '../app.js'
+import { createChallengeStore } from '../auth/challenges.js'
 import { hashPassword } from '../auth/passwords.js'
 import { createModels } from '../db/models.js'
 import { isDatabaseReachable } from '../db/sequelize.js'
@@ -80,6 +81,7 @@ export async function createTestContext(
     mailer,
     clock,
     limiters: createLimiters(clock),
+    challenges: createChallengeStore(() => clock.now().getTime()),
     push,
     alerts: createAlertScheduler(async (userId) => {
       await evaluateUserAlerts(

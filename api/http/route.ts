@@ -1,3 +1,4 @@
+import { pipeline } from 'node:stream/promises'
 import type { Request, Response } from 'express'
 import type { z } from 'zod'
 import type { AppDependencies } from '../types/app.js'
@@ -25,14 +26,34 @@ export const defaultRequestBody: RouteRequestBody = {
   limit: '16kb',
 }
 
-function sendResult(
+async function sendDownload(
+  response: Response,
+  mediaType: string,
+  result: RouteResult,
+): Promise<void> {
+  const download = result.download
+  if (download === undefined) {
+    throw new Error(`Missing download for status ${result.status}`)
+  }
+  response.status(result.status)
+  response.type(mediaType)
+  response.attachment(download.filename)
+  response.set('Cache-Control', 'no-store')
+  await pipeline(download.stream, response)
+}
+
+async function sendResult(
   response: Response,
   responses: Record<number, RouteResponse>,
   result: RouteResult,
-): void {
+): Promise<void> {
   const declared = responses[result.status]
   if (declared === undefined) {
     throw new Error(`Undeclared response status ${result.status}`)
+  }
+  if (declared.mediaType !== undefined) {
+    await sendDownload(response, declared.mediaType, result)
+    return
   }
   if (declared.schema === undefined) {
     response.status(result.status).end()
@@ -78,6 +99,8 @@ const alertNeutralTags: ReadonlySet<string> = new Set([
   'administration',
   'auth',
   'notifications',
+  'passkeys',
+  'personal-data',
 ])
 
 function buildRoute<
@@ -129,7 +152,7 @@ function buildRoute<
         params: params.data,
         query: query.data,
       })
-      sendResult(response, definition.responses, result)
+      await sendResult(response, definition.responses, result)
       if (
         user !== null &&
         definition.method !== 'get' &&

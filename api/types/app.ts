@@ -1,5 +1,5 @@
 import type { Sequelize } from 'sequelize'
-import type { AttemptLimiter } from './auth.js'
+import type { AttemptLimiter, ChallengeStore } from './auth.js'
 import type { Clock } from './clock.js'
 import type { Mailer } from './mail.js'
 import type { Models } from './models.js'
@@ -26,6 +26,7 @@ export type AppDependencies = HealthDependencies & {
   mailer: Mailer
   clock: Clock
   limiters: AttemptLimiters
+  challenges: ChallengeStore
   push: PushSender | null
   alerts: AlertScheduler
 }

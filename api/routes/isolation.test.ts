@@ -1,10 +1,18 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import {
+  passkeyAuthenticationOptionsSchema,
+  passkeyRegistrationOptionsSchema,
+  passkeySchema,
+} from '@mint/shared/schemas/passkeys'
+import { apiPrefix } from '../app.js'
+import {
   createClient,
   createTestContext,
   createTestUser,
   testPassword,
 } from '../tests/context.js'
+import { createSoftAuthenticator } from '../tests/webauthn.js'
+import { readZip } from '../tests/zip.js'
 import type {
   IsolationActors as Actors,
   IsolationResources,
@@ -14,11 +22,14 @@ import type {
 } from '../types/tests.js'
 import { apiRoutes } from './index.js'
 
+const testOrigin = 'http://mint.test'
+
 async function snapshotOf(
   client: Client,
   resources: IsolationResources,
 ): Promise<IsolationSnapshot> {
   return {
+    passkeys: (await client.get('/profile/passkeys')).body,
     overview: (await client.get('/accounts/overview')).body,
     paymentMethods: (await client.get('/payment-methods')).body,
     categories: (await client.get('/categories')).body,
@@ -943,6 +954,124 @@ const scenarios: Record<string, Scenario> = {
     'delete',
     ({ pushSubscriptionId }) => `/push/subscriptions/${pushSubscriptionId}`,
   ),
+  'post /auth/passkey/options': async (actors) => {
+    const response = await actors.anonymous.post('/auth/passkey/options')
+    expect(response.status).toBe(200)
+    expect(
+      passkeyAuthenticationOptionsSchema.parse(response.body).allowCredentials,
+    ).toEqual([])
+    await expectBobDataUntouched(actors)
+  },
+  'post /auth/passkey/login': async (actors) => {
+    const intruder = createClient(actors.context.server)
+    const options = passkeyAuthenticationOptionsSchema.parse(
+      (await intruder.post('/auth/passkey/options')).body,
+    )
+    const forged = createSoftAuthenticator({ origin: testOrigin })
+    const assertion = forged.authenticate(options)
+    const response = await intruder.post('/auth/passkey/login', {
+      response: {
+        ...assertion,
+        id: actors.bobResources.passkeyCredentialId,
+        rawId: actors.bobResources.passkeyCredentialId,
+      },
+    })
+    expect(response.status).toBe(401)
+    expect((await intruder.get('/auth/session')).status).toBe(401)
+    await expectBobUntouched(actors)
+  },
+  'get /profile/passkeys': ownListOnly('/profile/passkeys'),
+  'post /profile/passkeys/options': async (actors) => {
+    const response = await actors.aliceClient.post(
+      '/profile/passkeys/options',
+      { password: testPassword },
+    )
+    expect(response.status).toBe(200)
+    expect(
+      passkeyRegistrationOptionsSchema
+        .parse(response.body)
+        .excludeCredentials?.map((credential) => credential.id),
+    ).not.toContain(actors.bobResources.passkeyCredentialId)
+    await expectBobDataUntouched(actors)
+  },
+  'post /profile/passkeys': async (actors) => {
+    const options = passkeyRegistrationOptionsSchema.parse(
+      (
+        await actors.aliceClient.post('/profile/passkeys/options', {
+          password: testPassword,
+        })
+      ).body,
+    )
+    const response = await actors.aliceClient.post('/profile/passkeys', {
+      name: 'Alice phone',
+      response: createSoftAuthenticator({ origin: testOrigin }).register(
+        options,
+      ),
+    })
+    expect(response.status).toBe(201)
+    await expectBobDataUntouched(actors)
+  },
+  'patch /profile/passkeys/:id': crossAccess(
+    'patch',
+    ({ passkeyId }) => `/profile/passkeys/${passkeyId}`,
+    () => ({ name: 'Stolen' }),
+  ),
+  'delete /profile/passkeys/:id': crossAccess(
+    'delete',
+    ({ passkeyId }) => `/profile/passkeys/${passkeyId}`,
+  ),
+  'post /profile/export': async (actors) => {
+    const response = await actors.aliceClient.agent
+      .post(`${apiPrefix}/profile/export`)
+      .set('X-CSRF-Token', await actors.aliceClient.csrfToken())
+      .send({ password: testPassword })
+      .buffer(true)
+      .parse((stream, callback) => {
+        const chunks: Buffer[] = []
+        stream.on('data', (chunk: Buffer) => chunks.push(chunk))
+        stream.on('end', () => callback(null, Buffer.concat(chunks)))
+      })
+    expect(response.status).toBe(200)
+    const archive: unknown = response.body
+    if (!Buffer.isBuffer(archive)) {
+      throw new Error('The export is not binary')
+    }
+    const content = [...readZip(archive).values()]
+      .map((entry) => entry.toString('utf8'))
+      .join('\n')
+    for (const id of [actors.bob.id, ...collectIds(actors.bobSnapshot)]) {
+      expect(content).not.toContain(id)
+    }
+    expect(content).not.toContain(actors.bob.email)
+  },
+  'post /profile/delete/options': async (actors) => {
+    const response = await actors.aliceClient.post('/profile/delete/options')
+    if (response.status === 200) {
+      expect(
+        passkeyAuthenticationOptionsSchema
+          .parse(response.body)
+          .allowCredentials?.map((credential) => credential.id),
+      ).not.toContain(actors.bobResources.passkeyCredentialId)
+    } else {
+      expect(response.status).toBe(409)
+    }
+    await expectBobDataUntouched(actors)
+  },
+  'post /profile/delete': async (actors) => {
+    const carol = await createTestUser(actors.context, {
+      email: 'carol@example.org',
+    })
+    const carolClient = createClient(actors.context.server)
+    await carolClient.login(carol.email)
+    const response = await carolClient.post('/profile/delete', {
+      method: 'password',
+      email: carol.email,
+      password: testPassword,
+    })
+    expect(response.status).toBe(204)
+    await expectBobUntouched(actors)
+    await expectBobDataUntouched(actors)
+  },
   'patch /admin/regulated-caps/:product': async (actors) => {
     const asUser = await actors.aliceClient.patch(
       '/admin/regulated-caps/livret_a',
@@ -1093,6 +1222,31 @@ async function createBobResources(
     interestRateId: interestRate.body.id,
     notificationId: '',
     pushSubscriptionId: pushSubscription.body.id,
+    passkeyId: '',
+    passkeyCredentialId: '',
+  }
+}
+
+async function registerBobPasskey(bobClient: Client) {
+  const authenticator = createSoftAuthenticator({ origin: testOrigin })
+  const options = passkeyRegistrationOptionsSchema.parse(
+    (
+      await bobClient.post('/profile/passkeys/options', {
+        password: testPassword,
+      })
+    ).body,
+  )
+  const passkey = passkeySchema.parse(
+    (
+      await bobClient.post('/profile/passkeys', {
+        name: 'Bob phone',
+        response: authenticator.register(options),
+      })
+    ).body,
+  )
+  return {
+    passkeyId: passkey.id,
+    passkeyCredentialId: authenticator.credentialId,
   }
 }
 
@@ -1119,7 +1273,11 @@ beforeAll(async () => {
       thresholdCents: 2,
     },
   })
-  const bobResources = { ...createdResources, notificationId: notification.id }
+  const bobResources = {
+    ...createdResources,
+    notificationId: notification.id,
+    ...(await registerBobPasskey(bobClient)),
+  }
   actors = {
     context,
     alice,

@@ -451,6 +451,7 @@ export type Models = {
   AlertEpisode: ModelStatic<AlertEpisodeModel>
   PushSubscription: ModelStatic<PushSubscriptionModel>
   NotificationPreference: ModelStatic<NotificationPreferenceModel>
+  WebauthnCredential: ModelStatic<WebauthnCredentialModel>
 }
 
 export type ImportMappingAttributes = {
@@ -832,3 +833,27 @@ export type NotificationPreferenceModel = Model<
   NotificationPreferenceCreationAttributes
 > &
   NotificationPreferenceAttributes
+
+export type WebauthnCredentialAttributes = {
+  id: string
+  userId: string
+  credentialId: string
+  publicKey: Buffer
+  signCount: number
+  transports: string[]
+  name: string
+  lastUsedAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type WebauthnCredentialCreationAttributes = Optional<
+  WebauthnCredentialAttributes,
+  'id' | 'signCount' | 'transports' | 'lastUsedAt' | 'createdAt' | 'updatedAt'
+>
+
+export type WebauthnCredentialModel = Model<
+  WebauthnCredentialAttributes,
+  WebauthnCredentialCreationAttributes
+> &
+  WebauthnCredentialAttributes

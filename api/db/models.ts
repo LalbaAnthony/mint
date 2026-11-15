@@ -30,6 +30,7 @@ import type {
   AlertEpisodeModel,
   PushSubscriptionModel,
   NotificationPreferenceModel,
+  WebauthnCredentialModel,
 } from '../types/models.js'
 
 const primaryKey = {
@@ -694,6 +695,33 @@ export function createModels(sequelize: Sequelize): Models {
     options('notification_preferences'),
   )
 
+  const WebauthnCredential = sequelize.define<WebauthnCredentialModel>(
+    'WebauthnCredential',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      credentialId: { type: DataTypes.TEXT, allowNull: false, unique: true },
+      publicKey: { type: DataTypes.BLOB, allowNull: false },
+      signCount: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        defaultValue: 0,
+        get(this: WebauthnCredentialModel) {
+          return Number(this.getDataValue('signCount'))
+        },
+      },
+      transports: {
+        type: DataTypes.ARRAY(DataTypes.TEXT),
+        allowNull: false,
+        defaultValue: [],
+      },
+      name: { type: DataTypes.TEXT, allowNull: false },
+      lastUsedAt: { type: DataTypes.DATE, allowNull: true },
+      ...timestamps,
+    },
+    options('webauthn_credentials'),
+  )
+
   return {
     User,
     Session,
@@ -723,5 +751,6 @@ export function createModels(sequelize: Sequelize): Models {
     AlertEpisode,
     PushSubscription,
     NotificationPreference,
+    WebauthnCredential,
   }
 }

@@ -3,6 +3,7 @@ import {
   createAttemptLimiter,
   ipLimiterPolicy,
 } from './auth/attempt-limiter.js'
+import { createChallengeStore } from './auth/challenges.js'
 import { systemClock } from './clock.js'
 import { createModels } from './db/models.js'
 import { createSequelize, isDatabaseReachable } from './db/sequelize.js'
@@ -39,6 +40,7 @@ export function createDependencies(
     mailer: createSmtpMailer(environment),
     clock: systemClock,
     limiters: createLimiters(systemClock),
+    challenges: createChallengeStore(() => systemClock.now().getTime()),
     push,
     alerts: createAlertScheduler(async (userId) => {
       await evaluateUserAlerts(
