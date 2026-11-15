@@ -1,5 +1,6 @@
 import type { AccountInput } from './accounts.js'
 import type { CategoryInput } from './categories.js'
+import type { Forecast } from './forecast.js'
 import type { OperationInput } from './transactions.js'
 
 export type CategorySpending = {
@@ -37,6 +38,12 @@ export type MonthlyIncomeExpense = {
 export type MonthlyIncomeExpenseInput = {
   fromMonth: string
   toMonth: string
+  operations: OperationInput[]
+  categories: CategoryInput[]
+}
+
+export type ForecastMonthlyInput = {
+  forecast: Forecast
   operations: OperationInput[]
   categories: CategoryInput[]
 }

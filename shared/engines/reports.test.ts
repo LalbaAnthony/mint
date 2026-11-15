@@ -3,9 +3,18 @@ import {
   account,
   categories,
   category,
+  envelope,
+  expensePosting,
+  forecastInput,
+  incomePosting,
   operation,
+  recurrence,
+  schedule,
+  transferPosting,
 } from '../tests/engine-fixtures.js'
+import { computeForecast } from './forecast.js'
 import {
+  forecastMonthlyIncomeExpenses,
   monthlyIncomeExpenses,
   savingsTransfersCents,
   spendingBreakdown,
@@ -236,6 +245,81 @@ describe('monthlyIncomeExpenses (DSH-03, real months)', () => {
         incomeCents: 0,
         expenseCents: 3_000,
         balanceCents: -3_000,
+      },
+    ])
+  })
+})
+
+describe('forecastMonthlyIncomeExpenses (DSH-03)', () => {
+  it('adds the planned incomes, expenses and envelope shares per month, transfers excluded', () => {
+    const operations = [
+      operation({
+        id: 'future-refund',
+        date: '2026-11-20',
+        amountCents: 1_500,
+        categoryId: 'leisure',
+      }),
+      operation({ id: 'future-gift', date: '2026-11-21', amountCents: 2_000 }),
+      operation({
+        id: 'future-adjustment',
+        date: '2026-11-22',
+        amountCents: -700,
+        categoryId: 'adjustment',
+      }),
+      operation({
+        id: 'future-transfer',
+        date: '2026-11-23',
+        amountCents: -5_000,
+        transferGroupId: 'group',
+      }),
+      operation({
+        id: 'future-salary',
+        date: '2026-11-24',
+        amountCents: 3_000,
+        categoryId: 'salary',
+      }),
+    ]
+    const forecast = computeForecast(
+      forecastInput({
+        horizonMonths: 1,
+        accounts: [account(), account({ id: 'livret-a', usage: 'savings' })],
+        operations,
+        schedules: [
+          schedule({
+            id: 'rent',
+            posting: expensePosting({ categoryId: 'housing' }),
+            recurrence: recurrence({ startDate: '2026-11-25' }),
+          }),
+          schedule({
+            id: 'salary',
+            amountCents: 150_000,
+            posting: incomePosting(),
+            recurrence: recurrence({ startDate: '2026-11-28' }),
+          }),
+          schedule({
+            id: 'saving',
+            posting: transferPosting(),
+            recurrence: recurrence({ startDate: '2026-11-06' }),
+          }),
+        ],
+        envelopes: [envelope({ monthlyAmountCents: 2_000 })],
+      }),
+    )
+
+    expect(
+      forecastMonthlyIncomeExpenses({ forecast, operations, categories }),
+    ).toEqual([
+      {
+        month: '2026-11-01',
+        incomeCents: 150_000 + 2_000 + 3_000,
+        expenseCents: 10_000 + 20 * 100 - 1_500,
+        balanceCents: 155_000 - 10_500,
+      },
+      {
+        month: '2026-12-01',
+        incomeCents: 0,
+        expenseCents: 11 * 64,
+        balanceCents: -704,
       },
     ])
   })

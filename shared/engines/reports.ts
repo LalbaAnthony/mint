@@ -1,6 +1,7 @@
 import type { AccountInput, AccountUsage } from '../types/accounts.js'
 import type { CategoryInput, ExpenseGroup } from '../types/categories.js'
 import type {
+  ForecastMonthlyInput,
   GroupSpending,
   MonthlyIncomeExpense,
   MonthlyIncomeExpenseInput,
@@ -186,6 +187,64 @@ export function monthlyIncomeExpenses(
       monthTotals.incomeCents += operation.amountCents
     } else {
       monthTotals.expenseCents -= operation.amountCents
+    }
+  }
+  return [...totals.entries()].map(
+    ([month, { incomeCents, expenseCents }]) => ({
+      month,
+      incomeCents,
+      expenseCents,
+      balanceCents: incomeCents - expenseCents,
+    }),
+  )
+}
+
+export function forecastMonthlyIncomeExpenses(
+  input: ForecastMonthlyInput,
+): MonthlyIncomeExpense[] {
+  const categories = indexById(input.categories)
+  const operations = indexById(input.operations)
+  const totals = new Map(
+    enumerateMonths(input.forecast.startDate, input.forecast.endDate).map(
+      (month) => [month, { incomeCents: 0, expenseCents: 0 }],
+    ),
+  )
+  for (const account of input.forecast.accounts) {
+    for (const day of account.days) {
+      const monthTotals = totals.get(monthStart(day.date))
+      if (monthTotals === undefined) {
+        continue
+      }
+      for (const flow of day.flows) {
+        if (flow.source === 'occurrence') {
+          if (flow.kind === 'income') {
+            monthTotals.incomeCents += flow.amountCents
+          } else if (flow.kind === 'expense') {
+            monthTotals.expenseCents -= flow.amountCents
+          }
+          continue
+        }
+        if (flow.source === 'envelope') {
+          monthTotals.expenseCents -= flow.amountCents
+          continue
+        }
+        const operation = requireItem(operations, flow.operationId, 'operation')
+        if (operation.transferGroupId !== null) {
+          continue
+        }
+        const kind =
+          operation.categoryId === null
+            ? null
+            : requireItem(categories, operation.categoryId, 'category').kind
+        if (kind === 'adjustment') {
+          continue
+        }
+        if (kind === 'income' || (kind === null && flow.amountCents > 0)) {
+          monthTotals.incomeCents += flow.amountCents
+        } else {
+          monthTotals.expenseCents -= flow.amountCents
+        }
+      }
     }
   }
   return [...totals.entries()].map(
