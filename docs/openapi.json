@@ -1552,6 +1552,261 @@
           }
         },
         "required": ["date", "balanceCents"]
+      },
+      "ImportBatchView": {
+        "type": "object",
+        "properties": {
+          "batch": { "$ref": "#/components/schemas/ImportBatch" },
+          "mapping": { "$ref": "#/components/schemas/CsvMapping" },
+          "mappingRemembered": { "type": "boolean" },
+          "sampleLines": {
+            "type": "array",
+            "items": { "type": "array", "items": { "type": "string" } }
+          },
+          "rows": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ImportRow" }
+          }
+        },
+        "required": [
+          "batch",
+          "mapping",
+          "mappingRemembered",
+          "sampleLines",
+          "rows"
+        ]
+      },
+      "ImportBatch": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "filename": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "validated", "cancelled"]
+          },
+          "rowsRead": { "type": "integer" },
+          "rowsCreated": { "type": "integer" },
+          "rowsDuplicate": { "type": "integer" },
+          "rowsMerged": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "validatedAt": { "type": ["string", "null"], "format": "date-time" },
+          "cancelledAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "accountId",
+          "filename",
+          "status",
+          "rowsRead",
+          "rowsCreated",
+          "rowsDuplicate",
+          "rowsMerged",
+          "createdAt",
+          "validatedAt",
+          "cancelledAt"
+        ]
+      },
+      "CsvMapping": {
+        "type": "object",
+        "properties": {
+          "delimiter": {
+            "type": "string",
+            "enum": ["semicolon", "comma", "tab"]
+          },
+          "encoding": { "type": "string", "enum": ["utf-8", "windows-1252"] },
+          "hasHeader": { "type": "boolean" },
+          "skipTop": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "skipBottom": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "dateFormat": {
+            "type": "string",
+            "enum": [
+              "DD/MM/YYYY",
+              "DD/MM/YY",
+              "DD-MM-YYYY",
+              "DD.MM.YYYY",
+              "YYYY-MM-DD",
+              "MM/DD/YYYY"
+            ]
+          },
+          "decimalSeparator": { "type": "string", "enum": ["comma", "dot"] },
+          "colDate": { "type": "integer", "minimum": 0, "maximum": 99 },
+          "colLabel": { "type": "integer", "minimum": 0, "maximum": 99 },
+          "colAmount": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99
+          },
+          "colDebit": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99
+          },
+          "colCredit": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99
+          }
+        },
+        "required": [
+          "delimiter",
+          "encoding",
+          "hasHeader",
+          "skipTop",
+          "skipBottom",
+          "dateFormat",
+          "decimalSeparator",
+          "colDate",
+          "colLabel",
+          "colAmount",
+          "colDebit",
+          "colCredit"
+        ]
+      },
+      "ImportRow": {
+        "type": "object",
+        "properties": {
+          "rowIndex": { "type": "integer" },
+          "raw": { "type": "array", "items": { "type": "string" } },
+          "date": { "type": ["string", "null"], "format": "date" },
+          "amountCents": { "type": ["integer", "null"] },
+          "bankLabel": { "type": ["string", "null"] },
+          "error": { "$ref": "#/components/schemas/ImportLineError" },
+          "duplicate": { "type": "boolean" },
+          "ruleId": { "type": ["string", "null"], "format": "uuid" },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "candidates": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ImportCandidate" }
+          }
+        },
+        "required": [
+          "rowIndex",
+          "raw",
+          "date",
+          "amountCents",
+          "bankLabel",
+          "error",
+          "duplicate",
+          "ruleId",
+          "categoryId",
+          "transferAccountId",
+          "candidates"
+        ]
+      },
+      "ImportLineError": {
+        "type": ["string", "null"],
+        "enum": [
+          "missing_column",
+          "invalid_date",
+          "invalid_amount",
+          "amount_zero",
+          "both_amounts",
+          "missing_label",
+          "date_before_initial_balance",
+          null
+        ]
+      },
+      "ImportCandidate": {
+        "type": "object",
+        "properties": {
+          "scheduleId": { "type": "string", "format": "uuid" },
+          "scheduleLabel": { "type": "string" },
+          "originalDate": { "type": "string", "format": "date" },
+          "effectiveDate": { "type": "string", "format": "date" },
+          "amountCents": { "type": "integer" },
+          "operationId": { "type": ["string", "null"], "format": "uuid" },
+          "score": { "type": "number" }
+        },
+        "required": [
+          "scheduleId",
+          "scheduleLabel",
+          "originalDate",
+          "effectiveDate",
+          "amountCents",
+          "operationId",
+          "score"
+        ]
+      },
+      "ImportHistory": {
+        "type": "object",
+        "properties": {
+          "batches": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ImportBatch" }
+          }
+        },
+        "required": ["batches"]
+      },
+      "PreviewImportRequest": {
+        "type": "object",
+        "properties": {
+          "mapping": { "$ref": "#/components/schemas/CsvMapping" }
+        },
+        "required": ["mapping"]
+      },
+      "ValidateImportRequest": {
+        "type": "object",
+        "properties": {
+          "mapping": { "$ref": "#/components/schemas/CsvMapping" },
+          "decisions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ImportRowDecision" },
+            "maxItems": 20000
+          }
+        },
+        "required": ["mapping", "decisions"]
+      },
+      "ImportRowDecision": {
+        "type": "object",
+        "properties": {
+          "rowIndex": { "type": "integer" },
+          "include": { "type": "boolean" },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "reconcile": {
+            "type": ["object", "null"],
+            "properties": {
+              "scheduleId": { "type": "string", "format": "uuid" },
+              "originalDate": { "type": "string", "format": "date" }
+            },
+            "required": ["scheduleId", "originalDate"]
+          }
+        },
+        "required": [
+          "rowIndex",
+          "include",
+          "categoryId",
+          "transferAccountId",
+          "reconcile"
+        ]
+      },
+      "CandidateListResponse": {
+        "type": "object",
+        "properties": {
+          "candidates": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ImportCandidate" }
+          }
+        },
+        "required": ["candidates"]
+      },
+      "ReconcileRequest": {
+        "type": "object",
+        "properties": {
+          "scheduleId": { "type": "string", "format": "uuid" },
+          "originalDate": { "type": "string", "format": "date" }
+        },
+        "required": ["scheduleId", "originalDate"]
+      },
+      "ConvertToTransferRequest": {
+        "type": "object",
+        "properties": {
+          "counterpartAccountId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["counterpartAccountId"]
       }
     },
     "parameters": {}
@@ -5894,6 +6149,696 @@
           },
           "404": {
             "description": "Unknown statement",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/imports": {
+      "post": {
+        "summary": "Upload a CSV file of at most 5 MB into an account; the pending import keeps the file and returns the remembered or guessed settings with the first lines (IMP-01 to IMP-03)",
+        "tags": ["imports"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "required": true,
+            "name": "filename",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/csv": { "schema": { "type": "string", "format": "binary" } },
+            "text/plain": {
+              "schema": { "type": "string", "format": "binary" }
+            },
+            "application/csv": {
+              "schema": { "type": "string", "format": "binary" }
+            },
+            "application/vnd.ms-excel": {
+              "schema": { "type": "string", "format": "binary" }
+            },
+            "application/octet-stream": {
+              "schema": { "type": "string", "format": "binary" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pending import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportBatchView" }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or empty file, or missing file name",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "413": {
+            "description": "File larger than 5 MB",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Imports of an account, latest first, with their read, created, duplicate and merged lines (IMP-08)",
+        "tags": ["imports"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Import history",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportHistory" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/{id}": {
+      "get": {
+        "summary": "An import with its settings, first lines and interpreted lines",
+        "tags": ["imports"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportBatchView" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Abandon a pending import and its file",
+        "tags": ["imports"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Import abandoned" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Import already validated or cancelled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/{id}/preview": {
+      "post": {
+        "summary": "Read the file with the given settings: interpreted lines, lines in error with their reason, strict duplicates, matching rules and reconciliation proposals, nothing recorded yet (IMP-02, IMP-04 to IMP-06, RAP-01, RAP-02)",
+        "tags": ["imports"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PreviewImportRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Previewed import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportBatchView" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid settings",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Import already validated or cancelled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/{id}/validate": {
+      "post": {
+        "summary": "Record the previewed lines with their categories, transfers and confirmed reconciliations, remember the settings of the account and drop the file (IMP-03, IMP-07, RAP-03, RAP-04, RAP-06, RAP-07)",
+        "tags": ["imports"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ValidateImportRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validated import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportBatch" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid decisions",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Import not pending or not previewed, archived reference, or occurrence no longer a candidate",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/imports/{id}/cancel": {
+      "post": {
+        "summary": "Cancel a validated import: delete the operations it created and restore the operations it merged (IMP-08)",
+        "tags": ["imports"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ImportBatch" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown import",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Import not validated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operations/{id}/candidates": {
+      "get": {
+        "summary": "Occurrences that a manual or imported operation could reconcile with, best first (RAP-01, RAP-02, RAP-05)",
+        "tags": ["reconciliation"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Candidates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, schedule or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operations/{id}/reconcile": {
+      "post": {
+        "summary": "Associate an operation with an occurrence: a future one is marked executed, an executed one gives up its generated operation (RAP-04, RAP-05)",
+        "tags": ["reconciliation"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReconcileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reconciled operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Operation" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, schedule or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Transfer or already reconciled operation, or occurrence not a candidate",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Dissociate an operation from its occurrence: a past occurrence is marked skipped without regeneration, a future one is planned again (RAP-05)",
+        "tags": ["reconciliation"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dissociated operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Operation" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, schedule or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation not reconciled",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/operations/{id}/convert-to-transfer": {
+      "post": {
+        "summary": "Convert an operation into an internal transfer: linked to an opposite operation of the counterpart account within 3 days, otherwise with a created counterpart (OPE-07)",
+        "tags": ["reconciliation"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConvertToTransferRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transfer",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Transfer" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or same account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation, schedule or account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation already a transfer, generated, reconciled or of the adjustment category, archived account, or date before the initial balance of the counterpart",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

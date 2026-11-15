@@ -57,11 +57,13 @@ export type IsolationResources = {
   envelopeId: string
   ruleId: string
   statementId: string
+  importBatchId: string
 }
 
 export type IsolationSnapshot = {
   rules: unknown
   statements: unknown
+  imports: unknown
   overview: unknown
   paymentMethods: unknown
   categories: unknown

@@ -25,8 +25,8 @@ export type RouteContext<
 }
 
 export type RouteRequestBody =
-  | { format: 'json'; limit: string }
-  | { format: 'binary'; limit: string; mediaTypes: string[] }
+  | { format: 'json'; limit: string | number }
+  | { format: 'binary'; limit: string | number; mediaTypes: string[] }
 
 export type RouteResult = {
   status: number

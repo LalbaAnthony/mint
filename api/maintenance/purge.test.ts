@@ -94,12 +94,34 @@ async function seed(email: string) {
     tokenHash: tokenHash(),
     expiresAt: future,
   })
-  return { user, live, liveChange }
+  const account = await models.Account.create({
+    userId: user.id,
+    name: 'Courant',
+    nature: 'current_account',
+    usage: 'current',
+    initialBalanceCents: 0,
+    initialBalanceDate: '2026-11-01',
+  })
+  const batch = (filename: string) =>
+    models.ImportBatch.create({
+      userId: user.id,
+      accountId: account.id,
+      filename,
+      status: 'pending',
+      rawFile: Buffer.from('a'),
+    })
+  const stale = await batch('stale.csv')
+  await context.dependencies.sequelize.query(
+    "UPDATE import_batches SET updated_at = '2026-11-10T01:00:00Z' WHERE id = :id",
+    { replacements: { id: stale.id } },
+  )
+  const fresh = await batch('fresh.csv')
+  return { user, live, liveChange, fresh }
 }
 
 describe('purge of 03:00 (section 7.3)', () => {
   it('removes the expired sessions and the expired or used tokens only', async () => {
-    const { user, live, liveChange } = await seed('purge@example.org')
+    const { user, live, liveChange, fresh } = await seed('purge@example.org')
     const { models } = context.dependencies
 
     const summary = await purgeExpiredRecords(data(), now)
@@ -108,6 +130,7 @@ describe('purge of 03:00 (section 7.3)', () => {
       sessions: 1,
       passwordResetTokens: 2,
       emailChangeTokens: 1,
+      pendingImports: 1,
     })
     expect(
       (await models.Session.findAll({ where: { userId: user.id } })).map(
@@ -120,6 +143,9 @@ describe('purge of 03:00 (section 7.3)', () => {
     expect(
       (await models.EmailChangeToken.findAll()).map((token) => token.id),
     ).toEqual([liveChange.id])
+    expect(
+      (await models.ImportBatch.findAll()).map((batch) => batch.id),
+    ).toEqual([fresh.id])
   })
 
   it('pings start then success', async () => {

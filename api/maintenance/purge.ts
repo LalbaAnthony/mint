@@ -14,6 +14,8 @@ export const purgeLockKey = 1_835_626_101
 
 export const purgeCronExpression = '0 3 * * *'
 
+export const pendingImportLifetimeMs = 24 * 60 * 60 * 1000
+
 export async function purgeExpiredRecords(
   data: DataAccess,
   now: Date,
@@ -33,6 +35,15 @@ export async function purgeExpiredRecords(
     }),
     emailChangeTokens: await data.models.EmailChangeToken.destroy({
       where: spentToken,
+      transaction,
+    }),
+    pendingImports: await data.models.ImportBatch.destroy({
+      where: {
+        status: 'pending',
+        updatedAt: {
+          [Op.lte]: new Date(now.getTime() - pendingImportLifetimeMs),
+        },
+      },
       transaction,
     }),
   }

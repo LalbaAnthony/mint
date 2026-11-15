@@ -147,5 +147,11 @@ export function createClient(server: Express) {
     delete: (path: string, body?: object) => send('delete', path, body),
     login: (email: string, password = testPassword) =>
       send('post', '/auth/login', { email, password }),
+    upload: async (path: string, content: Buffer, contentType = 'text/csv') =>
+      agent
+        .post(`${apiPrefix}${path}`)
+        .set('X-CSRF-Token', await csrfToken())
+        .set('Content-Type', contentType)
+        .send(content),
   }
 }

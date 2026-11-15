@@ -163,8 +163,21 @@ export const importRowDecisionSchema = z
 
 export const validateImportRequestSchema = z
   .object({
+    mapping: csvMappingSchema,
     decisions: z
       .array(importRowDecisionSchema, { error: 'invalid' })
       .max(20_000, { error: 'too_long' }),
   })
   .meta({ id: 'ValidateImportRequest' })
+
+export const previewImportRequestSchema = z
+  .object({ mapping: csvMappingSchema })
+  .meta({ id: 'PreviewImportRequest' })
+
+export const importMediaTypes = [
+  'text/csv',
+  'text/plain',
+  'application/csv',
+  'application/vnd.ms-excel',
+  'application/octet-stream',
+]

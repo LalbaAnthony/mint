@@ -49,6 +49,21 @@ import {
 import { balanceCurveRoute, calendarMonthRoute } from './forecast.js'
 import { healthRoute } from './health.js'
 import {
+  abandonImportRoute,
+  cancelImportRoute,
+  createImportRoute,
+  getImportRoute,
+  importHistoryRoute,
+  previewImportRoute,
+  validateImportRoute,
+} from './imports.js'
+import {
+  convertToTransferRoute,
+  dissociateOperationRoute,
+  operationCandidatesRoute,
+  reconcileOperationRoute,
+} from './reconciliation.js'
+import {
   adjustStatementRoute,
   createStatementRoute,
   deleteStatementRoute,
@@ -176,4 +191,15 @@ export const apiRoutes: ApiRoute[] = [
   createStatementRoute,
   adjustStatementRoute,
   deleteStatementRoute,
+  createImportRoute,
+  importHistoryRoute,
+  getImportRoute,
+  previewImportRoute,
+  validateImportRoute,
+  abandonImportRoute,
+  cancelImportRoute,
+  operationCandidatesRoute,
+  reconcileOperationRoute,
+  dissociateOperationRoute,
+  convertToTransferRoute,
 ]

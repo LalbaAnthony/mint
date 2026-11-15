@@ -32,6 +32,8 @@ async function snapshotOf(
     statements: (
       await client.get(`/accounts/${resources.accountId}/statements`)
     ).body,
+    imports: (await client.get(`/accounts/${resources.accountId}/imports`))
+      .body,
   }
 }
 
@@ -52,6 +54,21 @@ function crossRead(path: (resources: IsolationResources) => string): Scenario {
 function expectNotFound(response: { status: number; body: unknown }): void {
   expect(response.status).toBe(404)
   expect(response.body).toEqual({ error: 'not_found' })
+}
+
+const isolationMapping = {
+  delimiter: 'semicolon',
+  encoding: 'utf-8',
+  hasHeader: true,
+  skipTop: 0,
+  skipBottom: 0,
+  dateFormat: 'DD/MM/YYYY',
+  decimalSeparator: 'comma',
+  colDate: 0,
+  colLabel: 1,
+  colAmount: 2,
+  colDebit: null,
+  colCredit: null,
 }
 
 function aliceRule(accountId: string | null, categoryId: string) {
@@ -724,6 +741,70 @@ const scenarios: Record<string, Scenario> = {
     'delete',
     ({ statementId }) => `/statements/${statementId}`,
   ),
+  'post /accounts/:id/imports': async (actors) => {
+    expectNotFound(
+      await actors.aliceClient.upload(
+        `/accounts/${actors.bobResources.accountId}/imports?filename=x.csv`,
+        Buffer.from('a;b;c\n'),
+      ),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'get /accounts/:id/imports': crossRead(
+    ({ accountId }) => `/accounts/${accountId}/imports`,
+  ),
+  'get /imports/:id': crossRead(
+    ({ importBatchId }) => `/imports/${importBatchId}`,
+  ),
+  'post /imports/:id/preview': crossAccess(
+    'post',
+    ({ importBatchId }) => `/imports/${importBatchId}/preview`,
+    () => ({ mapping: isolationMapping }),
+  ),
+  'post /imports/:id/validate': crossAccess(
+    'post',
+    ({ importBatchId }) => `/imports/${importBatchId}/validate`,
+    () => ({ mapping: isolationMapping, decisions: [] }),
+  ),
+  'delete /imports/:id': crossAccess(
+    'delete',
+    ({ importBatchId }) => `/imports/${importBatchId}`,
+  ),
+  'post /imports/:id/cancel': crossAccess(
+    'post',
+    ({ importBatchId }) => `/imports/${importBatchId}/cancel`,
+  ),
+  'get /operations/:id/candidates': crossRead(
+    ({ operationId }) => `/operations/${operationId}/candidates`,
+  ),
+  'post /operations/:id/reconcile': crossAccess(
+    'post',
+    ({ operationId }) => `/operations/${operationId}/reconcile`,
+    ({ scheduleId }) => ({ scheduleId, originalDate: '2026-12-01' }),
+  ),
+  'delete /operations/:id/reconcile': crossAccess(
+    'delete',
+    ({ operationId }) => `/operations/${operationId}/reconcile`,
+  ),
+  'post /operations/:id/convert-to-transfer': async (actors) => {
+    await crossAccess(
+      'post',
+      ({ operationId }) => `/operations/${operationId}/convert-to-transfer`,
+      ({ accountId }) => ({ counterpartAccountId: accountId }),
+    )(actors)
+    const aliceAccount = await createAliceAccount(actors)
+    const own = await actors.aliceClient.post(
+      '/operations',
+      aliceOperation(aliceAccount),
+    )
+    expectNotFound(
+      await actors.aliceClient.post(
+        `/operations/${own.body.id}/convert-to-transfer`,
+        { counterpartAccountId: actors.bobResources.accountId },
+      ),
+    )
+    await expectBobDataUntouched(actors)
+  },
   'get /rules/suggestion': crossRead(
     ({ operationId }) => `/rules/suggestion?operationId=${operationId}`,
   ),
@@ -786,6 +867,10 @@ async function createBobResources(
     `/accounts/${account.body.id}/statements`,
     { date: '2026-11-10', balanceCents: 100_000 },
   )
+  const batch = await bobClient.upload(
+    `/accounts/${account.body.id}/imports?filename=bob.csv`,
+    Buffer.from('Date;Libelle;Montant\n05/11/2026;BOB;-1,00\n'),
+  )
   const rule = await bobClient.post('/rules', {
     ...aliceRule(account.body.id, category.id),
     pattern: 'BOB',
@@ -796,7 +881,8 @@ async function createBobResources(
     schedule.status !== 201 ||
     envelope.status !== 201 ||
     rule.status !== 201 ||
-    statement.status !== 201
+    statement.status !== 201 ||
+    batch.status !== 201
   ) {
     throw new Error('Bob planning resources could not be created')
   }
@@ -811,6 +897,7 @@ async function createBobResources(
     envelopeId: envelope.body.id,
     ruleId: rule.body.id,
     statementId: statement.body.id,
+    importBatchId: batch.body.batch.id,
   }
 }
 
