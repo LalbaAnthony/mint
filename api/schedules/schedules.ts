@@ -79,6 +79,8 @@ export function scheduleFieldsOf(schedule: ScheduleModel): ScheduleDraft {
     endDate: schedule.endDate,
     maxOccurrences: schedule.maxOccurrences,
     businessDayRule: schedule.businessDayRule,
+    amountTolerancePct: schedule.amountTolerancePct,
+    bankLabelPatterns: schedule.bankLabelPatterns,
     ...(schedule.kind === 'transfer'
       ? {
           sourceAccountId: schedule.sourceAccountId ?? undefined,
@@ -234,6 +236,8 @@ export function scheduleColumns(
     endDate: fields.endDate,
     maxOccurrences: fields.maxOccurrences,
     businessDayRule: fields.businessDayRule,
+    amountTolerancePct: fields.amountTolerancePct,
+    bankLabelPatterns: fields.bankLabelPatterns,
   }
   if (fields.kind === 'transfer') {
     return {
@@ -301,6 +305,8 @@ export function toSchedule(
     endDate: schedule.endDate,
     maxOccurrences: schedule.maxOccurrences,
     businessDayRule: schedule.businessDayRule,
+    amountTolerancePct: schedule.amountTolerancePct,
+    bankLabelPatterns: schedule.bankLabelPatterns,
     createdAt: schedule.createdAt.toISOString(),
     monthlyEquivalentCents: monthlyEquivalentCents(periodicAmount(input)),
     nextOccurrence:

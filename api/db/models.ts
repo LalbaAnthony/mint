@@ -1,7 +1,12 @@
 import { DataTypes } from 'sequelize'
-import type { Sequelize } from 'sequelize'
+import type { Model, Sequelize } from 'sequelize'
 import type {
   AccountModel,
+  AccountStatementModel,
+  CategorizationRuleModel,
+  ImportBatchModel,
+  ImportMappingModel,
+  ImportRowModel,
   CategoryModel,
   EmailChangeTokenModel,
   EnvelopeCategoryModel,
@@ -242,6 +247,16 @@ export function createModels(sequelize: Sequelize): Models {
       },
       note: { type: DataTypes.TEXT, allowNull: true },
       active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      amountTolerancePct: {
+        type: DataTypes.SMALLINT,
+        allowNull: false,
+        defaultValue: 10,
+      },
+      bankLabelPatterns: {
+        type: DataTypes.ARRAY(DataTypes.TEXT),
+        allowNull: false,
+        defaultValue: [],
+      },
       ...timestamps,
     },
     options('schedules'),
@@ -290,6 +305,10 @@ export function createModels(sequelize: Sequelize): Models {
       origin: { type: DataTypes.TEXT, allowNull: false },
       transferGroupId: { type: DataTypes.UUID, allowNull: true },
       occurrenceId: { type: DataTypes.UUID, allowNull: true },
+      bankLabel: { type: DataTypes.TEXT, allowNull: true },
+      importBatchId: { type: DataTypes.UUID, allowNull: true },
+      dedupHash: { type: DataTypes.TEXT, allowNull: true },
+      preMergeSnapshot: { type: DataTypes.JSONB, allowNull: true },
       ...timestamps,
     },
     options('transactions'),
@@ -333,6 +352,138 @@ export function createModels(sequelize: Sequelize): Models {
     options('envelope_categories'),
   )
 
+  const bigintCents = <T extends Model>(field: string) => ({
+    type: DataTypes.BIGINT,
+    allowNull: true,
+    get(this: T) {
+      const stored: unknown = this.getDataValue(field)
+      return stored === null || stored === undefined ? null : Number(stored)
+    },
+  })
+
+  const ImportMapping = sequelize.define<ImportMappingModel>(
+    'ImportMapping',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      delimiter: { type: DataTypes.TEXT, allowNull: false },
+      encoding: { type: DataTypes.TEXT, allowNull: false },
+      hasHeader: { type: DataTypes.BOOLEAN, allowNull: false },
+      skipTop: { type: DataTypes.SMALLINT, allowNull: false },
+      skipBottom: { type: DataTypes.SMALLINT, allowNull: false },
+      dateFormat: { type: DataTypes.TEXT, allowNull: false },
+      decimalSeparator: { type: DataTypes.TEXT, allowNull: false },
+      colDate: { type: DataTypes.SMALLINT, allowNull: false },
+      colLabel: { type: DataTypes.SMALLINT, allowNull: false },
+      colAmount: { type: DataTypes.SMALLINT, allowNull: true },
+      colDebit: { type: DataTypes.SMALLINT, allowNull: true },
+      colCredit: { type: DataTypes.SMALLINT, allowNull: true },
+      ...timestamps,
+    },
+    options('import_mappings'),
+  )
+
+  const ImportBatch = sequelize.define<ImportBatchModel>(
+    'ImportBatch',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      filename: { type: DataTypes.TEXT, allowNull: false },
+      status: { type: DataTypes.TEXT, allowNull: false },
+      rawFile: { type: DataTypes.BLOB, allowNull: true },
+      rowsRead: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+      rowsCreated: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      rowsDuplicate: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      rowsMerged: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      validatedAt: { type: DataTypes.DATE, allowNull: true },
+      cancelledAt: { type: DataTypes.DATE, allowNull: true },
+      ...timestamps,
+    },
+    options('import_batches'),
+  )
+
+  const ImportRow = sequelize.define<ImportRowModel>(
+    'ImportRow',
+    {
+      id: primaryKey,
+      batchId: { type: DataTypes.UUID, allowNull: false },
+      rowIndex: { type: DataTypes.INTEGER, allowNull: false },
+      raw: { type: DataTypes.JSONB, allowNull: false },
+      date: { type: DataTypes.DATEONLY, allowNull: true },
+      amountCents: bigintCents<ImportRowModel>('amountCents'),
+      bankLabel: { type: DataTypes.TEXT, allowNull: true },
+      dedupHash: { type: DataTypes.TEXT, allowNull: true },
+      error: { type: DataTypes.TEXT, allowNull: true },
+      duplicate: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      proposedRuleId: { type: DataTypes.UUID, allowNull: true },
+      proposedCategoryId: { type: DataTypes.UUID, allowNull: true },
+      proposedTransferAccountId: { type: DataTypes.UUID, allowNull: true },
+      proposedScheduleId: { type: DataTypes.UUID, allowNull: true },
+      proposedOriginalDate: { type: DataTypes.DATEONLY, allowNull: true },
+      candidates: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
+      ...timestamps,
+    },
+    options('import_rows'),
+  )
+
+  const CategorizationRule = sequelize.define<CategorizationRuleModel>(
+    'CategorizationRule',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      priority: { type: DataTypes.INTEGER, allowNull: false },
+      matchType: { type: DataTypes.TEXT, allowNull: false },
+      pattern: { type: DataTypes.TEXT, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: true },
+      sign: { type: DataTypes.TEXT, allowNull: false },
+      amountMinCents: bigintCents<CategorizationRuleModel>('amountMinCents'),
+      amountMaxCents: bigintCents<CategorizationRuleModel>('amountMaxCents'),
+      actionCategoryId: { type: DataTypes.UUID, allowNull: true },
+      actionTransferAccountId: { type: DataTypes.UUID, allowNull: true },
+      active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      ...timestamps,
+    },
+    options('categorization_rules'),
+  )
+
+  const AccountStatement = sequelize.define<AccountStatementModel>(
+    'AccountStatement',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      date: { type: DataTypes.DATEONLY, allowNull: false },
+      balanceCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: AccountStatementModel) {
+          return Number(this.getDataValue('balanceCents'))
+        },
+      },
+      adjustmentTransactionId: { type: DataTypes.UUID, allowNull: true },
+      ...timestamps,
+    },
+    options('account_statements'),
+  )
+
   return {
     User,
     Session,
@@ -347,5 +498,10 @@ export function createModels(sequelize: Sequelize): Models {
     Transaction,
     Envelope,
     EnvelopeCategory,
+    ImportMapping,
+    ImportBatch,
+    ImportRow,
+    CategorizationRule,
+    AccountStatement,
   }
 }

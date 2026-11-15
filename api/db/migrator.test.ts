@@ -94,7 +94,7 @@ describe('createMigrator', () => {
 
   async function listTables(): Promise<string[]> {
     const [rows] = await database.sequelize.query(
-      "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'schema_migrations' ORDER BY tablename",
+      "SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename <> 'schema_migrations' ORDER BY tablename COLLATE \"C\"",
     )
     return rows.flatMap((row) =>
       typeof row === 'object' &&
@@ -117,11 +117,16 @@ describe('createMigrator', () => {
     )
     expect(await isCitextInstalled()).toBe(true)
     expect(await listTables()).toEqual([
+      'account_statements',
       'accounts',
       'categories',
+      'categorization_rules',
       'email_change_tokens',
       'envelope_categories',
       'envelopes',
+      'import_batches',
+      'import_mappings',
+      'import_rows',
       'invitations',
       'password_reset_tokens',
       'payment_methods',

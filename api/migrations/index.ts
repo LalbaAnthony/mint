@@ -14,6 +14,10 @@ import * as createScheduleOccurrences from './0012-create-schedule-occurrences.j
 import * as createTransactions from './0013-create-transactions.js'
 import * as createEnvelopes from './0014-create-envelopes.js'
 import * as addScheduleNote from './0015-add-schedule-note.js'
+import * as createImportTables from './0016-create-import-tables.js'
+import * as addBankColumns from './0017-add-bank-columns.js'
+import * as createCategorizationRules from './0018-create-categorization-rules.js'
+import * as createAccountStatements from './0019-create-account-statements.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -31,4 +35,8 @@ export const migrations: Migration[] = [
   { name: '0013-create-transactions', ...createTransactions },
   { name: '0014-create-envelopes', ...createEnvelopes },
   { name: '0015-add-schedule-note', ...addScheduleNote },
+  { name: '0016-create-import-tables', ...createImportTables },
+  { name: '0017-add-bank-columns', ...addBankColumns },
+  { name: '0018-create-categorization-rules', ...createCategorizationRules },
+  { name: '0019-create-account-statements', ...createAccountStatements },
 ]

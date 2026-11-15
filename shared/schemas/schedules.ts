@@ -63,12 +63,34 @@ const recurrenceShape = {
   businessDayRule: businessDayRuleSchema,
 }
 
+export const maxBankLabelPatterns = 50
+
+export const bankLabelPatternsSchema = z
+  .array(
+    z
+      .string({ error: 'invalid' })
+      .trim()
+      .min(1, { error: 'required' })
+      .max(200, { error: 'too_long' }),
+    { error: 'invalid' },
+  )
+  .max(maxBankLabelPatterns, { error: 'too_long' })
+  .transform((patterns) => [...new Set(patterns)])
+
+export const amountToleranceSchema = z
+  .number({ error: 'invalid' })
+  .int({ error: 'invalid' })
+  .min(0, { error: 'tolerance_out_of_range' })
+  .max(100, { error: 'tolerance_out_of_range' })
+
 const commonShape = {
   label: labelSchema,
   amountCents: positiveAmountCentsSchema,
   triggerMode: triggerModeSchema,
   note: noteSchema,
   active: z.boolean({ error: 'invalid' }),
+  amountTolerancePct: amountToleranceSchema.default(10),
+  bankLabelPatterns: bankLabelPatternsSchema.default([]),
   ...recurrenceShape,
 }
 
@@ -143,6 +165,8 @@ export const createScheduleRequestSchema = scheduleFieldsSchema
 export const updateScheduleRequestSchema = z
   .object({
     ...commonShape,
+    amountTolerancePct: amountToleranceSchema,
+    bankLabelPatterns: bankLabelPatternsSchema,
     ...categorizedShape,
     ...transferShape,
     isSubscription: z.boolean({ error: 'invalid' }),
@@ -187,6 +211,8 @@ export const scheduleSchema = z
     endDate: z.iso.date().nullable(),
     maxOccurrences: z.number().int().nullable(),
     businessDayRule: businessDayRuleSchema,
+    amountTolerancePct: z.number().int(),
+    bankLabelPatterns: z.array(z.string()),
     createdAt: z.iso.datetime(),
     monthlyEquivalentCents: z.number().int().nullable(),
     nextOccurrence: scheduleOccurrenceSchema.nullable(),

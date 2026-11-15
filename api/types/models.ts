@@ -5,6 +5,11 @@ import type {
   RegulatedProduct,
 } from '@mint/shared/types/accounts'
 import type { CategoryKind, ExpenseGroup } from '@mint/shared/types/categories'
+import type {
+  CsvMapping,
+  ImportBatch,
+  ImportLineError,
+} from '@mint/shared/types/imports'
 import type { PaymentMethodKind } from '@mint/shared/types/payment-methods'
 import type {
   BusinessDayRule,
@@ -17,6 +22,7 @@ import type {
   TransactionOrigin,
   TransactionStatus,
 } from '@mint/shared/types/transactions'
+import type { RuleMatchType, RuleSign } from '@mint/shared/types/rules'
 import type { Locale, UserRole, UserStatus } from '@mint/shared/types/user'
 
 export type UserAttributes = {
@@ -246,12 +252,16 @@ export type ScheduleAttributes = {
   businessDayRule: BusinessDayRule
   note: string | null
   active: boolean
+  amountTolerancePct: number
+  bankLabelPatterns: string[]
   createdAt: Date
   updatedAt: Date
 }
 
 export type ScheduleCreationAttributes = Optional<
   ScheduleAttributes,
+  | 'amountTolerancePct'
+  | 'bankLabelPatterns'
   | 'id'
   | 'paymentMethodId'
   | 'accountId'
@@ -313,12 +323,20 @@ export type TransactionAttributes = {
   origin: TransactionOrigin
   transferGroupId: string | null
   occurrenceId: string | null
+  bankLabel: string | null
+  importBatchId: string | null
+  dedupHash: string | null
+  preMergeSnapshot: unknown
   createdAt: Date
   updatedAt: Date
 }
 
 export type TransactionCreationAttributes = Optional<
   TransactionAttributes,
+  | 'bankLabel'
+  | 'importBatchId'
+  | 'dedupHash'
+  | 'preMergeSnapshot'
   | 'id'
   | 'paymentMethodId'
   | 'note'
@@ -399,4 +417,181 @@ export type Models = {
   Transaction: ModelStatic<TransactionModel>
   Envelope: ModelStatic<EnvelopeModel>
   EnvelopeCategory: ModelStatic<EnvelopeCategoryModel>
+  ImportMapping: ModelStatic<ImportMappingModel>
+  ImportBatch: ModelStatic<ImportBatchModel>
+  ImportRow: ModelStatic<ImportRowModel>
+  CategorizationRule: ModelStatic<CategorizationRuleModel>
+  AccountStatement: ModelStatic<AccountStatementModel>
 }
+
+export type ImportMappingAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  delimiter: CsvMapping['delimiter']
+  encoding: CsvMapping['encoding']
+  hasHeader: boolean
+  skipTop: number
+  skipBottom: number
+  dateFormat: CsvMapping['dateFormat']
+  decimalSeparator: CsvMapping['decimalSeparator']
+  colDate: number
+  colLabel: number
+  colAmount: number | null
+  colDebit: number | null
+  colCredit: number | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ImportMappingCreationAttributes = Optional<
+  ImportMappingAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>
+
+export type ImportMappingModel = Model<
+  ImportMappingAttributes,
+  ImportMappingCreationAttributes
+> &
+  ImportMappingAttributes
+
+export type ImportBatchAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  filename: string
+  status: ImportBatch['status']
+  rawFile: Buffer | null
+  rowsRead: number
+  rowsCreated: number
+  rowsDuplicate: number
+  rowsMerged: number
+  validatedAt: Date | null
+  cancelledAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ImportBatchCreationAttributes = Optional<
+  ImportBatchAttributes,
+  | 'id'
+  | 'rawFile'
+  | 'rowsRead'
+  | 'rowsCreated'
+  | 'rowsDuplicate'
+  | 'rowsMerged'
+  | 'validatedAt'
+  | 'cancelledAt'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type ImportBatchModel = Model<
+  ImportBatchAttributes,
+  ImportBatchCreationAttributes
+> &
+  ImportBatchAttributes
+
+export type ImportRowAttributes = {
+  id: string
+  batchId: string
+  rowIndex: number
+  raw: unknown
+  date: string | null
+  amountCents: number | null
+  bankLabel: string | null
+  dedupHash: string | null
+  error: ImportLineError | null
+  duplicate: boolean
+  proposedRuleId: string | null
+  proposedCategoryId: string | null
+  proposedTransferAccountId: string | null
+  proposedScheduleId: string | null
+  proposedOriginalDate: string | null
+  candidates: unknown
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type ImportRowCreationAttributes = Optional<
+  ImportRowAttributes,
+  | 'id'
+  | 'date'
+  | 'amountCents'
+  | 'bankLabel'
+  | 'dedupHash'
+  | 'error'
+  | 'duplicate'
+  | 'proposedRuleId'
+  | 'proposedCategoryId'
+  | 'proposedTransferAccountId'
+  | 'proposedScheduleId'
+  | 'proposedOriginalDate'
+  | 'candidates'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type ImportRowModel = Model<
+  ImportRowAttributes,
+  ImportRowCreationAttributes
+> &
+  ImportRowAttributes
+
+export type CategorizationRuleAttributes = {
+  id: string
+  userId: string
+  priority: number
+  matchType: RuleMatchType
+  pattern: string
+  accountId: string | null
+  sign: RuleSign
+  amountMinCents: number | null
+  amountMaxCents: number | null
+  actionCategoryId: string | null
+  actionTransferAccountId: string | null
+  active: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type CategorizationRuleCreationAttributes = Optional<
+  CategorizationRuleAttributes,
+  | 'id'
+  | 'accountId'
+  | 'amountMinCents'
+  | 'amountMaxCents'
+  | 'actionCategoryId'
+  | 'actionTransferAccountId'
+  | 'active'
+  | 'createdAt'
+  | 'updatedAt'
+>
+
+export type CategorizationRuleModel = Model<
+  CategorizationRuleAttributes,
+  CategorizationRuleCreationAttributes
+> &
+  CategorizationRuleAttributes
+
+export type AccountStatementAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  date: string
+  balanceCents: number
+  adjustmentTransactionId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AccountStatementCreationAttributes = Optional<
+  AccountStatementAttributes,
+  'id' | 'adjustmentTransactionId' | 'createdAt' | 'updatedAt'
+>
+
+export type AccountStatementModel = Model<
+  AccountStatementAttributes,
+  AccountStatementCreationAttributes
+> &
+  AccountStatementAttributes

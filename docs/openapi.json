@@ -730,6 +730,11 @@
           "endDate": { "type": ["string", "null"], "format": "date" },
           "maxOccurrences": { "type": ["integer", "null"] },
           "businessDayRule": { "$ref": "#/components/schemas/BusinessDayRule" },
+          "amountTolerancePct": { "type": "integer" },
+          "bankLabelPatterns": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
           "createdAt": { "type": "string", "format": "date-time" },
           "monthlyEquivalentCents": { "type": ["integer", "null"] },
           "nextOccurrence": {
@@ -758,6 +763,8 @@
           "endDate",
           "maxOccurrences",
           "businessDayRule",
+          "amountTolerancePct",
+          "bankLabelPatterns",
           "createdAt",
           "monthlyEquivalentCents",
           "nextOccurrence",
@@ -824,6 +831,18 @@
               "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
               "note": { "type": ["string", "null"], "maxLength": 1000 },
               "active": { "type": "boolean" },
+              "amountTolerancePct": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "default": 10
+              },
+              "bankLabelPatterns": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 200 },
+                "maxItems": 50,
+                "default": []
+              },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
               "startDate": { "type": "string", "format": "date" },
@@ -878,6 +897,18 @@
               "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
               "note": { "type": ["string", "null"], "maxLength": 1000 },
               "active": { "type": "boolean" },
+              "amountTolerancePct": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "default": 10
+              },
+              "bankLabelPatterns": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 200 },
+                "maxItems": 50,
+                "default": []
+              },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
               "startDate": { "type": "string", "format": "date" },
@@ -930,6 +961,18 @@
               "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
               "note": { "type": ["string", "null"], "maxLength": 1000 },
               "active": { "type": "boolean" },
+              "amountTolerancePct": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "default": 10
+              },
+              "bankLabelPatterns": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1, "maxLength": 200 },
+                "maxItems": 50,
+                "default": []
+              },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
               "startDate": { "type": "string", "format": "date" },
@@ -986,6 +1029,16 @@
           "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
           "note": { "type": ["string", "null"], "maxLength": 1000 },
           "active": { "type": "boolean" },
+          "amountTolerancePct": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "bankLabelPatterns": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "maxItems": 50
+          },
           "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
           "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
           "startDate": { "type": "string", "format": "date" },
