@@ -75,7 +75,7 @@ La tâche planifiée de 00:05 appelle `planExecutions` avec la date du jour, les
 - sa date effective est comprise entre sa borne basse et aujourd'hui, bornes incluses ; la borne basse est la plus tardive entre la date de création de l'échéance (Europe/Paris) et les dates de solde initial des comptes qu'elle touche ;
 - elle n'a pas de ligne `skipped` ni `executed`.
 
-Avec cette borne, une échéance ressaisie avec une date de début passée (reprise Notion) n'exécute pas son historique, le rattrapage du worker ne couvre que les jours manqués depuis la création, et aucune opération générée ne précède le solde initial de son compte (ADR 0014). Chaque occurrence à exécuter donne ses mouvements : une dépense débite son compte, un revenu crédite le sien, avec le moyen de paiement et la catégorie de l'échéance ; un transfert débite la source et crédite la cible, sans catégorie. Le libellé de l'opération est celui de l'échéance, son origine « échéance ».
+Avec cette borne, une échéance ressaisie avec une date de début passée (reprise Notion) n'exécute pas son historique, le rattrapage du worker ne couvre que les jours manqués depuis la création, et aucune opération générée ne précède le solde initial de son compte (ADR 0014). Chaque occurrence à exécuter donne ses mouvements : une dépense débite son compte, un revenu crédite le sien, avec le moyen de paiement et la catégorie de l'échéance ; un transfert débite la source et crédite la cible, sans catégorie. Le libellé de l'opération est celui de l'échéance, son origine « échéance », ses tags ceux de l'échéance (ADR 0018).
 
 Le worker (`api/execution/`, ADR 0014) enregistre, dans une même transaction par occurrence, la ligne `executed` (date effective et montant de l'opération) et les opérations liées par `occurrence_id`, les deux mouvements d'un transfert partageant un `transfer_group_id`. L'idempotence (EXE-03) repose sur les contraintes uniques `(schedule_id, original_date)` et `(occurrence_id, account_id)`. La liste est triée par date effective, puis échéance, puis date d'origine.
 
@@ -160,7 +160,7 @@ Clé de doublon (IMP-05) : date, montant, rang parmi les lignes identiques du m�
 
 ## 10. Règles et rapprochement
 
-Règles (REG-01, REG-02) : la première règle active satisfaite, dans l'ordre de priorité, s'applique. Une règle est satisfaite si son compte (facultatif) est celui de la ligne, son sens convient, la valeur absolue du montant est dans la plage, et le libellé bancaire contient le motif ou commence par lui (casse et accents ignorés), ou correspond à l'expression régulière (accents retirés, casse ignorée, moteur RE2).
+Règles (REG-01, REG-02) : la première règle active satisfaite, dans l'ordre de priorité, s'applique ; elle donne sa catégorie ou son compte de transfert, et ses éventuels tags (ADR 0018). Une règle est satisfaite si son compte (facultatif) est celui de la ligne, son sens convient, la valeur absolue du montant est dans la plage, et le libellé bancaire contient le motif ou commence par lui (casse et accents ignorés), ou correspond à l'expression régulière (accents retirés, casse ignorée, moteur RE2).
 
 Occurrences candidates d'une ligne ou d'une opération (RAP-01) : même compte, même sens, date effective à ±5 jours, écart de montant au plus égal à la tolérance de l'échéance (pourcentage du montant de l'occurrence, arrondi au centime inférieur), occurrence ni sautée ni déjà rapprochée d'une ligne bancaire, postérieure à la borne basse de la section 4. Score (RAP-02) :
 
