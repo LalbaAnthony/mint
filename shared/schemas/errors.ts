@@ -40,6 +40,14 @@ export const apiErrorCodes = [
   'operations_before_initial_balance',
   'occurrence_not_editable',
   'operation_is_transfer',
+  'operation_without_bank_label',
+  'statement_exists',
+  'import_not_pending',
+  'import_not_validated',
+  'import_not_previewed',
+  'occurrence_not_candidate',
+  'operation_reconciled',
+  'operation_not_reconciled',
   'internal_error',
 ] as const
 

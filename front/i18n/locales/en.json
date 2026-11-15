@@ -355,7 +355,8 @@
     "checking": "Checking usage...",
     "operations": "{n} operation | {n} operations",
     "schedules": "{n} schedule | {n} schedules",
-    "envelopes": "{n} envelope | {n} envelopes"
+    "envelopes": "{n} envelope | {n} envelopes",
+    "rules": "{n} rule | {n} rules"
   },
   "operations": {
     "add": "Add an operation",

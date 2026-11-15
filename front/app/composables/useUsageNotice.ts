@@ -20,6 +20,9 @@ export function useUsageNotice() {
       usage.envelopes > 0
         ? t('usage.envelopes', { n: usage.envelopes }, usage.envelopes)
         : null,
+      usage.rules > 0
+        ? t('usage.rules', { n: usage.rules }, usage.rules)
+        : null,
     ]
       .filter((part): part is string => part !== null)
       .join(', ')
@@ -39,7 +42,7 @@ export function useUsageNotice() {
         description: t('accounts.deleteBlockedOperations', { name }),
       }
     }
-    if (usage.schedules + usage.envelopes > 0) {
+    if (usage.schedules + usage.envelopes + usage.rules > 0) {
       return {
         blocked: true,
         description: t('accounts.deleteBlockedUsage', {

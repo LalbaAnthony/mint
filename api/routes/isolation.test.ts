@@ -28,6 +28,7 @@ async function snapshotOf(
       await client.get(`/schedules/${resources.scheduleId}/occurrences`)
     ).body,
     envelopes: (await client.get('/envelopes')).body,
+    rules: (await client.get('/rules')).body,
   }
 }
 
@@ -48,6 +49,20 @@ function crossRead(path: (resources: IsolationResources) => string): Scenario {
 function expectNotFound(response: { status: number; body: unknown }): void {
   expect(response.status).toBe(404)
   expect(response.body).toEqual({ error: 'not_found' })
+}
+
+function aliceRule(accountId: string | null, categoryId: string) {
+  return {
+    matchType: 'contains',
+    pattern: 'ALICE',
+    accountId,
+    sign: 'any',
+    amountMinCents: null,
+    amountMaxCents: null,
+    categoryId,
+    transferAccountId: null,
+    active: true,
+  }
 }
 
 function aliceOperation(accountId: string) {
@@ -649,6 +664,50 @@ const scenarios: Record<string, Scenario> = {
   'get /calendar/:month': crossRead(
     ({ accountId }) => `/calendar/2026-11-01?accountId=${accountId}`,
   ),
+  'get /rules': ownListOnly('/rules'),
+  'post /rules': async (actors) => {
+    const aliceAccount = await createAliceAccount(actors)
+    const leisure = await findAliceCategory(actors, 'Loisirs')
+    expectNotFound(
+      await actors.aliceClient.post(
+        '/rules',
+        aliceRule(actors.bobResources.accountId, leisure.id),
+      ),
+    )
+    expectNotFound(
+      await actors.aliceClient.post(
+        '/rules',
+        aliceRule(aliceAccount, actors.bobResources.categoryId),
+      ),
+    )
+    expectNotFound(
+      await actors.aliceClient.post('/rules', {
+        ...aliceRule(aliceAccount, leisure.id),
+        categoryId: null,
+        transferAccountId: actors.bobResources.accountId,
+      }),
+    )
+    await expectBobDataUntouched(actors)
+  },
+  'patch /rules/:id': crossAccess(
+    'patch',
+    ({ ruleId }) => `/rules/${ruleId}`,
+    () => ({ pattern: 'Taken over' }),
+  ),
+  'delete /rules/:id': crossAccess(
+    'delete',
+    ({ ruleId }) => `/rules/${ruleId}`,
+  ),
+  'post /rules/reorder': async (actors) => {
+    const response = await actors.aliceClient.post('/rules/reorder', {
+      ruleIds: [actors.bobResources.ruleId],
+    })
+    expect(response.status).toBe(409)
+    await expectBobDataUntouched(actors)
+  },
+  'get /rules/suggestion': crossRead(
+    ({ operationId }) => `/rules/suggestion?operationId=${operationId}`,
+  ),
 }
 
 async function createBobResources(
@@ -704,11 +763,16 @@ async function createBobResources(
     '/envelopes',
     aliceEnvelope(account.body.id, [groceries.id]),
   )
+  const rule = await bobClient.post('/rules', {
+    ...aliceRule(account.body.id, category.id),
+    pattern: 'BOB',
+  })
   if (
     operation.status !== 201 ||
     transfer.status !== 201 ||
     schedule.status !== 201 ||
-    envelope.status !== 201
+    envelope.status !== 201 ||
+    rule.status !== 201
   ) {
     throw new Error('Bob planning resources could not be created')
   }
@@ -721,6 +785,7 @@ async function createBobResources(
     transferGroupId: transfer.body.transferGroupId,
     scheduleId: schedule.body.id,
     envelopeId: envelope.body.id,
+    ruleId: rule.body.id,
   }
 }
 

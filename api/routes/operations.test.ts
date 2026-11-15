@@ -77,6 +77,10 @@ describe('OPE-01 record an expense or an income', () => {
       transferGroupId: null,
       counterpartAccountId: null,
       scheduleId: null,
+      occurrenceDate: null,
+      bankLabel: null,
+      reconciled: false,
+      unconfirmed: false,
     })
     expect(await balanceOf(user, accountId)).toBe(95_500)
   })

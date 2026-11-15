@@ -427,9 +427,10 @@
         "properties": {
           "operations": { "type": "integer" },
           "schedules": { "type": "integer" },
-          "envelopes": { "type": "integer" }
+          "envelopes": { "type": "integer" },
+          "rules": { "type": "integer" }
         },
-        "required": ["operations", "schedules", "envelopes"]
+        "required": ["operations", "schedules", "envelopes", "rules"]
       },
       "PaymentMethodListResponse": {
         "type": "array",
@@ -567,7 +568,11 @@
             "type": ["string", "null"],
             "format": "uuid"
           },
-          "scheduleId": { "type": ["string", "null"], "format": "uuid" }
+          "scheduleId": { "type": ["string", "null"], "format": "uuid" },
+          "occurrenceDate": { "type": ["string", "null"], "format": "date" },
+          "bankLabel": { "type": ["string", "null"] },
+          "reconciled": { "type": "boolean" },
+          "unconfirmed": { "type": "boolean" }
         },
         "required": [
           "id",
@@ -582,7 +587,11 @@
           "origin",
           "transferGroupId",
           "counterpartAccountId",
-          "scheduleId"
+          "scheduleId",
+          "occurrenceDate",
+          "bankLabel",
+          "reconciled",
+          "unconfirmed"
         ]
       },
       "TransactionStatus": {
@@ -1371,6 +1380,130 @@
           "amountCents": { "type": "integer" }
         },
         "required": ["envelopeId", "label", "accountId", "amountCents"]
+      },
+      "RuleListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/Rule" }
+      },
+      "Rule": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "priority": { "type": "integer" },
+          "matchType": { "$ref": "#/components/schemas/RuleMatchType" },
+          "pattern": { "type": "string" },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "sign": { "$ref": "#/components/schemas/RuleSign" },
+          "amountMinCents": { "type": ["integer", "null"] },
+          "amountMaxCents": { "type": ["integer", "null"] },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "active": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "priority",
+          "matchType",
+          "pattern",
+          "accountId",
+          "sign",
+          "amountMinCents",
+          "amountMaxCents",
+          "categoryId",
+          "transferAccountId",
+          "active"
+        ]
+      },
+      "RuleMatchType": {
+        "type": "string",
+        "enum": ["contains", "starts_with", "regex"]
+      },
+      "RuleSign": { "type": "string", "enum": ["debit", "credit", "any"] },
+      "CreateRuleRequest": {
+        "type": "object",
+        "properties": {
+          "matchType": { "$ref": "#/components/schemas/RuleMatchType" },
+          "pattern": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "sign": { "$ref": "#/components/schemas/RuleSign" },
+          "amountMinCents": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99999999999
+          },
+          "amountMaxCents": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99999999999
+          },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "active": { "type": "boolean" }
+        },
+        "required": [
+          "matchType",
+          "pattern",
+          "accountId",
+          "sign",
+          "amountMinCents",
+          "amountMaxCents",
+          "categoryId",
+          "transferAccountId",
+          "active"
+        ]
+      },
+      "ReorderRulesRequest": {
+        "type": "object",
+        "properties": {
+          "ruleIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": ["ruleIds"]
+      },
+      "RuleSuggestion": {
+        "type": "object",
+        "properties": {
+          "matchType": { "$ref": "#/components/schemas/RuleMatchType" },
+          "pattern": { "type": "string" },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "sign": { "$ref": "#/components/schemas/RuleSign" },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" }
+        },
+        "required": [
+          "matchType",
+          "pattern",
+          "accountId",
+          "sign",
+          "categoryId",
+          "transferAccountId"
+        ]
+      },
+      "UpdateRuleRequest": {
+        "type": "object",
+        "properties": {
+          "matchType": { "$ref": "#/components/schemas/RuleMatchType" },
+          "pattern": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "accountId": { "type": ["string", "null"], "format": "uuid" },
+          "sign": { "$ref": "#/components/schemas/RuleSign" },
+          "amountMinCents": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99999999999
+          },
+          "amountMaxCents": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "maximum": 99999999999
+          },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "active": { "type": "boolean" }
+        }
       }
     },
     "parameters": {}
@@ -3946,6 +4079,18 @@
             "required": false,
             "name": "status",
             "in": "query"
+          },
+          {
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "required": false,
+            "name": "reconciled",
+            "in": "query"
+          },
+          {
+            "schema": { "type": "string", "enum": ["true", "false"] },
+            "required": false,
+            "name": "unconfirmed",
+            "in": "query"
           }
         ],
         "responses": {
@@ -5160,6 +5305,326 @@
           },
           "409": {
             "description": "Archived account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules": {
+      "get": {
+        "summary": "Categorization rules by priority (REG-01, REG-02)",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Rules",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RuleListResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a rule on the bank label, optionally the account, the sign and an amount range, classifying into a category or a transfer, placed last (REG-01)",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateRuleRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rule created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Rule" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or regular expression",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown rule, account or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/reorder": {
+      "post": {
+        "summary": "Set the priority of every rule, the first one applying first (REG-02)",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReorderRulesRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Order saved" },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "The list is not exactly the rules of the user",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/suggestion": {
+      "get": {
+        "summary": "Rule prefilled from an imported operation: its bank label without digits nor dates, its sign and its category (REG-03)",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "operationId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Suggested rule",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RuleSuggestion" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid operation identifier",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation without bank label",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/{id}": {
+      "patch": {
+        "summary": "Modify a rule",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateRuleRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rule modified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Rule" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body or regular expression",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown rule, account or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account or category newly referenced",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a rule; the operations it classified keep their category",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Rule deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown rule, account or category",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

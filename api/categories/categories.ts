@@ -196,6 +196,13 @@ export async function reassignCategories(
     { categoryId: replacement.id },
     { where, transaction },
   )
+  await app.models.CategorizationRule.update(
+    { actionCategoryId: replacement.id },
+    {
+      where: { userId, actionCategoryId: { [Op.in]: [...removedIds] } },
+      transaction,
+    },
+  )
   const memberships = await app.models.EnvelopeCategory.findAll({
     where,
     transaction,

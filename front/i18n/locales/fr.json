@@ -355,7 +355,8 @@
     "checking": "Vérification des usages...",
     "operations": "{n} opération | {n} opérations",
     "schedules": "{n} échéance | {n} échéances",
-    "envelopes": "{n} enveloppe | {n} enveloppes"
+    "envelopes": "{n} enveloppe | {n} enveloppes",
+    "rules": "{n} règle | {n} règles"
   },
   "operations": {
     "add": "Ajouter une opération",

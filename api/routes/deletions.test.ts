@@ -54,6 +54,7 @@ describe('CPT-07 account deletion', () => {
       operations: 0,
       schedules: 1,
       envelopes: 0,
+      rules: 0,
     })
     expect((await user.delete(`/accounts/${withOperations}`)).body).toEqual({
       error: 'account_has_operations',
@@ -98,6 +99,7 @@ describe('PAY payment method deletion', () => {
         operations: 1,
         schedules: 0,
         envelopes: 0,
+        rules: 0,
       },
     )
     expect((await user.delete(`/payment-methods/${usedCard}`)).body).toEqual({
@@ -130,7 +132,12 @@ describe('CAT-07 category deletion with reassignment', () => {
       `/categories/${groceries}?replacementId=${food}`,
     )
 
-    expect(usage.body).toEqual({ operations: 1, schedules: 1, envelopes: 1 })
+    expect(usage.body).toEqual({
+      operations: 1,
+      schedules: 1,
+      envelopes: 1,
+      rules: 0,
+    })
     expect(withoutReplacement.body).toEqual({ error: 'category_in_use' })
     expect(otherKind.body).toEqual({ error: 'invalid_replacement' })
     expect(ownChild.body).toEqual({ error: 'invalid_replacement' })

@@ -25,6 +25,22 @@ import type {
 import type { OperationFields, TransferMovements } from '../types/operations.js'
 import type { DataAccess } from '../types/planning.js'
 
+export async function accountsWithValidatedImport(
+  data: DataAccess,
+  accountIds: readonly string[],
+  transaction?: Transaction,
+): Promise<Set<string>> {
+  if (accountIds.length === 0) {
+    return new Set()
+  }
+  const batches = await data.models.ImportBatch.findAll({
+    attributes: ['accountId'],
+    where: { accountId: { [Op.in]: [...accountIds] }, status: 'validated' },
+    transaction,
+  })
+  return new Set(batches.map((batch) => batch.accountId))
+}
+
 export async function toOperations(
   data: DataAccess,
   rows: readonly TransactionModel[],
@@ -48,14 +64,23 @@ export async function toOperations(
     occurrenceIds.length === 0
       ? []
       : await data.models.ScheduleOccurrence.findAll({
-          attributes: ['id', 'scheduleId'],
+          attributes: ['id', 'scheduleId', 'originalDate'],
           where: { id: { [Op.in]: occurrenceIds } },
           transaction,
         })
-  const scheduleByOccurrence = new Map(
-    occurrences.map((occurrence) => [occurrence.id, occurrence.scheduleId]),
+  const occurrencesById = new Map(
+    occurrences.map((occurrence) => [occurrence.id, occurrence]),
+  )
+  const importedAccounts = await accountsWithValidatedImport(
+    data,
+    [...new Set(rows.map((row) => row.accountId))],
+    transaction,
   )
   return rows.map((row) => {
+    const occurrence =
+      row.occurrenceId === null
+        ? undefined
+        : occurrencesById.get(row.occurrenceId)
     const counterpart =
       row.transferGroupId === null
         ? undefined
@@ -77,10 +102,12 @@ export async function toOperations(
       origin: row.origin,
       transferGroupId: row.transferGroupId,
       counterpartAccountId: counterpart?.accountId ?? null,
-      scheduleId:
-        row.occurrenceId === null
-          ? null
-          : (scheduleByOccurrence.get(row.occurrenceId) ?? null),
+      scheduleId: occurrence?.scheduleId ?? null,
+      occurrenceDate: occurrence?.originalDate ?? null,
+      bankLabel: row.bankLabel,
+      reconciled: row.occurrenceId !== null && row.origin !== 'schedule',
+      unconfirmed:
+        row.origin === 'schedule' && importedAccounts.has(row.accountId),
     }
   })
 }

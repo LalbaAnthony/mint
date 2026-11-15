@@ -118,6 +118,10 @@ export const operationSchema = z
     transferGroupId: z.uuid().nullable(),
     counterpartAccountId: z.uuid().nullable(),
     scheduleId: z.uuid().nullable(),
+    occurrenceDate: z.iso.date().nullable(),
+    bankLabel: z.string().nullable(),
+    reconciled: z.boolean(),
+    unconfirmed: z.boolean(),
   })
   .meta({ id: 'Operation' })
 
@@ -135,6 +139,11 @@ function asList<Schema extends z.ZodType>(item: Schema) {
     z.array(item).max(200, { error: 'too_long' }).optional(),
   )
 }
+
+const booleanQuerySchema = z
+  .enum(['true', 'false'], { error: 'invalid' })
+  .transform((value) => value === 'true')
+  .optional()
 
 const centsQuerySchema = z.coerce
   .number({ error: 'invalid_amount' })
@@ -171,6 +180,8 @@ export const operationListQuerySchema = z
     direction: operationDirectionSchema.optional(),
     origins: asList(transactionOriginSchema),
     status: transactionStatusSchema.optional(),
+    reconciled: booleanQuerySchema,
+    unconfirmed: booleanQuerySchema,
   })
   .meta({ id: 'OperationListQuery' })
 

@@ -44,6 +44,7 @@ describe('CPT-07 account deletion', () => {
         operations: 3,
         schedules: 0,
         envelopes: 0,
+        rules: 0,
       }),
     })
     const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
@@ -74,6 +75,7 @@ describe('CPT-07 account deletion', () => {
         operations: 0,
         schedules: 2,
         envelopes: 1,
+        rules: 0,
       }),
     })
     const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
@@ -116,6 +118,7 @@ describe('CAT-07 category deletion', () => {
       operations: 4,
       schedules: 1,
       envelopes: 1,
+      rules: 0,
     })
 
     await vi.waitFor(() => {
@@ -130,7 +133,7 @@ describe('CAT-07 category deletion', () => {
 
   it('deletes an unused category directly', async () => {
     const { api, wrapper } = await mountModal(
-      { operations: 0, schedules: 0, envelopes: 0 },
+      { operations: 0, schedules: 0, envelopes: 0, rules: 0 },
       { [`DELETE /categories/${ids.groceries}`]: () => undefined },
     )
     await vi.waitFor(() => {

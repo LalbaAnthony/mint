@@ -5,5 +5,6 @@ export const usageCountsSchema = z
     operations: z.number().int(),
     schedules: z.number().int(),
     envelopes: z.number().int(),
+    rules: z.number().int(),
   })
   .meta({ id: 'UsageCounts' })

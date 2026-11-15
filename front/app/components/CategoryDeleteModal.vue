@@ -44,7 +44,11 @@ watch(
 const isUsed = computed(
   () =>
     usage.value !== null &&
-    usage.value.operations + usage.value.schedules + usage.value.envelopes > 0,
+    usage.value.operations +
+      usage.value.schedules +
+      usage.value.envelopes +
+      usage.value.rules >
+      0,
 )
 
 const childCount = computed(

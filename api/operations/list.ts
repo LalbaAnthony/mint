@@ -113,6 +113,7 @@ export async function listOperations(
     conditions.push({
       [Op.or]: [
         { label: { [Op.iLike]: pattern } },
+        { bankLabel: { [Op.iLike]: pattern } },
         { note: { [Op.iLike]: pattern } },
       ],
     })
@@ -153,6 +154,30 @@ export async function listOperations(
   }
   if (query.status !== undefined) {
     conditions.push({ status: query.status })
+  }
+  if (query.reconciled !== undefined) {
+    conditions.push(
+      query.reconciled
+        ? { occurrenceId: { [Op.ne]: null }, origin: { [Op.ne]: 'schedule' } }
+        : {
+            [Op.or]: [{ occurrenceId: null }, { origin: 'schedule' }],
+          },
+    )
+  }
+  if (query.unconfirmed !== undefined) {
+    const imported = Sequelize.literal(
+      "(SELECT b.account_id FROM import_batches b WHERE b.status = 'validated')",
+    )
+    conditions.push(
+      query.unconfirmed
+        ? { origin: 'schedule', accountId: { [Op.in]: imported } }
+        : {
+            [Op.or]: [
+              { origin: { [Op.ne]: 'schedule' } },
+              { accountId: { [Op.notIn]: imported } },
+            ],
+          },
+    )
   }
   const { rows, count } = await data.models.Transaction.findAndCountAll({
     where: { [Op.and]: conditions },

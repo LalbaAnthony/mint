@@ -260,7 +260,7 @@ export const deleteAccountRoute = defineUserRoute({
       if (usage.operations > 0) {
         throw conflict('account_has_operations')
       }
-      if (usage.schedules + usage.envelopes > 0) {
+      if (usage.schedules + usage.envelopes + usage.rules > 0) {
         throw conflict('account_in_use')
       }
       await app.models.PaymentMethod.destroy({

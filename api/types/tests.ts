@@ -55,9 +55,11 @@ export type IsolationResources = {
   transferGroupId: string
   scheduleId: string
   envelopeId: string
+  ruleId: string
 }
 
 export type IsolationSnapshot = {
+  rules: unknown
   overview: unknown
   paymentMethods: unknown
   categories: unknown

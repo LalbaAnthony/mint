@@ -78,6 +78,13 @@ export async function accountUsage(
       where: { userId, [Op.or]: [{ accountId }, ...throughPaymentMethod] },
       transaction,
     }),
+    rules: await data.models.CategorizationRule.count({
+      where: {
+        userId,
+        [Op.or]: [{ accountId }, { actionTransferAccountId: accountId }],
+      },
+      transaction,
+    }),
   }
 }
 
@@ -92,6 +99,7 @@ export async function paymentMethodUsage(
     operations: await data.models.Transaction.count({ where, transaction }),
     schedules: await data.models.Schedule.count({ where, transaction }),
     envelopes: await data.models.Envelope.count({ where, transaction }),
+    rules: 0,
   }
 }
 
@@ -106,9 +114,13 @@ export async function categoryUsage(
     operations: await data.models.Transaction.count({ where, transaction }),
     schedules: await data.models.Schedule.count({ where, transaction }),
     envelopes: await data.models.EnvelopeCategory.count({ where, transaction }),
+    rules: await data.models.CategorizationRule.count({
+      where: { userId, actionCategoryId: { [Op.in]: [...categoryIds] } },
+      transaction,
+    }),
   }
 }
 
 export function isUsed(usage: UsageCounts): boolean {
-  return usage.operations + usage.schedules + usage.envelopes > 0
+  return usage.operations + usage.schedules + usage.envelopes + usage.rules > 0
 }
