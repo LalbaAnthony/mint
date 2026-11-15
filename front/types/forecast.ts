@@ -17,6 +17,11 @@ import type {
 import type { Schedule } from '@mint/shared/types/schedules'
 
 export type ChartTheme = {
+  needs: string
+  wants: string
+  save: string
+  needsShades: string[]
+  wantsShades: string[]
   balance: string
   threshold: string
   negative: string
@@ -31,7 +36,10 @@ export type ChartTheme = {
   fontFamily: string
 }
 
-export type ChartToken = keyof Omit<ChartTheme, 'fontFamily'>
+export type ChartToken = keyof Omit<
+  ChartTheme,
+  'fontFamily' | 'needsShades' | 'wantsShades'
+>
 
 export type BalanceCurveLabels = {
   real: string

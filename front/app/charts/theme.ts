@@ -1,6 +1,9 @@
 import type { ChartTheme, ChartToken } from '~~/types/forecast'
 
 const tokenVariables = {
+  needs: '--data-group-needs',
+  wants: '--data-group-wants',
+  save: '--data-group-save',
   balance: '--data-balance',
   threshold: '--data-threshold',
   negative: '--data-negative',
@@ -39,7 +42,16 @@ export function readChartTheme(root: HTMLElement): ChartTheme {
   const style = getComputedStyle(root)
   const color = (token: ChartToken) =>
     toSrgbHex(style.getPropertyValue(tokenVariables[token]).trim())
+  const shades = (group: 'needs' | 'wants') =>
+    Array.from({ length: 8 }, (_, index) =>
+      toSrgbHex(style.getPropertyValue(`--data-${group}-${index + 1}`).trim()),
+    )
   return {
+    needs: color('needs'),
+    wants: color('wants'),
+    save: color('save'),
+    needsShades: shades('needs'),
+    wantsShades: shades('wants'),
     balance: color('balance'),
     threshold: color('threshold'),
     negative: color('negative'),

@@ -1,10 +1,21 @@
 import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type {
+  BreakdownResponse,
+  MonthlyReportResponse,
+} from '@mint/shared/types/dashboard'
+import type {
   BalanceCurvePoint,
   BalanceCurveResponse,
 } from '@mint/shared/types/forecast'
 import { balanceCurveOption, balanceCurveSeries } from '~/charts/balance-curve'
+import {
+  categorySlices,
+  donutOption,
+  groupRows,
+  groupSlices,
+} from '~/charts/breakdown'
+import { monthlyOption } from '~/charts/monthly'
 import { toSrgbHex } from '~/charts/theme'
 import DashboardPage from '~/pages/index.vue'
 import type { ChartTheme } from '~~/types/forecast'
@@ -19,17 +30,25 @@ const mounted: { unmount: () => void }[] = []
 
 beforeEach(() => {
   resetCsrfToken()
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date('2026-11-11T10:00:00Z'))
 })
 
 afterEach(() => {
   for (const wrapper of mounted.splice(0)) {
     wrapper.unmount()
   }
+  vi.useRealTimers()
   fetchMock.mockReset()
   document.body.innerHTML = ''
 })
 
 const theme: ChartTheme = {
+  needs: '#2563eb',
+  wants: '#de5333',
+  save: '#3d853c',
+  needsShades: ['#2563eb', '#60a5fa'],
+  wantsShades: ['#de5333', '#f58468'],
   balance: '#3d853c',
   threshold: '#d97706',
   negative: '#dc2626',
@@ -202,6 +221,7 @@ describe('dashboard view (DSH-01)', () => {
     const api = installFakeApi(fetchMock, {
       ...referentialHandlers(),
       'GET /forecast/curve?horizonMonths=3': () => curve(),
+      ...dashboardHandlers(),
     })
 
     const wrapper = await mountSuspended(DashboardPage, {
@@ -261,5 +281,217 @@ describe('dashboard view (DSH-01)', () => {
     expect(wrapper.find('[data-testid="balance-curve-chart"]').exists()).toBe(
       false,
     )
+  })
+})
+
+function breakdownFixture(): BreakdownResponse {
+  return {
+    from: '2026-11-01',
+    to: '2026-11-30',
+    needs: {
+      totalCents: 60_000,
+      categories: [{ categoryId: ids.groceries, totalCents: 60_000 }],
+    },
+    wants: {
+      totalCents: 30_000,
+      categories: [{ categoryId: ids.leisure, totalCents: 30_000 }],
+    },
+    saveCents: 10_000,
+    toCategorizeCents: 500,
+    targets: { needs: 50, wants: 30, save: 20 },
+  }
+}
+
+function monthlyFixture(): MonthlyReportResponse {
+  return {
+    today: '2026-11-11',
+    currentMonth: '2026-11-01',
+    months: [
+      {
+        month: '2026-10-01',
+        real: { incomeCents: 200_000, expenseCents: 150_000 },
+        planned: { incomeCents: 0, expenseCents: 0 },
+        balanceCents: 50_000,
+      },
+      {
+        month: '2026-11-01',
+        real: { incomeCents: 0, expenseCents: 4_500 },
+        planned: { incomeCents: 150_000, expenseCents: 60_000 },
+        balanceCents: 85_500,
+      },
+    ],
+  }
+}
+
+function dashboardHandlers() {
+  return {
+    'GET /dashboard/summary': () => ({
+      wealthCents: 1_900_000,
+      alerts: [
+        {
+          accountId: ids.current,
+          firstBelowThresholdDate: '2026-11-16',
+          minBalanceCents: 15_000,
+          thresholdCents: 20_000,
+        },
+      ],
+      toCategorizeCount: 3,
+      pendingProposalsCount: 2,
+      pendingImportIds: ['00000000-0000-4000-8000-0000000000aa'],
+    }),
+    'GET /dashboard/breakdown?from=2026-11-01&to=2026-11-30': () =>
+      breakdownFixture(),
+    'GET /dashboard/monthly?horizonMonths=3': () => monthlyFixture(),
+  }
+}
+
+describe('breakdown chart (DSH-02, CHG-74, CHG-22)', () => {
+  const names = { needs: 'Besoins', wants: 'Envies', save: 'Épargne' }
+
+  it('compares each group with its target and flags the unfavourable gaps', () => {
+    expect(groupRows(breakdownFixture(), names)).toEqual([
+      {
+        group: 'needs',
+        name: 'Besoins',
+        actualCents: 60_000,
+        actualPct: 60,
+        targetPct: 50,
+        gapPct: 10,
+        unfavourable: true,
+      },
+      {
+        group: 'wants',
+        name: 'Envies',
+        actualCents: 30_000,
+        actualPct: 30,
+        targetPct: 30,
+        gapPct: 0,
+        unfavourable: false,
+      },
+      {
+        group: 'save',
+        name: 'Épargne',
+        actualCents: 10_000,
+        actualPct: 10,
+        targetPct: 20,
+        gapPct: -10,
+        unfavourable: true,
+      },
+    ])
+  })
+
+  it('colours the categories with the shades of their group and hatches beyond the palette', () => {
+    const many: BreakdownResponse = {
+      ...breakdownFixture(),
+      needs: {
+        totalCents: 3,
+        categories: [
+          { categoryId: 'a', totalCents: 1 },
+          { categoryId: 'b', totalCents: 1 },
+          { categoryId: 'c', totalCents: 1 },
+        ],
+      },
+    }
+
+    const slices = categorySlices(
+      many,
+      'needs',
+      (id) => id,
+      () => 0,
+      theme,
+    )
+
+    expect(slices.map((slice) => [slice.color, slice.hatched])).toEqual([
+      ['#2563eb', false],
+      ['#60a5fa', false],
+      ['#2563eb', true],
+    ])
+    const option = donutOption({
+      slices: groupSlices(breakdownFixture(), names, theme),
+      totalLabel: 'Total',
+      theme,
+      money: (cents) => `${cents / 100} €`,
+      animate: false,
+    })
+    expect(JSON.stringify(option.graphic)).toContain('Total\\n1000 €')
+  })
+})
+
+describe('monthly chart (DSH-03, CHG-75)', () => {
+  it('stacks the planned part over the real part with a hatch and marks the current month', () => {
+    const option = monthlyOption({
+      report: monthlyFixture(),
+      theme,
+      labels: {
+        realIncome: 'Revenus réels',
+        plannedIncome: 'Revenus prévus',
+        realExpense: 'Dépenses réelles',
+        plannedExpense: 'Dépenses prévues',
+        net: 'Solde',
+        today: "Aujourd'hui",
+      },
+      money: String,
+      monthLabel: String,
+      animate: false,
+    })
+    const series = Array.isArray(option.series) ? option.series : []
+
+    expect(series.map((item) => [item.name, item.stack])).toEqual([
+      ['Revenus réels', 'income'],
+      ['Revenus prévus', 'income'],
+      ['Dépenses réelles', 'expense'],
+      ['Dépenses prévues', 'expense'],
+      ['Solde', undefined],
+    ])
+    expect(series[1]?.data).toEqual(['-', 150_000])
+    expect(JSON.stringify(series[1])).toContain('"rotation"')
+    expect(JSON.stringify(series[0])).toContain('"xAxis":"2026-11-01"')
+  })
+})
+
+describe('dashboard banner (DSH-04, CHG-65)', () => {
+  it('shows the wealth, the alert and the coral counters', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /forecast/curve?horizonMonths=3': () => curve(),
+      ...dashboardHandlers(),
+    })
+
+    const wrapper = await mountSuspended(DashboardPage, {
+      route: '/',
+      global: { stubs: { Echarts: true } },
+    })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="dashboard-banner"]').exists()).toBe(
+        true,
+      )
+    })
+    expect(wrapper.get('[data-testid="dashboard-wealth"]').text()).toBe(
+      euros(1_900_000),
+    )
+    expect(wrapper.get('[data-testid="dashboard-alerts"]').text()).toContain(
+      'Compte courant',
+    )
+    expect(
+      wrapper.get('[data-testid="dashboard-to-categorize"]').text(),
+    ).toContain('3')
+    expect(
+      wrapper.get('[data-testid="dashboard-proposals"]').attributes('href'),
+    ).toBe('/import?batch=00000000-0000-4000-8000-0000000000aa')
+    await vi.waitFor(
+      () => {
+        expect(
+          wrapper.find('[data-testid="breakdown-row-save"]').exists(),
+        ).toBe(true)
+      },
+      { timeout: 10_000 },
+    )
+    expect(
+      wrapper
+        .get('[data-testid="breakdown-row-save"] [data-unfavourable]')
+        .attributes('data-unfavourable'),
+    ).toBe('true')
   })
 })

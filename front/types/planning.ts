@@ -103,6 +103,8 @@ export type ScheduleFormState = {
   businessDayRule: BusinessDayRule
   note: string
   active: boolean
+  amountTolerancePct: number
+  bankLabelPatterns: string[]
 }
 
 export type ScheduleKindFilter = ScheduleKind | 'all'

@@ -59,6 +59,8 @@ function emptyState(): ScheduleFormState {
     maxOccurrences: 12,
     businessDayRule: 'exact',
     note: '',
+    amountTolerancePct: 10,
+    bankLabelPatterns: [],
     active: true,
   }
 }
@@ -90,6 +92,8 @@ function stateFrom(schedule: Schedule): ScheduleFormState {
     maxOccurrences: schedule.maxOccurrences ?? 12,
     businessDayRule: schedule.businessDayRule,
     note: schedule.note ?? '',
+    amountTolerancePct: schedule.amountTolerancePct,
+    bankLabelPatterns: [...schedule.bankLabelPatterns],
     active: schedule.active,
   }
 }
@@ -218,6 +222,8 @@ function draftFields(): ScheduleFields | null {
     maxOccurrences:
       !isOnce.value && state.endMode === 'count' ? state.maxOccurrences : null,
     businessDayRule: state.businessDayRule,
+    amountTolerancePct: state.amountTolerancePct,
+    bankLabelPatterns: state.bankLabelPatterns,
   }
   if (state.kind === 'transfer') {
     return {
@@ -526,6 +532,32 @@ async function submit(): Promise<void> {
         >
           <UTextarea v-model="state.note" :rows="2" class="w-full" />
         </AppFormField>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <AppFormField
+            :label="t('schedules.fields.amountTolerance')"
+            :hint="t('schedules.fields.amountToleranceHint')"
+            name="amountTolerancePct"
+          >
+            <UInputNumber
+              v-model="state.amountTolerancePct"
+              :min="0"
+              :max="100"
+              class="w-full"
+              data-testid="schedule-tolerance"
+            />
+          </AppFormField>
+          <AppFormField
+            :label="t('schedules.fields.bankLabelPatterns')"
+            :hint="t('schedules.fields.bankLabelPatternsHint')"
+            name="bankLabelPatterns"
+          >
+            <UInputTags
+              v-model="state.bankLabelPatterns"
+              class="w-full"
+              data-testid="schedule-patterns"
+            />
+          </AppFormField>
+        </div>
         <USwitch v-model="state.active" :label="t('schedules.fields.active')" />
         <UButton
           type="submit"

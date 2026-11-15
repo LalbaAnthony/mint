@@ -141,6 +141,10 @@ export function operation(overrides: Partial<Operation> = {}): Operation {
     transferGroupId: null,
     counterpartAccountId: null,
     scheduleId: null,
+    occurrenceDate: null,
+    bankLabel: null,
+    reconciled: false,
+    unconfirmed: false,
     ...overrides,
   }
 }
@@ -167,6 +171,8 @@ export function schedule(overrides: Partial<Schedule> = {}): Schedule {
     endDate: null,
     maxOccurrences: null,
     businessDayRule: 'exact',
+    amountTolerancePct: 10,
+    bankLabelPatterns: [],
     createdAt: '2026-11-11T10:00:00.000Z',
     monthlyEquivalentCents: 368,
     nextOccurrence: {
