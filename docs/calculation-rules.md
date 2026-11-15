@@ -113,11 +113,18 @@ S_c(J) = S_c(J-1) + \sum_{f \in F_c(J)} m(f) - L_c(J) + I_c(J)
 - part d'enveloppes L : section 6 ;
 - intérêts I : nuls jusqu'au lot 3 (LIV-03) ; le solde de référence des placements (CPT-06) arrive aussi au lot 3.
 
-Chaque jour porte son solde de fin de journée et ses flux (occurrence avec libellé, montant signé, mode de déclenchement et marqueur abonnement ; opération ; part d'enveloppe), base du calendrier (CAL-02).
+Chaque jour porte son solde de fin de journée et ses flux (occurrence avec libellé, montant signé, montant de l'occurrence, surcharge, mode de déclenchement et marqueur abonnement ; opération ; part d'enveloppe), base du calendrier (CAL-02).
 
 Vue agrégée (PRV-05) : somme des comptes actifs jour par jour, avec sous-totaux par usage. Les transferts internes y sont neutres ; un transfert vers ou depuis un compte archivé n'est pas projeté, ce qui préserve cette neutralité.
 
 Indicateurs (PRV-07), par compte et pour la vue agrégée : solde minimal sur l'horizon et sa première date en cas d'égalité, premier jour strictement sous le seuil d'alerte (aucun sans seuil, toujours aucun pour la vue agrégée), premier jour strictement négatif.
+
+Calendrier et courbe (CAL-01 à CAL-05, DSH-01, ADR 0016), assemblés par `api/forecast/views.ts` :
+
+- solde d'un jour passé : solde calculé de fin de journée (section 5) ; en vue agrégée, somme des comptes actifs qui ont déjà un solde ce jour-là (`aggregateEndOfDayBalances`), aucun solde si aucun n'en a ;
+- solde d'aujourd'hui et d'un jour futur : solde prévisionnel ci-dessus ;
+- en vue agrégée, un mouvement de transfert dont la contrepartie est un compte actif et une occurrence de transfert sont neutres et ne sont pas listés ;
+- courbe : les 30 jours précédant aujourd'hui en solde réel, puis l'horizon en solde prévisionnel ; point annoté = minimum de l'horizon.
 
 ## 8. Répartition et revenus/dépenses
 

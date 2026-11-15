@@ -6,13 +6,13 @@ Mise en route locale et exécution des tests. Les décisions sont motivées dans
 
 Copier `.env.example` en `.env` à la racine : Docker Compose et les tests de l'API le lisent. Les valeurs `SMTP_*` y restent vides, elles ne servent qu'au service `api` de production.
 
-| Service (profil `dev`) | Rôle                                                                                     | Accès depuis l'hôte                          |
-| ---------------------- | ---------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `db-dev`               | PostgreSQL de développement et des tests de l'API                                        | `127.0.0.1:${DB_HOST_PORT}`                  |
-| `api-dev`              | API en `tsx watch`, sources `api/` et `shared/` montées                                  | `127.0.0.1:${API_HOST_PORT}`                 |
-| `worker-dev`           | worker en `tsx watch` : exécution des échéances à 00:05 et au démarrage, sources montées | aucun port                                   |
-| `web-dev`              | front en `nuxt dev`, sources `front/` et `shared/` montées                               | `http://localhost:${WEB_HOST_PORT}`          |
-| `mailpit`              | serveur SMTP de développement, reçoit tous les emails de `api-dev`                       | interface web `127.0.0.1:${MAILPIT_UI_PORT}` |
+| Service (profil `dev`) | Rôle                                                                                      | Accès depuis l'hôte                          |
+| ---------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `db-dev`               | PostgreSQL de développement et des tests de l'API                                         | `127.0.0.1:${DB_HOST_PORT}`                  |
+| `api-dev`              | API en `tsx watch`, sources `api/` et `shared/` montées                                   | `127.0.0.1:${API_HOST_PORT}`                 |
+| `worker-dev`           | worker en `tsx watch` : échéances à 00:05 et au démarrage, purge à 03:00, sources montées | aucun port                                   |
+| `web-dev`              | front en `nuxt dev`, sources `front/` et `shared/` montées                                | `http://localhost:${WEB_HOST_PORT}`          |
+| `mailpit`              | serveur SMTP de développement, reçoit tous les emails de `api-dev`                        | interface web `127.0.0.1:${MAILPIT_UI_PORT}` |
 
 ```sh
 docker compose --profile dev up -d
@@ -55,7 +55,7 @@ docker compose --profile dev exec api-dev npm run seed -- --wipe
 
 Une sous-catégorie de dépense a `expense_group` à `NULL` : son groupe se lit sur son parent. Le script vit dans `api/scripts/`, exclu du build de production : il n'existe pas dans l'image `mint-api`. Une table ajoutée sans suppression en cascade depuis `users` doit être ajoutée à la suppression du script.
 
-Le service `worker-dev` exécute les occurrences dues à son démarrage puis chaque jour à 00:05 (Europe/Paris), sans ping de supervision. Pour relancer une exécution : `docker compose --profile dev restart worker-dev`. Sur l'hôte, `npm run worker --workspace @mint/api` demande les variables `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER` et `DATABASE_PASSWORD`. Les règles d'exécution sont dans `docs/calculation-rules.md` (section 4).
+Le service `worker-dev` exécute les occurrences dues à son démarrage puis chaque jour à 00:05 (Europe/Paris), et purge les sessions et jetons expirés ou utilisés à 03:00, sans ping de supervision. Pour relancer une exécution : `docker compose --profile dev restart worker-dev`. Sur l'hôte, `npm run worker --workspace @mint/api` demande les variables `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, `DATABASE_USER` et `DATABASE_PASSWORD`. Les règles d'exécution sont dans `docs/calculation-rules.md` (section 4).
 
 ## 2. Tests
 
@@ -83,3 +83,13 @@ La pile écoute sur `localhost:8090` (Apache simulé), PostgreSQL sur `127.0.0.1
 ## 3. Isolation des données
 
 Chaque route de l'API est déclarée dans `api/routes/index.ts` avec son niveau d'accès (`definePublicRoute`, `defineUserRoute`, `defineAdminRoute`). Le test `api/routes/isolation.test.ts` échoue si une route n'a pas de scénario d'accès croisé entre deux utilisateurs (NF-SEC-05, US-02) : toute nouvelle route y ajoute le sien.
+
+## 4. Ressources de la PWA
+
+Les icônes, le favicon, le badge des notifications et les écrans de démarrage iOS de `front/public/` sont générés depuis `logo.svg`, `badge.svg` et `icon.svg` puis versionnés (CHG-80, CHG-81). À relancer à la main quand le logo change :
+
+```sh
+npm run pwa:assets --workspace @mint/front
+```
+
+Le service worker n'est actif que dans le build de production (`nuxt generate`), pas sous `nuxt dev` ni sous Vitest.
