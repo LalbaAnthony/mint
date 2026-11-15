@@ -28,28 +28,29 @@ Le contexte de build de `mint-web` utilise `front/Dockerfile.prod.dockerignore`,
 
 Tous au niveau du dépôt (Settings, Secrets and variables, Actions). Aucune valeur de déploiement n'est versionnée ni stockée en variable. Hors clé privée, aucune valeur ne doit contenir d'apostrophe droite ni de saut de ligne : le job `deploy` le vérifie avant toute connexion.
 
-| Secret                     | Usage                                                                                                                                  |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `DOCKERHUB_USERNAME`       | compte Docker Hub, espace de noms des images                                                                                           |
-| `DOCKERHUB_TOKEN`          | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`                                                 |
-| `VPS_SSH_HOST`             | nom d'hôte ou adresse IP du VPS                                                                                                        |
-| `VPS_SSH_PORT`             | port SSH du VPS                                                                                                                        |
-| `VPS_SSH_USER`             | utilisateur SSH dédié au déploiement                                                                                                   |
-| `VPS_SSH_PRIVATE_KEY`      | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                                                                    |
-| `VPS_SSH_HOST_FINGERPRINT` | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64                                            |
-| `VPS_DEPLOY_PATH`          | dossier de déploiement sur le VPS, chemin absolu                                                                                       |
-| `POSTGRES_DB`              | nom de la base de production                                                                                                           |
-| `POSTGRES_USER`            | utilisateur PostgreSQL de production                                                                                                   |
-| `POSTGRES_PASSWORD`        | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                                                             |
-| `API_HOST_PORT`            | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/` : `4568` (`apache.conf`)                                             |
-| `WEB_HOST_PORT`            | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/` : `4569` (`apache.conf`)                                       |
-| `SESSION_SECRET`           | secret de signature des cookies de session et des jetons CSRF, 32 caractères minimum (ADR 0006, ADR 0007)                              |
-| `SMTP_HOST`                | serveur SMTP d'envoi des invitations et des liens de réinitialisation                                                                  |
-| `SMTP_PORT`                | port de ce serveur                                                                                                                     |
-| `SMTP_TLS_MODE`            | `tls` (TLS implicite, port 465 en général), `starttls` (STARTTLS obligatoire, port 587) ou `none` (sans TLS, réservé au développement) |
-| `SMTP_USER`                | identifiant SMTP                                                                                                                       |
-| `SMTP_PASSWORD`            | mot de passe SMTP                                                                                                                      |
-| `MAIL_FROM`                | expéditeur des emails, par exemple `Mint <no-reply@dev-it.app>`                                                                        |
+| Secret                      | Usage                                                                                                                                  |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `DOCKERHUB_USERNAME`        | compte Docker Hub, espace de noms des images                                                                                           |
+| `DOCKERHUB_TOKEN`           | jeton d'accès Docker Hub en lecture et écriture, utilisé seulement par `build.inc.yml`                                                 |
+| `VPS_SSH_HOST`              | nom d'hôte ou adresse IP du VPS                                                                                                        |
+| `VPS_SSH_PORT`              | port SSH du VPS                                                                                                                        |
+| `VPS_SSH_USER`              | utilisateur SSH dédié au déploiement                                                                                                   |
+| `VPS_SSH_PRIVATE_KEY`       | clé privée de cet utilisateur, format OpenSSH, sans phrase de passe                                                                    |
+| `VPS_SSH_HOST_FINGERPRINT`  | empreinte SHA256 de la clé d'hôte du VPS, au format `SHA256:` suivi de 43 caractères base64                                            |
+| `VPS_DEPLOY_PATH`           | dossier de déploiement sur le VPS, chemin absolu                                                                                       |
+| `POSTGRES_DB`               | nom de la base de production                                                                                                           |
+| `POSTGRES_USER`             | utilisateur PostgreSQL de production                                                                                                   |
+| `POSTGRES_PASSWORD`         | mot de passe PostgreSQL de production (voir section 7 avant de le changer)                                                             |
+| `API_HOST_PORT`             | port de l'API sur `127.0.0.1` du VPS, cible d'Apache pour `/api/` : `4568` (`apache.conf`)                                             |
+| `WEB_HOST_PORT`             | port du conteneur `web` sur `127.0.0.1` du VPS, cible d'Apache pour `/` : `4569` (`apache.conf`)                                       |
+| `SESSION_SECRET`            | secret de signature des cookies de session et des jetons CSRF, 32 caractères minimum (ADR 0006, ADR 0007)                              |
+| `SMTP_HOST`                 | serveur SMTP d'envoi des invitations et des liens de réinitialisation                                                                  |
+| `SMTP_PORT`                 | port de ce serveur                                                                                                                     |
+| `SMTP_TLS_MODE`             | `tls` (TLS implicite, port 465 en général), `starttls` (STARTTLS obligatoire, port 587) ou `none` (sans TLS, réservé au développement) |
+| `SMTP_USER`                 | identifiant SMTP                                                                                                                       |
+| `SMTP_PASSWORD`             | mot de passe SMTP                                                                                                                      |
+| `MAIL_FROM`                 | expéditeur des emails, par exemple `Mint <no-reply@dev-it.app>`                                                                        |
+| `HEALTHCHECK_EXECUTION_URL` | facultatif : URL de ping de la tâche d'exécution des échéances (type Healthchecks.io, NF-OPS-02), en `https` ; vide, aucun ping        |
 
 À chaque déploiement, le fichier `.env` du VPS est régénéré depuis ces secrets, avec `COMPOSE_PROFILES='prod'` et les références d'images `docker.io/<DOCKERHUB_USERNAME>/mint-api:<SHA>` et `mint-web:<SHA>`. Toute modification manuelle de ce fichier est écrasée au déploiement suivant. Un nouveau secret d'exécution (session, VAPID, SMTP) s'ajoute à la fois dans les secrets GitHub, dans `deploy.inc.yml` (déclaration, validation, écriture du `.env`), dans les deux flux et dans `docker-compose.yml`.
 
@@ -85,9 +86,9 @@ Première mise en service : le vhost 443 référence un certificat qui n'existe 
 1. Validation du SHA (40 caractères hexadécimaux) et des secrets.
 2. Lecture de `docker-compose.yml` dans le commit déployé ; génération du `.env` de production sur le runner.
 3. Connexion SSH avec la clé d'hôte épinglée. Le script `.github/deploy/remote.sh` de la branche qui exécute le workflow est envoyé sur l'entrée standard de `bash`, précédé des variables du déploiement ; le `.env` et le fichier compose y voyagent encodés en base64, jamais en argument de commande.
-4. Sur le VPS, écriture de `.env.next` et `docker-compose.next.yml`, puis `docker compose pull api web`.
+4. Sur le VPS, écriture de `.env.next` et `docker-compose.next.yml`, puis `docker compose pull api web worker` (le `worker` utilise l'image `mint-api`).
 5. Migrations Umzug dans un conteneur éphémère : `docker compose run --rm api node dist/db/migrate.js up`, qui démarre `db` au besoin.
-6. Seulement si les migrations réussissent : `.env.next` et `docker-compose.next.yml` remplacent `.env` et `docker-compose.yml`, puis `docker compose up --detach --no-build --wait` attend que `db`, `api` et `web` soient sains.
+6. Seulement si les migrations réussissent : `.env.next` et `docker-compose.next.yml` remplacent `.env` et `docker-compose.yml`, puis `docker compose up --detach --no-build --wait` attend que `db`, `api` et `web` soient sains et que `worker` tourne.
 7. Vérification par `curl` de `http://127.0.0.1:<API_HOST_PORT>/api/v1/health` et de `http://127.0.0.1:<WEB_HOST_PORT>/`.
 8. Suppression des tags locaux de `mint-api` et `mint-web` autres que le SHA déployé. Les images des autres services du VPS ne sont jamais touchées.
 
@@ -106,7 +107,7 @@ Actions, workflow `rollback`, Run workflow, puis saisir le SHA complet d'un comm
 - Changer `POSTGRES_PASSWORD` : PostgreSQL ne relit cette variable qu'à l'initialisation du volume. Modifier d'abord le mot de passe dans la base (`ALTER USER`), puis le secret. Sinon le déploiement suivant échoue à l'étape des migrations, sans interruption de la version en place.
 - Toute modification de la définition du service `db` dans `docker-compose.yml` (image, environnement) recrée le conteneur `db` dès l'étape des migrations, avant la bascule de l'API.
 - Docker Compose signale `The "DB_HOST_PORT" variable is not set` à chaque commande sur le VPS : la variable ne sert qu'au service `db-dev` du profil `dev`. Avertissement sans effet.
-- Le service `worker` (section 7.2) n'existe pas encore ; il sera ajouté à `docker-compose.yml` et à `remote.sh` (pull) avec les tâches planifiées.
+- Le service `worker` (`node dist/worker.js`, image `mint-api`) exécute les échéances à 00:05 (Europe/Paris) et au démarrage, pour rattraper les jours manqués (ADR 0014). Il n'a pas de port. Un verrou consultatif PostgreSQL empêche deux exécutions simultanées. Journaux : `docker compose logs worker` (événements `execution_completed`, `execution_failed`, `occurrence_execution_failed`, sans montant ni libellé). Avec `HEALTHCHECK_EXECUTION_URL`, chaque exécution appelle `/start`, puis l'URL en cas de succès ou `/fail` en cas d'échec : configurer côté supervision une période d'un jour et une alerte vers l'administrateur. La purge de 03:00 et les notifications de 08:00 ne sont pas encore livrées.
 
 ## 9. Administrateurs
 

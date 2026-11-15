@@ -1,6 +1,6 @@
 # ADR 0013 · Moteurs de calcul et tables de planification
 
-Statut : acceptée · 14 novembre 2026 · Exigences : ECH-01 à ECH-11, EXE-01 à EXE-04, ENV-01 à ENV-07, PRV-01 à PRV-09, CAT-03, DSH-02, DSH-03, NF-QUA-02, NF-PERF-02, US-06 à US-08, US-10 à US-12
+Statut : acceptée, amendée par ADR 0014 (borne basse d'exécution, suppressions) · 14 novembre 2026 · Exigences : ECH-01 à ECH-11, EXE-01 à EXE-04, ENV-01 à ENV-07, PRV-01 à PRV-09, CAT-03, DSH-02, DSH-03, NF-QUA-02, NF-PERF-02, US-06 à US-08, US-10 à US-12
 
 ## Contexte
 

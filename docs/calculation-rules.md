@@ -68,12 +68,12 @@ L'équivalent mensuel est arrondi au centime le plus proche, demi vers le haut, 
 La tâche planifiée de 00:05 appelle `planExecutions` avec la date du jour, les échéances et les comptes actifs. Une occurrence est à exécuter quand :
 
 - son échéance est active et tous les comptes qu'elle touche sont actifs ;
-- sa date effective est comprise entre la date de création de l'échéance (Europe/Paris) et aujourd'hui, bornes incluses ;
+- sa date effective est comprise entre sa borne basse et aujourd'hui, bornes incluses ; la borne basse est la plus tardive entre la date de création de l'échéance (Europe/Paris) et les dates de solde initial des comptes qu'elle touche ;
 - elle n'a pas de ligne `skipped` ni `executed`.
 
-La borne basse est la date de création : une échéance ressaisie avec une date de début passée (reprise Notion) n'exécute pas son historique ; le rattrapage du worker ne couvre que les jours manqués depuis la création. Chaque occurrence à exécuter donne ses mouvements : une dépense débite son compte, un revenu crédite le sien, avec le moyen de paiement et la catégorie de l'échéance ; un transfert débite la source et crédite la cible, sans catégorie. Le libellé de l'opération est celui de l'échéance, son origine « échéance ».
+Avec cette borne, une échéance ressaisie avec une date de début passée (reprise Notion) n'exécute pas son historique, le rattrapage du worker ne couvre que les jours manqués depuis la création, et aucune opération générée ne précède le solde initial de son compte (ADR 0014). Chaque occurrence à exécuter donne ses mouvements : une dépense débite son compte, un revenu crédite le sien, avec le moyen de paiement et la catégorie de l'échéance ; un transfert débite la source et crédite la cible, sans catégorie. Le libellé de l'opération est celui de l'échéance, son origine « échéance ».
 
-Le worker enregistre, dans une même transaction, la ligne `executed` (date effective et montant de l'opération) et les opérations liées par `occurrence_id`, les deux mouvements d'un transfert partageant un `transfer_group_id`. L'idempotence (EXE-03) repose sur les contraintes uniques `(schedule_id, original_date)` et `(occurrence_id, account_id)`. La liste est triée par date effective, puis échéance, puis date d'origine.
+Le worker (`api/execution/`, ADR 0014) enregistre, dans une même transaction par occurrence, la ligne `executed` (date effective et montant de l'opération) et les opérations liées par `occurrence_id`, les deux mouvements d'un transfert partageant un `transfer_group_id`. L'idempotence (EXE-03) repose sur les contraintes uniques `(schedule_id, original_date)` et `(occurrence_id, account_id)`. La liste est triée par date effective, puis échéance, puis date d'origine.
 
 Compte archivé (CPT-07) : aucune occurrence n'est exécutée sur lui ; un transfert dont un des deux comptes est archivé n'est pas exécuté du tout. Un moyen de paiement archivé (PAY-05) est sans effet : son compte reste impacté.
 
@@ -108,7 +108,7 @@ S_c(J) = S_c(J-1) + \sum_{f \in F_c(J)} m(f) - L_c(J) + I_c(J)
 ```
 
 - point de départ : solde calculé en fin d'aujourd'hui (opérations datées d'aujourd'hui ou avant), auquel s'appliquent les flux d'aujourd'hui ;
-- flux d'occurrence : occurrences à venir des échéances actives dont tous les comptes sont actifs, à leur date effective ; une occurrence due (date effective entre la création de l'échéance et aujourd'hui) que le worker n'a pas encore exécutée est projetée aujourd'hui, pour que la prévision ne change pas au passage du worker ;
+- flux d'occurrence : occurrences à venir des échéances actives dont tous les comptes sont actifs, à leur date effective ; une occurrence due (date effective entre la borne basse de la section 4 et aujourd'hui) que le worker n'a pas encore exécutée est projetée aujourd'hui, pour que la prévision ne change pas au passage du worker ;
 - flux d'opération : opérations des comptes actifs datées après aujourd'hui et dans l'horizon ;
 - part d'enveloppes L : section 6 ;
 - intérêts I : nuls jusqu'au lot 3 (LIV-03) ; le solde de référence des placements (CPT-06) arrive aussi au lot 3.
