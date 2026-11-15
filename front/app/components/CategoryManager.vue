@@ -78,11 +78,6 @@ async function run(action: () => Promise<void>): Promise<void> {
   }
 }
 
-function childCount(category: Category): number {
-  return categories.value.filter((child) => child.parentId === category.id)
-    .length
-}
-
 function activeChildCount(category: Category): number {
   return categories.value.filter(
     (child) => child.parentId === category.id && child.archivedAt === null,
@@ -114,16 +109,10 @@ const deleteOpen = computed({
   },
 })
 
-function deleteCategory(): Promise<void> {
-  const category = categoryToDelete.value
-  if (category === null) {
-    return Promise.resolve()
-  }
-  return run(async () => {
-    await apiCommand('DELETE', `/categories/${category.id}`)
-    categoryToDelete.value = null
-    notify(t('categories.deleted', { name: category.name }))
-  })
+async function categoryDeleted(category: Category): Promise<void> {
+  categoryToDelete.value = null
+  notify(t('categories.deleted', { name: category.name }))
+  await load()
 }
 
 function onAction({ kind, category }: CategoryAction): Promise<void> {
@@ -236,24 +225,11 @@ onMounted(load)
       @saved="saved"
     />
 
-    <ConfirmModal
+    <CategoryDeleteModal
       v-model:open="deleteOpen"
-      :title="t('categories.deleteTitle')"
-      :description="
-        categoryToDelete === null
-          ? ''
-          : t(
-              'categories.deleteEffect',
-              {
-                name: categoryToDelete.name,
-                n: childCount(categoryToDelete),
-              },
-              childCount(categoryToDelete),
-            )
-      "
-      :confirm-label="t('common.delete')"
-      :pending="busy"
-      @confirm="deleteCategory"
+      :category="categoryToDelete"
+      :categories="categories"
+      @deleted="categoryDeleted"
     />
   </UCard>
 </template>

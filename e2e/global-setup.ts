@@ -49,6 +49,22 @@ async function seedAdministrator(): Promise<void> {
         await hash(administratorPassword, { type: argon2id }),
       ],
     )
+    for (const table of ['transactions', 'schedules', 'envelopes']) {
+      await client.query(
+        `DELETE FROM ${table}
+         WHERE user_id = (SELECT id FROM users WHERE email = $1)`,
+        [administratorEmail],
+      )
+    }
+    await client.query(
+      `INSERT INTO categories (user_id, kind, expense_group, name, sort_order)
+       SELECT id, 'expense', 'needs', category.name, category.position
+       FROM users,
+         (VALUES ('Logement', 0), ('Courses', 1)) AS category (name, position)
+       WHERE email = $1
+       ON CONFLICT DO NOTHING`,
+      [administratorEmail],
+    )
     await client.query(
       `DELETE FROM payment_methods
        WHERE user_id = (SELECT id FROM users WHERE email = $1)`,

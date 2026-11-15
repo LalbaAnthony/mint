@@ -1,12 +1,19 @@
 <script setup lang="ts">
 import { useOnline } from '@vueuse/core'
+import type { QuickAddKind } from '~~/types/navigation'
 
 const { t } = useI18n()
 const route = useRoute()
 const isOnline = useOnline()
 const { quickAddEntries } = useNavigation()
+const editor = useOperationEditorStore()
 
 const isOpen = ref(false)
+
+function choose(kind: QuickAddKind): void {
+  isOpen.value = false
+  editor.create(kind)
+}
 const isHidden = computed(() => route.meta.hideFab === true)
 </script>
 
@@ -33,6 +40,8 @@ const isHidden = computed(() => route.meta.hideFab === true)
             variant="ghost"
             block
             class="justify-start"
+            :data-testid="`fab-${entry.kind}`"
+            @click="choose(entry.kind)"
           />
         </li>
       </ul>

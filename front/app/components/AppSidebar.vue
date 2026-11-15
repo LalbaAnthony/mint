@@ -12,13 +12,19 @@ const {
   quickAddEntries,
 } = useNavigation()
 const logout = useLogout()
+const editor = useOperationEditorStore()
 
 function toNavigationItems(entries: NavigationEntry[]): NavigationMenuItem[] {
   return entries.map(({ label, icon, to }) => ({ label, icon, to }))
 }
 
 function toQuickAddItems(entries: QuickAddEntry[]): DropdownMenuItem[] {
-  return entries.map(({ label, icon, disabled }) => ({ label, icon, disabled }))
+  return entries.map(({ kind, label, icon, disabled }) => ({
+    label,
+    icon,
+    disabled,
+    onSelect: () => editor.create(kind),
+  }))
 }
 
 const navigationLists = computed(() => [

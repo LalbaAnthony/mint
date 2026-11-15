@@ -1,0 +1,99 @@
+import type { Operation } from '@mint/shared/types/operations'
+import type { OperationFilterState, OperationSorting } from '~~/types/planning'
+
+export function emptyOperationFilters(): OperationFilterState {
+  return {
+    q: '',
+    from: '',
+    to: '',
+    accountIds: [],
+    groups: [],
+    categoryIds: [],
+    minAmount: '',
+    maxAmount: '',
+    direction: undefined,
+    origins: [],
+    status: undefined,
+  }
+}
+
+function absoluteCents(text: string): number | null {
+  const cents = parseAmountInput(text)
+  return cents === null ? null : Math.abs(cents)
+}
+
+export function operationQuery(
+  filters: OperationFilterState,
+  sorting: OperationSorting,
+  page: number,
+  pageSize: number,
+): string {
+  const params = new URLSearchParams()
+  params.set('page', String(page))
+  params.set('pageSize', String(pageSize))
+  params.set('sort', sorting.sort)
+  params.set('order', sorting.order)
+  const q = filters.q.trim()
+  if (q !== '') {
+    params.set('q', q)
+  }
+  if (filters.from !== '') {
+    params.set('from', filters.from)
+  }
+  if (filters.to !== '') {
+    params.set('to', filters.to)
+  }
+  for (const id of filters.accountIds) {
+    params.append('accountIds', id)
+  }
+  for (const group of filters.groups) {
+    params.append('groups', group)
+  }
+  for (const id of filters.categoryIds) {
+    params.append('categoryIds', id)
+  }
+  const min = absoluteCents(filters.minAmount)
+  if (min !== null) {
+    params.set('minCents', String(min))
+  }
+  const max = absoluteCents(filters.maxAmount)
+  if (max !== null) {
+    params.set('maxCents', String(max))
+  }
+  if (filters.direction !== undefined) {
+    params.set('direction', filters.direction)
+  }
+  for (const origin of filters.origins) {
+    params.append('origins', origin)
+  }
+  if (filters.status !== undefined) {
+    params.set('status', filters.status)
+  }
+  return params.toString()
+}
+
+export function activeFilterCount(filters: OperationFilterState): number {
+  return [
+    filters.from !== '',
+    filters.to !== '',
+    filters.accountIds.length > 0,
+    filters.groups.length > 0,
+    filters.categoryIds.length > 0,
+    filters.minAmount !== '',
+    filters.maxAmount !== '',
+    filters.direction !== undefined,
+    filters.origins.length > 0,
+    filters.status !== undefined,
+  ].filter(Boolean).length
+}
+
+export function originIcon(operation: Operation): string {
+  switch (operation.origin) {
+    case 'manual':
+      return icons.manualOrigin
+    case 'import':
+      return icons.import
+    case 'schedule':
+      return icons.schedules
+  }
+}

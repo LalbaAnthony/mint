@@ -105,7 +105,9 @@
       "emergency": "Emergency savings",
       "savings": "Savings",
       "investment": "Investment"
-    }
+    },
+    "deleteBlockedOperations": "{name} has operations: it can only be archived.",
+    "deleteBlockedUsage": "{name} cannot be deleted: {references} use it. Change or delete them first."
   },
   "paymentMethods": {
     "add": "Add a payment method",
@@ -127,7 +129,8 @@
       "card": "Bank card",
       "transfer_out": "Outgoing transfer",
       "third_party": "Direct debit or third-party transfer"
-    }
+    },
+    "deleteBlocked": "{label} cannot be deleted: {references} use it. Archive it instead."
   },
   "categories": {
     "title": "Categories",
@@ -162,7 +165,9 @@
       "adjustment": "Adjustment",
       "badge": "System",
       "help": "Created by Mint, they can be neither edited nor deleted."
-    }
+    },
+    "deleteReassign": "It is used by {references}: choose the category that takes them over.",
+    "replacement": "Replacement category"
   },
   "auth": {
     "login": "Log in",
@@ -280,7 +285,27 @@
     "product_mismatch": "Product incompatible with the kind",
     "group_required": "Choose the group",
     "group_not_allowed": "Group not applicable",
-    "parent_not_allowed": "Parent category not applicable"
+    "parent_not_allowed": "Parent category not applicable",
+    "amount_zero": "The amount cannot be zero",
+    "amount_not_positive": "The amount must be positive",
+    "date_before_initial_balance": "Date before the initial balance of the account",
+    "payment_method_mismatch": "This payment method belongs to another account",
+    "adjustment_not_allowed": "Category reserved for adjustments",
+    "same_account": "Choose two different accounts",
+    "payment_or_account_required": "Choose an account or a payment method",
+    "category_kind_mismatch": "Category of another type",
+    "interval_out_of_range": "Between 1 and 99",
+    "occurrences_out_of_range": "Between 1 and 999",
+    "single_end": "Only one end is possible",
+    "end_before_start": "The end is before the start",
+    "last_day_not_allowed": "Only for monthly and yearly recurrences",
+    "interval_not_allowed": "Not applicable to a one-off schedule",
+    "end_not_allowed": "Not applicable to a one-off schedule",
+    "not_allowed": "Not applicable to this type",
+    "override_empty": "Change the amount or the date",
+    "date_not_future": "Choose a date after today",
+    "duplicate": "Duplicate value",
+    "invalid_month": "Invalid month"
   },
   "errors": {
     "validation_failed": "Some values are invalid.",
@@ -312,6 +337,222 @@
     "invalid_parent": "This category cannot hold subcategories.",
     "order_mismatch": "The list changed in the meantime: it has just been reloaded.",
     "network_error": "Server unreachable: check your connection.",
-    "internal_error": "Something went wrong: try again later."
+    "internal_error": "Something went wrong: try again later.",
+    "account_has_operations": "This account has operations: it can only be archived.",
+    "account_in_use": "Schedules or envelopes use this account.",
+    "payment_method_in_use": "This payment method is used: archive it instead.",
+    "payment_method_archived": "This payment method is archived.",
+    "category_archived": "This category is archived.",
+    "category_in_use": "This category is used: choose a replacement category.",
+    "category_in_envelope": "One of these categories already belongs to another envelope.",
+    "invalid_replacement": "This category cannot be used as a replacement.",
+    "operations_before_initial_balance": "Operations are dated before this new initial balance date.",
+    "occurrence_not_editable": "This occurrence can no longer be changed.",
+    "operation_is_transfer": "This movement belongs to a transfer: edit the transfer."
+  },
+  "usage": {
+    "checking": "Checking usage...",
+    "operations": "{n} operation | {n} operations",
+    "schedules": "{n} schedule | {n} schedules",
+    "envelopes": "{n} envelope | {n} envelopes"
+  },
+  "operations": {
+    "add": "Add an operation",
+    "saved": "Operation saved.",
+    "deleted": "{label} deleted.",
+    "editTitle": "Edit the operation",
+    "createTitle": {
+      "expense": "New expense",
+      "income": "New income",
+      "transfer": "New transfer"
+    },
+    "noCategory": "Categorize later",
+    "transferWith": "Transfer with {account}",
+    "emptyTitle": "No operation",
+    "emptyText": "Record your expenses, incomes and transfers, or change the filters.",
+    "deleteTitle": "Delete the operation",
+    "deleteEffect": "{label} will be deleted permanently.",
+    "deleteGeneratedEffect": "{label} will be deleted permanently and its schedule occurrence marked as skipped, without regeneration.",
+    "deleteTransferEffect": "Both movements of the transfer {label} will be deleted permanently.",
+    "fields": {
+      "kind": "Type",
+      "source": "Paid with",
+      "sourceAccount": "Debited account",
+      "targetAccount": "Credited account",
+      "amount": "Amount",
+      "date": "Date",
+      "label": "Label",
+      "category": "Category",
+      "note": "Note",
+      "account": "Account"
+    },
+    "origins": {
+      "manual": "Manual entry",
+      "import": "Import",
+      "schedule": "Generated from a schedule"
+    },
+    "statuses": {
+      "categorized": "Categorized",
+      "to_categorize": "To categorize"
+    },
+    "directions": {
+      "debit": "Debit",
+      "credit": "Credit"
+    },
+    "filters": {
+      "title": "Filters",
+      "titleWithCount": "Filters ({n})",
+      "search": "Search labels and notes",
+      "from": "From",
+      "to": "To",
+      "minAmount": "Minimum amount",
+      "maxAmount": "Maximum amount",
+      "accounts": "Accounts",
+      "groups": "Groups",
+      "categories": "Categories",
+      "origins": "Origins",
+      "direction": "Direction",
+      "status": "Status",
+      "anyDirection": "All directions",
+      "anyStatus": "All statuses",
+      "reset": "Clear the filters"
+    },
+    "sort": {
+      "label": "Sort",
+      "dateDesc": "Most recent",
+      "dateAsc": "Oldest",
+      "amountDesc": "Largest amounts",
+      "amountAsc": "Smallest amounts"
+    }
+  },
+  "recurrence": {
+    "once": "One-off",
+    "weekly": "Every week | Every {n} weeks",
+    "monthly": "Every month | Every {n} months",
+    "yearly": "Every year | Every {n} years",
+    "lastDaySuffix": "on the last day of the month"
+  },
+  "schedules": {
+    "add": "Add a schedule",
+    "createTitle": "New schedule",
+    "editTitle": "Edit the schedule",
+    "saved": "{label} saved.",
+    "deleted": "{label} deleted.",
+    "deleteTitle": "Delete the schedule",
+    "deleteEffect": "{label} will be deleted; the operations already generated stay.",
+    "removedExceptions": "{n} occurrence exception no longer matched a date of the schedule: it was removed. | {n} occurrence exceptions no longer matched a date of the schedule: they were removed.",
+    "kindFixed": "Type: {kind}. It cannot be changed.",
+    "emptyTitle": "No schedule",
+    "emptyText": "Plan your recurring or one-off expenses, incomes and transfers.",
+    "notCounted": "not counted",
+    "foldedSection": "Inactive or ended ({n})",
+    "ended": "Ended",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "kinds": {
+      "expense": "Expense",
+      "income": "Income",
+      "transfer": "Transfer"
+    },
+    "frequencies": {
+      "once": "One-off",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly"
+    },
+    "businessDayRules": {
+      "exact": "Exact date",
+      "previous": "Previous business day",
+      "next": "Next business day"
+    },
+    "triggerModes": {
+      "auto": "Automatic",
+      "manual": "Manual"
+    },
+    "endModes": {
+      "never": "No end",
+      "date": "On a date",
+      "count": "After a number of occurrences"
+    },
+    "markers": {
+      "manual": "Manual payment",
+      "subscription": "Subscription"
+    },
+    "fields": {
+      "kind": "Type",
+      "label": "Label",
+      "amount": "Reference amount",
+      "isSubscription": "Subscription",
+      "frequency": "Recurrence",
+      "interval": "Every (N)",
+      "date": "Date",
+      "startDate": "Start date (anchor)",
+      "businessDayRule": "Non-business days",
+      "anchorLastDay": "On the last day of the month",
+      "end": "End",
+      "endDate": "End date",
+      "maxOccurrences": "Number of occurrences",
+      "triggerMode": "Trigger",
+      "active": "Active",
+      "recurrence": "Recurrence",
+      "monthlyEquivalent": "Monthly equivalent",
+      "nextOccurrence": "Next occurrence"
+    },
+    "totals": {
+      "expenses": "Expenses per month",
+      "incomes": "Incomes per month",
+      "savingsTransfers": "Savings transfers per month"
+    },
+    "filters": {
+      "legend": "Schedule type",
+      "all": "All",
+      "expense": "Expenses",
+      "income": "Incomes",
+      "transfer": "Transfers"
+    },
+    "occurrences": {
+      "title": "Upcoming occurrences",
+      "none": "No occurrence within the forecast horizon.",
+      "editTitle": "Edit the occurrence",
+      "editHelp": "Occurrence planned on {date}. Leave a field empty to keep the value of the schedule.",
+      "amount": "Amount of this occurrence",
+      "date": "Date of this occurrence",
+      "originally": "planned on {date}",
+      "skipped": "Skipped",
+      "overridden": "Modified",
+      "edit": "Edit the occurrence",
+      "skip": "Skip the occurrence",
+      "restore": "Restore the occurrence"
+    }
+  },
+  "envelopes": {
+    "add": "Add an envelope",
+    "createTitle": "New envelope",
+    "editTitle": "Edit the envelope",
+    "saved": "{label} saved.",
+    "deleteTitle": "Delete the envelope",
+    "deleteEffect": "{label} will be deleted permanently; its categories and their operations stay.",
+    "emptyTitle": "No envelope",
+    "emptyText": "Cap your variable expenses, such as groceries, over one or more categories.",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "remainingDays": "Last day of the month | {n} days left in the month",
+    "inactiveSection": "Inactive envelopes ({n})",
+    "progressLabel": "{consumed} consumed out of {budget}",
+    "consumedOfBudget": "{consumed} out of {budget}",
+    "overrun": "Overrun of {amount}",
+    "available": "Available",
+    "perRemainingDay": "Per remaining day",
+    "carriedOver": "Carry-over",
+    "fields": {
+      "label": "Label",
+      "amount": "Monthly amount",
+      "source": "Account debited in the forecast",
+      "categories": "Expense categories",
+      "carryOver": "Carry the remainder over",
+      "carryOverHelp": "The remaining amount, positive or negative, is added to the next month.",
+      "active": "Active"
+    }
   }
 }

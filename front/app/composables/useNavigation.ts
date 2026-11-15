@@ -75,7 +75,7 @@ export function useNavigation() {
       kind,
       label: t(`quickAdd.${kind}`),
       icon: icons[kind],
-      disabled: true,
+      disabled: false,
     })),
   )
 

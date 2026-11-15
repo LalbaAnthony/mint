@@ -6,5 +6,6 @@
     </main>
     <AppBottomBar />
     <AppFab />
+    <OperationFormModal />
   </UDashboardGroup>
 </template>

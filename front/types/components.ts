@@ -36,6 +36,7 @@ export interface ConfirmModalProps {
   description: string
   confirmLabel: string
   pending?: boolean
+  blocked?: boolean
 }
 
 export type ConfirmModalEmits = {

@@ -8,12 +8,14 @@ import {
   paymentMethodSchema,
 } from '@mint/shared/schemas/payment-methods'
 import type { Account, AccountOverview } from '@mint/shared/types/accounts'
+import type { UsageCounts } from '@mint/shared/types/operations'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
 import type { AccountAction, PaymentMethodAction } from '~~/types/referentials'
 
 const { t } = useI18n()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
+const { loadUsage, accountNotice, paymentMethodNotice } = useUsageNotice()
 
 const overview = ref<AccountOverview | null>(null)
 const paymentMethods = ref<PaymentMethod[]>([])
@@ -114,6 +116,7 @@ function methodCount(account: Account): number {
 }
 
 const accountToDelete = ref<Account | null>(null)
+const accountUsage = ref<UsageCounts | null>(null)
 const deleteAccountOpen = computed({
   get: () => accountToDelete.value !== null,
   set: (open) => {
@@ -122,6 +125,29 @@ const deleteAccountOpen = computed({
     }
   },
 })
+
+const accountDeletion = computed(() => {
+  const account = accountToDelete.value
+  if (account === null) {
+    return { blocked: true, description: '' }
+  }
+  const count = methodCount(account)
+  return accountNotice(
+    accountUsage.value,
+    account.name,
+    t('accounts.deleteEffect', { name: account.name, n: count }, count),
+  )
+})
+
+async function askAccountDeletion(account: Account): Promise<void> {
+  accountUsage.value = null
+  accountToDelete.value = account
+  try {
+    accountUsage.value = await loadUsage(`/accounts/${account.id}`)
+  } catch (error) {
+    notifyFailure(error)
+  }
+}
 
 function deleteAccount(): Promise<void> {
   const account = accountToDelete.value
@@ -144,8 +170,7 @@ function onAccountAction({ kind, account }: AccountAction): Promise<void> {
       openPaymentMethodForm(null, account.id)
       return Promise.resolve()
     case 'delete':
-      accountToDelete.value = account
-      return Promise.resolve()
+      return askAccountDeletion(account)
     case 'archive':
       return run(async () => {
         const count = activeMethodCount(account)
@@ -163,6 +188,7 @@ function onAccountAction({ kind, account }: AccountAction): Promise<void> {
 }
 
 const paymentMethodToDelete = ref<PaymentMethod | null>(null)
+const paymentMethodUsage = ref<UsageCounts | null>(null)
 const deletePaymentMethodOpen = computed({
   get: () => paymentMethodToDelete.value !== null,
   set: (open) => {
@@ -171,6 +197,27 @@ const deletePaymentMethodOpen = computed({
     }
   },
 })
+
+const paymentMethodDeletion = computed(() =>
+  paymentMethodNotice(
+    paymentMethodUsage.value,
+    paymentMethodToDelete.value?.label ?? '',
+  ),
+)
+
+async function askPaymentMethodDeletion(
+  paymentMethod: PaymentMethod,
+): Promise<void> {
+  paymentMethodUsage.value = null
+  paymentMethodToDelete.value = paymentMethod
+  try {
+    paymentMethodUsage.value = await loadUsage(
+      `/payment-methods/${paymentMethod.id}`,
+    )
+  } catch (error) {
+    notifyFailure(error)
+  }
+}
 
 function deletePaymentMethod(): Promise<void> {
   const paymentMethod = paymentMethodToDelete.value
@@ -192,8 +239,7 @@ function onPaymentMethodAction({
       openPaymentMethodForm(paymentMethod, null)
       return Promise.resolve()
     case 'delete':
-      paymentMethodToDelete.value = paymentMethod
-      return Promise.resolve()
+      return askPaymentMethodDeletion(paymentMethod)
     case 'archive':
       return run(async () => {
         await apiCall(
@@ -335,33 +381,20 @@ onMounted(load)
     <ConfirmModal
       v-model:open="deleteAccountOpen"
       :title="t('accounts.deleteTitle')"
-      :description="
-        accountToDelete === null
-          ? ''
-          : t(
-              'accounts.deleteEffect',
-              {
-                name: accountToDelete.name,
-                n: methodCount(accountToDelete),
-              },
-              methodCount(accountToDelete),
-            )
-      "
+      :description="accountDeletion.description"
       :confirm-label="t('common.delete')"
       :pending="busy"
+      :blocked="accountDeletion.blocked"
       @confirm="deleteAccount"
     />
 
     <ConfirmModal
       v-model:open="deletePaymentMethodOpen"
       :title="t('paymentMethods.deleteTitle')"
-      :description="
-        t('paymentMethods.deleteEffect', {
-          label: paymentMethodToDelete?.label ?? '',
-        })
-      "
+      :description="paymentMethodDeletion.description"
       :confirm-label="t('common.delete')"
       :pending="busy"
+      :blocked="paymentMethodDeletion.blocked"
       @confirm="deletePaymentMethod"
     />
   </ViewPanel>

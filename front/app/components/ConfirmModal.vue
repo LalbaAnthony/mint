@@ -22,6 +22,7 @@ const { t } = useI18n()
         <UButton
           :label="confirmLabel"
           :loading="pending"
+          :disabled="blocked"
           color="error"
           variant="solid"
           data-testid="confirm-modal-confirm"

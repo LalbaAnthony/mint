@@ -59,7 +59,7 @@ describe('useNavigation', () => {
     expect(wrapper.vm.moreEntries.at(-1)?.label).toBe('Administration')
   })
 
-  it('offers expense, income and transfer, disabled for now', async () => {
+  it('offers expense, income and transfer', async () => {
     const wrapper = await mountSuspended(NavigationProbe)
 
     expect(wrapper.vm.quickAddEntries).toEqual([
@@ -67,19 +67,19 @@ describe('useNavigation', () => {
         kind: 'expense',
         label: 'Dépense',
         icon: 'lucide:arrow-up-right',
-        disabled: true,
+        disabled: false,
       },
       {
         kind: 'income',
         label: 'Revenu',
         icon: 'lucide:arrow-down-left',
-        disabled: true,
+        disabled: false,
       },
       {
         kind: 'transfer',
         label: 'Transfert',
         icon: 'lucide:arrow-left-right',
-        disabled: true,
+        disabled: false,
       },
     ])
   })

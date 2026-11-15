@@ -60,4 +60,12 @@ export const icons = {
   paymentMethod: 'lucide:credit-card',
   categories: 'lucide:tags',
   systemCategory: 'lucide:lock',
+  filter: 'lucide:filter',
+  search: 'lucide:search',
+  previous: 'lucide:chevron-left',
+  next: 'lucide:chevron-right',
+  skip: 'lucide:skip-forward',
+  restoreOccurrence: 'lucide:rotate-ccw',
+  deactivate: 'lucide:pause',
+  activate: 'lucide:play',
 } as const

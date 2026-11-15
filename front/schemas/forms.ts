@@ -10,6 +10,8 @@ import {
   isoDateSchema,
   labelSchema,
 } from '@mint/shared/schemas/common'
+import { noteMaxLength } from '@mint/shared/schemas/operations'
+import { maxScheduleInterval } from '@mint/shared/schemas/schedules'
 import {
   currentPasswordSchema,
   localeSchema,
@@ -107,3 +109,85 @@ export function accountFormSchema(today: string) {
       }
     })
 }
+
+const positiveAmountInputSchema = amountInputSchema.refine(
+  (cents) => cents > 0,
+  { error: 'amount_not_positive' },
+)
+
+const noteInputSchema = z
+  .string({ error: 'invalid' })
+  .trim()
+  .max(noteMaxLength, { error: 'too_long' })
+
+const requiredChoiceSchema = z
+  .string({ error: 'required' })
+  .min(1, { error: 'required' })
+
+export const operationFormSchema = z.object({
+  source: requiredChoiceSchema,
+  date: isoDateSchema,
+  amount: positiveAmountInputSchema,
+  label: labelSchema,
+  note: noteInputSchema,
+})
+
+export const transferFormSchema = z
+  .object({
+    sourceAccountId: requiredChoiceSchema,
+    targetAccountId: requiredChoiceSchema,
+    date: isoDateSchema,
+    amount: positiveAmountInputSchema,
+    label: labelSchema,
+    note: noteInputSchema,
+  })
+  .refine((transfer) => transfer.sourceAccountId !== transfer.targetAccountId, {
+    error: 'same_account',
+    path: ['targetAccountId'],
+  })
+
+export const occurrenceFormSchema = z
+  .object({
+    amount: z.string({ error: 'invalid_amount' }).trim(),
+    effectiveDate: z.string({ error: 'invalid_date' }).trim(),
+  })
+  .superRefine((occurrence, context) => {
+    if (occurrence.amount === '' && occurrence.effectiveDate === '') {
+      context.addIssue({
+        code: 'custom',
+        message: 'override_empty',
+        path: ['amount'],
+      })
+    }
+    if (occurrence.amount !== '') {
+      const cents = parseAmountInput(occurrence.amount)
+      if (cents === null || cents <= 0) {
+        context.addIssue({
+          code: 'custom',
+          message: 'amount_not_positive',
+          path: ['amount'],
+        })
+      }
+    }
+  })
+
+export const envelopeFormSchema = z.object({
+  label: labelSchema,
+  amount: positiveAmountInputSchema,
+  source: requiredChoiceSchema,
+  categoryIds: z
+    .array(z.string(), { error: 'required' })
+    .min(1, { error: 'required' }),
+})
+
+export const scheduleFormSchema = z.object({
+  label: labelSchema,
+  amount: positiveAmountInputSchema,
+  interval: z
+    .number({ error: 'invalid' })
+    .int({ error: 'invalid' })
+    .min(1, { error: 'interval_out_of_range' })
+    .max(maxScheduleInterval, { error: 'interval_out_of_range' }),
+  startDate: isoDateSchema,
+  note: noteInputSchema,
+})

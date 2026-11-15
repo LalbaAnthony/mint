@@ -105,7 +105,9 @@
       "emergency": "Épargne de précaution",
       "savings": "Épargne",
       "investment": "Investissement"
-    }
+    },
+    "deleteBlockedOperations": "{name} a des opérations : il ne peut qu'être archivé.",
+    "deleteBlockedUsage": "{name} ne peut pas être supprimé : {references} l'utilisent. Modifiez-les ou supprimez-les d'abord."
   },
   "paymentMethods": {
     "add": "Ajouter un moyen de paiement",
@@ -127,7 +129,8 @@
       "card": "Carte bancaire",
       "transfer_out": "Virement émis",
       "third_party": "Prélèvement ou virement tiers"
-    }
+    },
+    "deleteBlocked": "{label} ne peut pas être supprimé : {references} l'utilisent. Archivez-le plutôt."
   },
   "categories": {
     "title": "Catégories",
@@ -162,7 +165,9 @@
       "adjustment": "Ajustement",
       "badge": "Système",
       "help": "Créées par Mint, elles ne peuvent être ni modifiées ni supprimées."
-    }
+    },
+    "deleteReassign": "Elle est utilisée par {references} : choisissez la catégorie qui les reprend.",
+    "replacement": "Catégorie de remplacement"
   },
   "auth": {
     "login": "Connexion",
@@ -280,7 +285,27 @@
     "product_mismatch": "Produit incompatible avec la nature",
     "group_required": "Choisissez le groupe",
     "group_not_allowed": "Groupe non applicable",
-    "parent_not_allowed": "Catégorie parente non applicable"
+    "parent_not_allowed": "Catégorie parente non applicable",
+    "amount_zero": "Le montant ne peut pas être nul",
+    "amount_not_positive": "Le montant doit être positif",
+    "date_before_initial_balance": "Date antérieure au solde initial du compte",
+    "payment_method_mismatch": "Ce moyen de paiement appartient à un autre compte",
+    "adjustment_not_allowed": "Catégorie réservée aux ajustements",
+    "same_account": "Choisissez deux comptes différents",
+    "payment_or_account_required": "Choisissez un compte ou un moyen de paiement",
+    "category_kind_mismatch": "Catégorie d'un autre type",
+    "interval_out_of_range": "Entre 1 et 99",
+    "occurrences_out_of_range": "Entre 1 et 999",
+    "single_end": "Une seule fin possible",
+    "end_before_start": "La fin précède le début",
+    "last_day_not_allowed": "Réservé aux récurrences mensuelles et annuelles",
+    "interval_not_allowed": "Sans objet pour une échéance ponctuelle",
+    "end_not_allowed": "Sans objet pour une échéance ponctuelle",
+    "not_allowed": "Sans objet pour ce type",
+    "override_empty": "Modifiez le montant ou la date",
+    "date_not_future": "Choisissez une date après aujourd'hui",
+    "duplicate": "Valeur en double",
+    "invalid_month": "Mois invalide"
   },
   "errors": {
     "validation_failed": "Certaines valeurs sont invalides.",
@@ -312,6 +337,222 @@
     "invalid_parent": "Cette catégorie ne peut pas recevoir de sous-catégorie.",
     "order_mismatch": "La liste a changé entre-temps : elle vient d'être rechargée.",
     "network_error": "Serveur injoignable : vérifiez votre connexion.",
-    "internal_error": "Une erreur est survenue : réessayez plus tard."
+    "internal_error": "Une erreur est survenue : réessayez plus tard.",
+    "account_has_operations": "Ce compte a des opérations : il ne peut qu'être archivé.",
+    "account_in_use": "Des échéances ou des enveloppes utilisent ce compte.",
+    "payment_method_in_use": "Ce moyen de paiement est utilisé : archivez-le plutôt.",
+    "payment_method_archived": "Ce moyen de paiement est archivé.",
+    "category_archived": "Cette catégorie est archivée.",
+    "category_in_use": "Cette catégorie est utilisée : choisissez une catégorie de remplacement.",
+    "category_in_envelope": "Une de ces catégories appartient déjà à une autre enveloppe.",
+    "invalid_replacement": "Cette catégorie ne peut pas servir de remplacement.",
+    "operations_before_initial_balance": "Des opérations sont datées avant cette nouvelle date de solde initial.",
+    "occurrence_not_editable": "Cette occurrence ne peut plus être modifiée.",
+    "operation_is_transfer": "Ce mouvement appartient à un transfert : modifiez le transfert."
+  },
+  "usage": {
+    "checking": "Vérification des usages...",
+    "operations": "{n} opération | {n} opérations",
+    "schedules": "{n} échéance | {n} échéances",
+    "envelopes": "{n} enveloppe | {n} enveloppes"
+  },
+  "operations": {
+    "add": "Ajouter une opération",
+    "saved": "Opération enregistrée.",
+    "deleted": "{label} supprimée.",
+    "editTitle": "Modifier l'opération",
+    "createTitle": {
+      "expense": "Nouvelle dépense",
+      "income": "Nouveau revenu",
+      "transfer": "Nouveau transfert"
+    },
+    "noCategory": "À catégoriser plus tard",
+    "transferWith": "Transfert avec {account}",
+    "emptyTitle": "Aucune opération",
+    "emptyText": "Saisissez vos dépenses, revenus et transferts, ou modifiez les filtres.",
+    "deleteTitle": "Supprimer l'opération",
+    "deleteEffect": "{label} sera supprimée définitivement.",
+    "deleteGeneratedEffect": "{label} sera supprimée définitivement et son occurrence d'échéance sera marquée comme sautée, sans régénération.",
+    "deleteTransferEffect": "Les deux mouvements du transfert {label} seront supprimés définitivement.",
+    "fields": {
+      "kind": "Type",
+      "source": "Payé avec",
+      "sourceAccount": "Compte débité",
+      "targetAccount": "Compte crédité",
+      "amount": "Montant",
+      "date": "Date",
+      "label": "Libellé",
+      "category": "Catégorie",
+      "note": "Note",
+      "account": "Compte"
+    },
+    "origins": {
+      "manual": "Saisie manuelle",
+      "import": "Import",
+      "schedule": "Générée depuis une échéance"
+    },
+    "statuses": {
+      "categorized": "Catégorisée",
+      "to_categorize": "À catégoriser"
+    },
+    "directions": {
+      "debit": "Débit",
+      "credit": "Crédit"
+    },
+    "filters": {
+      "title": "Filtres",
+      "titleWithCount": "Filtres ({n})",
+      "search": "Rechercher dans les libellés et les notes",
+      "from": "Du",
+      "to": "Au",
+      "minAmount": "Montant minimal",
+      "maxAmount": "Montant maximal",
+      "accounts": "Comptes",
+      "groups": "Groupes",
+      "categories": "Catégories",
+      "origins": "Origines",
+      "direction": "Sens",
+      "status": "Statut",
+      "anyDirection": "Tous les sens",
+      "anyStatus": "Tous les statuts",
+      "reset": "Effacer les filtres"
+    },
+    "sort": {
+      "label": "Tri",
+      "dateDesc": "Plus récentes",
+      "dateAsc": "Plus anciennes",
+      "amountDesc": "Montants les plus élevés",
+      "amountAsc": "Montants les plus faibles"
+    }
+  },
+  "recurrence": {
+    "once": "Ponctuelle",
+    "weekly": "Toutes les semaines | Toutes les {n} semaines",
+    "monthly": "Tous les mois | Tous les {n} mois",
+    "yearly": "Tous les ans | Tous les {n} ans",
+    "lastDaySuffix": "le dernier jour du mois"
+  },
+  "schedules": {
+    "add": "Ajouter une échéance",
+    "createTitle": "Nouvelle échéance",
+    "editTitle": "Modifier l'échéance",
+    "saved": "{label} enregistrée.",
+    "deleted": "{label} supprimée.",
+    "deleteTitle": "Supprimer l'échéance",
+    "deleteEffect": "{label} sera supprimée ; les opérations déjà générées restent.",
+    "removedExceptions": "{n} exception d'occurrence ne correspondait plus à une date de l'échéance : elle a été supprimée. | {n} exceptions d'occurrence ne correspondaient plus à une date de l'échéance : elles ont été supprimées.",
+    "kindFixed": "Type : {kind}. Il ne peut pas être modifié.",
+    "emptyTitle": "Aucune échéance",
+    "emptyText": "Planifiez vos dépenses, revenus et virements récurrents ou ponctuels.",
+    "notCounted": "non compté",
+    "foldedSection": "Inactives ou terminées ({n})",
+    "ended": "Terminée",
+    "inactive": "Inactive",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "kinds": {
+      "expense": "Dépense",
+      "income": "Revenu",
+      "transfer": "Transfert"
+    },
+    "frequencies": {
+      "once": "Ponctuelle",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuelle",
+      "yearly": "Annuelle"
+    },
+    "businessDayRules": {
+      "exact": "Date exacte",
+      "previous": "Jour ouvré précédent",
+      "next": "Jour ouvré suivant"
+    },
+    "triggerModes": {
+      "auto": "Automatique",
+      "manual": "Manuel"
+    },
+    "endModes": {
+      "never": "Sans fin",
+      "date": "À une date",
+      "count": "Après un nombre d'occurrences"
+    },
+    "markers": {
+      "manual": "Paiement manuel",
+      "subscription": "Abonnement"
+    },
+    "fields": {
+      "kind": "Type",
+      "label": "Libellé",
+      "amount": "Montant de référence",
+      "isSubscription": "Abonnement",
+      "frequency": "Récurrence",
+      "interval": "Toutes les (N)",
+      "date": "Date",
+      "startDate": "Date de début (ancrage)",
+      "businessDayRule": "Jours non ouvrés",
+      "anchorLastDay": "Le dernier jour du mois",
+      "end": "Fin",
+      "endDate": "Date de fin",
+      "maxOccurrences": "Nombre d'occurrences",
+      "triggerMode": "Déclenchement",
+      "active": "Active",
+      "recurrence": "Récurrence",
+      "monthlyEquivalent": "Équivalent mensuel",
+      "nextOccurrence": "Prochaine occurrence"
+    },
+    "totals": {
+      "expenses": "Dépenses par mois",
+      "incomes": "Revenus par mois",
+      "savingsTransfers": "Transferts d'épargne par mois"
+    },
+    "filters": {
+      "legend": "Type d'échéance",
+      "all": "Toutes",
+      "expense": "Dépenses",
+      "income": "Revenus",
+      "transfer": "Transferts"
+    },
+    "occurrences": {
+      "title": "Occurrences à venir",
+      "none": "Aucune occurrence sur l'horizon de prévision.",
+      "editTitle": "Modifier l'occurrence",
+      "editHelp": "Occurrence prévue le {date}. Laissez un champ vide pour garder la valeur de l'échéance.",
+      "amount": "Montant de cette occurrence",
+      "date": "Date de cette occurrence",
+      "originally": "prévue le {date}",
+      "skipped": "Sautée",
+      "overridden": "Modifiée",
+      "edit": "Modifier l'occurrence",
+      "skip": "Sauter l'occurrence",
+      "restore": "Rétablir l'occurrence"
+    }
+  },
+  "envelopes": {
+    "add": "Ajouter une enveloppe",
+    "createTitle": "Nouvelle enveloppe",
+    "editTitle": "Modifier l'enveloppe",
+    "saved": "{label} enregistrée.",
+    "deleteTitle": "Supprimer l'enveloppe",
+    "deleteEffect": "{label} sera supprimée définitivement ; ses catégories et leurs opérations restent.",
+    "emptyTitle": "Aucune enveloppe",
+    "emptyText": "Plafonnez vos dépenses variables, comme les courses, sur une ou plusieurs catégories.",
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "remainingDays": "Dernier jour du mois | {n} jours restants dans le mois",
+    "inactiveSection": "Enveloppes inactives ({n})",
+    "progressLabel": "{consumed} consommés sur {budget}",
+    "consumedOfBudget": "{consumed} sur {budget}",
+    "overrun": "Dépassement de {amount}",
+    "available": "Disponible",
+    "perRemainingDay": "Par jour restant",
+    "carriedOver": "Report",
+    "fields": {
+      "label": "Libellé",
+      "amount": "Montant mensuel",
+      "source": "Compte débité dans la prévision",
+      "categories": "Catégories de dépenses",
+      "carryOver": "Reporter le reliquat",
+      "carryOverHelp": "Le disponible restant, positif ou négatif, s'ajoute au mois suivant.",
+      "active": "Active"
+    }
   }
 }
