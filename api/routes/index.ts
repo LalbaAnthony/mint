@@ -49,6 +49,12 @@ import {
 import { balanceCurveRoute, calendarMonthRoute } from './forecast.js'
 import { healthRoute } from './health.js'
 import {
+  adjustStatementRoute,
+  createStatementRoute,
+  deleteStatementRoute,
+  listStatementsRoute,
+} from './statements.js'
+import {
   createRuleRoute,
   deleteRuleRoute,
   listRulesRoute,
@@ -166,4 +172,8 @@ export const apiRoutes: ApiRoute[] = [
   suggestRuleRoute,
   updateRuleRoute,
   deleteRuleRoute,
+  listStatementsRoute,
+  createStatementRoute,
+  adjustStatementRoute,
+  deleteStatementRoute,
 ]

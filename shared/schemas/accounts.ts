@@ -116,6 +116,7 @@ export const accountSchema = z
     sortOrder: z.number().int(),
     archivedAt: z.iso.datetime().nullable(),
     currentBalanceCents: z.number().int(),
+    reconciliationGapCents: z.number().int().nullable(),
   })
   .meta({ id: 'Account' })
 

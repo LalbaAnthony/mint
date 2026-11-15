@@ -310,7 +310,8 @@
           "lowBalanceThresholdCents": { "type": ["integer", "null"] },
           "sortOrder": { "type": "integer" },
           "archivedAt": { "type": ["string", "null"], "format": "date-time" },
-          "currentBalanceCents": { "type": "integer" }
+          "currentBalanceCents": { "type": "integer" },
+          "reconciliationGapCents": { "type": ["integer", "null"] }
         },
         "required": [
           "id",
@@ -324,7 +325,8 @@
           "lowBalanceThresholdCents",
           "sortOrder",
           "archivedAt",
-          "currentBalanceCents"
+          "currentBalanceCents",
+          "reconciliationGapCents"
         ]
       },
       "AccountNature": {
@@ -1504,6 +1506,52 @@
           "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
           "active": { "type": "boolean" }
         }
+      },
+      "StatementListResponse": {
+        "type": "object",
+        "properties": {
+          "statements": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Statement" }
+          }
+        },
+        "required": ["statements"]
+      },
+      "Statement": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "accountId": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" },
+          "balanceCents": { "type": "integer" },
+          "calculatedBalanceCents": { "type": "integer" },
+          "gapCents": { "type": "integer" },
+          "adjustmentOperationId": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "accountId",
+          "date",
+          "balanceCents",
+          "calculatedBalanceCents",
+          "gapCents",
+          "adjustmentOperationId"
+        ]
+      },
+      "CreateStatementRequest": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string", "format": "date" },
+          "balanceCents": {
+            "type": "integer",
+            "minimum": -99999999999,
+            "maximum": 99999999999
+          }
+        },
+        "required": ["date", "balanceCents"]
       }
     },
     "parameters": {}
@@ -5625,6 +5673,227 @@
           },
           "404": {
             "description": "Unknown rule, account or category",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/{id}/statements": {
+      "get": {
+        "summary": "Statement balances of an account, latest first, with the calculated balance at the end of their date and the gap (CPT-05)",
+        "tags": ["statements"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Record the balance read on a bank statement at a date and show its gap with the calculated balance (CPT-05)",
+        "tags": ["statements"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStatementRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Statement recorded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Statement" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, date in the future or before the initial balance",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account or statement already at this date",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{id}/adjust": {
+      "post": {
+        "summary": "Correct the gap of a statement with an operation of the system category Adjustment dated on the statement, excluded from every breakdown (CPT-05, CAT-08)",
+        "tags": ["statements"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gap corrected",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Statement" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown statement",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived account or no gap to correct",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/statements/{id}": {
+      "delete": {
+        "summary": "Delete a statement; its adjustment operation, if any, stays",
+        "tags": ["statements"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Statement deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown statement",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

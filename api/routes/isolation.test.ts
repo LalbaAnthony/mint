@@ -29,6 +29,9 @@ async function snapshotOf(
     ).body,
     envelopes: (await client.get('/envelopes')).body,
     rules: (await client.get('/rules')).body,
+    statements: (
+      await client.get(`/accounts/${resources.accountId}/statements`)
+    ).body,
   }
 }
 
@@ -705,6 +708,22 @@ const scenarios: Record<string, Scenario> = {
     expect(response.status).toBe(409)
     await expectBobDataUntouched(actors)
   },
+  'get /accounts/:id/statements': crossRead(
+    ({ accountId }) => `/accounts/${accountId}/statements`,
+  ),
+  'post /accounts/:id/statements': crossAccess(
+    'post',
+    ({ accountId }) => `/accounts/${accountId}/statements`,
+    () => ({ date: '2026-11-09', balanceCents: 1 }),
+  ),
+  'post /statements/:id/adjust': crossAccess(
+    'post',
+    ({ statementId }) => `/statements/${statementId}/adjust`,
+  ),
+  'delete /statements/:id': crossAccess(
+    'delete',
+    ({ statementId }) => `/statements/${statementId}`,
+  ),
   'get /rules/suggestion': crossRead(
     ({ operationId }) => `/rules/suggestion?operationId=${operationId}`,
   ),
@@ -763,6 +782,10 @@ async function createBobResources(
     '/envelopes',
     aliceEnvelope(account.body.id, [groceries.id]),
   )
+  const statement = await bobClient.post(
+    `/accounts/${account.body.id}/statements`,
+    { date: '2026-11-10', balanceCents: 100_000 },
+  )
   const rule = await bobClient.post('/rules', {
     ...aliceRule(account.body.id, category.id),
     pattern: 'BOB',
@@ -772,7 +795,8 @@ async function createBobResources(
     transfer.status !== 201 ||
     schedule.status !== 201 ||
     envelope.status !== 201 ||
-    rule.status !== 201
+    rule.status !== 201 ||
+    statement.status !== 201
   ) {
     throw new Error('Bob planning resources could not be created')
   }
@@ -786,6 +810,7 @@ async function createBobResources(
     scheduleId: schedule.body.id,
     envelopeId: envelope.body.id,
     ruleId: rule.body.id,
+    statementId: statement.body.id,
   }
 }
 

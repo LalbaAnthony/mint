@@ -117,6 +117,7 @@ describe('US-04 where my money is (CPT-01, CPT-08)', () => {
       sortOrder: 0,
       archivedAt: null,
       currentBalanceCents: 200_000,
+      reconciliationGapCents: null,
     })
   })
 

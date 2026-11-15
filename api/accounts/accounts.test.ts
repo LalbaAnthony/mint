@@ -17,6 +17,7 @@ function account(overrides: Partial<Account>): Account {
     sortOrder: 0,
     archivedAt: null,
     currentBalanceCents: 0,
+    reconciliationGapCents: null,
     ...overrides,
   }
 }

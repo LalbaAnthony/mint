@@ -19,6 +19,7 @@ import {
 } from '../accounts/accounts.js'
 import { parisDate } from '../clock.js'
 import { conflict } from '../http/http-error.js'
+import { loadStatementGaps } from '../accounts/statements.js'
 import { accountUsage, loadAccountBalances } from '../planning/usage.js'
 import { ensureSameMembers } from '../http/ordering.js'
 import { defineUserRoute } from '../http/route.js'
@@ -58,10 +59,11 @@ export const accountOverviewRoute = defineUserRoute({
       user.id,
       parisDate(app.clock.now()),
     )
+    const gaps = await loadStatementGaps(app, user.id)
     return {
       status: 200,
       body: buildAccountOverview(
-        accounts.map((account) => toAccount(account, balances)),
+        accounts.map((account) => toAccount(account, balances, gaps)),
       ),
     }
   },

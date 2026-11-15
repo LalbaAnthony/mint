@@ -42,6 +42,7 @@ export const apiErrorCodes = [
   'operation_is_transfer',
   'operation_without_bank_label',
   'statement_exists',
+  'statement_balanced',
   'import_not_pending',
   'import_not_validated',
   'import_not_previewed',

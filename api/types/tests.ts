@@ -56,10 +56,12 @@ export type IsolationResources = {
   scheduleId: string
   envelopeId: string
   ruleId: string
+  statementId: string
 }
 
 export type IsolationSnapshot = {
   rules: unknown
+  statements: unknown
   overview: unknown
   paymentMethods: unknown
   categories: unknown

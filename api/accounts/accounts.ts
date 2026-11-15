@@ -15,6 +15,7 @@ import type { AppDependencies } from '../types/app.js'
 import type { DataAccess } from '../types/planning.js'
 import type { AccountModel } from '../types/models.js'
 import { loadAccountBalances } from '../planning/usage.js'
+import { loadStatementGaps } from './statements.js'
 
 export function currentBalanceCents(
   account: AccountModel,
@@ -34,12 +35,17 @@ export async function accountWithBalance(
     parisDate(app.clock.now()),
     transaction,
   )
-  return toAccount(account, balances)
+  return toAccount(
+    account,
+    balances,
+    await loadStatementGaps(app, account.userId, transaction),
+  )
 }
 
 export function toAccount(
   account: AccountModel,
   balances: ReadonlyMap<string, number>,
+  gaps: ReadonlyMap<string, number> = new Map(),
 ): Account {
   return {
     id: account.id,
@@ -54,6 +60,7 @@ export function toAccount(
     sortOrder: account.sortOrder,
     archivedAt: account.archivedAt?.toISOString() ?? null,
     currentBalanceCents: currentBalanceCents(account, balances),
+    reconciliationGapCents: gaps.get(account.id) ?? null,
   }
 }
 
