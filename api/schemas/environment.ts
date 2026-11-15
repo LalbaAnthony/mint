@@ -41,6 +41,35 @@ export const mailEnvironmentSchema = z
   .object(mailEnvironmentShape)
   .refine(hasCompleteSmtpCredentials, { error: smtpCredentialsMessage })
 
+const vapidShape = {
+  VAPID_PUBLIC_KEY: optionalSecretSchema,
+  VAPID_PRIVATE_KEY: optionalSecretSchema,
+  VAPID_SUBJECT: optionalSecretSchema.pipe(
+    z
+      .string()
+      .regex(/^(mailto:|https:\/\/)/, {
+        error: 'VAPID_SUBJECT must be a mailto: or https:// contact',
+      })
+      .optional(),
+  ),
+}
+
+function hasCompleteVapidKeys(environment: {
+  VAPID_PUBLIC_KEY?: string | undefined
+  VAPID_PRIVATE_KEY?: string | undefined
+  VAPID_SUBJECT?: string | undefined
+}): boolean {
+  const defined = [
+    environment.VAPID_PUBLIC_KEY,
+    environment.VAPID_PRIVATE_KEY,
+    environment.VAPID_SUBJECT,
+  ].filter((value) => value !== undefined).length
+  return defined === 0 || defined === 3
+}
+
+const vapidKeysMessage =
+  'VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY and VAPID_SUBJECT must be all set or all empty'
+
 const appOriginSchema = z
   .url({ protocol: /^https?$/ })
   .refine((value) => new URL(value).origin === value, {
@@ -53,8 +82,10 @@ export const serverEnvironmentSchema = databaseEnvironmentSchema
     APP_ORIGIN: appOriginSchema,
     SESSION_SECRET: z.string().min(32),
     ...mailEnvironmentShape,
+    ...vapidShape,
   })
   .refine(hasCompleteSmtpCredentials, { error: smtpCredentialsMessage })
+  .refine(hasCompleteVapidKeys, { error: vapidKeysMessage })
 
 export const testDatabaseEnvironmentSchema = z.object({
   POSTGRES_DB: z.string().min(1),
@@ -69,7 +100,11 @@ const healthcheckUrlSchema = z
   .transform((value) => (value === '' ? undefined : value))
   .pipe(z.url({ protocol: /^https?$/ }).optional())
 
-export const workerEnvironmentSchema = databaseEnvironmentSchema.extend({
-  HEALTHCHECK_EXECUTION_URL: healthcheckUrlSchema,
-  HEALTHCHECK_PURGE_URL: healthcheckUrlSchema,
-})
+export const workerEnvironmentSchema = databaseEnvironmentSchema
+  .extend({
+    HEALTHCHECK_EXECUTION_URL: healthcheckUrlSchema,
+    HEALTHCHECK_PURGE_URL: healthcheckUrlSchema,
+    HEALTHCHECK_NOTIFICATIONS_URL: healthcheckUrlSchema,
+    ...vapidShape,
+  })
+  .refine(hasCompleteVapidKeys, { error: vapidKeysMessage })

@@ -21,6 +21,7 @@ import * as createAccountStatements from './0019-create-account-statements.js'
 import * as createTags from './0020-create-tags.js'
 import * as createValuations from './0021-create-valuations.js'
 import * as addCapsAndInterest from './0022-add-caps-and-interest.js'
+import * as createNotifications from './0023-create-notifications.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -45,4 +46,5 @@ export const migrations: Migration[] = [
   { name: '0020-create-tags', ...createTags },
   { name: '0021-create-valuations', ...createValuations },
   { name: '0022-add-caps-and-interest', ...addCapsAndInterest },
+  { name: '0023-create-notifications', ...createNotifications },
 ]

@@ -3,6 +3,7 @@ import { parseEnvironment } from './environment.js'
 import {
   mailEnvironmentSchema,
   serverEnvironmentSchema,
+  workerEnvironmentSchema,
 } from './schemas/environment.js'
 
 const validEnvironment = {
@@ -73,6 +74,54 @@ describe('parseEnvironment', () => {
         SESSION_SECRET: 'too-short',
       }),
     ).toThrow(/SESSION_SECRET/)
+  })
+})
+
+describe('VAPID keys (NOTIF-03)', () => {
+  const vapid = {
+    VAPID_PUBLIC_KEY: 'vapid-public-key',
+    VAPID_PRIVATE_KEY: 'vapid-private-key',
+    VAPID_SUBJECT: 'mailto:admin@example.org',
+  }
+
+  it('accepts the three keys together or none of them', () => {
+    expect(
+      parseEnvironment(serverEnvironmentSchema, {
+        ...validEnvironment,
+        ...vapid,
+      }),
+    ).toMatchObject(vapid)
+    const disabled = parseEnvironment(workerEnvironmentSchema, {
+      ...validEnvironment,
+      VAPID_PUBLIC_KEY: '',
+      VAPID_PRIVATE_KEY: '',
+      VAPID_SUBJECT: '',
+    })
+    expect(disabled.VAPID_PUBLIC_KEY).toBeUndefined()
+    expect(disabled.VAPID_PRIVATE_KEY).toBeUndefined()
+    expect(disabled.VAPID_SUBJECT).toBeUndefined()
+  })
+
+  it('rejects a partial configuration without echoing the keys', () => {
+    const parse = () =>
+      parseEnvironment(workerEnvironmentSchema, {
+        ...validEnvironment,
+        VAPID_PUBLIC_KEY: vapid.VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY: vapid.VAPID_PRIVATE_KEY,
+      })
+
+    expect(parse).toThrow(/must be all set or all empty/)
+    expect(parse).not.toThrow(/vapid-private-key/)
+  })
+
+  it('requires a mailto: or https:// subject', () => {
+    expect(() =>
+      parseEnvironment(serverEnvironmentSchema, {
+        ...validEnvironment,
+        ...vapid,
+        VAPID_SUBJECT: 'admin@example.org',
+      }),
+    ).toThrow(/VAPID_SUBJECT/)
   })
 })
 

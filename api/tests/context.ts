@@ -1,4 +1,6 @@
 import request from 'supertest'
+import { evaluateUserAlerts } from '../notifications/evaluate.js'
+import { createAlertScheduler } from '../notifications/scheduler.js'
 import type { Express } from 'express'
 import { csrfTokenResponseSchema } from '@mint/shared/schemas/auth'
 import type { Locale, UserRole } from '@mint/shared/types/user'
@@ -66,16 +68,26 @@ export async function createTestContext(
   const database = await createMigratedDatabase()
   const clock = createFakeClock(options.now ?? new Date('2026-11-11T10:00:00Z'))
   const mailer = createMemoryMailer()
+  const models = createModels(database.sequelize)
+  const push = options.push ?? null
   const dependencies: AppDependencies = {
     config: {
       appOrigin: options.appOrigin ?? 'http://mint.test',
       sessionSecret: 'test-session-secret-of-at-least-32-characters',
     },
     sequelize: database.sequelize,
-    models: createModels(database.sequelize),
+    models,
     mailer,
     clock,
     limiters: createLimiters(clock),
+    push,
+    alerts: createAlertScheduler(async (userId) => {
+      await evaluateUserAlerts(
+        { sequelize: database.sequelize, models, clock, push },
+        userId,
+        { reminders: false },
+      )
+    }),
     checkDatabase:
       options.checkDatabase ?? (() => isDatabaseReachable(database.sequelize)),
   }
@@ -84,7 +96,10 @@ export async function createTestContext(
     server: createApp(dependencies),
     clock,
     mailer,
-    close: database.drop,
+    close: async () => {
+      await dependencies.alerts.idle()
+      await database.drop()
+    },
   }
 }
 

@@ -84,6 +84,16 @@ export const amountToleranceSchema = z
   .min(0, { error: 'tolerance_out_of_range' })
   .max(100, { error: 'tolerance_out_of_range' })
 
+export const defaultReminderDaysBefore = 2
+
+export const maxReminderDaysBefore = 30
+
+export const reminderDaysBeforeSchema = z
+  .number({ error: 'invalid' })
+  .int({ error: 'invalid' })
+  .min(0, { error: 'reminder_out_of_range' })
+  .max(maxReminderDaysBefore, { error: 'reminder_out_of_range' })
+
 const commonShape = {
   label: labelSchema,
   amountCents: positiveAmountCentsSchema,
@@ -93,6 +103,9 @@ const commonShape = {
   amountTolerancePct: amountToleranceSchema.default(10),
   bankLabelPatterns: bankLabelPatternsSchema.default([]),
   tagIds: tagIdsSchema.default([]),
+  reminderDaysBefore: reminderDaysBeforeSchema.default(
+    defaultReminderDaysBefore,
+  ),
   ...recurrenceShape,
 }
 
@@ -170,6 +183,7 @@ export const updateScheduleRequestSchema = z
     amountTolerancePct: amountToleranceSchema,
     bankLabelPatterns: bankLabelPatternsSchema,
     tagIds: tagIdsSchema,
+    reminderDaysBefore: reminderDaysBeforeSchema,
     ...categorizedShape,
     ...transferShape,
     isSubscription: z.boolean({ error: 'invalid' }),
@@ -207,6 +221,7 @@ export const scheduleSchema = z
     label: z.string(),
     amountCents: z.number().int(),
     triggerMode: triggerModeSchema,
+    reminderDaysBefore: z.number().int(),
     note: z.string().nullable(),
     active: z.boolean(),
     isSubscription: z.boolean(),

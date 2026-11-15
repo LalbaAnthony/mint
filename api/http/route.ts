@@ -74,6 +74,12 @@ async function resolveAdministrator(
   return user
 }
 
+const alertNeutralTags: ReadonlySet<string> = new Set([
+  'administration',
+  'auth',
+  'notifications',
+])
+
 function buildRoute<
   User extends UserModel | null,
   Body extends z.ZodType,
@@ -124,6 +130,13 @@ function buildRoute<
         query: query.data,
       })
       sendResult(response, definition.responses, result)
+      if (
+        user !== null &&
+        definition.method !== 'get' &&
+        !alertNeutralTags.has(definition.tag)
+      ) {
+        app.alerts.schedule(user.id)
+      }
     },
   }
 }

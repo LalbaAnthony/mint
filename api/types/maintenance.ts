@@ -3,4 +3,5 @@ export type PurgeSummary = {
   passwordResetTokens: number
   emailChangeTokens: number
   pendingImports: number
+  readNotifications: number
 }

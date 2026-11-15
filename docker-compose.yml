@@ -25,6 +25,9 @@ x-api-environment: &api-environment
   DATABASE_USER: ${POSTGRES_USER}
   DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
   SESSION_SECRET: ${SESSION_SECRET}
+  VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+  VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+  VAPID_SUBJECT: ${VAPID_SUBJECT:-}
 
 x-worker-environment: &worker-environment
   TZ: Europe/Paris
@@ -32,6 +35,9 @@ x-worker-environment: &worker-environment
   DATABASE_NAME: ${POSTGRES_DB}
   DATABASE_USER: ${POSTGRES_USER}
   DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+  VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+  VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+  VAPID_SUBJECT: ${VAPID_SUBJECT:-}
 
 x-api-healthcheck: &api-healthcheck
   test:
@@ -90,6 +96,7 @@ services:
       DATABASE_HOST: db
       HEALTHCHECK_EXECUTION_URL: ${HEALTHCHECK_EXECUTION_URL:-}
       HEALTHCHECK_PURGE_URL: ${HEALTHCHECK_PURGE_URL:-}
+      HEALTHCHECK_NOTIFICATIONS_URL: ${HEALTHCHECK_NOTIFICATIONS_URL:-}
     depends_on:
       db:
         condition: service_healthy
@@ -168,6 +175,7 @@ services:
       DATABASE_HOST: db-dev
       HEALTHCHECK_EXECUTION_URL: ''
       HEALTHCHECK_PURGE_URL: ''
+      HEALTHCHECK_NOTIFICATIONS_URL: ''
       CHOKIDAR_USEPOLLING: 'true'
     volumes:
       - ./api:/app/api

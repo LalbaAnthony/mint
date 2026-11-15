@@ -28,6 +28,7 @@ import type {
 } from '@mint/shared/types/transactions'
 import type { RuleMatchType, RuleSign } from '@mint/shared/types/rules'
 import type { Locale, UserRole, UserStatus } from '@mint/shared/types/user'
+import type { NotificationType } from '@mint/shared/types/notifications'
 
 export type UserAttributes = {
   id: string
@@ -269,6 +270,7 @@ export type ScheduleAttributes = {
   amountTolerancePct: number
   bankLabelPatterns: string[]
   isSystem: boolean
+  reminderDaysBefore: number
   createdAt: Date
   updatedAt: Date
 }
@@ -278,6 +280,7 @@ export type ScheduleCreationAttributes = Optional<
   | 'amountTolerancePct'
   | 'bankLabelPatterns'
   | 'isSystem'
+  | 'reminderDaysBefore'
   | 'id'
   | 'paymentMethodId'
   | 'accountId'
@@ -444,6 +447,10 @@ export type Models = {
   Valuation: ModelStatic<ValuationModel>
   InterestRate: ModelStatic<InterestRateModel>
   RegulatedCap: ModelStatic<RegulatedCapModel>
+  Notification: ModelStatic<NotificationModel>
+  AlertEpisode: ModelStatic<AlertEpisodeModel>
+  PushSubscription: ModelStatic<PushSubscriptionModel>
+  NotificationPreference: ModelStatic<NotificationPreferenceModel>
 }
 
 export type ImportMappingAttributes = {
@@ -737,3 +744,91 @@ export type RegulatedCapModel = Model<
   RegulatedCapCreationAttributes
 > &
   RegulatedCapAttributes
+
+export type NotificationAttributes = {
+  id: string
+  userId: string
+  type: NotificationType
+  payload: unknown
+  dedupKey: string
+  readAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type NotificationCreationAttributes = Optional<
+  NotificationAttributes,
+  'id' | 'readAt' | 'createdAt' | 'updatedAt'
+>
+
+export type NotificationModel = Model<
+  NotificationAttributes,
+  NotificationCreationAttributes
+> &
+  NotificationAttributes
+
+export type AlertEpisodeAttributes = {
+  id: string
+  userId: string
+  accountId: string
+  openedAt: Date
+  closedAt: Date | null
+  minCents: number
+  minDate: string
+  lastNotifiedMinCents: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AlertEpisodeCreationAttributes = Optional<
+  AlertEpisodeAttributes,
+  'id' | 'closedAt' | 'createdAt' | 'updatedAt'
+>
+
+export type AlertEpisodeModel = Model<
+  AlertEpisodeAttributes,
+  AlertEpisodeCreationAttributes
+> &
+  AlertEpisodeAttributes
+
+export type PushSubscriptionAttributes = {
+  id: string
+  userId: string
+  endpoint: string
+  p256dh: string
+  auth: string
+  userAgent: string | null
+  lastSuccessAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type PushSubscriptionCreationAttributes = Optional<
+  PushSubscriptionAttributes,
+  'id' | 'userAgent' | 'lastSuccessAt' | 'createdAt' | 'updatedAt'
+>
+
+export type PushSubscriptionModel = Model<
+  PushSubscriptionAttributes,
+  PushSubscriptionCreationAttributes
+> &
+  PushSubscriptionAttributes
+
+export type NotificationPreferenceAttributes = {
+  userId: string
+  type: 'low_balance' | 'manual_reminder'
+  push: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type NotificationPreferenceCreationAttributes = Optional<
+  NotificationPreferenceAttributes,
+  'createdAt' | 'updatedAt'
+>
+
+export type NotificationPreferenceModel = Model<
+  NotificationPreferenceAttributes,
+  NotificationPreferenceCreationAttributes
+> &
+  NotificationPreferenceAttributes

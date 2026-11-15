@@ -16,6 +16,8 @@ export const purgeCronExpression = '0 3 * * *'
 
 export const pendingImportLifetimeMs = 24 * 60 * 60 * 1000
 
+export const readNotificationLifetimeMs = 90 * 24 * 60 * 60 * 1000
+
 export async function purgeExpiredRecords(
   data: DataAccess,
   now: Date,
@@ -42,6 +44,15 @@ export async function purgeExpiredRecords(
         status: 'pending',
         updatedAt: {
           [Op.lte]: new Date(now.getTime() - pendingImportLifetimeMs),
+        },
+      },
+      transaction,
+    }),
+    readNotifications: await data.models.Notification.destroy({
+      where: {
+        readAt: { [Op.ne]: null },
+        createdAt: {
+          [Op.lte]: new Date(now.getTime() - readNotificationLifetimeMs),
         },
       },
       transaction,

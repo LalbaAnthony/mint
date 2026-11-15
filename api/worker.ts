@@ -10,6 +10,11 @@ import {
 } from './execution/job.js'
 import { describeError, log } from './logger.js'
 import { purgeCronExpression, runPurgeJob } from './maintenance/purge.js'
+import {
+  notificationCronExpression,
+  runNotificationJob,
+} from './notifications/job.js'
+import { createWebPushSender, vapidSettings } from './notifications/push.js'
 import { workerEnvironmentSchema } from './schemas/environment.js'
 
 function loadEnvironment() {
@@ -28,12 +33,29 @@ const executionPing = createHealthcheckPinger(
   environment.HEALTHCHECK_EXECUTION_URL,
 )
 const purgePing = createHealthcheckPinger(environment.HEALTHCHECK_PURGE_URL)
+const notificationPing = createHealthcheckPinger(
+  environment.HEALTHCHECK_NOTIFICATIONS_URL,
+)
+const vapid = vapidSettings(environment)
+const notificationContext = {
+  ...data,
+  clock: systemClock,
+  push: vapid === null ? null : createWebPushSender(vapid),
+}
 
 async function runExecution(): Promise<void> {
   try {
     await runExecutionJob(data, systemClock, executionPing)
   } catch (error) {
     log('error', 'execution_failed', { error: describeError(error) })
+  }
+}
+
+async function runNotifications(): Promise<void> {
+  try {
+    await runNotificationJob(notificationContext, notificationPing)
+  } catch (error) {
+    log('error', 'notifications_failed', { error: describeError(error) })
   }
 }
 
@@ -48,8 +70,10 @@ async function runPurge(): Promise<void> {
 log('info', 'worker_started', {
   execution: executionCronExpression,
   purge: purgeCronExpression,
+  notifications: notificationCronExpression,
 })
 await runExecution()
+await runNotifications()
 
 const tasks = [
   cron.schedule(executionCronExpression, runExecution, {
@@ -59,6 +83,11 @@ const tasks = [
   }),
   cron.schedule(purgeCronExpression, runPurge, {
     name: 'purge',
+    timezone: 'Europe/Paris',
+    noOverlap: true,
+  }),
+  cron.schedule(notificationCronExpression, runNotifications, {
+    name: 'notifications',
     timezone: 'Europe/Paris',
     noOverlap: true,
   }),

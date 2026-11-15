@@ -3,6 +3,7 @@ import type { AttemptLimiter } from './auth.js'
 import type { Clock } from './clock.js'
 import type { Mailer } from './mail.js'
 import type { Models } from './models.js'
+import type { AlertScheduler, PushSender } from './notifications.js'
 
 export type HealthDependencies = {
   checkDatabase: () => Promise<boolean>
@@ -25,4 +26,6 @@ export type AppDependencies = HealthDependencies & {
   mailer: Mailer
   clock: Clock
   limiters: AttemptLimiters
+  push: PushSender | null
+  alerts: AlertScheduler
 }

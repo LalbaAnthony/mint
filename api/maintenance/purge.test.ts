@@ -131,6 +131,7 @@ describe('purge of 03:00 (section 7.3)', () => {
       passwordResetTokens: 2,
       emailChangeTokens: 1,
       pendingImports: 1,
+      readNotifications: 0,
     })
     expect(
       (await models.Session.findAll({ where: { userId: user.id } })).map(

@@ -30,6 +30,10 @@ async function snapshotOf(
     envelopes: (await client.get('/envelopes')).body,
     rules: (await client.get('/rules')).body,
     tags: (await client.get('/tags')).body,
+    notifications: (await client.get('/notifications')).body,
+    notificationPreferences: (await client.get('/notifications/preferences'))
+      .body,
+    pushDevices: (await client.get('/push/subscriptions')).body,
     interest: (
       await client.get(`/accounts/${resources.savingsAccountId}/interest`)
     ).body,
@@ -897,6 +901,48 @@ const scenarios: Record<string, Scenario> = {
     ({ interestRateId }) => `/interest-rates/${interestRateId}`,
   ),
   'get /regulated-caps': ownListOnly('/regulated-caps'),
+  'get /notifications': ownListOnly('/notifications'),
+  'post /notifications/:id/read': crossAccess(
+    'post',
+    ({ notificationId }) => `/notifications/${notificationId}/read`,
+  ),
+  'post /notifications/read-all': async (actors) => {
+    expect(
+      (await actors.aliceClient.post('/notifications/read-all')).status,
+    ).toBe(204)
+    await expectBobDataUntouched(actors)
+  },
+  'delete /notifications/:id': crossAccess(
+    'delete',
+    ({ notificationId }) => `/notifications/${notificationId}`,
+  ),
+  'get /notifications/preferences': ownListOnly('/notifications/preferences'),
+  'patch /notifications/preferences': async (actors) => {
+    const response = await actors.aliceClient.patch(
+      '/notifications/preferences',
+      { lowBalancePush: false, manualReminderPush: false },
+    )
+    expect(response.status).toBe(200)
+    await expectBobDataUntouched(actors)
+  },
+  'get /push/key': async ({ aliceClient }) => {
+    expect((await aliceClient.get('/push/key')).body).toEqual({
+      publicKey: null,
+    })
+  },
+  'get /push/subscriptions': ownListOnly('/push/subscriptions'),
+  'post /push/subscriptions': async (actors) => {
+    const response = await actors.aliceClient.post('/push/subscriptions', {
+      endpoint: 'https://push.example.org/alice',
+      keys: { p256dh: 'alice-key', auth: 'alice-auth' },
+    })
+    expect(response.status).toBe(201)
+    await expectBobDataUntouched(actors)
+  },
+  'delete /push/subscriptions/:id': crossAccess(
+    'delete',
+    ({ pushSubscriptionId }) => `/push/subscriptions/${pushSubscriptionId}`,
+  ),
   'patch /admin/regulated-caps/:product': async (actors) => {
     const asUser = await actors.aliceClient.patch(
       '/admin/regulated-caps/livret_a',
@@ -973,6 +1019,13 @@ async function createBobResources(
   if (savingsAccount.status !== 201 || interestRate.status !== 201) {
     throw new Error('Bob savings could not be created')
   }
+  const pushSubscription = await bobClient.post('/push/subscriptions', {
+    endpoint: 'https://push.example.org/bob',
+    keys: { p256dh: 'bob-key', auth: 'bob-auth' },
+  })
+  if (pushSubscription.status !== 201) {
+    throw new Error('Bob push subscription could not be created')
+  }
   if (tag.status !== 201) {
     throw new Error('Bob tag could not be created')
   }
@@ -1038,6 +1091,8 @@ async function createBobResources(
     valuationId: valuation.body.id,
     savingsAccountId: savingsAccount.body.id,
     interestRateId: interestRate.body.id,
+    notificationId: '',
+    pushSubscriptionId: pushSubscription.body.id,
   }
 }
 
@@ -1051,7 +1106,20 @@ beforeAll(async () => {
   const bobClient = createClient(context.server)
   await aliceClient.login(alice.email)
   await bobClient.login(bob.email)
-  const bobResources = await createBobResources(bobClient)
+  const createdResources = await createBobResources(bobClient)
+  const notification = await context.dependencies.models.Notification.create({
+    userId: bob.id,
+    type: 'low_balance',
+    dedupKey: 'bob-alert',
+    payload: {
+      accountId: createdResources.accountId,
+      accountName: 'Bob account',
+      minDate: '2026-11-15',
+      minCents: 1,
+      thresholdCents: 2,
+    },
+  })
+  const bobResources = { ...createdResources, notificationId: notification.id }
   actors = {
     context,
     alice,

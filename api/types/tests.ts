@@ -1,4 +1,5 @@
 import type { Express } from 'express'
+import type { PushSender } from './notifications.js'
 import type { Sequelize } from 'sequelize'
 import type { AppDependencies } from './app.js'
 import type { Clock } from './clock.js'
@@ -34,6 +35,7 @@ export type TestContextOptions = {
   now?: Date
   appOrigin?: string
   checkDatabase?: () => Promise<boolean>
+  push?: PushSender
 }
 
 export type TestContext = {
@@ -63,9 +65,14 @@ export type IsolationResources = {
   valuationId: string
   savingsAccountId: string
   interestRateId: string
+  notificationId: string
+  pushSubscriptionId: string
 }
 
 export type IsolationSnapshot = {
+  notifications: unknown
+  notificationPreferences: unknown
+  pushDevices: unknown
   interest: unknown
   tags: unknown
   valuations: unknown

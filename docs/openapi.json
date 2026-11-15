@@ -938,6 +938,7 @@
           "label": { "type": "string" },
           "amountCents": { "type": "integer" },
           "triggerMode": { "$ref": "#/components/schemas/TriggerMode" },
+          "reminderDaysBefore": { "type": "integer" },
           "note": { "type": ["string", "null"] },
           "active": { "type": "boolean" },
           "isSubscription": { "type": "boolean" },
@@ -976,6 +977,7 @@
           "label",
           "amountCents",
           "triggerMode",
+          "reminderDaysBefore",
           "note",
           "active",
           "isSubscription",
@@ -1088,6 +1090,12 @@
                 "maxItems": 20,
                 "default": []
               },
+              "reminderDaysBefore": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 30,
+                "default": 2
+              },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
               "startDate": { "type": "string", "format": "date" },
@@ -1160,6 +1168,12 @@
                 "maxItems": 20,
                 "default": []
               },
+              "reminderDaysBefore": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 30,
+                "default": 2
+              },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
               "startDate": { "type": "string", "format": "date" },
@@ -1229,6 +1243,12 @@
                 "items": { "type": "string", "format": "uuid" },
                 "maxItems": 20,
                 "default": []
+              },
+              "reminderDaysBefore": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 30,
+                "default": 2
               },
               "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
               "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
@@ -1300,6 +1320,11 @@
             "type": "array",
             "items": { "type": "string", "format": "uuid" },
             "maxItems": 20
+          },
+          "reminderDaysBefore": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 30
           },
           "frequency": { "$ref": "#/components/schemas/ScheduleFrequency" },
           "interval": { "type": "integer", "minimum": 1, "maximum": 99 },
@@ -1928,6 +1953,177 @@
           }
         },
         "required": ["capCents"]
+      },
+      "NotificationListResponse": {
+        "type": "object",
+        "properties": {
+          "notifications": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Notification" }
+          },
+          "unreadCount": { "type": "integer" }
+        },
+        "required": ["notifications", "unreadCount"]
+      },
+      "Notification": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "type": { "type": "string", "enum": ["low_balance"] },
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "accountId": { "type": "string", "format": "uuid" },
+                  "accountName": { "type": "string" },
+                  "minDate": { "type": "string", "format": "date" },
+                  "minCents": { "type": "integer" },
+                  "thresholdCents": { "type": "integer" }
+                },
+                "required": [
+                  "accountId",
+                  "accountName",
+                  "minDate",
+                  "minCents",
+                  "thresholdCents"
+                ]
+              },
+              "readAt": { "type": ["string", "null"], "format": "date-time" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id", "type", "payload", "readAt", "createdAt"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "type": { "type": "string", "enum": ["manual_reminder"] },
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "scheduleId": { "type": "string", "format": "uuid" },
+                  "scheduleLabel": { "type": "string" },
+                  "kind": { "$ref": "#/components/schemas/ScheduleKind" },
+                  "accountId": { "type": "string", "format": "uuid" },
+                  "originalDate": { "type": "string", "format": "date" },
+                  "effectiveDate": { "type": "string", "format": "date" },
+                  "amountCents": { "type": "integer" },
+                  "dueToday": { "type": "boolean" }
+                },
+                "required": [
+                  "scheduleId",
+                  "scheduleLabel",
+                  "kind",
+                  "accountId",
+                  "originalDate",
+                  "effectiveDate",
+                  "amountCents",
+                  "dueToday"
+                ]
+              },
+              "readAt": { "type": ["string", "null"], "format": "date-time" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id", "type", "payload", "readAt", "createdAt"]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "format": "uuid" },
+              "type": { "type": "string", "enum": ["deposit_cap"] },
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "accountId": { "type": "string", "format": "uuid" },
+                  "accountName": { "type": "string" },
+                  "scheduleId": {
+                    "type": ["string", "null"],
+                    "format": "uuid"
+                  },
+                  "scheduleLabel": { "type": ["string", "null"] },
+                  "originalDate": {
+                    "type": ["string", "null"],
+                    "format": "date"
+                  },
+                  "date": { "type": "string", "format": "date" },
+                  "excessCents": { "type": "integer" }
+                },
+                "required": [
+                  "accountId",
+                  "accountName",
+                  "scheduleId",
+                  "scheduleLabel",
+                  "originalDate",
+                  "date",
+                  "excessCents"
+                ]
+              },
+              "readAt": { "type": ["string", "null"], "format": "date-time" },
+              "createdAt": { "type": "string", "format": "date-time" }
+            },
+            "required": ["id", "type", "payload", "readAt", "createdAt"]
+          }
+        ]
+      },
+      "NotificationPreferences": {
+        "type": "object",
+        "properties": {
+          "lowBalancePush": { "type": "boolean" },
+          "manualReminderPush": { "type": "boolean" }
+        },
+        "required": ["lowBalancePush", "manualReminderPush"]
+      },
+      "UpdateNotificationPreferencesRequest": {
+        "type": "object",
+        "properties": {
+          "lowBalancePush": { "type": "boolean" },
+          "manualReminderPush": { "type": "boolean" }
+        }
+      },
+      "PushKeyResponse": {
+        "type": "object",
+        "properties": { "publicKey": { "type": ["string", "null"] } },
+        "required": ["publicKey"]
+      },
+      "PushDeviceListResponse": {
+        "type": "array",
+        "items": { "$ref": "#/components/schemas/PushDevice" }
+      },
+      "PushDevice": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "endpoint": { "type": "string" },
+          "userAgent": { "type": ["string", "null"] },
+          "lastSuccessAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "id",
+          "endpoint",
+          "userAgent",
+          "lastSuccessAt",
+          "createdAt"
+        ]
+      },
+      "PushSubscriptionRequest": {
+        "type": "object",
+        "properties": {
+          "endpoint": { "type": "string", "maxLength": 2000, "format": "uri" },
+          "keys": {
+            "type": "object",
+            "properties": {
+              "p256dh": { "type": "string", "minLength": 1, "maxLength": 200 },
+              "auth": { "type": "string", "minLength": 1, "maxLength": 100 }
+            },
+            "required": ["p256dh", "auth"]
+          }
+        },
+        "required": ["endpoint", "keys"]
       },
       "ImportBatchView": {
         "type": "object",
@@ -7436,6 +7632,389 @@
           },
           "404": {
             "description": "Unknown product",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "summary": "In-app notifications, newest first, with the number of unread ones (NOTIF-04)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Notifications",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/{id}/read": {
+      "post": {
+        "summary": "Mark a notification as read (NOTIF-04)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification read",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Notification" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown notification",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/read-all": {
+      "post": {
+        "summary": "Mark every notification as read (NOTIF-04)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Notifications read" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/{id}": {
+      "delete": {
+        "summary": "Delete a notification (NOTIF-04)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Notification deleted" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown notification",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/preferences": {
+      "get": {
+        "summary": "Push channel of the low balance alerts and manual reminders; every notification always reaches the in-app center (NOTIF-03, NOTIF-05)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferences"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Switch the push channel per type (NOTIF-05)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferencesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferences"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/push/key": {
+      "get": {
+        "summary": "Public VAPID key to subscribe this device, null when Web Push is not configured (NOTIF-03)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Public key",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PushKeyResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/push/subscriptions": {
+      "get": {
+        "summary": "Devices subscribed to Web Push (NOTIF-03)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "responses": {
+          "200": {
+            "description": "Devices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushDeviceListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Subscribe this device to Web Push; an endpoint already known moves to the current user (NOTIF-03)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Device subscribed",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PushDevice" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/push/subscriptions/{id}": {
+      "delete": {
+        "summary": "Remove a device from Web Push (NOTIF-03)",
+        "tags": ["notifications"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "format": "uuid" },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "204": { "description": "Device removed" },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown device",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

@@ -26,6 +26,10 @@ import type {
   ValuationModel,
   InterestRateModel,
   RegulatedCapModel,
+  NotificationModel,
+  AlertEpisodeModel,
+  PushSubscriptionModel,
+  NotificationPreferenceModel,
 } from '../types/models.js'
 
 const primaryKey = {
@@ -286,6 +290,11 @@ export function createModels(sequelize: Sequelize): Models {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
+      },
+      reminderDaysBefore: {
+        type: DataTypes.SMALLINT,
+        allowNull: false,
+        defaultValue: 2,
       },
       ...timestamps,
     },
@@ -617,6 +626,74 @@ export function createModels(sequelize: Sequelize): Models {
     options('regulated_caps'),
   )
 
+  const Notification = sequelize.define<NotificationModel>(
+    'Notification',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      type: { type: DataTypes.TEXT, allowNull: false },
+      payload: { type: DataTypes.JSONB, allowNull: false },
+      dedupKey: { type: DataTypes.TEXT, allowNull: false },
+      readAt: { type: DataTypes.DATE, allowNull: true },
+      ...timestamps,
+    },
+    options('notifications'),
+  )
+
+  const AlertEpisode = sequelize.define<AlertEpisodeModel>(
+    'AlertEpisode',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      accountId: { type: DataTypes.UUID, allowNull: false },
+      openedAt: { type: DataTypes.DATE, allowNull: false },
+      closedAt: { type: DataTypes.DATE, allowNull: true },
+      minCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: AlertEpisodeModel) {
+          return Number(this.getDataValue('minCents'))
+        },
+      },
+      minDate: { type: DataTypes.DATEONLY, allowNull: false },
+      lastNotifiedMinCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: AlertEpisodeModel) {
+          return Number(this.getDataValue('lastNotifiedMinCents'))
+        },
+      },
+      ...timestamps,
+    },
+    options('alert_episodes'),
+  )
+
+  const PushSubscription = sequelize.define<PushSubscriptionModel>(
+    'PushSubscription',
+    {
+      id: primaryKey,
+      userId: { type: DataTypes.UUID, allowNull: false },
+      endpoint: { type: DataTypes.TEXT, allowNull: false, unique: true },
+      p256dh: { type: DataTypes.TEXT, allowNull: false },
+      auth: { type: DataTypes.TEXT, allowNull: false },
+      userAgent: { type: DataTypes.TEXT, allowNull: true },
+      lastSuccessAt: { type: DataTypes.DATE, allowNull: true },
+      ...timestamps,
+    },
+    options('push_subscriptions'),
+  )
+
+  const NotificationPreference = sequelize.define<NotificationPreferenceModel>(
+    'NotificationPreference',
+    {
+      userId: { type: DataTypes.UUID, allowNull: false, primaryKey: true },
+      type: { type: DataTypes.TEXT, allowNull: false, primaryKey: true },
+      push: { type: DataTypes.BOOLEAN, allowNull: false },
+      ...timestamps,
+    },
+    options('notification_preferences'),
+  )
+
   return {
     User,
     Session,
@@ -642,5 +719,9 @@ export function createModels(sequelize: Sequelize): Models {
     Valuation,
     InterestRate,
     RegulatedCap,
+    Notification,
+    AlertEpisode,
+    PushSubscription,
+    NotificationPreference,
   }
 }
