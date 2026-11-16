@@ -274,10 +274,10 @@ async function abandon(batch: ImportBatch): Promise<void> {
             name="file"
             class="min-w-48 flex-1"
           >
-            <input
+            <UInput
               type="file"
               accept=".csv,text/csv,text/plain"
-              class="block w-full text-sm text-default"
+              class="w-full"
               data-testid="import-file"
               @change="onFileChange"
             />

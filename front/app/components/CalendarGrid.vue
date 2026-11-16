@@ -91,7 +91,7 @@ function numberClasses(cell: CalendarCell): string {
   if (cell.date === props.today && cell.inMonth) {
     return 'bg-primary text-inverted'
   }
-  return !cell.inMonth || cell.nonWorking ? 'text-dimmed' : 'text-default'
+  return !cell.inMonth || cell.nonWorking ? 'text-muted' : 'text-default'
 }
 </script>
 

@@ -404,6 +404,9 @@ async function deleteOperation(): Promise<void> {
               @update:model-value="toggleOperation(row.original)"
             />
           </template>
+          <template #actions-header>
+            <span class="sr-only">{{ t('common.actions') }}</span>
+          </template>
           <template #date-cell="{ row }">
             <span class="tabular-nums">{{
               formatDate(row.original.date)

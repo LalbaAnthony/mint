@@ -54,6 +54,7 @@
   --ui-info: var(--ui-color-info-700);
   --ui-warning: var(--ui-color-warning-700);
   --ui-error: var(--ui-color-error-600);
+  --ui-text-muted: var(--ui-color-neutral-600);
 
   --app-canvas: var(--ui-color-neutral-50);
   --app-primary-hover: var(--ui-color-primary-800);
@@ -101,6 +102,7 @@
   --ui-info: var(--ui-color-info-400);
   --ui-warning: var(--ui-color-warning-400);
   --ui-error: var(--ui-color-error-400);
+  --ui-text-muted: var(--ui-color-neutral-400);
 
   --app-canvas: var(--ui-color-neutral-950);
   --app-primary-hover: var(--ui-color-primary-300);

@@ -64,6 +64,7 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
     :collapsed-size="64"
     :toggle="false"
     :ui="{ root: 'bg-default', footer: 'flex-col items-stretch gap-1' }"
+    role="banner"
   >
     <template #header="{ collapsed }">
       <AppBrand variant="sidebar" :collapsed="collapsed" />
@@ -87,6 +88,7 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
         :collapsed="collapsed"
         orientation="vertical"
         tooltip
+        :aria-label="t('navigation.main')"
         data-testid="sidebar-navigation"
       />
     </template>
@@ -114,6 +116,7 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
         :collapsed="collapsed"
         orientation="vertical"
         tooltip
+        :aria-label="t('navigation.administration')"
         data-testid="sidebar-administration"
       />
 

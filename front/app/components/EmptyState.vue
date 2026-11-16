@@ -11,7 +11,7 @@ defineProps<EmptyStateProps>()
     >
       <UIcon :name="icon" class="size-8 text-accent-tile-icon" />
     </span>
-    <h3 class="text-base font-semibold text-highlighted">{{ title }}</h3>
+    <h2 class="text-base font-semibold text-highlighted">{{ title }}</h2>
     <p class="text-sm text-muted">{{ description }}</p>
     <slot />
   </div>
