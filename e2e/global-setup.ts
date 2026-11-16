@@ -43,7 +43,8 @@ async function seedAdministrator(): Promise<void> {
       `INSERT INTO users (email, password_hash, role, locale)
        VALUES ($1, $2, 'admin', 'fr')
        ON CONFLICT (email) DO UPDATE
-         SET password_hash = EXCLUDED.password_hash, status = 'active'`,
+         SET password_hash = EXCLUDED.password_hash, status = 'active',
+           theme = 'system'`,
       [
         administratorEmail,
         await hash(administratorPassword, { type: argon2id }),
@@ -61,6 +62,16 @@ async function seedAdministrator(): Promise<void> {
        SELECT id, 'expense', 'needs', category.name, category.position
        FROM users,
          (VALUES ('Logement', 0), ('Courses', 1)) AS category (name, position)
+       WHERE email = $1
+       ON CONFLICT DO NOTHING`,
+      [administratorEmail],
+    )
+    await client.query(
+      `INSERT INTO categories (user_id, kind, name, is_system, sort_order)
+       SELECT id, category.kind, category.name, true, category.position
+       FROM users,
+         (VALUES ('income', 'Intérêts', 2), ('adjustment', 'Ajustement', 3))
+           AS category (kind, name, position)
        WHERE email = $1
        ON CONFLICT DO NOTHING`,
       [administratorEmail],

@@ -22,7 +22,7 @@ test('AUTH-02: wrong password refused, then login, logout and guarded views', as
   await page
     .getByLabel('Mot de passe', { exact: true })
     .fill(administratorPassword)
-  await page.getByRole('button', { name: 'Se connecter' }).click()
+  await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
   await expect(page).toHaveURL('/')
 
   await page.getByTestId('sidebar-profile').click()

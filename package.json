@@ -26,6 +26,7 @@
     "commit-msg": "npx --no -- commitlint --edit \"$1\" && node scripts/scan.ts --message \"$1\""
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
     "@playwright/test": "^1.65.0",

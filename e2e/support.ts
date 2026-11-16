@@ -41,7 +41,7 @@ export async function login(
   await page.goto('/login')
   await page.getByLabel('Adresse email', { exact: true }).fill(email)
   await page.getByLabel('Mot de passe', { exact: true }).fill(password)
-  await page.getByRole('button', { name: 'Se connecter' }).click()
+  await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
 }
 
 function readString(source: unknown, key: string): string | undefined {
