@@ -428,7 +428,8 @@
     "operation_not_reconciled": "Cette opération n'est pas rapprochée.",
     "account_not_savings": "Ce compte n'est ni un livret réglementé ni une épargne logement.",
     "interest_rate_exists": "Un taux existe déjà à cette date.",
-    "system_schedule": "Cette échéance est gérée par Mint et ne se modifie pas."
+    "system_schedule": "Cette échéance est gérée par Mint et ne se modifie pas.",
+    "preview_outdated": "Les règles ou les opérations ont changé depuis l'aperçu : relancez-le."
   },
   "usage": {
     "checking": "Vérification des usages...",
@@ -849,6 +850,40 @@
     "actions": {
       "category": "Catégoriser",
       "transfer": "Convertir en transfert"
+    },
+    "reapply": {
+      "action": "Réappliquer les règles",
+      "selected": "{n} opération sélectionnée | {n} opérations sélectionnées",
+      "clearSelection": "Désélectionner",
+      "selectPage": "Sélectionner les opérations de la page",
+      "selectOperation": "Sélectionner {label}",
+      "title": "Réappliquer les règles",
+      "description": "Changements que les règles actives apporteraient aux opérations sélectionnées. Décochez celles à laisser telles quelles.",
+      "loading": "Calcul de l'aperçu...",
+      "noChange": "Aucune opération sélectionnée ne change.",
+      "changes": "Changements proposés",
+      "keep": "Appliquer le changement à {label}",
+      "before": "Avant",
+      "after": "Après",
+      "rule": "Règle « {pattern} »",
+      "classificationKept": "Classement inchangé",
+      "uncategorized": "À catégoriser",
+      "tagsAdded": "Tags ajoutés",
+      "skippedTitle": "Laissées telles quelles",
+      "confirm": "Appliquer à {n} opération | Appliquer à {n} opérations",
+      "applied": "{n} opération reclassée. | {n} opérations reclassées.",
+      "outdated": "Les règles ou les opérations ont changé : l'aperçu a été recalculé.",
+      "skipped": {
+        "no_bank_label": "{n} sans libellé bancaire",
+        "no_matching_rule": "{n} sans règle satisfaite",
+        "unchanged": "{n} déjà conforme | {n} déjà conformes",
+        "too_many_tags": "{n} dépasserait 20 tags | {n} dépasseraient 20 tags",
+        "adjustment": "{n} ajustement | {n} ajustements",
+        "category_archived": "{n} vers une catégorie archivée",
+        "account_archived": "{n} vers un compte archivé",
+        "same_account": "{n} vers son propre compte | {n} vers leur propre compte",
+        "before_initial_balance": "{n} antérieure au solde initial du compte de contrepartie | {n} antérieures au solde initial du compte de contrepartie"
+      }
     },
     "fields": {
       "matchType": "Condition",

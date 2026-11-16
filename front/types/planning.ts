@@ -149,6 +149,7 @@ export type UsageNotice = {
 
 export interface OperationRowProps {
   operation: Operation
+  selected?: boolean
 }
 
 export interface OperationBadgesProps {
@@ -162,6 +163,15 @@ export interface OperationLinksPanelProps {
 export type OperationRowEmits = {
   edit: [operation: Operation]
   delete: [operation: Operation]
+  toggle: [operation: Operation]
+}
+
+export interface ReapplyRulesModalProps {
+  operationIds: string[]
+}
+
+export type ReapplyRulesModalEmits = {
+  applied: [count: number]
 }
 
 export interface OperationFiltersProps {

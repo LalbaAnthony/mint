@@ -2,7 +2,9 @@
 import type { DropdownMenuItem } from '@nuxt/ui'
 import type { OperationRowEmits, OperationRowProps } from '~~/types/planning'
 
-const props = defineProps<OperationRowProps>()
+const props = withDefaults(defineProps<OperationRowProps>(), {
+  selected: false,
+})
 const emit = defineEmits<OperationRowEmits>()
 
 const { t } = useI18n()
@@ -48,6 +50,15 @@ const actions = computed<DropdownMenuItem[][]>(() => [
     class="flex items-center gap-3 py-2"
     :data-testid="`operation-${operation.id}`"
   >
+    <UCheckbox
+      :model-value="selected"
+      :disabled="connectivity.offline"
+      :aria-label="
+        t('rules.reapply.selectOperation', { label: operation.label })
+      "
+      data-testid="operation-select"
+      @update:model-value="emit('toggle', operation)"
+    />
     <button
       type="button"
       class="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left"

@@ -428,7 +428,8 @@
     "operation_not_reconciled": "This operation is not reconciled.",
     "account_not_savings": "This account is neither a regulated nor a housing savings account.",
     "interest_rate_exists": "A rate already exists at this date.",
-    "system_schedule": "This schedule is managed by Mint and cannot be changed."
+    "system_schedule": "This schedule is managed by Mint and cannot be changed.",
+    "preview_outdated": "The rules or the operations changed since the preview: run it again."
   },
   "usage": {
     "checking": "Checking usage...",
@@ -849,6 +850,40 @@
     "actions": {
       "category": "Categorize",
       "transfer": "Convert into a transfer"
+    },
+    "reapply": {
+      "action": "Reapply the rules",
+      "selected": "{n} operation selected | {n} operations selected",
+      "clearSelection": "Clear the selection",
+      "selectPage": "Select the operations of the page",
+      "selectOperation": "Select {label}",
+      "title": "Reapply the rules",
+      "description": "Changes that the active rules would bring to the selected operations. Uncheck the ones to leave as they are.",
+      "loading": "Computing the preview...",
+      "noChange": "No selected operation changes.",
+      "changes": "Proposed changes",
+      "keep": "Apply the change to {label}",
+      "before": "Before",
+      "after": "After",
+      "rule": "Rule \"{pattern}\"",
+      "classificationKept": "Classification unchanged",
+      "uncategorized": "To categorize",
+      "tagsAdded": "Added tags",
+      "skippedTitle": "Left as they are",
+      "confirm": "Apply to {n} operation | Apply to {n} operations",
+      "applied": "{n} operation reclassified. | {n} operations reclassified.",
+      "outdated": "The rules or the operations changed: the preview was computed again.",
+      "skipped": {
+        "no_bank_label": "{n} without bank label",
+        "no_matching_rule": "{n} without matching rule",
+        "unchanged": "{n} already up to date",
+        "too_many_tags": "{n} would exceed 20 tags",
+        "adjustment": "{n} adjustment | {n} adjustments",
+        "category_archived": "{n} towards an archived category",
+        "account_archived": "{n} towards an archived account",
+        "same_account": "{n} towards its own account | {n} towards their own account",
+        "before_initial_balance": "{n} before the initial balance of the counterpart account"
+      }
     },
     "fields": {
       "matchType": "Condition",

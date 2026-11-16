@@ -29,6 +29,8 @@ const page = ref(1)
 const result = ref<OperationListResponse | null>(null)
 const filtersOpen = ref(false)
 const busy = ref(false)
+const selected = ref<Set<string>>(new Set())
+const reapplyOpen = ref(false)
 
 function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
@@ -55,6 +57,8 @@ async function load(): Promise<void> {
       `/operations?${operationQuery(filters.value, sorting.value, page.value, pageSize)}`,
       operationListResponseSchema,
     )
+    const shown = new Set(result.value.items.map((item) => item.id))
+    selected.value = new Set([...selected.value].filter((id) => shown.has(id)))
   } catch (error) {
     if (error instanceof ApiError && error.code === 'offline_unavailable') {
       await loadOffline()
@@ -116,7 +120,43 @@ const filterCount = computed(() => activeFilterCount(filters.value))
 
 const items = computed(() => result.value?.items ?? [])
 
+const selectedIds = computed(() => [...selected.value])
+
+const pageSelection = computed<boolean | 'indeterminate'>(() => {
+  if (selected.value.size === 0) {
+    return false
+  }
+  return items.value.every((item) => selected.value.has(item.id))
+    ? true
+    : 'indeterminate'
+})
+
+function toggleOperation(operation: Operation): void {
+  const next = new Set(selected.value)
+  if (!next.delete(operation.id)) {
+    next.add(operation.id)
+  }
+  selected.value = next
+}
+
+function togglePage(): void {
+  selected.value =
+    pageSelection.value === true
+      ? new Set()
+      : new Set(items.value.map((item) => item.id))
+}
+
+function clearSelection(): void {
+  selected.value = new Set()
+}
+
+async function reapplied(): Promise<void> {
+  clearSelection()
+  await load()
+}
+
 const columns = computed<TableColumn<Operation>[]>(() => [
+  { id: 'select', header: '' },
   { accessorKey: 'date', header: t('operations.fields.date') },
   { accessorKey: 'label', header: t('operations.fields.label') },
   { accessorKey: 'accountId', header: t('operations.fields.account') },
@@ -292,12 +332,78 @@ async function deleteOperation(): Promise<void> {
             />
           </OfflineGuard>
         </EmptyState>
+        <div
+          v-if="items.length > 0 && !connectivity.offline"
+          class="flex min-h-11 flex-wrap items-center gap-2 pb-3"
+          data-testid="operations-selection"
+        >
+          <UCheckbox
+            v-if="!isDesktop"
+            :model-value="pageSelection"
+            :label="t('rules.reapply.selectPage')"
+            data-testid="operations-select-page"
+            @update:model-value="togglePage"
+          />
+          <span
+            class="text-sm text-muted"
+            role="status"
+            data-testid="operations-selected-count"
+          >
+            {{
+              selected.size === 0
+                ? ''
+                : t(
+                    'rules.reapply.selected',
+                    { n: selected.size },
+                    selected.size,
+                  )
+            }}
+          </span>
+          <template v-if="selected.size > 0">
+            <UButton
+              :icon="icons.rules"
+              :label="t('rules.reapply.action')"
+              color="primary"
+              variant="soft"
+              data-testid="operations-reapply"
+              @click="reapplyOpen = true"
+            />
+            <UButton
+              :label="t('rules.reapply.clearSelection')"
+              color="neutral"
+              variant="ghost"
+              @click="clearSelection"
+            />
+          </template>
+        </div>
         <UTable
-          v-else-if="isDesktop"
+          v-if="items.length > 0 && isDesktop"
           :data="items"
           :columns="columns"
           data-testid="operations-table"
         >
+          <template #select-header>
+            <UCheckbox
+              :model-value="pageSelection"
+              :disabled="connectivity.offline"
+              :aria-label="t('rules.reapply.selectPage')"
+              data-testid="operations-select-page"
+              @update:model-value="togglePage"
+            />
+          </template>
+          <template #select-cell="{ row }">
+            <UCheckbox
+              :model-value="selected.has(row.original.id)"
+              :disabled="connectivity.offline"
+              :aria-label="
+                t('rules.reapply.selectOperation', {
+                  label: row.original.label,
+                })
+              "
+              data-testid="operation-select"
+              @update:model-value="toggleOperation(row.original)"
+            />
+          </template>
           <template #date-cell="{ row }">
             <span class="tabular-nums">{{
               formatDate(row.original.date)
@@ -343,13 +449,18 @@ async function deleteOperation(): Promise<void> {
             </div>
           </template>
         </UTable>
-        <ul v-else class="flex flex-col divide-y divide-default">
+        <ul
+          v-else-if="items.length > 0"
+          class="flex flex-col divide-y divide-default"
+        >
           <OperationRow
             v-for="operation in items"
             :key="operation.id"
             :operation="operation"
+            :selected="selected.has(operation.id)"
             @edit="editor.edit"
             @delete="operationToDelete = $event"
+            @toggle="toggleOperation"
           />
         </ul>
         <div
@@ -364,6 +475,13 @@ async function deleteOperation(): Promise<void> {
         </div>
       </UCard>
     </div>
+
+    <ReapplyRulesModal
+      v-if="selectedIds.length > 0"
+      v-model:open="reapplyOpen"
+      :operation-ids="selectedIds"
+      @applied="reapplied"
+    />
 
     <ConfirmModal
       v-model:open="deleteOpen"

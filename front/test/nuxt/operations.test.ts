@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import OperationFormModal from '~/components/OperationFormModal.vue'
 import OperationRow from '~/components/OperationRow.vue'
 import ReconciliationProposalModal from '~/components/ReconciliationProposalModal.vue'
+import ReapplyRulesModal from '~/components/ReapplyRulesModal.vue'
 import OperationsPage from '~/pages/operations/index.vue'
 import { installFakeApi } from '../fake-api'
 import {
@@ -451,5 +452,149 @@ describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () =
     ).toBe(
       'page=1&pageSize=50&sort=date&order=desc&reconciled=false&unconfirmed=true',
     )
+  })
+})
+
+describe('reapplying the rules to a selection (REG-05)', () => {
+  const ruleId = '00000000-0000-4000-8000-0000000000e9'
+  const second = operation({
+    id: '00000000-0000-4000-8000-0000000000d2',
+    label: 'PRLV DEEZER',
+    bankLabel: 'PRLV DEEZER 06/12',
+    categoryId: ids.groceries,
+  })
+
+  function previewWithOneChange() {
+    return {
+      changes: [
+        {
+          operation: second,
+          after: {
+            operationId: second.id,
+            ruleId,
+            categoryId: ids.leisure,
+            transferAccountId: null,
+            tagIds: [ids.holidays],
+          },
+        },
+      ],
+      skipped: [{ operationId: ids.operation, reason: 'no_bank_label' }],
+    }
+  }
+
+  function rules() {
+    return [
+      {
+        id: ruleId,
+        priority: 0,
+        matchType: 'contains',
+        pattern: 'DEEZER',
+        accountId: null,
+        sign: 'any',
+        amountMinCents: null,
+        amountMaxCents: null,
+        categoryId: ids.leisure,
+        transferAccountId: null,
+        tagIds: [ids.holidays],
+        active: true,
+      },
+    ]
+  }
+
+  it('selects the operations of the page and opens the preview', async () => {
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      [`GET ${listPath}`]: () => page([operation(), second]),
+      'POST /rules/reapply/preview': () => previewWithOneChange(),
+      'GET /rules': () => rules(),
+    })
+    const wrapper = await mountPage()
+    await vi.waitFor(() => {
+      expect(
+        wrapper.find('[data-testid="operations-select-page"]').exists(),
+      ).toBe(true)
+    })
+    expect(wrapper.find('[data-testid="operations-reapply"]').exists()).toBe(
+      false,
+    )
+
+    await wrapper.get('[data-testid="operations-select-page"]').trigger('click')
+
+    await vi.waitFor(() => {
+      expect(
+        wrapper.get('[data-testid="operations-selected-count"]').text(),
+      ).toBe('2 opérations sélectionnées')
+    })
+    await wrapper.get('[data-testid="operations-reapply"]').trigger('click')
+
+    await vi.waitFor(() => {
+      expect(findInBody('[data-testid="reapply-preview"]')).not.toBeNull()
+    })
+    expect(
+      api.requests.find((request) => request.path === '/rules/reapply/preview')
+        ?.body,
+    ).toEqual({ operationIds: [ids.operation, second.id] })
+  })
+
+  it('shows each change and the skipped operations, then applies the kept changes', async () => {
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'POST /rules/reapply/preview': () => previewWithOneChange(),
+      'GET /rules': () => rules(),
+      'POST /rules/reapply': () => ({ updated: 1 }),
+    })
+    const wrapper = await mountSuspended(ReapplyRulesModal, {
+      props: { open: true, operationIds: [ids.operation, second.id] },
+    })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(findInBody('[data-testid="reapply-preview"]')).not.toBeNull()
+    })
+    const change = findInBody(`[data-testid="reapply-change-${second.id}"]`)
+    expect(change?.textContent).toContain('Règle « DEEZER »')
+    expect(change?.textContent).toContain('Courses')
+    expect(
+      findInBody('[data-testid="reapply-after"]')?.textContent?.trim(),
+    ).toBe('Loisirs')
+    expect(change?.textContent).toContain('Vacances')
+    expect(
+      findInBody('[data-testid="reapply-skipped"]')?.textContent?.trim(),
+    ).toBe('1 sans libellé bancaire')
+    expect(
+      findInBody('[data-testid="reapply-confirm"]')?.textContent,
+    ).toContain('Appliquer à 1 opération')
+
+    findInBody('[data-testid="reapply-confirm"]')?.click()
+
+    await vi.waitFor(() => {
+      expect(wrapper.emitted('applied')).toEqual([[1]])
+    })
+    expect(
+      api.requests.find((request) => request.path === '/rules/reapply')?.body,
+    ).toEqual({ changes: [previewWithOneChange().changes[0]?.after] })
+  })
+
+  it('disables the confirmation when every change is unchecked', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'POST /rules/reapply/preview': () => previewWithOneChange(),
+      'GET /rules': () => rules(),
+    })
+    const wrapper = await mountSuspended(ReapplyRulesModal, {
+      props: { open: true, operationIds: [second.id] },
+    })
+    mounted.push(wrapper)
+    await vi.waitFor(() => {
+      expect(findInBody('[data-testid="reapply-keep"]')).not.toBeNull()
+    })
+
+    findInBody('[data-testid="reapply-keep"]')?.click()
+
+    await vi.waitFor(() => {
+      expect(
+        findInBody('[data-testid="reapply-confirm"]')?.hasAttribute('disabled'),
+      ).toBe(true)
+    })
   })
 })
