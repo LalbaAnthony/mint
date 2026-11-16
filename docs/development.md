@@ -59,13 +59,14 @@ Le service `worker-dev` exécute les occurrences dues à son démarrage puis cha
 
 ## 2. Tests
 
-| Commande                                | Portée                                                                      |
-| --------------------------------------- | --------------------------------------------------------------------------- |
-| `npm test`                              | Vitest : scripts, `shared`, API (intégration avec PostgreSQL), front (Nuxt) |
-| `npm run test:coverage`                 | Vitest avec couverture ; échoue sous 90 % sur `shared/engines/`             |
-| `npx vitest run --project shared`       | moteurs de calcul et schémas partagés, sans base de données                 |
-| `npm run openapi --workspace @mint/api` | régénère `docs/openapi.json` ; un test échoue s'il n'est pas à jour         |
-| `npm run test:e2e`                      | Playwright, sur la pile `e2e/compose.yml` déjà démarrée                     |
+| Commande                                                    | Portée                                                                      |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `npm test`                                                  | Vitest : scripts, `shared`, API (intégration avec PostgreSQL), front (Nuxt) |
+| `npm run test:coverage`                                     | Vitest avec couverture ; échoue sous 90 % sur `shared/engines/`             |
+| `npx vitest run --project shared`                           | moteurs de calcul et schémas partagés, sans base de données                 |
+| `npm run openapi --workspace @mint/api`                     | régénère `docs/openapi.json` ; un test échoue s'il n'est pas à jour         |
+| `npm run test:e2e`                                          | Playwright, sur la pile `e2e/compose.yml` déjà démarrée                     |
+| `npx playwright test e2e/tests/views-accessibility.spec.ts` | revue axe des vues, en clair puis en sombre (ADR 0029)                      |
 
 Les tests de l'API exigent `db-dev`. Le setup global crée une base modèle migrée ; chaque fichier de test travaille sur sa propre copie, supprimée à la fin.
 

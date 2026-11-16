@@ -101,6 +101,8 @@ Pour un mois civil M :
 - report(M) = 0 en remise à zéro ; en mode report, disponible(M - 1), positif ou négatif, la chaîne démarrant à 0 au mois de création de l'enveloppe (Europe/Paris) avec le montant mensuel actuel ;
 - disponible(M) = budget(M) + report(M) - consommé(M).
 
+Totaux de la vue du mois (ENV-08, ADR 0026) : sommes, sur les enveloppes actives, du budget, du report, du consommé et du disponible ; le total du budget compte les exceptions mensuelles, et budget + report - consommé = disponible vaut aussi pour les totaux.
+
 Lissage dans la prévision (PRV-04), débité sur le compte par défaut de l'enveloppe (compte du moyen de paiement ou compte direct) :
 
 - mois en cours : reste = max(0, disponible - occurrences à venir du mois sur les catégories de l'enveloppe), réparti sur les jours d'aujourd'hui à la fin du mois ;

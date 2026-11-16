@@ -1,6 +1,6 @@
 # ADR 0002 · Mode de couleur désactivé jusqu'au lot 4
 
-Statut : acceptée · 12 novembre 2026 · Exigences : NF-UX-02, CHG-90, CHG-91, CHG-92, CA-11
+Statut : acceptée, remplacée au lot 4 par l'ADR 0028 · 12 novembre 2026 · Exigences : NF-UX-02, CHG-90, CHG-91, CHG-92, CA-11
 
 ## Contexte
 

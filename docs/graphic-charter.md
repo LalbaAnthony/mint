@@ -134,15 +134,15 @@ Gamme à teinte glissante : jaune-vert dans les clairs, vert franc dans les fonc
 
 ### 3.4 Rôles sémantiques (CHG-10)
 
-| Rôle      | Palette | Nuance en clair | Nuance en sombre | Emplois                                                                    |
-| --------- | ------- | --------------- | ---------------- | -------------------------------------------------------------------------- |
-| primary   | mint    | 700             | 400              | bouton principal, liens, éléments actifs, anneau de focus                  |
-| secondary | coral   | 400             | 400              | aplats d'accent uniquement (section 3.6)                                   |
-| success   | emerald | 700             | 400              | crédits, confirmations                                                     |
-| info      | sky     | 700             | 400              | messages informatifs, hors ligne, nouvelle version                         |
-| warning   | amber   | 700             | 400              | seuil d'alerte, enveloppe au-delà de 80 %, plafond, écart de rapprochement |
-| error     | red     | 600             | 400              | solde négatif, enveloppe au-delà de 100 %, erreurs, actions destructrices  |
-| neutral   | olive   | défauts Nuxt UI | défauts Nuxt UI  | textes, bordures, surfaces                                                 |
+| Rôle      | Palette | Nuance en clair                   | Nuance en sombre | Emplois                                                                    |
+| --------- | ------- | --------------------------------- | ---------------- | -------------------------------------------------------------------------- |
+| primary   | mint    | 700                               | 400              | bouton principal, liens, éléments actifs, anneau de focus                  |
+| secondary | coral   | 400                               | 400              | aplats d'accent uniquement (section 3.6)                                   |
+| success   | emerald | 700                               | 400              | crédits, confirmations                                                     |
+| info      | sky     | 700                               | 400              | messages informatifs, hors ligne, nouvelle version                         |
+| warning   | amber   | 700                               | 400              | seuil d'alerte, enveloppe au-delà de 80 %, plafond, écart de rapprochement |
+| error     | red     | 600                               | 400              | solde négatif, enveloppe au-delà de 100 %, erreurs, actions destructrices  |
+| neutral   | olive   | défauts Nuxt UI, `text-muted` 600 | défauts Nuxt UI  | textes, bordures, surfaces ; `text-muted` relevé en clair (ADR 0029)       |
 
 ### 3.5 Surfaces (CHG-11)
 
@@ -166,18 +166,21 @@ Gamme à teinte glissante : jaune-vert dans les clairs, vert franc dans les fonc
 
 ### 3.7 Contrastes de référence
 
-| Paire                            | Ratio        | Exigence couverte                                       |
-| -------------------------------- | ------------ | ------------------------------------------------------- |
-| mint-700 sur blanc               | 6,5:1        | texte AA                                                |
-| mint-700 sur olive-50            | 6,3:1        | texte AA                                                |
-| blanc sur mint-700, sur mint-800 | 6,5:1, 9,0:1 | libellé de bouton AA, au repos et au survol             |
-| mint-400 sur olive-900           | 8,1:1        | texte AA en sombre                                      |
-| coral-950 sur coral-400          | 6,2:1        | texte de badge AA                                       |
-| coral-600 sur coral-100          | 3,2:1        | icône de tuile, élément graphique ≥ 3:1                 |
-| mint-600 sur blanc               | 4,55:1       | série de données ≥ 3:1                                  |
-| coral-600 sur blanc              | 3,9:1        | série de données ≥ 3:1                                  |
-| mint-600 sur olive-900           | 3,7:1        | picto en sombre ≥ 3:1                                   |
-| #3D853C sur olive-50             | 4,4:1        | motif du rejet de la nuance 600 comme primaire en clair |
+| Paire                             | Ratio        | Exigence couverte                                       |
+| --------------------------------- | ------------ | ------------------------------------------------------- |
+| mint-700 sur blanc                | 6,5:1        | texte AA                                                |
+| mint-700 sur olive-50             | 6,3:1        | texte AA                                                |
+| blanc sur mint-700, sur mint-800  | 6,5:1, 9,0:1 | libellé de bouton AA, au repos et au survol             |
+| mint-400 sur olive-900            | 8,1:1        | texte AA en sombre                                      |
+| coral-950 sur coral-400           | 6,2:1        | texte de badge AA                                       |
+| coral-600 sur coral-100           | 3,2:1        | icône de tuile, élément graphique ≥ 3:1                 |
+| mint-600 sur blanc                | 4,55:1       | série de données ≥ 3:1                                  |
+| coral-600 sur blanc               | 3,9:1        | série de données ≥ 3:1                                  |
+| mint-600 sur olive-900            | 3,7:1        | picto en sombre ≥ 3:1                                   |
+| olive-600 sur blanc, sur olive-50 | 6,9:1, 6,7:1 | `text-muted` en clair AA (ADR 0029)                     |
+| olive-400 sur olive-900           | 7,3:1        | `text-muted` en sombre AA                               |
+| olive-500 sur blanc               | 4,3:1        | motif du relèvement de `text-muted` en clair            |
+| #3D853C sur olive-50              | 4,4:1        | motif du rejet de la nuance 600 comme primaire en clair |
 
 Les paires impliquant les palettes Tailwind (emerald-700, sky-700, amber-700, red-600 sur blanc et sur olive-50) sont vérifiées en recette (CA-02).
 
@@ -332,18 +335,18 @@ Exception assumée au seuil de 3:1 de la section 3.7 : plusieurs nuances de la s
 
 ## 8. Composants métier
 
-| ID     | Règle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CHG-60 | Composant unique `MoneyAmount` pour tout affichage de montant : formatage, couleur, signe, `tabular-nums` et icône d'état selon CHG-20. Types de ses props dans `front/types/` (CODE-08).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| CHG-61 | Badges et statuts : tableau ci-dessous.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| CHG-62 | Calendrier, grille complète (768 px et plus) : numéro du jour `text-xs` 500 en haut à gauche, en `text-dimmed` les samedis, dimanches et jours fériés (ECH-06) ; occurrences (libellé tronqué, montant signé selon CHG-20, marqueurs corail Manuel et abonnement) ; solde de fin de journée en bas à droite, `text-xs` 600 tabulaire. Jour passé : « n opérations » et total en `text-muted`, solde réel. Sous le seuil : fond `bg-warning/10`, solde `text-warning`, icône `triangle-alert`. Négatif : fond `bg-error/10`, solde `text-error`, icône `circle-alert` ; le négatif prime. Aujourd'hui : numéro dans une pastille `bg-primary text-inverted`. Jour sélectionné : `ring-2 ring-primary`. Jours hors du mois : numéro `text-dimmed`, sans contenu. |
-| CHG-63 | Calendrier compact (moins de 768 px, CAL-06) : numéro du jour et jusqu'à 3 points de 6 px : `success` (crédit), neutre (débit), corail (paiement manuel à déclencher). Teintes d'alerte de case identiques à CHG-62. Détail du jour sélectionné sous la grille.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| CHG-64 | Enveloppes (ENV-06) : `UProgress` de 8 px, `primary` jusqu'à 80 % inclus, `warning` au-delà de 80 %, `error` au-delà de 100 % (barre plafonnée à 100 %, dépassement chiffré en `text-error`). Lignes : consommé sur budget, disponible (règles de solde de CHG-20), disponible par jour restant.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| CHG-65 | Bandeau du tableau de bord (DSH-04) : quatre cartes. Patrimoine total (`text-3xl`, tuile d'icône d'accent avec `wallet`) ; alertes actives (icône `triangle-alert` en `text-warning` ; lot 2 : comptes dont le solde prévisionnel passe sous le seuil dans les 7 prochains jours, PRV-07 ; lot 3 : s'y ajoutent les dépassements de plafond, LIV-02) ; opérations à catégoriser et propositions de rapprochement (compteurs corail).                                                                                                                                                                                                                                                                                                                           |
-| CHG-66 | États vides : tuile ronde de 64 px `bg-accent-tile`, icône Lucide de 32 px `text-accent-tile-icon`, titre `text-base` 600, phrase `text-sm text-muted`, bouton `soft` primaire. Aucune illustration.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| CHG-67 | Centre de notifications (NOTIF-04) : `low_balance` et `deposit_cap` avec icône `triangle-alert` en `text-warning` ; `manual_reminder` avec pastille corail `hand`. Non lue : point corail de 8 px et titre en 600. Lue : titre en 400, `text-toned`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| CHG-68 | Hors ligne (NF-PWA-02) : `UAlert` `info` `soft` fixé sous l'en-tête, icône `wifi-off`, texte « Hors ligne : données du » suivi de la date et de l'heure ; actions d'écriture `disabled` avec infobulle. Nouvelle version (NF-PWA-04) : toast `info` persistant, action « Recharger » avec icône `refresh-cw`.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| CHG-69 | Formulaires : libellés toujours visibles au-dessus des champs ; erreurs en `text-error` sous le champ, avec icône ; champs de montant alignés à droite, `inputmode="decimal"`, chiffres tabulaires. L'anneau de focus de Nuxt UI n'est jamais supprimé.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ID     | Règle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CHG-60 | Composant unique `MoneyAmount` pour tout affichage de montant : formatage, couleur, signe, `tabular-nums` et icône d'état selon CHG-20. Types de ses props dans `front/types/` (CODE-08).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| CHG-61 | Badges et statuts : tableau ci-dessous.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| CHG-62 | Calendrier, grille complète (768 px et plus) : numéro du jour `text-xs` 500 en haut à gauche, en `text-muted` les samedis, dimanches et jours fériés (ECH-06, ADR 0029) ; occurrences (libellé tronqué, montant signé selon CHG-20, marqueurs corail Manuel et abonnement) ; solde de fin de journée en bas à droite, `text-xs` 600 tabulaire. Jour passé : « n opérations » et total en `text-muted`, solde réel. Sous le seuil : fond `bg-warning/10`, solde `text-warning`, icône `triangle-alert`. Négatif : fond `bg-error/10`, solde `text-error`, icône `circle-alert` ; le négatif prime. Aujourd'hui : numéro dans une pastille `bg-primary text-inverted`. Jour sélectionné : `ring-2 ring-primary`. Jours hors du mois : numéro `text-muted`, sans contenu. |
+| CHG-63 | Calendrier compact (moins de 768 px, CAL-06) : numéro du jour et jusqu'à 3 points de 6 px : `success` (crédit), neutre (débit), corail (paiement manuel à déclencher). Teintes d'alerte de case identiques à CHG-62. Détail du jour sélectionné sous la grille.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| CHG-64 | Enveloppes (ENV-06) : `UProgress` de 8 px, `primary` jusqu'à 80 % inclus, `warning` au-delà de 80 %, `error` au-delà de 100 % (barre plafonnée à 100 %, dépassement chiffré en `text-error`). Lignes : consommé sur budget, disponible (règles de solde de CHG-20), disponible par jour restant.                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| CHG-65 | Bandeau du tableau de bord (DSH-04) : quatre cartes. Patrimoine total (`text-3xl`, tuile d'icône d'accent avec `wallet`) ; alertes actives (icône `triangle-alert` en `text-warning` ; lot 2 : comptes dont le solde prévisionnel passe sous le seuil dans les 7 prochains jours, PRV-07 ; lot 3 : s'y ajoutent les dépassements de plafond, LIV-02) ; opérations à catégoriser et propositions de rapprochement (compteurs corail).                                                                                                                                                                                                                                                                                                                                   |
+| CHG-66 | États vides : tuile ronde de 64 px `bg-accent-tile`, icône Lucide de 32 px `text-accent-tile-icon`, titre `text-base` 600, phrase `text-sm text-muted`, bouton `soft` primaire. Aucune illustration.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| CHG-67 | Centre de notifications (NOTIF-04) : `low_balance` et `deposit_cap` avec icône `triangle-alert` en `text-warning` ; `manual_reminder` avec pastille corail `hand`. Non lue : point corail de 8 px et titre en 600. Lue : titre en 400, `text-toned`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| CHG-68 | Hors ligne (NF-PWA-02) : `UAlert` `info` `soft` fixé sous l'en-tête, icône `wifi-off`, texte « Hors ligne : données du » suivi de la date et de l'heure ; actions d'écriture `disabled` avec infobulle. Nouvelle version (NF-PWA-04) : toast `info` persistant, action « Recharger » avec icône `refresh-cw`.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| CHG-69 | Formulaires : libellés toujours visibles au-dessus des champs ; erreurs en `text-error` sous le champ, avec icône ; champs de montant alignés à droite, `inputmode="decimal"`, chiffres tabulaires. L'anneau de focus de Nuxt UI n'est jamais supprimé.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 | Statut                                   | Rendu                                                                                       |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -372,14 +375,14 @@ Exception assumée au seuil de 3:1 de la section 3.7 : plusieurs nuances de la s
 
 ## 10. PWA
 
-| ID     | Règle                                                                                                                                                                                                                                                                                                   |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CHG-80 | Ressources générées par le CLI de `@vite-pwa/assets-generator` (dépendance de développement du paquet `front`), PNG versionnés, régénérés à la main quand le logo change.                                                                                                                               |
-| CHG-81 | Trois configurations exécutées dans l'ordre suivant ; les fichiers homonymes sont écrasés par la dernière exécution : écrans de démarrage depuis `logo.svg`, badge depuis `badge.svg`, icônes depuis `icon.svg`.                                                                                        |
-| CHG-82 | Icônes : `favicon.ico` 48 px ; `pwa-64x64`, `pwa-192x192`, `pwa-512x512` (carré menthe visible) ; `maskable-icon-512x512` (fond plein `mint-50`, picto dans la zone sûre) ; `apple-touch-icon-180x180` (fond plein `mint-50`). Favicon vectoriel : `logo.svg`.                                          |
-| CHG-83 | Écrans de démarrage iOS : picto centré, environ 30 % de la plus petite dimension (padding 0,7, ajusté au contrôle visuel), fond #FBFBF9 (olive-50) en clair et #0C0C09 (olive-950) en sombre, portrait et paysage, tous appareils. Liens `apple-touch-startup-image` clairs au lot 1, sombres au lot 4. |
-| CHG-84 | Manifeste : `name` et `short_name` « Mint », `display: standalone`, `theme_color` #FFFFFF (fond de l'en-tête), `background_color` #FBFBF9 (fond de page). Méta `theme-color` #FFFFFF ; au lot 4, ajout d'une seconde méta `media="(prefers-color-scheme: dark)"` à #1D1D16 (olive-900).                 |
-| CHG-85 | Notifications push (NOTIF-07) : `icon` = `pwa-192x192.png`, `badge` = `badge-96x96.png`.                                                                                                                                                                                                                |
+| ID     | Règle                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CHG-80 | Ressources générées par le CLI de `@vite-pwa/assets-generator` (dépendance de développement du paquet `front`), PNG versionnés, régénérés à la main quand le logo change.                                                                                                                                                                                                                              |
+| CHG-81 | Trois configurations exécutées dans l'ordre suivant ; les fichiers homonymes sont écrasés par la dernière exécution : écrans de démarrage depuis `logo.svg`, badge depuis `badge.svg`, icônes depuis `icon.svg`.                                                                                                                                                                                       |
+| CHG-82 | Icônes : `favicon.ico` 48 px ; `pwa-64x64`, `pwa-192x192`, `pwa-512x512` (carré menthe visible) ; `maskable-icon-512x512` (fond plein `mint-50`, picto dans la zone sûre) ; `apple-touch-icon-180x180` (fond plein `mint-50`). Favicon vectoriel : `logo.svg`.                                                                                                                                         |
+| CHG-83 | Écrans de démarrage iOS : picto centré, environ 30 % de la plus petite dimension (padding 0,7, ajusté au contrôle visuel), fond #FBFBF9 (olive-50) en clair et #0C0C09 (olive-950) en sombre, portrait et paysage, tous appareils. Liens `apple-touch-startup-image` clairs au lot 1, sombres au lot 4.                                                                                                |
+| CHG-84 | Manifeste : `name` et `short_name` « Mint », `display: standalone`, `theme_color` #FFFFFF (fond de l'en-tête), `background_color` #FBFBF9 (fond de page). Méta `theme-color` #FFFFFF ; au lot 4, ajout d'une méta `media="(prefers-color-scheme: dark)"` à #1D1D16 (olive-900), placée avant la méta claire ; avec un thème forcé dans le profil, les deux prennent la couleur de ce thème (ADR 0028). |
+| CHG-85 | Notifications push (NOTIF-07) : `icon` = `pwa-192x192.png`, `badge` = `badge-96x96.png`.                                                                                                                                                                                                                                                                                                               |
 
 Script dans `front/package.json` :
 
@@ -467,11 +470,11 @@ export default defineConfig({
 
 ## 11. Mode sombre
 
-| ID     | Règle                                                                                                                                                                              |
-| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CHG-90 | Jetons sombres définis dès le lot 1 (sections 3, 4 et 12.1).                                                                                                                       |
-| CHG-91 | Jusqu'au lot 4 : `ui.colorMode: false`. L'application reste en clair quel que soit le réglage du système.                                                                          |
-| CHG-92 | Lot 4 : `ui.colorMode` réactivé (suit le système, NF-UX-02), liens des écrans de démarrage sombres et méta `theme-color` sombre ajoutés, recette des contrastes refaite en sombre. |
+| ID     | Règle                                                                                                                                                                                                                                                          |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CHG-90 | Jetons sombres définis dès le lot 1 (sections 3, 4 et 12.1).                                                                                                                                                                                                   |
+| CHG-91 | Jusqu'au lot 4 : `ui.colorMode: false`. L'application reste en clair quel que soit le réglage du système.                                                                                                                                                      |
+| CHG-92 | Lot 4 : `ui.colorMode` réactivé (suit le système par défaut, NF-UX-02 ; thème Système, Clair ou Sombre choisi dans le profil, ADR 0028), liens des écrans de démarrage sombres et méta `theme-color` sombre ajoutés, recette des contrastes refaite en sombre. |
 
 ## 12. Implémentation
 
@@ -534,6 +537,7 @@ export default defineConfig({
   --ui-info: var(--ui-color-info-700);
   --ui-warning: var(--ui-color-warning-700);
   --ui-error: var(--ui-color-error-600);
+  --ui-text-muted: var(--ui-color-neutral-600);
 
   --app-canvas: var(--ui-color-neutral-50);
   --app-primary-hover: var(--ui-color-primary-800);
@@ -581,6 +585,7 @@ export default defineConfig({
   --ui-info: var(--ui-color-info-400);
   --ui-warning: var(--ui-color-warning-400);
   --ui-error: var(--ui-color-error-400);
+  --ui-text-muted: var(--ui-color-neutral-400);
 
   --app-canvas: var(--ui-color-neutral-950);
   --app-primary-hover: var(--ui-color-primary-300);
@@ -673,7 +678,7 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
   ui: {
-    colorMode: false,
+    colorMode: true,
   },
   icon: {
     provider: 'none',
@@ -728,7 +733,15 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      meta: [{ name: 'theme-color', content: '#FFFFFF' }],
+      meta: [
+        {
+          key: 'theme-color-dark',
+          name: 'theme-color',
+          media: '(prefers-color-scheme: dark)',
+          content: '#1D1D16',
+        },
+        { key: 'theme-color', name: 'theme-color', content: '#FFFFFF' },
+      ],
       link: [
         { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
         { rel: 'icon', href: '/logo.svg', sizes: 'any', type: 'image/svg+xml' },
@@ -759,7 +772,7 @@ export default defineNuxtConfig({
 })
 ```
 
-La liste `clientBundle.icons` est complétée par les icônes internes de Nuxt UI (valeurs de `ui.icons`, collection Lucide), que le balayage automatique ne détecte pas. Un test unitaire vérifie que chaque valeur de `ui.icons` et de la table métier (CHG-44) y figure (CA-08). Les liens `apple-touch-startup-image` journalisés par le script de splash s'ajoutent à `app.head.link`.
+La liste `clientBundle.icons` est complétée par les icônes internes de Nuxt UI (valeurs de `ui.icons`, collection Lucide), que le balayage automatique ne détecte pas. Un test unitaire vérifie que chaque valeur de `ui.icons` et de la table métier (CHG-44) y figure (CA-08). Les liens `apple-touch-startup-image` journalisés par le script de splash s'ajoutent à `app.head.link`, les sombres après les clairs (lot 4). `app.vue` met à jour les deux métas `theme-color` selon le thème du profil (ADR 0028).
 
 ### 12.4 CSP (CHG-103)
 
@@ -801,7 +814,7 @@ Un fichier par décision dans `docs/` (CODE-10) : CSP (empreinte du script inlin
 | ID    | Critère                                                                                                                                                                                                                                                                                                                                                                                           |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | CA-01 | `logo.svg`, `icon.svg`, `badge.svg` : `viewBox` carré, aucun attribut `style` ni `transform`, couleurs strictement conformes à la section 2.3. Superposés à l'original, écart maximal de 1 u.                                                                                                                                                                                                     |
-| CA-02 | Audit Lighthouse Accessibilité (outil déjà retenu par NF-PERF-04) sur connexion, accueil, comptes, calendrier, opérations et enveloppes : aucune erreur de contraste en clair, puis en sombre au lot 4.                                                                                                                                                                                           |
+| CA-02 | Audit Lighthouse Accessibilité (outil déjà retenu par NF-PERF-04) sur connexion, accueil, comptes, calendrier, opérations et enveloppes : aucune erreur de contraste en clair, puis en sombre au lot 4, par le scénario axe de l'ADR 0029.                                                                                                                                                        |
 | CA-03 | Tests Playwright en ligne puis hors ligne : aucune requête vers un domaine tiers ; icônes et police rendues hors ligne.                                                                                                                                                                                                                                                                           |
 | CA-04 | Aucune violation CSP dans la console sur l'ensemble des tests de bout en bout.                                                                                                                                                                                                                                                                                                                    |
 | CA-05 | `MoneyAmount` a pour style calculé `font-variant-numeric: tabular-nums`. Données de US-12 : la case du 20 affiche le débit de 50 € en couleur de texte standard et un solde de 950 € ; celle du 28 affiche le crédit de 1 500 € en `text-success` et un solde de 2 450 €. Les chaînes attendues sont produites par `Intl.NumberFormat` pour la locale du test (CHG-20), jamais saisies à la main. |
@@ -815,45 +828,48 @@ Un fichier par décision dans `docs/` (CODE-10) : CSP (empreinte du script inlin
 
 ### 13.3 Registre des décisions
 
-| Sujet                    | Retenu                                                                           | Écarté                                                               |
-| ------------------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Source du logo           | redessin géométrique                                                             | nettoyage minimal, redessin externe                                  |
-| Fichiers `.svg`          | assets autorisés, affichés par `<img>`                                           | collection d'icônes, raster seul                                     |
-| Logo dans l'interface    | picto seul + mot-symbole, carré réservé aux icônes                               | carré partout, picto sans texte                                      |
-| Casse                    | Mint                                                                             | mint, MINT                                                           |
-| Primaire en clair        | mint-700 dérivé                                                                  | mint-600 exact, Tailwind green                                       |
-| Neutre                   | olive                                                                            | neutral, zinc, stone                                                 |
-| Fond clair               | canevas olive-50, surfaces blanches                                              | blanc partout, menthe pâle                                           |
-| Accent                   | corail                                                                           | aucun accent, bleu, orange, pêche, terracotta                        |
-| Rôles de l'accent        | marqueurs du calendrier, badges et compteurs, mises en avant éditoriales         | boutons secondaires                                                  |
-| Success                  | emerald                                                                          | gamme mint                                                           |
-| Montants                 | crédits verts, débits neutres, rouge pour les soldes négatifs                    | débits rouges, tout neutre                                           |
-| Warning, error           | amber, red (600 en clair)                                                        | yellow et red, amber et rose                                         |
-| Groupes                  | Needs bleu, Wants corail, Save mint                                              | trois verts du logo, olive/corail/mint                               |
-| Usages                   | Courant mist, Précaution teal, Épargne mint, Investissement violet               | aucune couleur, dégradé de verts                                     |
-| Info                     | sky                                                                              | blue, neutre                                                         |
-| Revenus, dépenses        | emerald, olive                                                                   | emerald et corail, emerald et rouge                                  |
-| Catégories               | nuances du groupe                                                                | palette fixe, couleur choisie par l'utilisateur                      |
-| Réel, prévu              | plein, pointillé et hachuré                                                      | opacité, couleur différente                                          |
-| Police                   | Manrope                                                                          | Inter, Plus Jakarta Sans, Geist                                      |
-| Mot-symbole              | texte HTML, Manrope 700, `text-highlighted`                                      | police display, lettrage vectorisé, vert primaire                    |
-| Rayon                    | 0,5rem                                                                           | 0,25rem, 0,375rem, 0,75rem                                           |
-| Densité                  | `md` partout                                                                     | `sm` sur desktop, `lg` partout                                       |
-| Ajout rapide             | bouton flottant (mobile), bouton « Ajouter » en tête de barre latérale (desktop) | bouton central de barre, barre supérieure                            |
-| Barre basse              | Accueil, Comptes, Calendrier, Opérations, Plus                                   | variantes Enveloppes, Échéances                                      |
-| Bascule                  | 1024 px                                                                          | 768 px                                                               |
-| Barre d'état             | fond de l'en-tête                                                                | vert primaire, menthe pâle                                           |
-| Icônes                   | Lucide                                                                           | Phosphor, Tabler                                                     |
-| Centimes                 | partout sauf graphiques                                                          | partout, masqués dans les synthèses                                  |
-| États vides              | icône, texte, action                                                             | illustrations, picto Mint                                            |
-| Ressources PWA           | CLI, PNG versionnés                                                              | intégration au build, PNG externes                                   |
-| Calendrier en alerte     | fond teinté, solde coloré, icône                                                 | solde seul, bordure                                                  |
-| Mode sombre              | spécifié, forcé en clair jusqu'au lot 4                                          | actif dès le lot 1, hors charte                                      |
-| Badges corail            | aplat, texte coral-950                                                           | texte corail, pastille et texte neutre                               |
-| Écrans de démarrage iOS  | clair et sombre                                                                  | clair seul, aucun                                                    |
-| Picto en sombre          | identique                                                                        | variante éclaircie                                                   |
-| CSP des styles           | `style-src 'unsafe-inline'`                                                      | empreintes au build, styles extraits                                 |
-| CSP des scripts          | empreinte sha256 calculée au build, en-tête servi par nginx                      | `'unsafe-inline'`, empreinte mise à jour dans Apache, `buildId` fixe |
-| Bouton plein sur desktop | barre latérale hors du décompte de CHG-12                                        | « Ajouter » en `soft`                                                |
-| Déconnexion sur desktop  | menu de l'entrée Profil                                                          | entrée dédiée en pied de barre, page Profil seule                    |
-| Alertes actives au lot 2 | calculées depuis la prévision (PRV-07)                                           | carte reportée au lot 3                                              |
+| Sujet                          | Retenu                                                                               | Écarté                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Source du logo                 | redessin géométrique                                                                 | nettoyage minimal, redessin externe                                        |
+| Fichiers `.svg`                | assets autorisés, affichés par `<img>`                                               | collection d'icônes, raster seul                                           |
+| Logo dans l'interface          | picto seul + mot-symbole, carré réservé aux icônes                                   | carré partout, picto sans texte                                            |
+| Casse                          | Mint                                                                                 | mint, MINT                                                                 |
+| Primaire en clair              | mint-700 dérivé                                                                      | mint-600 exact, Tailwind green                                             |
+| Neutre                         | olive                                                                                | neutral, zinc, stone                                                       |
+| Fond clair                     | canevas olive-50, surfaces blanches                                                  | blanc partout, menthe pâle                                                 |
+| Accent                         | corail                                                                               | aucun accent, bleu, orange, pêche, terracotta                              |
+| Rôles de l'accent              | marqueurs du calendrier, badges et compteurs, mises en avant éditoriales             | boutons secondaires                                                        |
+| Success                        | emerald                                                                              | gamme mint                                                                 |
+| Montants                       | crédits verts, débits neutres, rouge pour les soldes négatifs                        | débits rouges, tout neutre                                                 |
+| Warning, error                 | amber, red (600 en clair)                                                            | yellow et red, amber et rose                                               |
+| Groupes                        | Needs bleu, Wants corail, Save mint                                                  | trois verts du logo, olive/corail/mint                                     |
+| Usages                         | Courant mist, Précaution teal, Épargne mint, Investissement violet                   | aucune couleur, dégradé de verts                                           |
+| Info                           | sky                                                                                  | blue, neutre                                                               |
+| Revenus, dépenses              | emerald, olive                                                                       | emerald et corail, emerald et rouge                                        |
+| Catégories                     | nuances du groupe                                                                    | palette fixe, couleur choisie par l'utilisateur                            |
+| Réel, prévu                    | plein, pointillé et hachuré                                                          | opacité, couleur différente                                                |
+| Police                         | Manrope                                                                              | Inter, Plus Jakarta Sans, Geist                                            |
+| Mot-symbole                    | texte HTML, Manrope 700, `text-highlighted`                                          | police display, lettrage vectorisé, vert primaire                          |
+| Rayon                          | 0,5rem                                                                               | 0,25rem, 0,375rem, 0,75rem                                                 |
+| Densité                        | `md` partout                                                                         | `sm` sur desktop, `lg` partout                                             |
+| Ajout rapide                   | bouton flottant (mobile), bouton « Ajouter » en tête de barre latérale (desktop)     | bouton central de barre, barre supérieure                                  |
+| Barre basse                    | Accueil, Comptes, Calendrier, Opérations, Plus                                       | variantes Enveloppes, Échéances                                            |
+| Bascule                        | 1024 px                                                                              | 768 px                                                                     |
+| Barre d'état                   | fond de l'en-tête                                                                    | vert primaire, menthe pâle                                                 |
+| Icônes                         | Lucide                                                                               | Phosphor, Tabler                                                           |
+| Centimes                       | partout sauf graphiques                                                              | partout, masqués dans les synthèses                                        |
+| États vides                    | icône, texte, action                                                                 | illustrations, picto Mint                                                  |
+| Ressources PWA                 | CLI, PNG versionnés                                                                  | intégration au build, PNG externes                                         |
+| Calendrier en alerte           | fond teinté, solde coloré, icône                                                     | solde seul, bordure                                                        |
+| Mode sombre                    | spécifié, forcé en clair jusqu'au lot 4                                              | actif dès le lot 1, hors charte                                            |
+| Badges corail                  | aplat, texte coral-950                                                               | texte corail, pastille et texte neutre                                     |
+| Écrans de démarrage iOS        | clair et sombre                                                                      | clair seul, aucun                                                          |
+| Picto en sombre                | identique                                                                            | variante éclaircie                                                         |
+| CSP des styles                 | `style-src 'unsafe-inline'`                                                          | empreintes au build, styles extraits                                       |
+| CSP des scripts                | empreinte sha256 calculée au build, en-tête servi par nginx                          | `'unsafe-inline'`, empreinte mise à jour dans Apache, `buildId` fixe       |
+| Bouton plein sur desktop       | barre latérale hors du décompte de CHG-12                                            | « Ajouter » en `soft`                                                      |
+| Déconnexion sur desktop        | menu de l'entrée Profil                                                              | entrée dédiée en pied de barre, page Profil seule                          |
+| Alertes actives au lot 2       | calculées depuis la prévision (PRV-07)                                               | carte reportée au lot 3                                                    |
+| Thème au lot 4                 | suit le système par défaut, choix Système, Clair ou Sombre enregistré dans le profil | système seul, choix mémorisé sur l'appareil                                |
+| Texte atténué en clair         | `text-muted` en olive-600                                                            | olive-500 par défaut de Nuxt UI (4,3:1), teinte intermédiaire hors palette |
+| Jours non ouvrés du calendrier | `text-muted`                                                                         | `text-dimmed` relevé, fond de case teinté                                  |
