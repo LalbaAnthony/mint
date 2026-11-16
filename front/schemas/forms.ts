@@ -242,6 +242,12 @@ export const envelopeFormSchema = z.object({
     .min(1, { error: 'required' }),
 })
 
+export const envelopeMonthAmountFormSchema = z.object({
+  amount: amountInputSchema.refine((cents) => cents >= 0, {
+    error: 'amount_out_of_range',
+  }),
+})
+
 export const scheduleFormSchema = z.object({
   label: labelSchema,
   amount: positiveAmountInputSchema,

@@ -131,6 +131,7 @@ export default defineNuxtConfig({
         'lucide:skip-forward',
         'lucide:pause',
         'lucide:play',
+        'lucide:calendar-cog',
       ],
     },
   },

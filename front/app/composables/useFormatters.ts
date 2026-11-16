@@ -19,6 +19,14 @@ export function useFormatters() {
     }).format(new Date(`${isoDate}T00:00:00Z`))
   }
 
+  function formatMonth(isoMonth: string): string {
+    return new Intl.DateTimeFormat(locale.value, {
+      month: 'long',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(`${isoMonth}T00:00:00Z`))
+  }
+
   function formatMoney(
     cents: number,
     signDisplay: 'auto' | 'exceptZero' = 'auto',
@@ -30,5 +38,5 @@ export function useFormatters() {
     }).format(cents / 100)
   }
 
-  return { formatDateTime, formatDate, formatMoney }
+  return { formatDateTime, formatDate, formatMonth, formatMoney }
 }

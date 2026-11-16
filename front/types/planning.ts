@@ -1,6 +1,10 @@
 import type { Account } from '@mint/shared/types/accounts'
 import type { Category, CategoryKind } from '@mint/shared/types/categories'
-import type { Envelope, EnvelopeMonthLine } from '@mint/shared/types/envelopes'
+import type {
+  Envelope,
+  EnvelopeMonthLine,
+  EnvelopeMonthStatusView,
+} from '@mint/shared/types/envelopes'
 import type {
   Operation,
   OperationDirection,
@@ -201,14 +205,42 @@ export type EnvelopeFormModalEmits = {
   saved: [envelope: Envelope]
 }
 
-export interface EnvelopeCardProps {
+export interface EnvelopeRowProps {
   line: EnvelopeMonthLine
   currentMonth: boolean
 }
 
-export type EnvelopeCardEmits = {
+export type EnvelopeRowEmits = {
   edit: [envelope: Envelope]
   delete: [envelope: Envelope]
+  monthAmount: [line: EnvelopeMonthLine]
+}
+
+export type EnvelopeActionHandlers = {
+  monthAmount: () => void
+  edit: () => void
+  delete: () => void
+}
+
+export interface EnvelopeConsumptionProps {
+  status: EnvelopeMonthStatusView
+}
+
+export interface EnvelopeBudgetProps {
+  line: EnvelopeMonthLine
+}
+
+export type EnvelopeMonthAmountFormState = {
+  amount: string
+}
+
+export interface EnvelopeMonthAmountModalProps {
+  line: EnvelopeMonthLine | null
+  month: string
+}
+
+export type EnvelopeMonthAmountModalEmits = {
+  saved: [label: string]
 }
 
 export interface CategoryDeleteModalProps {

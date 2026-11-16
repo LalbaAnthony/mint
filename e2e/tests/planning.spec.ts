@@ -110,7 +110,7 @@ test('OPE-01, CPT-04: record an expense from the quick add and see the account b
   guard.assertClean()
 })
 
-test('ENV-01, ENV-06: create an envelope and see its consumption', async ({
+test('ENV-01, ENV-06, ENV-08: create an envelope and see its consumption and the totals of the month', async ({
   page,
 }) => {
   const guard = guardPage(page)
@@ -132,14 +132,17 @@ test('ENV-01, ENV-06: create an envelope and see its consumption', async ({
 
   await recordExpense(page, account, '120', 'Supermarché e2e', 'Courses')
 
-  const card = page
+  const row = page
     .getByTestId('envelopes-list')
-    .locator('[data-testid^="envelope-"]')
+    .getByRole('row')
     .filter({ hasText: 'Courses e2e' })
-  await expect(card.getByTestId('envelope-consumed')).toHaveText(
+  await expect(row.getByTestId('envelope-consumed')).toHaveText(
     `${euros(12_000)} sur ${euros(30_000)}`,
   )
-  await expect(card.getByTestId('envelope-available')).toHaveText(euros(18_000))
+  await expect(row.getByTestId('envelope-available')).toHaveText(euros(18_000))
+  await expect(page.getByTestId('envelopes-total-available')).toHaveText(
+    euros(18_000),
+  )
   guard.assertClean()
 })
 

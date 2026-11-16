@@ -41,6 +41,7 @@
     "doneReordering": "Terminer",
     "moveUp": "Monter {name}",
     "moveDown": "Descendre {name}",
+    "actions": "Actions",
     "actionsFor": "Actions pour {name}"
   },
   "money": {
@@ -643,9 +644,20 @@
     "available": "Disponible",
     "perRemainingDay": "Par jour restant",
     "carriedOver": "Report",
+    "budget": "Budget",
+    "consumed": "Consommé",
+    "total": "Total",
+    "overridden": "Exception",
+    "monthlyReference": "Montant mensuel : {amount}",
+    "monthAmount": "Montant pour ce mois",
+    "monthAmountTitle": "Montant pour {month}",
+    "monthAmountHelp": "{label} : le montant mensuel de référence, {amount}, ne change pas.",
+    "monthAmountSaved": "{label} : montant pour {month} enregistré.",
+    "restoreMonthlyAmount": "Revenir au montant mensuel",
     "fields": {
       "label": "Libellé",
       "amount": "Montant mensuel",
+      "monthAmount": "Montant du mois",
       "source": "Compte débité dans la prévision",
       "categories": "Catégories de dépenses",
       "carryOver": "Reporter le reliquat",

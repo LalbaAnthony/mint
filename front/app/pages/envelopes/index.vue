@@ -1,16 +1,23 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { addMonthsToMonth } from '@mint/shared/engines/dates'
 import { envelopeMonthResponseSchema } from '@mint/shared/schemas/envelopes'
 import type {
   Envelope,
+  EnvelopeMonthLine,
   EnvelopeMonthResponse,
 } from '@mint/shared/types/envelopes'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
+const { formatMoney, formatMonth } = useFormatters()
 const referentials = useReferentialsStore()
 const editor = useOperationEditorStore()
+const labels = usePlanningLabels()
+const envelopeActions = useEnvelopeActions()
+const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 const month = ref<string | null>(null)
 const result = ref<EnvelopeMonthResponse | null>(null)
@@ -47,13 +54,7 @@ function shift(offset: number): Promise<void> {
 }
 
 const monthLabel = computed(() =>
-  month.value === null
-    ? ''
-    : new Intl.DateTimeFormat(locale.value, {
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'UTC',
-      }).format(new Date(`${month.value}T00:00:00Z`)),
+  month.value === null ? '' : formatMonth(month.value),
 )
 
 const isCurrentMonth = computed(
@@ -67,6 +68,45 @@ const takenCategoryIds = computed(() =>
     ...(result.value?.inactive ?? []),
   ].flatMap((envelope) => envelope.categoryIds),
 )
+
+const columns = computed<TableColumn<EnvelopeMonthLine>[]>(() => [
+  { id: 'label', header: t('envelopes.fields.label') },
+  { id: 'budget', header: t('envelopes.budget') },
+  { id: 'carriedOver', header: t('envelopes.carriedOver') },
+  { id: 'consumed', header: t('envelopes.consumed') },
+  { id: 'available', header: t('envelopes.available') },
+  ...(isCurrentMonth.value
+    ? [{ id: 'perDay', header: t('envelopes.perRemainingDay') }]
+    : []),
+  { id: 'actions', header: '' },
+])
+
+function actionsOf(line: EnvelopeMonthLine): DropdownMenuItem[][] {
+  return envelopeActions({
+    monthAmount: () => openMonthAmount(line),
+    edit: () => openForm(line.envelope),
+    delete: () => {
+      envelopeToDelete.value = line.envelope
+    },
+  })
+}
+
+const monthAmountOpen = ref(false)
+const monthAmountLine = ref<EnvelopeMonthLine | null>(null)
+
+function openMonthAmount(line: EnvelopeMonthLine): void {
+  monthAmountLine.value = line
+  monthAmountOpen.value = true
+}
+
+async function monthAmountSaved(label: string): Promise<void> {
+  toast.add({
+    title: t('envelopes.monthAmountSaved', { label, month: monthLabel.value }),
+    icon: icons.success,
+    color: 'success',
+  })
+  await load()
+}
 
 const formOpen = ref(false)
 const editedEnvelope = ref<Envelope | null>(null)
@@ -189,20 +229,189 @@ async function deleteEnvelope(): Promise<void> {
           </OfflineGuard>
         </EmptyState>
       </UCard>
-      <div
-        v-else
-        class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
-        data-testid="envelopes-list"
-      >
-        <EnvelopeCard
-          v-for="line in result.lines"
-          :key="line.envelope.id"
-          :line="line"
-          :current-month="isCurrentMonth"
-          @edit="openForm"
-          @delete="envelopeToDelete = $event"
-        />
-      </div>
+      <UCard v-else data-testid="envelopes-list">
+        <UTable
+          v-if="isDesktop"
+          :data="result.lines"
+          :columns="columns"
+          :ui="{ th: 'whitespace-nowrap', td: 'align-top' }"
+          data-testid="envelopes-table"
+        >
+          <template #label-cell="{ row }">
+            <div
+              class="flex min-w-0 flex-col"
+              :data-testid="`envelope-${row.original.envelope.id}`"
+            >
+              <span class="font-medium text-highlighted">
+                {{ row.original.envelope.label }}
+              </span>
+              <span class="text-xs text-muted">
+                {{ labels.envelopeSourceLabel(row.original.envelope) }}
+              </span>
+            </div>
+          </template>
+          <template #budget-cell="{ row }">
+            <div class="text-right">
+              <EnvelopeBudget :line="row.original" />
+            </div>
+          </template>
+          <template #carriedOver-cell="{ row }">
+            <div class="text-right">
+              <MoneyAmount
+                :cents="row.original.status.carriedOverCents"
+                variant="flow"
+              />
+            </div>
+          </template>
+          <template #consumed-cell="{ row }">
+            <EnvelopeConsumption :status="row.original.status" />
+          </template>
+          <template #available-cell="{ row }">
+            <div class="text-right">
+              <MoneyAmount
+                :cents="row.original.status.availableCents"
+                data-testid="envelope-available"
+              />
+            </div>
+          </template>
+          <template #perDay-cell="{ row }">
+            <div class="text-right">
+              <MoneyAmount
+                v-if="row.original.status.availablePerDayCents !== null"
+                :cents="row.original.status.availablePerDayCents"
+                data-testid="envelope-per-day"
+              />
+            </div>
+          </template>
+          <template #actions-cell="{ row }">
+            <div class="flex justify-end">
+              <UDropdownMenu :items="actionsOf(row.original)">
+                <UButton
+                  :icon="icons.rowActions"
+                  :aria-label="
+                    t('common.actionsFor', {
+                      name: row.original.envelope.label,
+                    })
+                  "
+                  color="neutral"
+                  variant="ghost"
+                />
+              </UDropdownMenu>
+            </div>
+          </template>
+          <template #actions-header>
+            <span class="sr-only">{{ t('common.actions') }}</span>
+          </template>
+          <template #body-bottom>
+            <tr
+              class="border-t border-default text-sm"
+              data-testid="envelopes-totals-row"
+            >
+              <th
+                scope="row"
+                class="p-4 text-left font-semibold text-highlighted"
+              >
+                {{ t('envelopes.total') }}
+              </th>
+              <td class="p-4 text-right">
+                <MoneyAmount
+                  :cents="result.totals.budgetCents"
+                  data-testid="envelopes-total-budget"
+                />
+              </td>
+              <td class="p-4 text-right">
+                <MoneyAmount
+                  :cents="result.totals.carriedOverCents"
+                  variant="flow"
+                  data-testid="envelopes-total-carried-over"
+                />
+              </td>
+              <td
+                class="p-4 tabular-nums text-default"
+                data-testid="envelopes-total-consumed"
+              >
+                {{ formatMoney(result.totals.consumedCents) }}
+              </td>
+              <td class="p-4 text-right">
+                <MoneyAmount
+                  :cents="result.totals.availableCents"
+                  data-testid="envelopes-total-available"
+                />
+              </td>
+              <td v-if="isCurrentMonth" />
+              <td />
+            </tr>
+          </template>
+        </UTable>
+        <template v-else>
+          <ul class="flex flex-col divide-y divide-default">
+            <EnvelopeRow
+              v-for="line in result.lines"
+              :key="line.envelope.id"
+              :line="line"
+              :current-month="isCurrentMonth"
+              @month-amount="openMonthAmount"
+              @edit="openForm"
+              @delete="envelopeToDelete = $event"
+            />
+          </ul>
+          <div
+            class="mt-2 flex flex-col gap-2 border-t border-default pt-3 text-sm"
+            data-testid="envelopes-totals"
+          >
+            <p class="font-semibold text-highlighted">
+              {{ t('envelopes.total') }}
+            </p>
+            <dl class="grid grid-cols-2 gap-2">
+              <div>
+                <dt class="text-xs font-medium text-muted">
+                  {{ t('envelopes.budget') }}
+                </dt>
+                <dd>
+                  <MoneyAmount
+                    :cents="result.totals.budgetCents"
+                    data-testid="envelopes-total-budget"
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium text-muted">
+                  {{ t('envelopes.carriedOver') }}
+                </dt>
+                <dd>
+                  <MoneyAmount
+                    :cents="result.totals.carriedOverCents"
+                    variant="flow"
+                    data-testid="envelopes-total-carried-over"
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium text-muted">
+                  {{ t('envelopes.consumed') }}
+                </dt>
+                <dd
+                  class="tabular-nums text-default"
+                  data-testid="envelopes-total-consumed"
+                >
+                  {{ formatMoney(result.totals.consumedCents) }}
+                </dd>
+              </div>
+              <div>
+                <dt class="text-xs font-medium text-muted">
+                  {{ t('envelopes.available') }}
+                </dt>
+                <dd>
+                  <MoneyAmount
+                    :cents="result.totals.availableCents"
+                    data-testid="envelopes-total-available"
+                  />
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </template>
+      </UCard>
 
       <UCard v-if="result.inactive.length > 0">
         <UCollapsible v-model:open="inactiveOpen">
@@ -241,6 +450,14 @@ async function deleteEnvelope(): Promise<void> {
         </UCollapsible>
       </UCard>
     </div>
+
+    <EnvelopeMonthAmountModal
+      v-if="month !== null"
+      v-model:open="monthAmountOpen"
+      :line="monthAmountLine"
+      :month="month"
+      @saved="monthAmountSaved"
+    />
 
     <EnvelopeFormModal
       v-model:open="formOpen"

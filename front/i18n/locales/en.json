@@ -41,6 +41,7 @@
     "doneReordering": "Done",
     "moveUp": "Move {name} up",
     "moveDown": "Move {name} down",
+    "actions": "Actions",
     "actionsFor": "Actions for {name}"
   },
   "money": {
@@ -643,9 +644,20 @@
     "available": "Available",
     "perRemainingDay": "Per remaining day",
     "carriedOver": "Carry-over",
+    "budget": "Budget",
+    "consumed": "Consumed",
+    "total": "Total",
+    "overridden": "Exception",
+    "monthlyReference": "Monthly amount: {amount}",
+    "monthAmount": "Amount for this month",
+    "monthAmountTitle": "Amount for {month}",
+    "monthAmountHelp": "{label}: the reference monthly amount, {amount}, does not change.",
+    "monthAmountSaved": "{label}: amount for {month} saved.",
+    "restoreMonthlyAmount": "Back to the monthly amount",
     "fields": {
       "label": "Label",
       "amount": "Monthly amount",
+      "monthAmount": "Amount for the month",
       "source": "Account debited in the forecast",
       "categories": "Expense categories",
       "carryOver": "Carry the remainder over",

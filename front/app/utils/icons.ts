@@ -69,4 +69,5 @@ export const icons = {
   restoreOccurrence: 'lucide:rotate-ccw',
   deactivate: 'lucide:pause',
   activate: 'lucide:play',
+  monthAmount: 'lucide:calendar-cog',
 } as const
