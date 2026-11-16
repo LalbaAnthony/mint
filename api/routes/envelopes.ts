@@ -91,6 +91,7 @@ export const createEnvelopeRoute = defineUserRoute({
           paymentMethodId: body.paymentMethodId,
           carryOver: body.carryOver,
           active: body.active,
+          createdOn: parisDate(app.clock.now()),
         },
         { transaction },
       )

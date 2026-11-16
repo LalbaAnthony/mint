@@ -96,7 +96,7 @@ describe('ENV-01 to ENV-06 envelopes of the month', () => {
       envelopeBody(accountId, [groceries], { carryOver: true }),
     )
     await context.dependencies.models.Envelope.update(
-      { createdAt: new Date('2026-10-10T10:00:00Z') },
+      { createdOn: '2026-10-10' },
       { where: { id: envelopeId } },
     )
     await createOperation(user, accountId, {

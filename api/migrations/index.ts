@@ -23,6 +23,7 @@ import * as createValuations from './0021-create-valuations.js'
 import * as addCapsAndInterest from './0022-add-caps-and-interest.js'
 import * as createNotifications from './0023-create-notifications.js'
 import * as createWebauthnCredentials from './0024-create-webauthn-credentials.js'
+import * as addCreatedOn from './0025-add-created-on.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -49,4 +50,5 @@ export const migrations: Migration[] = [
   { name: '0022-add-caps-and-interest', ...addCapsAndInterest },
   { name: '0023-create-notifications', ...createNotifications },
   { name: '0024-create-webauthn-credentials', ...createWebauthnCredentials },
+  { name: '0025-add-created-on', ...addCreatedOn },
 ]

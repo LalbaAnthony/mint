@@ -1,4 +1,5 @@
 import { DataTypes } from 'sequelize'
+import { parisDate, systemClock } from '../clock.js'
 import type { Model, Sequelize } from 'sequelize'
 import type {
   AccountModel,
@@ -297,6 +298,11 @@ export function createModels(sequelize: Sequelize): Models {
         allowNull: false,
         defaultValue: 2,
       },
+      createdOn: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        defaultValue: () => parisDate(systemClock.now()),
+      },
       ...timestamps,
     },
     options('schedules'),
@@ -375,6 +381,11 @@ export function createModels(sequelize: Sequelize): Models {
         defaultValue: false,
       },
       active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+      createdOn: {
+        type: DataTypes.DATEONLY,
+        allowNull: false,
+        defaultValue: () => parisDate(systemClock.now()),
+      },
       ...timestamps,
     },
     options('envelopes'),

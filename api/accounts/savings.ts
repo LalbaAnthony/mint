@@ -18,12 +18,14 @@ import type {
 } from '@mint/shared/types/accounts'
 import type { InterestSummary } from '@mint/shared/types/interest'
 import type { Locale } from '@mint/shared/types/user'
+import { parisDate } from '../clock.js'
 import { loadForecastData } from '../forecast/views.js'
 import {
   loadAccountInputs,
   loadInterestCategoryId,
   toOperationInput,
 } from '../planning/inputs.js'
+import type { AppDependencies } from '../types/app.js'
 import type { AccountAttributes, AccountModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
 import type { SavingsSummary } from '../types/savings.js'
@@ -98,7 +100,7 @@ export async function savingsColumns(
 }
 
 export async function syncInterestSchedule(
-  data: Pick<DataAccess, 'models'>,
+  data: Pick<AppDependencies, 'models' | 'clock'>,
   account: AccountModel,
   locale: Locale,
   transaction: Transaction,
@@ -149,6 +151,7 @@ export async function syncInterestSchedule(
       businessDayRule: 'exact',
       amountTolerancePct: 100,
       isSystem: true,
+      createdOn: parisDate(data.clock.now()),
     },
     { transaction },
   )

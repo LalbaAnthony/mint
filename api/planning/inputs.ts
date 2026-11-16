@@ -179,7 +179,7 @@ export function toScheduleInput(
     active: schedule.active,
     isSubscription: schedule.isSubscription,
     triggerMode: schedule.triggerMode,
-    createdOn: parisDate(schedule.createdAt),
+    createdOn: schedule.createdOn,
     recurrence: scheduleRecurrence(schedule),
     posting: schedulePosting(schedule, paymentMethods),
     exceptions: occurrences.map(toOccurrenceException),
@@ -335,7 +335,7 @@ export function toEnvelopeInput(
     monthlyAmountCents: envelope.monthlyAmountCents,
     carryOver: envelope.carryOver,
     active: envelope.active,
-    createdOn: parisDate(envelope.createdAt),
+    createdOn: envelope.createdOn,
     categoryIds: [...categoryIds],
     monthOverrides: [],
   }

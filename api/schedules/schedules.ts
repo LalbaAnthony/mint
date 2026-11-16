@@ -249,7 +249,7 @@ export function scheduleColumns(
   fields: ScheduleFields,
 ): Omit<
   ScheduleAttributes,
-  'id' | 'userId' | 'isSystem' | 'createdAt' | 'updatedAt'
+  'id' | 'userId' | 'isSystem' | 'createdOn' | 'createdAt' | 'updatedAt'
 > {
   const common = {
     kind: fields.kind,

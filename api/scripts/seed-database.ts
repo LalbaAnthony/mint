@@ -3,7 +3,7 @@ import { isSavingsNature } from '@mint/shared/schemas/accounts'
 import type { Locale } from '@mint/shared/types/user'
 import { referenceCapCents, syncInterestSchedule } from '../accounts/savings.js'
 import { hashPassword } from '../auth/passwords.js'
-import { parisDate } from '../clock.js'
+import { parisDate, systemClock } from '../clock.js'
 import type { CliDatabase } from '../types/cli.js'
 import type { CategoryModel, Models } from '../types/models.js'
 import type {
@@ -334,7 +334,12 @@ async function createAccounts(
       },
       { transaction },
     )
-    await syncInterestSchedule({ models }, account, locale, transaction)
+    await syncInterestSchedule(
+      { models, clock: systemClock },
+      account,
+      locale,
+      transaction,
+    )
     if (seedAccount.annualRatePct !== null) {
       await models.InterestRate.create(
         {

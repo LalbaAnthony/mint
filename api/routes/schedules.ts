@@ -161,7 +161,11 @@ export const createScheduleRoute = defineUserRoute({
     const schedule = await app.sequelize.transaction(async (transaction) => {
       await validateScheduleReferences(app, user.id, body, null, transaction)
       const created = await app.models.Schedule.create(
-        { ...scheduleColumns(body), userId: user.id },
+        {
+          ...scheduleColumns(body),
+          userId: user.id,
+          createdOn: parisDate(app.clock.now()),
+        },
         { transaction },
       )
       await replaceScheduleTags(

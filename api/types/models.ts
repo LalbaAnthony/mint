@@ -271,6 +271,7 @@ export type ScheduleAttributes = {
   bankLabelPatterns: string[]
   isSystem: boolean
   reminderDaysBefore: number
+  createdOn: string
   createdAt: Date
   updatedAt: Date
 }
@@ -281,6 +282,7 @@ export type ScheduleCreationAttributes = Optional<
   | 'bankLabelPatterns'
   | 'isSystem'
   | 'reminderDaysBefore'
+  | 'createdOn'
   | 'id'
   | 'paymentMethodId'
   | 'accountId'
@@ -381,12 +383,14 @@ export type EnvelopeAttributes = {
   accountId: string | null
   carryOver: boolean
   active: boolean
+  createdOn: string
   createdAt: Date
   updatedAt: Date
 }
 
 export type EnvelopeCreationAttributes = Optional<
   EnvelopeAttributes,
+  | 'createdOn'
   | 'id'
   | 'paymentMethodId'
   | 'accountId'
