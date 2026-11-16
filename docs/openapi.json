@@ -42,6 +42,7 @@
           "email": { "type": "string", "maxLength": 254, "format": "email" },
           "role": { "$ref": "#/components/schemas/UserRole" },
           "locale": { "$ref": "#/components/schemas/Locale" },
+          "theme": { "$ref": "#/components/schemas/ThemePreference" },
           "forecastHorizonMonths": {
             "type": "integer",
             "minimum": 1,
@@ -54,12 +55,17 @@
           "email",
           "role",
           "locale",
+          "theme",
           "forecastHorizonMonths",
           "targets"
         ]
       },
       "UserRole": { "type": "string", "enum": ["admin", "user"] },
       "Locale": { "type": "string", "enum": ["fr", "en"] },
+      "ThemePreference": {
+        "type": "string",
+        "enum": ["system", "light", "dark"]
+      },
       "AllocationTargets": {
         "type": "object",
         "properties": {
@@ -273,6 +279,7 @@
         "type": "object",
         "properties": {
           "locale": { "$ref": "#/components/schemas/Locale" },
+          "theme": { "$ref": "#/components/schemas/ThemePreference" },
           "forecastHorizonMonths": {
             "type": "integer",
             "minimum": 1,
@@ -3638,7 +3645,7 @@
     },
     "/api/v1/profile": {
       "patch": {
-        "summary": "Update language, forecast horizon and allocation targets",
+        "summary": "Update language, theme (NF-UX-02), forecast horizon and allocation targets",
         "tags": ["profile"],
         "security": [{ "session": [] }],
         "parameters": [

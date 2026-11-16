@@ -27,7 +27,12 @@ import type {
   TransactionStatus,
 } from '@mint/shared/types/transactions'
 import type { RuleMatchType, RuleSign } from '@mint/shared/types/rules'
-import type { Locale, UserRole, UserStatus } from '@mint/shared/types/user'
+import type {
+  Locale,
+  ThemePreference,
+  UserRole,
+  UserStatus,
+} from '@mint/shared/types/user'
 import type { NotificationType } from '@mint/shared/types/notifications'
 
 export type UserAttributes = {
@@ -36,6 +41,7 @@ export type UserAttributes = {
   passwordHash: string
   role: UserRole
   locale: Locale
+  theme: ThemePreference
   status: UserStatus
   forecastHorizonMonths: number
   targetNeedsPct: number
@@ -49,6 +55,7 @@ export type UserAttributes = {
 export type UserCreationAttributes = Optional<
   UserAttributes,
   | 'id'
+  | 'theme'
   | 'status'
   | 'forecastHorizonMonths'
   | 'targetNeedsPct'

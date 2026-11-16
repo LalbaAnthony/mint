@@ -7,11 +7,13 @@ import {
   forecastHorizonSchema,
   localeSchema,
   newPasswordSchema,
+  themePreferenceSchema,
 } from './user.js'
 
 export const updateProfileRequestSchema = z
   .object({
     locale: localeSchema.optional(),
+    theme: themePreferenceSchema.optional(),
     forecastHorizonMonths: forecastHorizonSchema.optional(),
     targets: allocationTargetsSchema.optional(),
   })

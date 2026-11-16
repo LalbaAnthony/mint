@@ -33,11 +33,14 @@ async function loggedInUser(locale: 'fr' | 'en' = 'fr') {
 }
 
 describe('PATCH /api/v1/profile (AUTH-07)', () => {
-  it('updates language, forecast horizon and allocation targets', async () => {
+  it('updates language, theme, forecast horizon and allocation targets (NF-UX-02)', async () => {
     const { client } = await loggedInUser()
+
+    expect((await client.get('/auth/session')).body.theme).toBe('system')
 
     const response = await client.patch('/profile', {
       locale: 'en',
+      theme: 'dark',
       forecastHorizonMonths: 12,
       targets: { needs: 60, wants: 20, save: 20 },
     })
@@ -46,11 +49,14 @@ describe('PATCH /api/v1/profile (AUTH-07)', () => {
     expect(response.body).toEqual(
       expect.objectContaining({
         locale: 'en',
+        theme: 'dark',
         forecastHorizonMonths: 12,
         targets: { needs: 60, wants: 20, save: 20 },
       }),
     )
-    expect((await client.get('/auth/session')).body.locale).toBe('en')
+    expect((await client.get('/auth/session')).body).toEqual(
+      expect.objectContaining({ locale: 'en', theme: 'dark' }),
+    )
   })
 
   it.each([
@@ -70,6 +76,7 @@ describe('PATCH /api/v1/profile (AUTH-07)', () => {
       'targets_sum_not_100',
     ],
     [{ locale: 'de' }, ['locale'], 'invalid_locale'],
+    [{ theme: 'sepia' }, ['theme'], 'invalid_theme'],
   ])('rejects %j', async (body, path, message) => {
     const { client } = await loggedInUser()
 

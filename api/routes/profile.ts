@@ -21,7 +21,8 @@ const tag = 'profile'
 export const updateProfileRoute = defineUserRoute({
   method: 'patch',
   path: '/profile',
-  summary: 'Update language, forecast horizon and allocation targets',
+  summary:
+    'Update language, theme (NF-UX-02), forecast horizon and allocation targets',
   tag,
   body: updateProfileRequestSchema,
   params: noParams,
@@ -33,6 +34,7 @@ export const updateProfileRoute = defineUserRoute({
   handle: async ({ user, body }) => {
     await user.update({
       ...(body.locale === undefined ? {} : { locale: body.locale }),
+      ...(body.theme === undefined ? {} : { theme: body.theme }),
       ...(body.forecastHorizonMonths === undefined
         ? {}
         : { forecastHorizonMonths: body.forecastHorizonMonths }),

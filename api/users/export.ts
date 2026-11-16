@@ -183,6 +183,7 @@ function exportDocument(
       email: user.email,
       role: user.role,
       locale: user.locale,
+      theme: user.theme,
       forecastHorizonMonths: user.forecastHorizonMonths,
       targets: {
         needs: user.targetNeedsPct,

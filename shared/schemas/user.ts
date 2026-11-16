@@ -10,6 +10,10 @@ export const localeSchema = z
   .enum(['fr', 'en'], { error: 'invalid_locale' })
   .meta({ id: 'Locale' })
 
+export const themePreferenceSchema = z
+  .enum(['system', 'light', 'dark'], { error: 'invalid_theme' })
+  .meta({ id: 'ThemePreference' })
+
 export const userRoleSchema = z.enum(['admin', 'user']).meta({ id: 'UserRole' })
 
 export const userStatusSchema = z
@@ -59,6 +63,7 @@ export const userProfileSchema = z
     email: emailSchema,
     role: userRoleSchema,
     locale: localeSchema,
+    theme: themePreferenceSchema,
     forecastHorizonMonths: forecastHorizonSchema,
     targets: allocationTargetsSchema,
   })

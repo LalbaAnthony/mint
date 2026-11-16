@@ -57,6 +57,11 @@ export function createModels(sequelize: Sequelize): Models {
       passwordHash: { type: DataTypes.TEXT, allowNull: false },
       role: { type: DataTypes.TEXT, allowNull: false },
       locale: { type: DataTypes.TEXT, allowNull: false },
+      theme: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+        defaultValue: 'system',
+      },
       status: {
         type: DataTypes.TEXT,
         allowNull: false,

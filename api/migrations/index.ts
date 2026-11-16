@@ -25,6 +25,7 @@ import * as createNotifications from './0023-create-notifications.js'
 import * as createWebauthnCredentials from './0024-create-webauthn-credentials.js'
 import * as addCreatedOn from './0025-add-created-on.js'
 import * as createEnvelopeMonthOverrides from './0026-create-envelope-month-overrides.js'
+import * as addUserTheme from './0027-add-user-theme.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -56,4 +57,5 @@ export const migrations: Migration[] = [
     name: '0026-create-envelope-month-overrides',
     ...createEnvelopeMonthOverrides,
   },
+  { name: '0027-add-user-theme', ...addUserTheme },
 ]

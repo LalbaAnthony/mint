@@ -5,6 +5,7 @@ export const testProfile: UserProfile = {
   email: 'me@example.org',
   role: 'user',
   locale: 'fr',
+  theme: 'system',
   forecastHorizonMonths: 3,
   targets: { needs: 50, wants: 30, save: 20 },
 }
