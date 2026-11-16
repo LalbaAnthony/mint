@@ -18,7 +18,11 @@ import type {
   InterestMethod,
 } from '@mint/shared/types/interest'
 import type { PaymentMethodKind } from '@mint/shared/types/payment-methods'
-import type { AllocationTargets, Locale } from '@mint/shared/types/user'
+import type {
+  AllocationTargets,
+  Locale,
+  ThemePreference,
+} from '@mint/shared/types/user'
 
 export type AcceptInvitationFormState = z.input<
   typeof acceptInvitationFormSchema
@@ -28,6 +32,7 @@ export type ChangePasswordFormState = z.input<typeof changePasswordFormSchema>
 
 export type ProfileFormState = {
   locale: Locale
+  theme: ThemePreference
   forecastHorizonMonths: number
   targets: Record<keyof AllocationTargets, number | null>
 }

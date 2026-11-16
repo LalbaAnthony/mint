@@ -15,7 +15,7 @@ import ProfilePage from '~/pages/profile/index.vue'
 import RulesPage from '~/pages/rules/index.vue'
 import SchedulesPage from '~/pages/schedules/index.vue'
 import SubscriptionsPage from '~/pages/subscriptions/index.vue'
-import { signOut } from '../session'
+import { signOut, testProfile } from '../session'
 
 describe('default layout (CHG-50)', () => {
   it('combines the sidebar, the content, the bottom bar and the FAB', async () => {
@@ -74,6 +74,41 @@ describe('app', () => {
     })
     expect(document.documentElement.lang).toBe('fr-FR')
     expect(document.documentElement.classList.contains('dark')).toBe(false)
+  })
+
+  it('applies the theme of the profile, then the system one once signed out (NF-UX-02, CHG-84)', async () => {
+    const session = useSessionStore()
+    session.setUser({ ...testProfile, theme: 'dark' })
+    function themeColors() {
+      return [
+        ...document.head.querySelectorAll('meta[name="theme-color"]'),
+      ].map((meta) => [
+        meta.getAttribute('media'),
+        meta.getAttribute('content'),
+      ])
+    }
+
+    await mountSuspended(App, { route: '/accounts' })
+
+    await vi.waitFor(() => {
+      expect(themeColors()).toEqual([
+        ['(prefers-color-scheme: dark)', '#1D1D16'],
+        [null, '#1D1D16'],
+      ])
+    })
+    expect(useColorMode().value).toBe('dark')
+
+    signOut()
+
+    await vi.waitFor(() => {
+      expect(themeColors()).toEqual([
+        ['(prefers-color-scheme: dark)', '#1D1D16'],
+        [null, '#FFFFFF'],
+      ])
+    })
+    expect(useColorMode().preference).toBe('system')
+    expect(useColorMode().value).toBe('light')
+    session.setUser(testProfile)
   })
 
   it('uses the login title on the login screen', async () => {

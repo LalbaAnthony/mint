@@ -6,6 +6,7 @@ import {
 } from '@mint/shared/schemas/profile'
 import { userProfileSchema } from '@mint/shared/schemas/user'
 import type { SessionSummary } from '@mint/shared/types/profile'
+import type { ThemePreference } from '@mint/shared/types/user'
 import { changePasswordFormSchema } from '~~/schemas/forms'
 import type {
   ChangePasswordFormState,
@@ -21,6 +22,7 @@ const { formatDateTime } = useFormatters()
 
 const preferences = reactive<ProfileFormState>({
   locale: session.user?.locale ?? 'fr',
+  theme: session.user?.theme ?? 'system',
   forecastHorizonMonths: session.user?.forecastHorizonMonths ?? 3,
   targets: {
     needs: session.user?.targets.needs ?? 50,
@@ -33,6 +35,12 @@ const savingPreferences = ref(false)
 const localeItems = computed<SelectItem<'fr' | 'en'>[]>(() => [
   { label: t('locales.fr'), value: 'fr' },
   { label: t('locales.en'), value: 'en' },
+])
+
+const themeItems = computed<SelectItem<ThemePreference>[]>(() => [
+  { label: t('profile.themes.system'), value: 'system' },
+  { label: t('profile.themes.light'), value: 'light' },
+  { label: t('profile.themes.dark'), value: 'dark' },
 ])
 
 const horizonItems = computed<SelectItem<number>[]>(() =>
@@ -177,6 +185,18 @@ onMounted(loadSessions)
               v-model="preferences.locale"
               :items="localeItems"
               class="w-full"
+            />
+          </AppFormField>
+          <AppFormField
+            :label="t('profile.theme')"
+            :hint="t('profile.themeHint')"
+            name="theme"
+          >
+            <USelect
+              v-model="preferences.theme"
+              :items="themeItems"
+              class="w-full"
+              data-testid="preferences-theme"
             />
           </AppFormField>
           <AppFormField

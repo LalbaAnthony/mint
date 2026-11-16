@@ -243,6 +243,13 @@
   "profile": {
     "preferences": "Preferences",
     "language": "Language",
+    "theme": "Theme",
+    "themeHint": "System follows the light or dark setting of the device.",
+    "themes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
     "forecastHorizon": "Forecast horizon",
     "monthCount": "{n} month | {n} months",
     "targets": "Allocation targets (%)",
@@ -319,6 +326,7 @@
     "password_too_short": "At least 12 characters",
     "passwords_differ": "The two passwords differ",
     "invalid_locale": "Language not available",
+    "invalid_theme": "Theme not available",
     "horizon_out_of_range": "Between 1 and 12 months",
     "percentage_out_of_range": "Between 0 and 100",
     "targets_sum_not_100": "The targets must add up to 100",

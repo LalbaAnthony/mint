@@ -158,13 +158,17 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     )
   })
 
-  it('saves the preferences and applies the returned profile', async () => {
+  it('saves the preferences and applies the returned profile, theme included (NF-UX-02)', async () => {
     signIn('user')
     const api = installFakeApi(fetchMock, {
       'GET /profile/sessions': () => sessions,
       'GET /categories': () => [],
       'GET /tags': () => [],
-      'PATCH /profile': () => ({ ...testProfile, forecastHorizonMonths: 6 }),
+      'PATCH /profile': () => ({
+        ...testProfile,
+        theme: 'dark',
+        forecastHorizonMonths: 6,
+      }),
     })
     const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
 
@@ -177,8 +181,12 @@ describe('profile (AUTH-05, AUTH-07)', () => {
       api.requests.find((request) => request.method === 'PATCH')?.body,
     ).toEqual({
       locale: 'fr',
+      theme: 'system',
       forecastHorizonMonths: 3,
       targets: { needs: 50, wants: 30, save: 20 },
+    })
+    await vi.waitFor(() => {
+      expect(useColorMode().preference).toBe('dark')
     })
   })
 })

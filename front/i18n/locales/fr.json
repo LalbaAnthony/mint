@@ -243,6 +243,13 @@
   "profile": {
     "preferences": "Préférences",
     "language": "Langue",
+    "theme": "Thème",
+    "themeHint": "Système suit le réglage clair ou sombre de l'appareil.",
+    "themes": {
+      "system": "Système",
+      "light": "Clair",
+      "dark": "Sombre"
+    },
     "forecastHorizon": "Horizon de prévision",
     "monthCount": "{n} mois",
     "targets": "Cibles de répartition (%)",
@@ -319,6 +326,7 @@
     "password_too_short": "12 caractères minimum",
     "passwords_differ": "Les deux mots de passe diffèrent",
     "invalid_locale": "Langue non proposée",
+    "invalid_theme": "Thème non proposé",
     "horizon_out_of_range": "Entre 1 et 12 mois",
     "percentage_out_of_range": "Entre 0 et 100",
     "targets_sum_not_100": "La somme des cibles doit faire 100",

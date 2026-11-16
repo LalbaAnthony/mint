@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { defineNuxtConfig } from 'nuxt/config'
+import { darkSchemeMedia, themeColors } from './app/utils/theme'
 import { appleSplashScreenLinks } from './pwa/splash-screens'
 
 const isVitest = process.env.VITEST !== undefined
@@ -32,7 +33,7 @@ export default defineNuxtConfig({
   modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt', '@vite-pwa/nuxt'],
   css: ['~/assets/css/main.css'],
   ui: {
-    colorMode: false,
+    colorMode: true,
   },
   icon: {
     provider: 'none',
@@ -154,13 +155,22 @@ export default defineNuxtConfig({
   app: {
     head: {
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
-      meta: [{ name: 'theme-color', content: '#FFFFFF' }],
+      meta: [
+        {
+          key: 'theme-color-dark',
+          name: 'theme-color',
+          media: darkSchemeMedia,
+          content: themeColors.dark,
+        },
+        { key: 'theme-color', name: 'theme-color', content: themeColors.light },
+      ],
       link: [
         { rel: 'icon', href: '/favicon.ico', sizes: '48x48' },
         { rel: 'icon', href: '/logo.svg', sizes: 'any', type: 'image/svg+xml' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon-180x180.png' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
         ...appleSplashScreenLinks('light'),
+        ...appleSplashScreenLinks('dark'),
       ],
     },
   },
