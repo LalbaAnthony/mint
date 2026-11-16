@@ -116,16 +116,19 @@ async function deleteEnvelope(): Promise<void> {
 <template>
   <ViewPanel :title="t('navigation.envelopes')">
     <template #actions>
-      <UButton
-        :icon="icons.add"
-        :aria-label="t('envelopes.add')"
-        color="primary"
-        variant="soft"
-        data-testid="envelopes-add"
-        @click="openForm(null)"
-      >
-        <span class="max-sm:sr-only">{{ t('envelopes.add') }}</span>
-      </UButton>
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :icon="icons.add"
+          :aria-label="t('envelopes.add')"
+          color="primary"
+          variant="soft"
+          data-testid="envelopes-add"
+          @click="openForm(null)"
+        >
+          <span class="max-sm:sr-only">{{ t('envelopes.add') }}</span>
+        </UButton>
+      </OfflineGuard>
     </template>
 
     <div v-if="result !== null" class="flex flex-col gap-4">
@@ -174,13 +177,16 @@ async function deleteEnvelope(): Promise<void> {
           :title="t('envelopes.emptyTitle')"
           :description="t('envelopes.emptyText')"
         >
-          <UButton
-            :label="t('envelopes.add')"
-            :icon="icons.add"
-            color="primary"
-            variant="soft"
-            @click="openForm(null)"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('envelopes.add')"
+              :icon="icons.add"
+              color="primary"
+              variant="soft"
+              @click="openForm(null)"
+            />
+          </OfflineGuard>
         </EmptyState>
       </UCard>
       <div
@@ -220,12 +226,15 @@ async function deleteEnvelope(): Promise<void> {
                 <span class="min-w-0 flex-1 truncate text-sm text-muted">
                   {{ envelope.label }}
                 </span>
-                <UButton
-                  :label="t('common.edit')"
-                  color="neutral"
-                  variant="ghost"
-                  @click="openForm(envelope)"
-                />
+                <OfflineGuard v-slot="{ offline }">
+                  <UButton
+                    :disabled="offline"
+                    :label="t('common.edit')"
+                    color="neutral"
+                    variant="ghost"
+                    @click="openForm(envelope)"
+                  />
+                </OfflineGuard>
               </li>
             </ul>
           </template>

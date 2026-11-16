@@ -282,16 +282,23 @@ async function abandon(batch: ImportBatch): Promise<void> {
               @change="onFileChange"
             />
           </AppFormField>
-          <UButton
-            :label="t('imports.upload')"
-            :icon="icons.import"
-            color="primary"
-            variant="soft"
-            :disabled="accountId === undefined || file === null || fileTooLarge"
-            :loading="busy"
-            data-testid="import-upload"
-            @click="upload"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :label="t('imports.upload')"
+              :icon="icons.import"
+              color="primary"
+              variant="soft"
+              :disabled="
+                offline ||
+                accountId === undefined ||
+                file === null ||
+                fileTooLarge
+              "
+              :loading="busy"
+              data-testid="import-upload"
+              @click="upload"
+            />
+          </OfflineGuard>
           <p v-if="fileTooLarge" class="w-full text-sm text-error">
             {{ t('imports.tooLarge') }}
           </p>

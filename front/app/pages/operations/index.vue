@@ -19,6 +19,7 @@ const editor = useOperationEditorStore()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 const route = useRoute()
+const connectivity = useConnectivityStore()
 const filters = ref<OperationFilterState>({
   ...emptyOperationFilters(),
   status: route.query.status === 'to_categorize' ? 'to_categorize' : undefined,
@@ -33,13 +34,32 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
+async function loadOffline(): Promise<void> {
+  const offlineResult = await offlineOperations()
+  if (offlineResult === null) {
+    notifyFailure(
+      new ApiError({ status: 0, code: 'offline_unavailable', issues: [] }),
+    )
+    return
+  }
+  result.value = offlineResult
+}
+
 async function load(): Promise<void> {
+  if (connectivity.offline) {
+    await loadOffline()
+    return
+  }
   try {
     result.value = await apiGet(
       `/operations?${operationQuery(filters.value, sorting.value, page.value, pageSize)}`,
       operationListResponseSchema,
     )
   } catch (error) {
+    if (error instanceof ApiError && error.code === 'offline_unavailable') {
+      await loadOffline()
+      return
+    }
     notifyFailure(error)
   }
 }
@@ -54,6 +74,7 @@ const reloadFromFirstPage = useDebounceFn(() => {
 
 watch([filters, sorting], () => void reloadFromFirstPage(), { deep: true })
 watch(page, load)
+watch(() => connectivity.offline, load)
 watch(
   () => editor.savedVersion,
   async () => {
@@ -118,6 +139,7 @@ function actionsOf(operation: Operation): DropdownMenuItem[][] {
       {
         label: t('common.edit'),
         icon: icons.edit,
+        disabled: connectivity.offline,
         onSelect: () => editor.edit(operation),
       },
     ],
@@ -126,6 +148,7 @@ function actionsOf(operation: Operation): DropdownMenuItem[][] {
         label: t('common.delete'),
         icon: icons.delete,
         color: 'error',
+        disabled: connectivity.offline,
         onSelect: () => {
           operationToDelete.value = operation
         },
@@ -183,16 +206,19 @@ async function deleteOperation(): Promise<void> {
 <template>
   <ViewPanel :title="t('navigation.operations')">
     <template #actions>
-      <UButton
-        :icon="icons.add"
-        :aria-label="t('operations.add')"
-        color="primary"
-        variant="soft"
-        data-testid="operations-add"
-        @click="editor.create('expense')"
-      >
-        <span class="max-sm:sr-only">{{ t('operations.add') }}</span>
-      </UButton>
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :icon="icons.add"
+          :aria-label="t('operations.add')"
+          color="primary"
+          variant="soft"
+          data-testid="operations-add"
+          @click="editor.create('expense')"
+        >
+          <span class="max-sm:sr-only">{{ t('operations.add') }}</span>
+        </UButton>
+      </OfflineGuard>
     </template>
 
     <div class="flex flex-col gap-4">
@@ -204,6 +230,7 @@ async function deleteOperation(): Promise<void> {
               :icon="icons.search"
               :placeholder="t('operations.filters.search')"
               :aria-label="t('operations.filters.search')"
+              :disabled="connectivity.offline"
               class="min-w-48 flex-1"
               data-testid="operations-search"
             />
@@ -211,6 +238,7 @@ async function deleteOperation(): Promise<void> {
               v-model="sortValue"
               :items="sortItems"
               :aria-label="t('operations.sort.label')"
+              :disabled="connectivity.offline"
               class="w-48"
               data-testid="operations-sort"
             />
@@ -222,14 +250,22 @@ async function deleteOperation(): Promise<void> {
                   : t('operations.filters.titleWithCount', { n: filterCount })
               "
               :aria-expanded="filtersOpen"
+              :disabled="connectivity.offline"
               color="neutral"
               variant="outline"
               data-testid="operations-filters-toggle"
               @click="filtersOpen = !filtersOpen"
             />
           </div>
+          <p
+            v-if="connectivity.offline"
+            class="text-sm text-muted"
+            data-testid="operations-offline"
+          >
+            {{ t('offline.operations', { n: offlineOperationDays }) }}
+          </p>
           <OperationFilters
-            v-if="filtersOpen"
+            v-if="filtersOpen && !connectivity.offline"
             v-model="filters"
             :accounts="referentials.accounts"
             :categories="referentials.categories"
@@ -245,13 +281,16 @@ async function deleteOperation(): Promise<void> {
           :title="t('operations.emptyTitle')"
           :description="t('operations.emptyText')"
         >
-          <UButton
-            :label="t('operations.add')"
-            :icon="icons.add"
-            color="primary"
-            variant="soft"
-            @click="editor.create('expense')"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('operations.add')"
+              :icon="icons.add"
+              color="primary"
+              variant="soft"
+              @click="editor.create('expense')"
+            />
+          </OfflineGuard>
         </EmptyState>
         <UTable
           v-else-if="isDesktop"
@@ -313,7 +352,10 @@ async function deleteOperation(): Promise<void> {
             @delete="operationToDelete = $event"
           />
         </ul>
-        <div v-if="result.total > pageSize" class="flex justify-center pt-4">
+        <div
+          v-if="!connectivity.offline && result.total > pageSize"
+          class="flex justify-center pt-4"
+        >
           <UPagination
             v-model:page="page"
             :total="result.total"

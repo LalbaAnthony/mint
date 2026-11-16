@@ -44,33 +44,41 @@ const { formatDateTime } = useFormatters()
           </p>
         </div>
         <template v-if="batch.status === 'pending'">
-          <UButton
-            :label="t('imports.resume')"
-            color="primary"
-            variant="soft"
-            size="sm"
-            :disabled="busy"
-            @click="emit('resume', batch)"
-          />
-          <UButton
-            :label="t('imports.abandon')"
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            :disabled="busy"
-            @click="emit('abandon', batch)"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :label="t('imports.resume')"
+              color="primary"
+              variant="soft"
+              size="sm"
+              :disabled="offline || busy"
+              @click="emit('resume', batch)"
+            />
+          </OfflineGuard>
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :label="t('imports.abandon')"
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              :disabled="offline || busy"
+              @click="emit('abandon', batch)"
+            />
+          </OfflineGuard>
         </template>
-        <UButton
+        <OfflineGuard
           v-else-if="batch.status === 'validated'"
-          :label="t('imports.cancel')"
-          color="error"
-          variant="outline"
-          size="sm"
-          :disabled="busy"
-          :data-testid="`import-cancel-${batch.id}`"
-          @click="emit('cancel', batch)"
-        />
+          v-slot="{ offline }"
+        >
+          <UButton
+            :label="t('imports.cancel')"
+            color="error"
+            variant="outline"
+            size="sm"
+            :disabled="offline || busy"
+            :data-testid="`import-cancel-${batch.id}`"
+            @click="emit('cancel', batch)"
+          />
+        </OfflineGuard>
       </li>
     </ul>
   </div>

@@ -3,6 +3,8 @@ const { t } = useI18n()
 const localeHead = useLocaleHead({ dir: true, lang: true, seo: false })
 const toasterPosition = useToasterPosition()
 
+usePwaUpdates()
+
 useHead({
   htmlAttrs: {
     lang: () => localeHead.value.htmlAttrs.lang,

@@ -165,7 +165,7 @@ export default defineNuxtConfig({
   },
   pwa: {
     disable: isVitest,
-    client: { registerPlugin: !isVitest },
+    client: { registerPlugin: !isVitest, periodicSyncForUpdates: 3600 },
     registerType: 'prompt',
     manifest: {
       name: 'Mint',

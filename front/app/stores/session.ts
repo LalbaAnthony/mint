@@ -6,23 +6,39 @@ export const useSessionStore = defineStore('session', () => {
   const status = ref<SessionStatus>('unknown')
   const role = computed(() => user.value?.role ?? null)
   const isAdmin = computed(() => role.value === 'admin')
+  const toast = useToast()
+  const i18n = useNuxtApp().$i18n
 
   function setUser(profile: UserProfile): void {
     user.value = profile
     status.value = 'authenticated'
   }
 
+  async function forgetDeviceData(): Promise<void> {
+    if (!(await clearOfflineCache())) {
+      toast.add({
+        title: i18n.t('offline.clearFailed'),
+        icon: icons.error,
+        color: 'error',
+      })
+    }
+  }
+
   function clear(): void {
     user.value = null
     status.value = 'anonymous'
     resetCsrfToken()
+    void forgetDeviceData()
   }
 
   async function load(): Promise<void> {
     try {
       setUser(await apiGet('/auth/session', userProfileSchema))
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
+      if (
+        error instanceof ApiError &&
+        (error.status === 401 || error.code === 'offline_unavailable')
+      ) {
         clear()
         return
       }
@@ -36,6 +52,7 @@ export const useSessionStore = defineStore('session', () => {
       password,
     })
     resetCsrfToken()
+    await forgetDeviceData()
     setUser(profile)
   }
 
@@ -45,6 +62,7 @@ export const useSessionStore = defineStore('session', () => {
       return false
     }
     resetCsrfToken()
+    await forgetDeviceData()
     setUser(result)
     return true
   }

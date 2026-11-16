@@ -211,14 +211,17 @@ onMounted(loadSessions)
             </div>
           </AppFormField>
           <div>
-            <UButton
-              type="submit"
-              :label="t('common.save')"
-              :loading="savingPreferences"
-              color="primary"
-              variant="solid"
-              data-testid="preferences-submit"
-            />
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('common.save')"
+                :loading="savingPreferences"
+                color="primary"
+                variant="solid"
+                data-testid="preferences-submit"
+              />
+            </OfflineGuard>
           </div>
         </UForm>
       </UCard>
@@ -248,21 +251,27 @@ onMounted(loadSessions)
                 {{ session.user?.email }}
               </p>
             </div>
-            <UButton
-              :label="t('profile.changeEmail')"
-              color="neutral"
-              variant="outline"
-              @click="emailOpen = true"
-            />
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :label="t('profile.changeEmail')"
+                color="neutral"
+                variant="outline"
+                @click="emailOpen = true"
+              />
+            </OfflineGuard>
           </div>
           <div class="flex flex-wrap items-center justify-between gap-2">
             <p class="text-sm text-muted">{{ t('profile.passwordHelp') }}</p>
-            <UButton
-              :label="t('profile.changePassword')"
-              color="neutral"
-              variant="outline"
-              @click="passwordOpen = true"
-            />
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :label="t('profile.changePassword')"
+                color="neutral"
+                variant="outline"
+                @click="passwordOpen = true"
+              />
+            </OfflineGuard>
           </div>
         </div>
       </UCard>
@@ -275,14 +284,17 @@ onMounted(loadSessions)
             <h2 class="text-base font-semibold text-highlighted">
               {{ t('profile.sessions') }}
             </h2>
-            <UButton
-              :label="t('profile.logoutEverywhere')"
-              :icon="icons.logout"
-              color="error"
-              variant="outline"
-              data-testid="logout-everywhere"
-              @click="revokeOpen = true"
-            />
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :label="t('profile.logoutEverywhere')"
+                :icon="icons.logout"
+                color="error"
+                variant="outline"
+                data-testid="logout-everywhere"
+                @click="revokeOpen = true"
+              />
+            </OfflineGuard>
           </div>
         </template>
         <ul class="divide-y divide-default" data-testid="session-list">
@@ -342,14 +354,17 @@ onMounted(loadSessions)
               class="w-full"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('profile.sendConfirmation')"
-            :loading="sendingEmail"
-            color="primary"
-            variant="solid"
-            block
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('profile.sendConfirmation')"
+              :loading="sendingEmail"
+              color="primary"
+              variant="solid"
+              block
+            />
+          </OfflineGuard>
         </UForm>
       </template>
     </UModal>
@@ -400,14 +415,17 @@ onMounted(loadSessions)
           <p class="text-sm text-muted">
             {{ t('profile.passwordChangeEffect') }}
           </p>
-          <UButton
-            type="submit"
-            :label="t('auth.savePassword')"
-            :loading="changingPassword"
-            color="primary"
-            variant="solid"
-            block
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('auth.savePassword')"
+              :loading="changingPassword"
+              color="primary"
+              variant="solid"
+              block
+            />
+          </OfflineGuard>
         </UForm>
       </template>
     </UModal>

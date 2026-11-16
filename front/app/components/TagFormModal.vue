@@ -59,15 +59,18 @@ async function submit(): Promise<void> {
         <AppFormField :label="t('tags.fields.name')" name="name">
           <UInput v-model="state.name" class="w-full" data-testid="tag-name" />
         </AppFormField>
-        <UButton
-          type="submit"
-          :label="t('common.save')"
-          :loading="saving"
-          color="primary"
-          variant="solid"
-          block
-          data-testid="tag-submit"
-        />
+        <OfflineGuard block v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            type="submit"
+            :label="t('common.save')"
+            :loading="saving"
+            color="primary"
+            variant="solid"
+            block
+            data-testid="tag-submit"
+          />
+        </OfflineGuard>
       </UForm>
     </template>
   </UModal>

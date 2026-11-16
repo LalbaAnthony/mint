@@ -23,6 +23,7 @@ function serviceWorkerContainer(): ServiceWorkerContainer | null {
 export function useNotificationRefresh(): void {
   const store = useNotificationsStore()
   const session = useSessionStore()
+  const connectivity = useConnectivityStore()
   const router = useRouter()
   const toast = useToast()
   const { errorMessage } = useFormValidation()
@@ -30,7 +31,7 @@ export function useNotificationRefresh(): void {
   let failing = false
 
   async function refresh(): Promise<void> {
-    if (session.user === null) {
+    if (session.user === null || connectivity.offline) {
       return
     }
     try {

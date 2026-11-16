@@ -8,6 +8,7 @@ const props = withDefaults(defineProps<CategoryListProps>(), { nested: false })
 const emit = defineEmits<CategoryListEmits>()
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 
 const list = useTemplateRef<HTMLElement>('list')
 const sortableScope = props.nested ? 'category-child' : 'category-root'
@@ -33,6 +34,7 @@ function actionItems(category: Category): DropdownMenuItem[][] {
     label: t('common.delete'),
     icon: icons.delete,
     color: 'error',
+    disabled: connectivity.offline,
     onSelect: () => select('delete'),
   }
   if (category.archivedAt !== null) {
@@ -41,6 +43,7 @@ function actionItems(category: Category): DropdownMenuItem[][] {
         {
           label: t('common.restore'),
           icon: icons.restore,
+          disabled: connectivity.offline,
           onSelect: () => select('restore'),
         },
       ],
@@ -51,6 +54,7 @@ function actionItems(category: Category): DropdownMenuItem[][] {
     {
       label: t('common.edit'),
       icon: icons.edit,
+      disabled: connectivity.offline,
       onSelect: () => select('edit'),
     },
   ]
@@ -58,12 +62,14 @@ function actionItems(category: Category): DropdownMenuItem[][] {
     main.push({
       label: t('categories.addChild'),
       icon: icons.add,
+      disabled: connectivity.offline,
       onSelect: () => select('addChild'),
     })
   }
   main.push({
     label: t('common.archive'),
     icon: icons.archive,
+    disabled: connectivity.offline,
     onSelect: () => select('archive'),
   })
   return [main, [remove]]

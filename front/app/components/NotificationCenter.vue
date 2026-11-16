@@ -3,6 +3,7 @@ import type { NotificationView } from '~~/types/notifications'
 
 const store = useNotificationsStore()
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
 const { formatDateTime } = useFormatters()
@@ -17,7 +18,7 @@ function notifyFailure(error: unknown): void {
 
 async function openView(view: NotificationView): Promise<void> {
   try {
-    if (view.unread) {
+    if (view.unread && !connectivity.offline) {
       await store.markRead(view.notification.id)
     }
     store.open = false
@@ -62,14 +63,17 @@ async function remove(view: NotificationView): Promise<void> {
     <template #body>
       <div class="flex flex-col gap-4" data-testid="notification-center">
         <div v-if="store.unreadCount > 0" class="flex justify-end">
-          <UButton
-            :label="t('notifications.markAllRead')"
-            :loading="markingAll"
-            color="primary"
-            variant="soft"
-            data-testid="notifications-read-all"
-            @click="markAllRead"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('notifications.markAllRead')"
+              :loading="markingAll"
+              color="primary"
+              variant="soft"
+              data-testid="notifications-read-all"
+              @click="markAllRead"
+            />
+          </OfflineGuard>
         </div>
         <EmptyState
           v-if="views.length === 0"
@@ -127,15 +131,18 @@ async function remove(view: NotificationView): Promise<void> {
                 {{ formatDateTime(view.notification.createdAt) }}
               </span>
             </button>
-            <UButton
-              :icon="icons.delete"
-              :aria-label="t('notifications.delete', { title: view.title })"
-              :class="touchIconButtonClass"
-              color="neutral"
-              variant="ghost"
-              :data-testid="`notification-delete-${view.notification.id}`"
-              @click="remove(view)"
-            />
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :icon="icons.delete"
+                :aria-label="t('notifications.delete', { title: view.title })"
+                :class="touchIconButtonClass"
+                color="neutral"
+                variant="ghost"
+                :data-testid="`notification-delete-${view.notification.id}`"
+                @click="remove(view)"
+              />
+            </OfflineGuard>
           </li>
         </ul>
       </div>

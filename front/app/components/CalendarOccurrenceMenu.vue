@@ -9,6 +9,7 @@ const props = defineProps<CalendarOccurrenceMenuProps>()
 const emit = defineEmits<CalendarOccurrenceMenuEmits>()
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 
 const items = computed<DropdownMenuItem[][]>(() => {
   const occurrence = props.occurrence
@@ -17,13 +18,13 @@ const items = computed<DropdownMenuItem[][]>(() => {
     {
       label: t('schedules.occurrences.edit'),
       icon: icons.edit,
-      disabled: !editable,
+      disabled: !editable || connectivity.offline,
       onSelect: () => emit('action', { kind: 'edit', occurrence }),
     },
     {
       label: t('schedules.occurrences.skip'),
       icon: icons.skip,
-      disabled: !editable,
+      disabled: !editable || connectivity.offline,
       onSelect: () => emit('action', { kind: 'skip', occurrence }),
     },
   ]
@@ -31,7 +32,7 @@ const items = computed<DropdownMenuItem[][]>(() => {
     changes.push({
       label: t('schedules.occurrences.restore'),
       icon: icons.restoreOccurrence,
-      disabled: !editable,
+      disabled: !editable || connectivity.offline,
       onSelect: () => emit('action', { kind: 'restore', occurrence }),
     })
   }

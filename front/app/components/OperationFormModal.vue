@@ -409,15 +409,18 @@ async function submit(): Promise<void> {
           v-if="edited !== null && edited.transferGroupId === null"
           :operation="edited"
         />
-        <UButton
-          type="submit"
-          :label="t('common.save')"
-          :loading="saving"
-          color="primary"
-          variant="solid"
-          block
-          data-testid="operation-submit"
-        />
+        <OfflineGuard block v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            type="submit"
+            :label="t('common.save')"
+            :loading="saving"
+            color="primary"
+            variant="solid"
+            block
+            data-testid="operation-submit"
+          />
+        </OfflineGuard>
       </UForm>
     </template>
   </UModal>

@@ -306,37 +306,45 @@ async function deleteSchedule(): Promise<void> {
               />
               <template v-if="occurrence.editable">
                 <template v-if="occurrence.status === 'pending'">
-                  <UButton
-                    :icon="icons.edit"
-                    :aria-label="t('schedules.occurrences.edit')"
-                    color="neutral"
-                    variant="ghost"
-                    :disabled="busy"
-                    data-testid="occurrence-edit"
-                    @click="editOccurrence(occurrence)"
-                  />
-                  <UButton
-                    :icon="icons.skip"
-                    :aria-label="t('schedules.occurrences.skip')"
-                    color="neutral"
-                    variant="ghost"
-                    :disabled="busy"
-                    data-testid="occurrence-skip"
-                    @click="skip(occurrence)"
-                  />
+                  <OfflineGuard v-slot="{ offline }">
+                    <UButton
+                      :icon="icons.edit"
+                      :aria-label="t('schedules.occurrences.edit')"
+                      color="neutral"
+                      variant="ghost"
+                      :disabled="offline || busy"
+                      data-testid="occurrence-edit"
+                      @click="editOccurrence(occurrence)"
+                    />
+                  </OfflineGuard>
+                  <OfflineGuard v-slot="{ offline }">
+                    <UButton
+                      :icon="icons.skip"
+                      :aria-label="t('schedules.occurrences.skip')"
+                      color="neutral"
+                      variant="ghost"
+                      :disabled="offline || busy"
+                      data-testid="occurrence-skip"
+                      @click="skip(occurrence)"
+                    />
+                  </OfflineGuard>
                 </template>
-                <UButton
+                <OfflineGuard
                   v-if="
                     occurrence.status === 'skipped' || occurrence.overridden
                   "
-                  :icon="icons.restoreOccurrence"
-                  :aria-label="t('schedules.occurrences.restore')"
-                  color="neutral"
-                  variant="ghost"
-                  :disabled="busy"
-                  data-testid="occurrence-restore"
-                  @click="restore(occurrence)"
-                />
+                  v-slot="{ offline }"
+                >
+                  <UButton
+                    :icon="icons.restoreOccurrence"
+                    :aria-label="t('schedules.occurrences.restore')"
+                    color="neutral"
+                    variant="ghost"
+                    :disabled="offline || busy"
+                    data-testid="occurrence-restore"
+                    @click="restore(occurrence)"
+                  />
+                </OfflineGuard>
               </template>
             </li>
           </ul>
@@ -348,35 +356,44 @@ async function deleteSchedule(): Promise<void> {
         v-if="schedule !== null"
         class="flex w-full flex-wrap justify-end gap-2"
       >
-        <UButton
-          :label="t('common.delete')"
-          :icon="icons.delete"
-          color="error"
-          variant="soft"
-          data-testid="schedule-delete"
-          @click="deleteOpen = true"
-        />
-        <UButton
-          :label="
-            schedule.active
-              ? t('schedules.deactivate')
-              : t('schedules.activate')
-          "
-          :icon="schedule.active ? icons.deactivate : icons.activate"
-          color="neutral"
-          variant="outline"
-          :loading="busy"
-          data-testid="schedule-toggle-active"
-          @click="toggleActive"
-        />
-        <UButton
-          :label="t('common.edit')"
-          :icon="icons.edit"
-          color="primary"
-          variant="soft"
-          data-testid="schedule-edit"
-          @click="emit('edit', schedule)"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :label="t('common.delete')"
+            :icon="icons.delete"
+            color="error"
+            variant="soft"
+            data-testid="schedule-delete"
+            @click="deleteOpen = true"
+          />
+        </OfflineGuard>
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :label="
+              schedule.active
+                ? t('schedules.deactivate')
+                : t('schedules.activate')
+            "
+            :icon="schedule.active ? icons.deactivate : icons.activate"
+            color="neutral"
+            variant="outline"
+            :loading="busy"
+            data-testid="schedule-toggle-active"
+            @click="toggleActive"
+          />
+        </OfflineGuard>
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :label="t('common.edit')"
+            :icon="icons.edit"
+            color="primary"
+            variant="soft"
+            data-testid="schedule-edit"
+            @click="emit('edit', schedule)"
+          />
+        </OfflineGuard>
       </div>
     </template>
   </UModal>

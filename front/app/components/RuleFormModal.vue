@@ -269,15 +269,18 @@ async function submit(): Promise<void> {
           <TagSelect v-model="state.tagIds" test-id="rule-tags" />
         </AppFormField>
         <USwitch v-model="state.active" :label="t('rules.fields.active')" />
-        <UButton
-          type="submit"
-          :label="t('common.save')"
-          :loading="saving"
-          color="primary"
-          variant="solid"
-          block
-          data-testid="rule-submit"
-        />
+        <OfflineGuard block v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            type="submit"
+            :label="t('common.save')"
+            :loading="saving"
+            color="primary"
+            variant="solid"
+            block
+            data-testid="rule-submit"
+          />
+        </OfflineGuard>
       </UForm>
     </template>
   </UModal>

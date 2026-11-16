@@ -329,32 +329,37 @@ onMounted(load)
 <template>
   <ViewPanel :title="t('navigation.accounts')">
     <template #actions>
-      <UButton
-        v-if="hasActiveAccounts"
-        :icon="reordering ? icons.success : icons.reorder"
-        :aria-label="
-          reordering ? t('common.doneReordering') : t('common.reorder')
-        "
-        :aria-pressed="reordering"
-        color="primary"
-        variant="soft"
-        data-testid="accounts-reorder"
-        @click="reordering = !reordering"
-      >
-        <span class="max-sm:sr-only">
-          {{ reordering ? t('common.doneReordering') : t('common.reorder') }}
-        </span>
-      </UButton>
-      <UButton
-        :icon="icons.add"
-        :aria-label="t('accounts.add')"
-        color="primary"
-        variant="soft"
-        data-testid="accounts-add"
-        @click="openAccountForm(null)"
-      >
-        <span class="max-sm:sr-only">{{ t('accounts.add') }}</span>
-      </UButton>
+      <OfflineGuard v-if="hasActiveAccounts" v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :icon="reordering ? icons.success : icons.reorder"
+          :aria-label="
+            reordering ? t('common.doneReordering') : t('common.reorder')
+          "
+          :aria-pressed="reordering"
+          color="primary"
+          variant="soft"
+          data-testid="accounts-reorder"
+          @click="reordering = !reordering"
+        >
+          <span class="max-sm:sr-only">
+            {{ reordering ? t('common.doneReordering') : t('common.reorder') }}
+          </span>
+        </UButton>
+      </OfflineGuard>
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :icon="icons.add"
+          :aria-label="t('accounts.add')"
+          color="primary"
+          variant="soft"
+          data-testid="accounts-add"
+          @click="openAccountForm(null)"
+        >
+          <span class="max-sm:sr-only">{{ t('accounts.add') }}</span>
+        </UButton>
+      </OfflineGuard>
     </template>
 
     <div v-if="overview !== null" class="flex flex-col gap-6">
@@ -387,13 +392,16 @@ onMounted(load)
           :title="t('accounts.emptyTitle')"
           :description="t('accounts.emptyText')"
         >
-          <UButton
-            :label="t('accounts.add')"
-            :icon="icons.add"
-            color="primary"
-            variant="soft"
-            @click="openAccountForm(null)"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('accounts.add')"
+              :icon="icons.add"
+              color="primary"
+              variant="soft"
+              @click="openAccountForm(null)"
+            />
+          </OfflineGuard>
         </EmptyState>
       </UCard>
       <ArchivedAccountsCard

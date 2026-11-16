@@ -94,14 +94,17 @@ onMounted(load)
             </template>
           </UInput>
         </AppFormField>
-        <UButton
-          :label="t('common.save')"
-          color="primary"
-          variant="soft"
-          :loading="saving === cap.product"
-          :data-testid="`regulated-cap-save-${cap.product}`"
-          @click="save(cap)"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :label="t('common.save')"
+            color="primary"
+            variant="soft"
+            :loading="saving === cap.product"
+            :data-testid="`regulated-cap-save-${cap.product}`"
+            @click="save(cap)"
+          />
+        </OfflineGuard>
       </li>
     </ul>
   </UCard>

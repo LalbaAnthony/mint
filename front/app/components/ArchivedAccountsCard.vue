@@ -10,6 +10,7 @@ defineProps<ArchivedAccountsCardProps>()
 const emit = defineEmits<ArchivedAccountsCardEmits>()
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 
 const open = ref(false)
 
@@ -19,6 +20,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
       {
         label: t('common.restore'),
         icon: icons.restore,
+        disabled: connectivity.offline,
         onSelect: () => emit('accountAction', { kind: 'restore', account }),
       },
     ],
@@ -27,6 +29,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
         label: t('common.delete'),
         icon: icons.delete,
         color: 'error',
+        disabled: connectivity.offline,
         onSelect: () => emit('accountAction', { kind: 'delete', account }),
       },
     ],

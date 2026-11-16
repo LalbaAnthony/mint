@@ -87,14 +87,35 @@ export function resetCsrfToken(): void {
   csrfToken = null
 }
 
+function browserOffline(): boolean {
+  return typeof navigator !== 'undefined' && navigator.onLine === false
+}
+
+function isOffline(): boolean {
+  return browserOffline() || useConnectivityStore().offline
+}
+
+function offlineError(code: 'offline' | 'offline_unavailable'): ApiError {
+  return new ApiError({ status: 0, code, issues: [] })
+}
+
+function ensureOnlineForWrite(): void {
+  if (isOffline()) {
+    throw offlineError('offline')
+  }
+}
+
 export async function apiRequest(
   method: ApiMethod,
   path: string,
   body?: object,
 ): Promise<unknown> {
   if (method === 'GET') {
-    return send(method, path, undefined, null)
+    const response = await send(method, path, undefined, null)
+    useConnectivityStore().backOnline()
+    return response
   }
+  ensureOnlineForWrite()
   const token = csrfToken ?? (await refreshCsrfToken())
   const response = await send(method, path, body, token).catch(
     async (error: unknown) => {
@@ -108,11 +129,49 @@ export async function apiRequest(
   return response
 }
 
+async function cachedResponse(path: string): Promise<unknown> {
+  const connectivity = useConnectivityStore()
+  const entry = await readOfflineEntry(path)
+  if (entry === null) {
+    connectivity.wentOffline()
+    throw offlineError('offline_unavailable')
+  }
+  connectivity.servedFromCache(entry.savedAt)
+  return entry.body
+}
+
+async function cacheableGet(path: string): Promise<unknown> {
+  if (browserOffline()) {
+    return cachedResponse(path)
+  }
+  try {
+    const body = await send('GET', path, undefined, null)
+    useConnectivityStore().backOnline()
+    await storeOfflineEntry(path, { savedAt: new Date().toISOString(), body })
+    return body
+  } catch (error) {
+    if (error instanceof ApiError && error.code === 'network_error') {
+      return cachedResponse(path)
+    }
+    throw error
+  }
+}
+
 export async function apiGet<Schema extends z.ZodType>(
   path: string,
   schema: Schema,
 ): Promise<z.output<Schema>> {
-  return schema.parse(await apiRequest('GET', path))
+  if (!isOfflineCacheable(path)) {
+    return schema.parse(await apiRequest('GET', path))
+  }
+  return schema.parse(await cacheableGet(path))
+}
+
+export async function prefetchOffline(path: string): Promise<void> {
+  if (!isOfflineCacheable(path)) {
+    throw new Error(`${path} is not kept offline`)
+  }
+  await cacheableGet(path)
 }
 
 export async function apiCall<Schema extends z.ZodType>(
@@ -150,6 +209,7 @@ export async function apiUpload<Schema extends z.ZodType>(
   file: Blob,
   schema: Schema,
 ): Promise<z.output<Schema>> {
+  ensureOnlineForWrite()
   const token = csrfToken ?? (await refreshCsrfToken())
   const response = await sendFile(path, file, token).catch(
     async (error: unknown) => {
@@ -206,6 +266,7 @@ async function sendDownload(
 }
 
 export async function apiDownload(path: string, body: object): Promise<Blob> {
+  ensureOnlineForWrite()
   const token = csrfToken ?? (await refreshCsrfToken())
   return sendDownload(path, body, token).catch(async (error: unknown) => {
     if (error instanceof ApiError && error.code === 'csrf_invalid') {

@@ -130,14 +130,17 @@ function remove(statement: Statement): Promise<void> {
               data-testid="statement-balance"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('statements.record')"
-            color="primary"
-            variant="solid"
-            :loading="busy"
-            data-testid="statement-submit"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('statements.record')"
+              color="primary"
+              variant="solid"
+              :loading="busy"
+              data-testid="statement-submit"
+            />
+          </OfflineGuard>
         </UForm>
         <p v-if="statements.length === 0" class="text-sm text-muted">
           {{ t('statements.empty') }}
@@ -172,26 +175,30 @@ function remove(statement: Statement): Promise<void> {
               {{ t('statements.gap') }}
               {{ formatMoney(statement.gapCents, 'exceptZero') }}
             </span>
-            <UButton
-              v-if="statement.gapCents !== 0"
-              :label="t('statements.adjust')"
-              :icon="icons.adjustment"
-              color="primary"
-              variant="soft"
-              size="sm"
-              :loading="busy"
-              data-testid="statement-adjust"
-              @click="adjust(statement)"
-            />
-            <UButton
-              :icon="icons.delete"
-              :aria-label="t('statements.delete')"
-              color="error"
-              variant="ghost"
-              size="sm"
-              :disabled="busy"
-              @click="remove(statement)"
-            />
+            <OfflineGuard v-if="statement.gapCents !== 0" v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :label="t('statements.adjust')"
+                :icon="icons.adjustment"
+                color="primary"
+                variant="soft"
+                size="sm"
+                :loading="busy"
+                data-testid="statement-adjust"
+                @click="adjust(statement)"
+              />
+            </OfflineGuard>
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :icon="icons.delete"
+                :aria-label="t('statements.delete')"
+                color="error"
+                variant="ghost"
+                size="sm"
+                :disabled="offline || busy"
+                @click="remove(statement)"
+              />
+            </OfflineGuard>
           </li>
         </ul>
       </div>

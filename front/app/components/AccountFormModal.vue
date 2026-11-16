@@ -430,15 +430,18 @@ async function submit(): Promise<void> {
             />
           </AppFormField>
         </template>
-        <UButton
-          type="submit"
-          :label="t('common.save')"
-          :loading="saving"
-          color="primary"
-          variant="solid"
-          block
-          data-testid="account-submit"
-        />
+        <OfflineGuard block v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            type="submit"
+            :label="t('common.save')"
+            :loading="saving"
+            color="primary"
+            variant="solid"
+            block
+            data-testid="account-submit"
+          />
+        </OfflineGuard>
       </UForm>
     </template>
   </UModal>

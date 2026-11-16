@@ -1,5 +1,6 @@
 <script setup lang="ts">
 useNotificationRefresh()
+useOfflineSync()
 </script>
 
 <template>

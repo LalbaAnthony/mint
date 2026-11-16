@@ -152,3 +152,7 @@ export interface InterestModalProps {
 export type InterestModalEmits = {
   changed: []
 }
+
+export interface OfflineGuardProps {
+  block?: boolean
+}

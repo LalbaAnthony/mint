@@ -148,25 +148,31 @@ async function deleteWithPasskey(): Promise<void> {
     <div class="flex flex-col gap-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <p class="text-sm text-muted">{{ t('personalData.exportHelp') }}</p>
-        <UButton
-          :label="t('personalData.export')"
-          :icon="icons.download"
-          color="primary"
-          variant="soft"
-          data-testid="personal-data-export"
-          @click="openExport"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :label="t('personalData.export')"
+            :icon="icons.download"
+            color="primary"
+            variant="soft"
+            data-testid="personal-data-export"
+            @click="openExport"
+          />
+        </OfflineGuard>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-2">
         <p class="text-sm text-muted">{{ t('personalData.deleteHelp') }}</p>
-        <UButton
-          :label="t('personalData.delete')"
-          :icon="icons.delete"
-          color="error"
-          variant="outline"
-          data-testid="personal-data-delete"
-          @click="openDelete"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :label="t('personalData.delete')"
+            :icon="icons.delete"
+            color="error"
+            variant="outline"
+            data-testid="personal-data-delete"
+            @click="openDelete"
+          />
+        </OfflineGuard>
       </div>
     </div>
 
@@ -193,16 +199,19 @@ async function deleteWithPasskey(): Promise<void> {
               data-testid="export-password"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('personalData.download')"
-            :icon="icons.download"
-            :loading="exporting"
-            color="primary"
-            variant="solid"
-            block
-            data-testid="export-submit"
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('personalData.download')"
+              :icon="icons.download"
+              :loading="exporting"
+              color="primary"
+              variant="solid"
+              block
+              data-testid="export-submit"
+            />
+          </OfflineGuard>
         </UForm>
       </template>
     </UModal>
@@ -243,28 +252,34 @@ async function deleteWithPasskey(): Promise<void> {
               data-testid="delete-account-password"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('personalData.deleteForever')"
-            :loading="deleting"
-            color="error"
-            variant="solid"
-            block
-            data-testid="delete-account-submit"
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('personalData.deleteForever')"
+              :loading="deleting"
+              color="error"
+              variant="solid"
+              block
+              data-testid="delete-account-submit"
+            />
+          </OfflineGuard>
         </UForm>
         <template v-if="passkeyConfirmation">
           <USeparator :label="t('auth.or')" class="my-4" />
-          <UButton
-            :label="t('personalData.deleteWithPasskey')"
-            :icon="icons.passkey"
-            :loading="deleting"
-            color="neutral"
-            variant="outline"
-            block
-            data-testid="delete-account-passkey"
-            @click="deleteWithPasskey"
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('personalData.deleteWithPasskey')"
+              :icon="icons.passkey"
+              :loading="deleting"
+              color="neutral"
+              variant="outline"
+              block
+              data-testid="delete-account-passkey"
+              @click="deleteWithPasskey"
+            />
+          </OfflineGuard>
         </template>
       </template>
     </UModal>

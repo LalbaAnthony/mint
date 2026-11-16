@@ -8,6 +8,7 @@ import {
 import type { Rule, RuleSuggestion } from '@mint/shared/types/rules'
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
 const { formatMoney } = useFormatters()
@@ -141,11 +142,13 @@ function actionsOf(rule: Rule): DropdownMenuItem[][] {
       {
         label: t('common.edit'),
         icon: icons.edit,
+        disabled: connectivity.offline,
         onSelect: () => openForm(rule, null),
       },
       {
         label: rule.active ? t('rules.deactivate') : t('rules.activate'),
         icon: rule.active ? icons.deactivate : icons.activate,
+        disabled: connectivity.offline,
         onSelect: () => void toggle(rule),
       },
     ],
@@ -154,6 +157,7 @@ function actionsOf(rule: Rule): DropdownMenuItem[][] {
         label: t('common.delete'),
         icon: icons.delete,
         color: 'error',
+        disabled: connectivity.offline,
         onSelect: () => {
           ruleToDelete.value = rule
         },
@@ -206,25 +210,30 @@ function actionOf(rule: Rule): string {
 <template>
   <ViewPanel :title="t('navigation.rules')">
     <template #actions>
-      <UButton
-        v-if="(rules?.length ?? 0) > 1"
-        :icon="icons.reorder"
-        :label="reordering ? t('common.doneReordering') : t('common.reorder')"
-        color="neutral"
-        variant="ghost"
-        data-testid="rules-reorder"
-        @click="reordering = !reordering"
-      />
-      <UButton
-        :icon="icons.add"
-        :aria-label="t('rules.add')"
-        color="primary"
-        variant="soft"
-        data-testid="rules-add"
-        @click="openForm(null, null)"
-      >
-        <span class="max-sm:sr-only">{{ t('rules.add') }}</span>
-      </UButton>
+      <OfflineGuard v-if="(rules?.length ?? 0) > 1" v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :icon="icons.reorder"
+          :label="reordering ? t('common.doneReordering') : t('common.reorder')"
+          color="neutral"
+          variant="ghost"
+          data-testid="rules-reorder"
+          @click="reordering = !reordering"
+        />
+      </OfflineGuard>
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :icon="icons.add"
+          :aria-label="t('rules.add')"
+          color="primary"
+          variant="soft"
+          data-testid="rules-add"
+          @click="openForm(null, null)"
+        >
+          <span class="max-sm:sr-only">{{ t('rules.add') }}</span>
+        </UButton>
+      </OfflineGuard>
     </template>
 
     <UCard v-if="rules !== null" data-testid="rules-list">
@@ -234,13 +243,16 @@ function actionOf(rule: Rule): string {
         :title="t('rules.emptyTitle')"
         :description="t('rules.emptyText')"
       >
-        <UButton
-          :label="t('rules.add')"
-          :icon="icons.add"
-          color="primary"
-          variant="soft"
-          @click="openForm(null, null)"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :label="t('rules.add')"
+            :icon="icons.add"
+            color="primary"
+            variant="soft"
+            @click="openForm(null, null)"
+          />
+        </OfflineGuard>
       </EmptyState>
       <template v-else>
         <p class="pb-2 text-xs text-muted">{{ t('rules.priorityHelp') }}</p>

@@ -11,6 +11,7 @@ const props = defineProps<PaymentMethodListProps>()
 const emit = defineEmits<PaymentMethodListEmits>()
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 
 function actionItems(paymentMethod: PaymentMethod): DropdownMenuItem[][] {
   const select = (kind: PaymentMethodActionKind) =>
@@ -19,6 +20,7 @@ function actionItems(paymentMethod: PaymentMethod): DropdownMenuItem[][] {
     label: t('common.delete'),
     icon: icons.delete,
     color: 'error',
+    disabled: connectivity.offline,
     onSelect: () => select('delete'),
   }
   if (paymentMethod.archivedAt !== null) {
@@ -27,6 +29,7 @@ function actionItems(paymentMethod: PaymentMethod): DropdownMenuItem[][] {
         {
           label: t('common.restore'),
           icon: icons.restore,
+          disabled: connectivity.offline,
           onSelect: () => select('restore'),
         },
       ],
@@ -38,11 +41,13 @@ function actionItems(paymentMethod: PaymentMethod): DropdownMenuItem[][] {
       {
         label: t('common.edit'),
         icon: icons.edit,
+        disabled: connectivity.offline,
         onSelect: () => select('edit'),
       },
       {
         label: t('common.archive'),
         icon: icons.archive,
+        disabled: connectivity.offline,
         onSelect: () => select('archive'),
       },
     ],
@@ -108,14 +113,17 @@ function actionItems(paymentMethod: PaymentMethod): DropdownMenuItem[][] {
     </ul>
     <p v-else class="text-sm text-muted">{{ t('paymentMethods.none') }}</p>
     <div>
-      <UButton
-        :label="t('paymentMethods.add')"
-        :icon="icons.add"
-        color="neutral"
-        variant="ghost"
-        data-testid="add-payment-method"
-        @click="emit('accountAction', { kind: 'addPaymentMethod', account })"
-      />
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :label="t('paymentMethods.add')"
+          :icon="icons.add"
+          color="neutral"
+          variant="ghost"
+          data-testid="add-payment-method"
+          @click="emit('accountAction', { kind: 'addPaymentMethod', account })"
+        />
+      </OfflineGuard>
     </div>
   </div>
 </template>

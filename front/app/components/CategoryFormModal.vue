@@ -221,15 +221,18 @@ async function submit(): Promise<void> {
             data-testid="category-parent"
           />
         </AppFormField>
-        <UButton
-          type="submit"
-          :label="t('common.save')"
-          :loading="saving"
-          color="primary"
-          variant="solid"
-          block
-          data-testid="category-submit"
-        />
+        <OfflineGuard block v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            type="submit"
+            :label="t('common.save')"
+            :loading="saving"
+            color="primary"
+            variant="solid"
+            block
+            data-testid="category-submit"
+          />
+        </OfflineGuard>
       </UForm>
     </template>
   </UModal>

@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useOnline } from '@vueuse/core'
 import type { QuickAddKind } from '~~/types/navigation'
 
 const { t } = useI18n()
 const route = useRoute()
-const isOnline = useOnline()
+const connectivity = useConnectivityStore()
 const { quickAddEntries } = useNavigation()
 const editor = useOperationEditorStore()
 
@@ -22,7 +21,7 @@ const isHidden = computed(() => route.meta.hideFab === true)
     <UButton
       :icon="icons.add"
       :aria-label="t('quickAdd.add')"
-      :disabled="!isOnline"
+      :disabled="connectivity.offline"
       color="primary"
       variant="solid"
       class="fixed right-4 bottom-[calc(64px+16px+env(safe-area-inset-bottom))] z-10 size-14 justify-center rounded-full shadow-lg lg:hidden"

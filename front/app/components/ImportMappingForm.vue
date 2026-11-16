@@ -243,14 +243,17 @@ function submit(): void {
         </tbody>
       </table>
     </div>
-    <UButton
-      :label="t('imports.preview')"
-      color="primary"
-      variant="solid"
-      :loading="busy"
-      class="self-end"
-      data-testid="import-preview"
-      @click="submit"
-    />
+    <OfflineGuard v-slot="{ offline }">
+      <UButton
+        :disabled="offline"
+        :label="t('imports.preview')"
+        color="primary"
+        variant="solid"
+        :loading="busy"
+        class="self-end"
+        data-testid="import-preview"
+        @click="submit"
+      />
+    </OfflineGuard>
   </div>
 </template>

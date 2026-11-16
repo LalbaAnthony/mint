@@ -4,6 +4,14 @@ import type { ViewPanelProps } from '~~/types/components'
 const props = defineProps<ViewPanelProps>()
 
 const { t } = useI18n()
+const { formatDateTime } = useFormatters()
+const connectivity = useConnectivityStore()
+
+const offlineTitle = computed(() =>
+  connectivity.dataAt === null
+    ? t('offline.bannerNoData')
+    : t('offline.banner', { date: formatDateTime(connectivity.dataAt) }),
+)
 
 useHead({ title: () => props.title })
 </script>
@@ -35,6 +43,16 @@ useHead({ title: () => props.title })
           <NotificationBell />
         </template>
       </UDashboardNavbar>
+      <UAlert
+        v-if="connectivity.offline"
+        :icon="icons.offline"
+        :title="offlineTitle"
+        color="info"
+        variant="soft"
+        class="rounded-none"
+        role="status"
+        data-testid="offline-banner"
+      />
     </template>
     <template #body>
       <slot />

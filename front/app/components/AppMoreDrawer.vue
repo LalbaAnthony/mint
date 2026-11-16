@@ -7,12 +7,14 @@ const { t } = useI18n()
 const route = useRoute()
 const { moreEntries } = useNavigation()
 const logout = useLogout()
+const connectivity = useConnectivityStore()
 
 const items = computed<NavigationMenuItem[]>(() => [
   ...moreEntries.value.map(({ label, icon, to }) => ({ label, icon, to })),
   {
     label: t('navigation.logout'),
     icon: icons.logout,
+    disabled: connectivity.offline,
     onSelect: () => {
       open.value = false
       void logout()

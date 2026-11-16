@@ -172,25 +172,31 @@ onMounted(load)
           {{ t('categories.title') }}
         </h2>
         <div class="flex flex-wrap gap-2">
-          <UButton
-            :icon="reordering ? icons.success : icons.reorder"
-            :label="
-              reordering ? t('common.doneReordering') : t('common.reorder')
-            "
-            :aria-pressed="reordering"
-            color="primary"
-            variant="soft"
-            data-testid="categories-reorder"
-            @click="reordering = !reordering"
-          />
-          <UButton
-            :icon="icons.add"
-            :label="t('categories.add')"
-            color="primary"
-            variant="soft"
-            data-testid="categories-add"
-            @click="openForm(null, null)"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :icon="reordering ? icons.success : icons.reorder"
+              :label="
+                reordering ? t('common.doneReordering') : t('common.reorder')
+              "
+              :aria-pressed="reordering"
+              color="primary"
+              variant="soft"
+              data-testid="categories-reorder"
+              @click="reordering = !reordering"
+            />
+          </OfflineGuard>
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :icon="icons.add"
+              :label="t('categories.add')"
+              color="primary"
+              variant="soft"
+              data-testid="categories-add"
+              @click="openForm(null, null)"
+            />
+          </OfflineGuard>
         </div>
       </div>
     </template>

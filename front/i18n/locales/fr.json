@@ -399,6 +399,8 @@
     "no_passkey": "Aucune passkey enregistrée sur ce compte.",
     "email_mismatch": "L'adresse saisie ne correspond pas à votre compte.",
     "last_admin": "Vous êtes le dernier administrateur actif : désignez-en un autre avant de supprimer votre compte.",
+    "offline": "Action indisponible hors ligne.",
+    "offline_unavailable": "Hors ligne : ces données ne sont pas enregistrées sur cet appareil.",
     "internal_error": "Une erreur est survenue : réessayez plus tard.",
     "account_has_operations": "Ce compte a des opérations : il ne peut qu'être archivé.",
     "account_in_use": "Des échéances ou des enveloppes utilisent ce compte.",
@@ -1024,5 +1026,16 @@
     "emailFirst": "Saisissez d'abord l'adresse email du compte.",
     "deleted": "Votre compte et toutes vos données ont été supprimés.",
     "pushNotDisabled": "Les notifications push n'ont pas pu être désactivées sur cet appareil : bloquez-les dans les réglages du navigateur."
+  },
+  "offline": {
+    "banner": "Hors ligne : données du {date}",
+    "bannerNoData": "Hors ligne : aucune donnée de cette vue n'est enregistrée sur cet appareil.",
+    "writeDisabled": "Indisponible hors ligne",
+    "operations": "Hors ligne : opérations des {n} derniers jours, sans recherche ni filtre.",
+    "clearFailed": "Les données hors ligne de cet appareil n'ont pas pu être effacées : videz le stockage du site dans les réglages du navigateur."
+  },
+  "pwaUpdate": {
+    "available": "Nouvelle version disponible",
+    "reload": "Recharger"
   }
 }

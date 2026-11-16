@@ -6,6 +6,7 @@ const props = defineProps<OperationRowProps>()
 const emit = defineEmits<OperationRowEmits>()
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 const { formatDate } = useFormatters()
 const referentials = useReferentialsStore()
 
@@ -26,6 +27,7 @@ const actions = computed<DropdownMenuItem[][]>(() => [
     {
       label: t('common.edit'),
       icon: icons.edit,
+      disabled: connectivity.offline,
       onSelect: () => emit('edit', props.operation),
     },
   ],
@@ -34,6 +36,7 @@ const actions = computed<DropdownMenuItem[][]>(() => [
       label: t('common.delete'),
       icon: icons.delete,
       color: 'error',
+      disabled: connectivity.offline,
       onSelect: () => emit('delete', props.operation),
     },
   ],
@@ -48,6 +51,8 @@ const actions = computed<DropdownMenuItem[][]>(() => [
     <button
       type="button"
       class="flex min-w-0 flex-1 items-center gap-3 rounded-md text-left"
+      :disabled="connectivity.offline"
+      :title="connectivity.offline ? t('offline.writeDisabled') : undefined"
       @click="emit('edit', operation)"
     >
       <div class="min-w-0 flex-1">

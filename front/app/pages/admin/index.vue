@@ -199,14 +199,17 @@ onMounted(load)
 <template>
   <ViewPanel :title="t('navigation.administration')">
     <template #actions>
-      <UButton
-        :label="t('admin.invite')"
-        :icon="icons.invite"
-        color="primary"
-        variant="soft"
-        data-testid="admin-invite"
-        @click="inviteOpen = true"
-      />
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :label="t('admin.invite')"
+          :icon="icons.invite"
+          color="primary"
+          variant="soft"
+          data-testid="admin-invite"
+          @click="inviteOpen = true"
+        />
+      </OfflineGuard>
     </template>
 
     <div class="flex flex-col gap-6">
@@ -222,13 +225,16 @@ onMounted(load)
           :title="t('admin.noInvitationTitle')"
           :description="t('admin.noInvitationText')"
         >
-          <UButton
-            :label="t('admin.invite')"
-            :icon="icons.invite"
-            color="primary"
-            variant="soft"
-            @click="inviteOpen = true"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('admin.invite')"
+              :icon="icons.invite"
+              color="primary"
+              variant="soft"
+              @click="inviteOpen = true"
+            />
+          </OfflineGuard>
         </EmptyState>
         <ul
           v-else
@@ -261,21 +267,27 @@ onMounted(load)
               </p>
             </div>
             <div v-if="isReusable(invitation)" class="flex flex-wrap gap-1">
-              <UButton
-                :label="t('admin.resend')"
-                :icon="icons.resend"
-                :loading="busyId === invitation.id"
-                color="neutral"
-                variant="ghost"
-                @click="resend(invitation)"
-              />
-              <UButton
-                :label="t('admin.revoke')"
-                :icon="icons.revoke"
-                color="error"
-                variant="ghost"
-                @click="invitationToRevoke = invitation"
-              />
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :label="t('admin.resend')"
+                  :icon="icons.resend"
+                  :loading="busyId === invitation.id"
+                  color="neutral"
+                  variant="ghost"
+                  @click="resend(invitation)"
+                />
+              </OfflineGuard>
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :label="t('admin.revoke')"
+                  :icon="icons.revoke"
+                  color="error"
+                  variant="ghost"
+                  @click="invitationToRevoke = invitation"
+                />
+              </OfflineGuard>
             </div>
           </li>
         </ul>
@@ -325,32 +337,47 @@ onMounted(load)
               </p>
             </div>
             <div class="flex flex-wrap gap-1">
-              <UButton
+              <OfflineGuard
                 v-if="user.status === 'active'"
-                :label="t('admin.sendResetLink')"
-                :icon="icons.passwordReset"
-                :loading="busyId === user.id"
-                color="neutral"
-                variant="ghost"
-                @click="sendPasswordReset(user)"
-              />
-              <UButton
+                v-slot="{ offline }"
+              >
+                <UButton
+                  :disabled="offline"
+                  :label="t('admin.sendResetLink')"
+                  :icon="icons.passwordReset"
+                  :loading="busyId === user.id"
+                  color="neutral"
+                  variant="ghost"
+                  @click="sendPasswordReset(user)"
+                />
+              </OfflineGuard>
+              <OfflineGuard
                 v-if="user.status === 'disabled'"
-                :label="t('admin.enable')"
-                :icon="icons.enableUser"
-                :loading="busyId === user.id"
-                color="neutral"
-                variant="ghost"
-                @click="enable(user)"
-              />
-              <UButton
+                v-slot="{ offline }"
+              >
+                <UButton
+                  :disabled="offline"
+                  :label="t('admin.enable')"
+                  :icon="icons.enableUser"
+                  :loading="busyId === user.id"
+                  color="neutral"
+                  variant="ghost"
+                  @click="enable(user)"
+                />
+              </OfflineGuard>
+              <OfflineGuard
                 v-else-if="user.id !== session.user?.id"
-                :label="t('admin.disable')"
-                :icon="icons.disableUser"
-                color="error"
-                variant="ghost"
-                @click="userToDisable = user"
-              />
+                v-slot="{ offline }"
+              >
+                <UButton
+                  :disabled="offline"
+                  :label="t('admin.disable')"
+                  :icon="icons.disableUser"
+                  color="error"
+                  variant="ghost"
+                  @click="userToDisable = user"
+                />
+              </OfflineGuard>
             </div>
           </li>
         </ul>
@@ -378,15 +405,18 @@ onMounted(load)
               data-testid="invite-email"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('admin.sendInvitation')"
-            :loading="inviting"
-            color="primary"
-            variant="solid"
-            block
-            data-testid="invite-submit"
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('admin.sendInvitation')"
+              :loading="inviting"
+              color="primary"
+              variant="solid"
+              block
+              data-testid="invite-submit"
+            />
+          </OfflineGuard>
         </UForm>
       </template>
     </UModal>

@@ -13,6 +13,7 @@ const {
 } = useNavigation()
 const logout = useLogout()
 const editor = useOperationEditorStore()
+const connectivity = useConnectivityStore()
 
 function toNavigationItems(entries: NavigationEntry[]): NavigationMenuItem[] {
   return entries.map(({ label, icon, to }) => ({ label, icon, to }))
@@ -22,7 +23,7 @@ function toQuickAddItems(entries: QuickAddEntry[]): DropdownMenuItem[] {
   return entries.map(({ kind, label, icon, disabled }) => ({
     label,
     icon,
-    disabled,
+    disabled: disabled || connectivity.offline,
     onSelect: () => editor.create(kind),
   }))
 }
@@ -45,7 +46,12 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
     icon: profileEntry.value.icon,
     to: profileEntry.value.to,
   },
-  { label: t('navigation.logout'), icon: icons.logout, onSelect: logout },
+  {
+    label: t('navigation.logout'),
+    icon: icons.logout,
+    disabled: connectivity.offline,
+    onSelect: logout,
+  },
 ])
 </script>
 

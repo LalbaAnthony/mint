@@ -9,6 +9,7 @@ const props = defineProps<CalendarDayDetailProps>()
 const emit = defineEmits<CalendarDayDetailEmits>()
 
 const { t, locale } = useI18n()
+const connectivity = useConnectivityStore()
 const { formatMoney } = useFormatters()
 const referentials = useReferentialsStore()
 const editor = useOperationEditorStore()
@@ -164,6 +165,10 @@ function accountSuffix(accountId: string): string {
           <button
             type="button"
             class="flex w-full items-center gap-2 py-2 text-left"
+            :disabled="connectivity.offline"
+            :title="
+              connectivity.offline ? t('offline.writeDisabled') : undefined
+            "
             :data-testid="`detail-operation-${operation.id}`"
             @click="editor.edit(operation)"
           >

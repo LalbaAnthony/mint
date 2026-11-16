@@ -13,6 +13,7 @@ import type { PushSupport } from '~~/types/notifications'
 const preferenceKeys = ['lowBalancePush', 'manualReminderPush'] as const
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
 const { formatDateTime } = useFormatters()
@@ -183,7 +184,7 @@ onMounted(() => {
           :model-value="preferences[key]"
           :label="t(`notifications.settings.${key}`)"
           :description="t(`notifications.settings.${key}Help`)"
-          :disabled="!loaded"
+          :disabled="!loaded || connectivity.offline"
           :data-testid="`notification-preference-${key}`"
           @update:model-value="savePreference(key, $event)"
         />
@@ -221,29 +222,34 @@ onMounted(() => {
           <p class="text-sm text-default">
             {{ t('notifications.settings.activeHere') }}
           </p>
-          <UButton
-            :label="t('notifications.settings.disableHere')"
-            :loading="busy"
-            color="neutral"
-            variant="outline"
-            data-testid="push-disable"
-            @click="disableThisDevice"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('notifications.settings.disableHere')"
+              :loading="busy"
+              color="neutral"
+              variant="outline"
+              data-testid="push-disable"
+              @click="disableThisDevice"
+            />
+          </OfflineGuard>
         </div>
         <div v-else class="flex flex-wrap items-center justify-between gap-2">
           <p class="text-sm text-muted">
             {{ t('notifications.settings.inactiveHere') }}
           </p>
-          <UButton
-            :label="t('notifications.settings.enableHere')"
-            :icon="icons.notifications"
-            :loading="busy"
-            :disabled="!loaded"
-            color="primary"
-            variant="soft"
-            data-testid="push-enable"
-            @click="enableThisDevice"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :label="t('notifications.settings.enableHere')"
+              :icon="icons.notifications"
+              :loading="busy"
+              :disabled="offline || !loaded"
+              color="primary"
+              variant="soft"
+              data-testid="push-enable"
+              @click="enableThisDevice"
+            />
+          </OfflineGuard>
         </div>
       </section>
 
@@ -285,20 +291,22 @@ onMounted(() => {
                 {{ deviceDetails(device) }}
               </p>
             </div>
-            <UButton
-              :icon="icons.delete"
-              :aria-label="
-                t('notifications.settings.removeDevice', {
-                  name: device.userAgent ?? t('profile.unknownDevice'),
-                })
-              "
-              :disabled="busy"
-              :class="touchIconButtonClass"
-              color="neutral"
-              variant="ghost"
-              :data-testid="`push-device-remove-${device.id}`"
-              @click="removeDevice(device)"
-            />
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :icon="icons.delete"
+                :aria-label="
+                  t('notifications.settings.removeDevice', {
+                    name: device.userAgent ?? t('profile.unknownDevice'),
+                  })
+                "
+                :disabled="offline || busy"
+                :class="touchIconButtonClass"
+                color="neutral"
+                variant="ghost"
+                :data-testid="`push-device-remove-${device.id}`"
+                @click="removeDevice(device)"
+              />
+            </OfflineGuard>
           </li>
         </ul>
       </section>

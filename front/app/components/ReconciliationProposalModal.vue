@@ -107,15 +107,17 @@ async function confirm(): Promise<void> {
             variant="outline"
             @click="editor.proposalOpen = false"
           />
-          <UButton
-            :label="t('reconciliation.associate')"
-            color="primary"
-            variant="solid"
-            :loading="busy"
-            :disabled="selected === undefined"
-            data-testid="reconciliation-confirm"
-            @click="confirm"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :label="t('reconciliation.associate')"
+              color="primary"
+              variant="solid"
+              :loading="busy"
+              :disabled="offline || selected === undefined"
+              data-testid="reconciliation-confirm"
+              @click="confirm"
+            />
+          </OfflineGuard>
         </div>
       </div>
     </template>

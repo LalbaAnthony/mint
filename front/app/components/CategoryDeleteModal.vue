@@ -147,15 +147,17 @@ async function confirm(): Promise<void> {
           variant="outline"
           @click="close"
         />
-        <UButton
-          :label="t('common.delete')"
-          :loading="pending"
-          :disabled="blocked"
-          color="error"
-          variant="solid"
-          data-testid="confirm-modal-confirm"
-          @click="confirm"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :label="t('common.delete')"
+            :loading="pending"
+            :disabled="offline || blocked"
+            color="error"
+            variant="solid"
+            data-testid="confirm-modal-confirm"
+            @click="confirm"
+          />
+        </OfflineGuard>
       </div>
     </template>
   </UModal>

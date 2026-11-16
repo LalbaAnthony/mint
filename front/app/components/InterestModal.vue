@@ -184,14 +184,17 @@ function remove(rate: InterestRate): Promise<void> {
               data-testid="interest-rate"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('interest.record')"
-            color="primary"
-            variant="solid"
-            :loading="busy"
-            data-testid="interest-rate-submit"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('interest.record')"
+              color="primary"
+              variant="solid"
+              :loading="busy"
+              data-testid="interest-rate-submit"
+            />
+          </OfflineGuard>
         </UForm>
         <p v-if="rates.length === 0" class="text-sm text-muted">
           {{ t('interest.empty') }}
@@ -209,18 +212,22 @@ function remove(rate: InterestRate): Promise<void> {
             <span class="ml-auto text-sm tabular-nums text-highlighted">
               {{ formatRate(rate.annualRatePct) }}
             </span>
-            <UButton
-              v-if="!archived"
-              :icon="icons.delete"
-              :aria-label="
-                t('interest.deleteOf', { date: formatDate(rate.effectiveDate) })
-              "
-              color="error"
-              variant="ghost"
-              :loading="busy"
-              data-testid="interest-rate-delete"
-              @click="remove(rate)"
-            />
+            <OfflineGuard v-if="!archived" v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :icon="icons.delete"
+                :aria-label="
+                  t('interest.deleteOf', {
+                    date: formatDate(rate.effectiveDate),
+                  })
+                "
+                color="error"
+                variant="ghost"
+                :loading="busy"
+                data-testid="interest-rate-delete"
+                @click="remove(rate)"
+              />
+            </OfflineGuard>
           </li>
         </ul>
       </div>

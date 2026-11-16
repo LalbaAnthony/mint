@@ -10,6 +10,7 @@ import { passkeyFormSchema, passkeyRenameFormSchema } from '~~/schemas/forms'
 import type { PasskeyFormState } from '~~/types/passkeys'
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 const toast = useToast()
 const { validator, errorMessage } = useFormValidation()
 const { formatDateTime } = useFormatters()
@@ -163,6 +164,7 @@ function actionsFor(passkey: Passkey): DropdownMenuItem[][] {
       {
         label: t('passkeys.rename'),
         icon: icons.edit,
+        disabled: connectivity.offline,
         onSelect: () => openRename(passkey),
       },
     ],
@@ -171,6 +173,7 @@ function actionsFor(passkey: Passkey): DropdownMenuItem[][] {
         label: t('common.delete'),
         icon: icons.delete,
         color: 'error',
+        disabled: connectivity.offline,
         onSelect: () => {
           removed.value = passkey
         },
@@ -192,16 +195,17 @@ onMounted(() => {
         <h2 class="text-base font-semibold text-highlighted">
           {{ t('passkeys.title') }}
         </h2>
-        <UButton
-          v-if="supported"
-          :icon="icons.passkey"
-          :label="t('passkeys.add')"
-          :disabled="limitReached"
-          color="primary"
-          variant="soft"
-          data-testid="passkeys-add"
-          @click="openAdd"
-        />
+        <OfflineGuard v-if="supported" v-slot="{ offline }">
+          <UButton
+            :icon="icons.passkey"
+            :label="t('passkeys.add')"
+            :disabled="offline || limitReached"
+            color="primary"
+            variant="soft"
+            data-testid="passkeys-add"
+            @click="openAdd"
+          />
+        </OfflineGuard>
       </div>
     </template>
     <div class="flex flex-col gap-3">
@@ -287,16 +291,19 @@ onMounted(() => {
               data-testid="passkey-password"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('passkeys.create')"
-            :icon="icons.passkey"
-            :loading="adding"
-            color="primary"
-            variant="solid"
-            block
-            data-testid="passkey-submit"
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('passkeys.create')"
+              :icon="icons.passkey"
+              :loading="adding"
+              color="primary"
+              variant="solid"
+              block
+              data-testid="passkey-submit"
+            />
+          </OfflineGuard>
         </UForm>
       </template>
     </UModal>
@@ -318,15 +325,18 @@ onMounted(() => {
               data-testid="passkey-rename-name"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="t('common.save')"
-            :loading="renaming"
-            color="primary"
-            variant="solid"
-            block
-            data-testid="passkey-rename-submit"
-          />
+          <OfflineGuard block v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('common.save')"
+              :loading="renaming"
+              color="primary"
+              variant="solid"
+              block
+              data-testid="passkey-rename-submit"
+            />
+          </OfflineGuard>
         </UForm>
       </template>
     </UModal>

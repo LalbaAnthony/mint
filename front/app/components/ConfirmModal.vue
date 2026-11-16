@@ -19,15 +19,17 @@ const { t } = useI18n()
           variant="outline"
           @click="close"
         />
-        <UButton
-          :label="confirmLabel"
-          :loading="pending"
-          :disabled="blocked"
-          color="error"
-          variant="solid"
-          data-testid="confirm-modal-confirm"
-          @click="emit('confirm')"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :label="confirmLabel"
+            :loading="pending"
+            :disabled="offline || blocked"
+            color="error"
+            variant="solid"
+            data-testid="confirm-modal-confirm"
+            @click="emit('confirm')"
+          />
+        </OfflineGuard>
       </div>
     </template>
   </UModal>

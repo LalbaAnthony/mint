@@ -399,6 +399,8 @@
     "no_passkey": "No passkey registered on this account.",
     "email_mismatch": "The address does not match your account.",
     "last_admin": "You are the last active administrator: appoint another one before deleting your account.",
+    "offline": "Action unavailable offline.",
+    "offline_unavailable": "Offline: this data is not stored on this device.",
     "internal_error": "Something went wrong: try again later.",
     "account_has_operations": "This account has operations: it can only be archived.",
     "account_in_use": "Schedules or envelopes use this account.",
@@ -1024,5 +1026,16 @@
     "emailFirst": "Type the email address of the account first.",
     "deleted": "Your account and all your data have been deleted.",
     "pushNotDisabled": "Push notifications could not be disabled on this device: block them in the browser settings."
+  },
+  "offline": {
+    "banner": "Offline: data from {date}",
+    "bannerNoData": "Offline: no data of this view is stored on this device.",
+    "writeDisabled": "Unavailable offline",
+    "operations": "Offline: operations of the last {n} days, without search or filters.",
+    "clearFailed": "The offline data of this device could not be erased: clear the site storage in the browser settings."
+  },
+  "pwaUpdate": {
+    "available": "New version available",
+    "reload": "Reload"
   }
 }

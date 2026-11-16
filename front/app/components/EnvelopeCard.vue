@@ -6,6 +6,7 @@ const props = defineProps<EnvelopeCardProps>()
 const emit = defineEmits<EnvelopeCardEmits>()
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 const { formatMoney } = useFormatters()
 const labels = usePlanningLabels()
 
@@ -27,6 +28,7 @@ const actions = computed<DropdownMenuItem[][]>(() => [
     {
       label: t('common.edit'),
       icon: icons.edit,
+      disabled: connectivity.offline,
       onSelect: () => emit('edit', props.line.envelope),
     },
   ],
@@ -35,6 +37,7 @@ const actions = computed<DropdownMenuItem[][]>(() => [
       label: t('common.delete'),
       icon: icons.delete,
       color: 'error',
+      disabled: connectivity.offline,
       onSelect: () => emit('delete', props.line.envelope),
     },
   ],

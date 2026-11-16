@@ -11,6 +11,7 @@ const props = defineProps<AccountGroupCardProps>()
 const emit = defineEmits<AccountGroupCardEmits>()
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 
 const list = useTemplateRef<HTMLElement>('list')
 const sortableScope = 'account'
@@ -57,11 +58,13 @@ function actionItems(account: Account): DropdownMenuItem[][] {
       {
         label: t('common.edit'),
         icon: icons.edit,
+        disabled: connectivity.offline,
         onSelect: () => select('edit'),
       },
       {
         label: t('paymentMethods.add'),
         icon: icons.add,
+        disabled: connectivity.offline,
         onSelect: () => select('addPaymentMethod'),
       },
       {
@@ -90,6 +93,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
       {
         label: t('common.archive'),
         icon: icons.archive,
+        disabled: connectivity.offline,
         onSelect: () => select('archive'),
       },
     ],
@@ -98,6 +102,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
         label: t('common.delete'),
         icon: icons.delete,
         color: 'error',
+        disabled: connectivity.offline,
         onSelect: () => select('delete'),
       },
     ],

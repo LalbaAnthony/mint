@@ -3,6 +3,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Tag } from '@mint/shared/types/tags'
 
 const { t } = useI18n()
+const connectivity = useConnectivityStore()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
 const referentials = useReferentialsStore()
@@ -92,6 +93,7 @@ function actionsFor(tag: Tag): DropdownMenuItem[][] {
       {
         label: t('common.edit'),
         icon: icons.edit,
+        disabled: connectivity.offline,
         onSelect: () => openForm(tag),
       },
     ],
@@ -100,6 +102,7 @@ function actionsFor(tag: Tag): DropdownMenuItem[][] {
         label: t('common.delete'),
         icon: icons.delete,
         color: 'error',
+        disabled: connectivity.offline,
         onSelect: () => {
           tagToDelete.value = tag
         },
@@ -118,14 +121,17 @@ onMounted(load)
         <h2 class="text-base font-semibold text-highlighted">
           {{ t('tags.title') }}
         </h2>
-        <UButton
-          :icon="icons.add"
-          :label="t('tags.add')"
-          color="primary"
-          variant="soft"
-          data-testid="tags-add"
-          @click="openForm(null)"
-        />
+        <OfflineGuard v-slot="{ offline }">
+          <UButton
+            :disabled="offline"
+            :icon="icons.add"
+            :label="t('tags.add')"
+            color="primary"
+            variant="soft"
+            data-testid="tags-add"
+            @click="openForm(null)"
+          />
+        </OfflineGuard>
       </div>
     </template>
     <p

@@ -132,15 +132,18 @@ async function createRule(): Promise<void> {
           })
         }}
       </span>
-      <UButton
-        :label="t('reconciliation.dissociate')"
-        color="neutral"
-        variant="outline"
-        size="sm"
-        :loading="busy"
-        data-testid="operation-dissociate"
-        @click="dissociate"
-      />
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :label="t('reconciliation.dissociate')"
+          color="neutral"
+          variant="outline"
+          size="sm"
+          :loading="busy"
+          data-testid="operation-dissociate"
+          @click="dissociate"
+        />
+      </OfflineGuard>
     </div>
     <div v-else-if="candidates.length > 0" class="flex flex-col gap-1">
       <p class="text-sm font-medium text-muted">
@@ -159,15 +162,18 @@ async function createRule(): Promise<void> {
             </span>
           </span>
           <MoneyAmount :cents="candidate.amountCents" variant="flow" />
-          <UButton
-            :label="t('reconciliation.associate')"
-            color="primary"
-            variant="soft"
-            size="sm"
-            :loading="busy"
-            :data-testid="`operation-associate-${candidate.scheduleId}`"
-            @click="associate(candidate)"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('reconciliation.associate')"
+              color="primary"
+              variant="soft"
+              size="sm"
+              :loading="busy"
+              :data-testid="`operation-associate-${candidate.scheduleId}`"
+              @click="associate(candidate)"
+            />
+          </OfflineGuard>
         </li>
       </ul>
     </div>
@@ -187,26 +193,30 @@ async function createRule(): Promise<void> {
           data-testid="operation-counterpart"
         />
       </AppFormField>
-      <UButton
-        :label="t('reconciliation.convert')"
-        :icon="icons.transfer"
-        color="neutral"
-        variant="outline"
-        :disabled="counterpartId === undefined"
-        :loading="busy"
-        data-testid="operation-convert"
-        @click="convert"
-      />
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :label="t('reconciliation.convert')"
+          :icon="icons.transfer"
+          color="neutral"
+          variant="outline"
+          :disabled="offline || counterpartId === undefined"
+          :loading="busy"
+          data-testid="operation-convert"
+          @click="convert"
+        />
+      </OfflineGuard>
     </div>
-    <UButton
-      v-if="operation.bankLabel !== null"
-      :label="t('reconciliation.createRule')"
-      :icon="icons.rules"
-      color="neutral"
-      variant="ghost"
-      class="self-start"
-      data-testid="operation-create-rule"
-      @click="createRule"
-    />
+    <OfflineGuard v-if="operation.bankLabel !== null" v-slot="{ offline }">
+      <UButton
+        :disabled="offline"
+        :label="t('reconciliation.createRule')"
+        :icon="icons.rules"
+        color="neutral"
+        variant="ghost"
+        class="self-start"
+        data-testid="operation-create-rule"
+        @click="createRule"
+      />
+    </OfflineGuard>
   </section>
 </template>

@@ -154,16 +154,19 @@ async function saved(
 <template>
   <ViewPanel :title="t('navigation.schedules')">
     <template #actions>
-      <UButton
-        :icon="icons.add"
-        :aria-label="t('schedules.add')"
-        color="primary"
-        variant="soft"
-        data-testid="schedules-add"
-        @click="openForm(null)"
-      >
-        <span class="max-sm:sr-only">{{ t('schedules.add') }}</span>
-      </UButton>
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :icon="icons.add"
+          :aria-label="t('schedules.add')"
+          color="primary"
+          variant="soft"
+          data-testid="schedules-add"
+          @click="openForm(null)"
+        >
+          <span class="max-sm:sr-only">{{ t('schedules.add') }}</span>
+        </UButton>
+      </OfflineGuard>
     </template>
 
     <div v-if="result !== null" class="flex flex-col gap-4">
@@ -219,13 +222,16 @@ async function saved(
           :title="t('schedules.emptyTitle')"
           :description="t('schedules.emptyText')"
         >
-          <UButton
-            :label="t('schedules.add')"
-            :icon="icons.add"
-            color="primary"
-            variant="soft"
-            @click="openForm(null)"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('schedules.add')"
+              :icon="icons.add"
+              color="primary"
+              variant="soft"
+              @click="openForm(null)"
+            />
+          </OfflineGuard>
         </EmptyState>
         <UTable
           v-else-if="isDesktop"

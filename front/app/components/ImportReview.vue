@@ -292,14 +292,17 @@ function errorLabel(row: ImportRow): string {
         variant="outline"
         @click="emit('back')"
       />
-      <UButton
-        :label="t('imports.validate')"
-        color="primary"
-        variant="solid"
-        :loading="busy"
-        data-testid="import-validate"
-        @click="emit('validate', decisions)"
-      />
+      <OfflineGuard v-slot="{ offline }">
+        <UButton
+          :disabled="offline"
+          :label="t('imports.validate')"
+          color="primary"
+          variant="solid"
+          :loading="busy"
+          data-testid="import-validate"
+          @click="emit('validate', decisions)"
+        />
+      </OfflineGuard>
     </div>
   </div>
 </template>

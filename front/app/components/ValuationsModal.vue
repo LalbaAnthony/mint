@@ -195,14 +195,19 @@ function remove(valuation: Valuation): Promise<void> {
               data-testid="valuation-value"
             />
           </AppFormField>
-          <UButton
-            type="submit"
-            :label="edited === null ? t('valuations.record') : t('common.save')"
-            color="primary"
-            variant="solid"
-            :loading="busy"
-            data-testid="valuation-submit"
-          />
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="
+                edited === null ? t('valuations.record') : t('common.save')
+              "
+              color="primary"
+              variant="solid"
+              :loading="busy"
+              data-testid="valuation-submit"
+            />
+          </OfflineGuard>
           <UButton
             v-if="edited !== null"
             :label="t('common.cancel')"
@@ -226,26 +231,34 @@ function remove(valuation: Valuation): Promise<void> {
             </span>
             <MoneyAmount :cents="valuation.valueCents" class="ml-auto" />
             <template v-if="!archived">
-              <UButton
-                :icon="icons.edit"
-                :aria-label="
-                  t('valuations.editOf', { date: formatDate(valuation.date) })
-                "
-                color="neutral"
-                variant="ghost"
-                @click="startEdit(valuation)"
-              />
-              <UButton
-                :icon="icons.delete"
-                :aria-label="
-                  t('valuations.deleteOf', { date: formatDate(valuation.date) })
-                "
-                color="error"
-                variant="ghost"
-                :loading="busy"
-                data-testid="valuation-delete"
-                @click="remove(valuation)"
-              />
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :icon="icons.edit"
+                  :aria-label="
+                    t('valuations.editOf', { date: formatDate(valuation.date) })
+                  "
+                  color="neutral"
+                  variant="ghost"
+                  @click="startEdit(valuation)"
+                />
+              </OfflineGuard>
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :icon="icons.delete"
+                  :aria-label="
+                    t('valuations.deleteOf', {
+                      date: formatDate(valuation.date),
+                    })
+                  "
+                  color="error"
+                  variant="ghost"
+                  :loading="busy"
+                  data-testid="valuation-delete"
+                  @click="remove(valuation)"
+                />
+              </OfflineGuard>
             </template>
           </li>
         </ul>
