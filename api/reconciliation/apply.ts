@@ -232,15 +232,14 @@ export async function reconcileBankLine(
   return 'created'
 }
 
-export async function linkOrCreateCounterpart(
+export async function findTransferCounterpart(
   data: DataAccess,
   userId: string,
   operation: TransactionModel,
   counterpartAccountId: string,
-  batchId: string | null,
-  transaction: Transaction,
-): Promise<TransactionModel> {
-  const transferGroupId = operation.transferGroupId ?? randomUUID()
+  excludedIds: ReadonlySet<string>,
+  transaction?: Transaction,
+): Promise<TransactionModel | null> {
   const candidates = await data.models.Transaction.findAll({
     where: {
       userId,
@@ -257,13 +256,35 @@ export async function linkOrCreateCounterpart(
     },
     transaction,
   })
-  const [closest] = candidates.sort(
-    (first, second) =>
-      Math.abs(daysBetween(operation.date, first.date)) -
-        Math.abs(daysBetween(operation.date, second.date)) ||
-      first.createdAt.getTime() - second.createdAt.getTime(),
+  const [closest] = candidates
+    .filter((candidate) => !excludedIds.has(candidate.id))
+    .sort(
+      (first, second) =>
+        Math.abs(daysBetween(operation.date, first.date)) -
+          Math.abs(daysBetween(operation.date, second.date)) ||
+        first.createdAt.getTime() - second.createdAt.getTime(),
+    )
+  return closest ?? null
+}
+
+export async function linkOrCreateCounterpart(
+  data: DataAccess,
+  userId: string,
+  operation: TransactionModel,
+  counterpartAccountId: string,
+  batchId: string | null,
+  transaction: Transaction,
+): Promise<TransactionModel> {
+  const transferGroupId = operation.transferGroupId ?? randomUUID()
+  const closest = await findTransferCounterpart(
+    data,
+    userId,
+    operation,
+    counterpartAccountId,
+    new Set(),
+    transaction,
   )
-  if (closest !== undefined) {
+  if (closest !== null) {
     await closest.update(
       {
         ...(batchId === null

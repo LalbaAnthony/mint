@@ -2212,6 +2212,99 @@
           "active": { "type": "boolean" }
         }
       },
+      "ReapplyRulesPreview": {
+        "type": "object",
+        "properties": {
+          "changes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReapplyRuleChange" }
+          },
+          "skipped": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReapplyRuleSkip" }
+          }
+        },
+        "required": ["changes", "skipped"]
+      },
+      "ReapplyRuleChange": {
+        "type": "object",
+        "properties": {
+          "operation": { "$ref": "#/components/schemas/Operation" },
+          "after": { "$ref": "#/components/schemas/ReappliedClassification" }
+        },
+        "required": ["operation", "after"]
+      },
+      "ReappliedClassification": {
+        "type": "object",
+        "properties": {
+          "operationId": { "type": "string", "format": "uuid" },
+          "ruleId": { "type": "string", "format": "uuid" },
+          "categoryId": { "type": ["string", "null"], "format": "uuid" },
+          "transferAccountId": { "type": ["string", "null"], "format": "uuid" },
+          "tagIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          }
+        },
+        "required": [
+          "operationId",
+          "ruleId",
+          "categoryId",
+          "transferAccountId",
+          "tagIds"
+        ]
+      },
+      "ReapplyRuleSkip": {
+        "type": "object",
+        "properties": {
+          "operationId": { "type": "string", "format": "uuid" },
+          "reason": { "$ref": "#/components/schemas/ReapplySkipReason" }
+        },
+        "required": ["operationId", "reason"]
+      },
+      "ReapplySkipReason": {
+        "type": "string",
+        "enum": [
+          "no_bank_label",
+          "no_matching_rule",
+          "unchanged",
+          "too_many_tags",
+          "adjustment",
+          "category_archived",
+          "account_archived",
+          "same_account",
+          "before_initial_balance"
+        ]
+      },
+      "ReapplyRulesPreviewRequest": {
+        "type": "object",
+        "properties": {
+          "operationIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": ["operationIds"]
+      },
+      "ApplyRulesResponse": {
+        "type": "object",
+        "properties": { "updated": { "type": "integer" } },
+        "required": ["updated"]
+      },
+      "ApplyRulesRequest": {
+        "type": "object",
+        "properties": {
+          "changes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReappliedClassification" },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": ["changes"]
+      },
       "StatementListResponse": {
         "type": "object",
         "properties": {
@@ -7953,6 +8046,138 @@
           },
           "404": {
             "description": "Unknown rule, account, category or tag",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/reapply/preview": {
+      "post": {
+        "summary": "Preview what the active rules would change on selected operations: category, conversion into a transfer or tags, and why the others stay unchanged (REG-05)",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReapplyRulesPreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Changes and skipped operations",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReapplyRulesPreview" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/reapply": {
+      "post": {
+        "summary": "Apply the previewed changes kept by the user, all or nothing, refused when the rules or the operations changed since the preview (REG-05)",
+        "tags": ["rules"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Token returned by GET /api/v1/csrf"
+            },
+            "required": true,
+            "description": "Token returned by GET /api/v1/csrf",
+            "name": "x-csrf-token",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ApplyRulesRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Number of operations updated",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApplyRulesResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown operation",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "The preview is outdated",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

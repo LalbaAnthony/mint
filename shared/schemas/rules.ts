@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { maxAmountCents, orderedIdsSchema } from './common.js'
+import { operationSchema } from './operations.js'
 import { tagIdsSchema } from './tags.js'
 
 export const ruleMatchTypes = ['contains', 'starts_with', 'regex'] as const
@@ -7,6 +8,20 @@ export const ruleMatchTypes = ['contains', 'starts_with', 'regex'] as const
 export const ruleSigns = ['debit', 'credit', 'any'] as const
 
 export const rulePatternMaxLength = 200
+
+export const maxReappliedOperations = 50
+
+export const reapplySkipReasons = [
+  'no_bank_label',
+  'no_matching_rule',
+  'unchanged',
+  'too_many_tags',
+  'adjustment',
+  'category_archived',
+  'account_archived',
+  'same_account',
+  'before_initial_balance',
+] as const
 
 const optionalIdSchema = z.uuid({ error: 'invalid' }).nullable()
 
@@ -101,3 +116,69 @@ export const ruleSuggestionSchema = z
     tagIds: z.array(z.uuid()),
   })
   .meta({ id: 'RuleSuggestion' })
+
+export const reapplySkipReasonSchema = z
+  .enum(reapplySkipReasons)
+  .meta({ id: 'ReapplySkipReason' })
+
+export const reapplyRulesPreviewRequestSchema = z
+  .object({
+    operationIds: z
+      .array(z.uuid({ error: 'invalid' }), { error: 'required' })
+      .min(1, { error: 'required' })
+      .max(maxReappliedOperations, { error: 'too_long' })
+      .refine((ids) => new Set(ids).size === ids.length, {
+        error: 'duplicate',
+      }),
+  })
+  .meta({ id: 'ReapplyRulesPreviewRequest' })
+
+export const reappliedClassificationSchema = z
+  .object({
+    operationId: z.uuid({ error: 'invalid' }),
+    ruleId: z.uuid({ error: 'invalid' }),
+    categoryId: optionalIdSchema,
+    transferAccountId: optionalIdSchema,
+    tagIds: z.array(z.uuid({ error: 'invalid' }), { error: 'invalid' }),
+  })
+  .meta({ id: 'ReappliedClassification' })
+
+export const reapplyRuleChangeSchema = z
+  .object({
+    operation: operationSchema,
+    after: reappliedClassificationSchema,
+  })
+  .meta({ id: 'ReapplyRuleChange' })
+
+export const reapplyRuleSkipSchema = z
+  .object({
+    operationId: z.uuid(),
+    reason: reapplySkipReasonSchema,
+  })
+  .meta({ id: 'ReapplyRuleSkip' })
+
+export const reapplyRulesPreviewSchema = z
+  .object({
+    changes: z.array(reapplyRuleChangeSchema),
+    skipped: z.array(reapplyRuleSkipSchema),
+  })
+  .meta({ id: 'ReapplyRulesPreview' })
+
+export const applyRulesRequestSchema = z
+  .object({
+    changes: z
+      .array(reappliedClassificationSchema, { error: 'required' })
+      .min(1, { error: 'required' })
+      .max(maxReappliedOperations, { error: 'too_long' })
+      .refine(
+        (changes) =>
+          new Set(changes.map((change) => change.operationId)).size ===
+          changes.length,
+        { error: 'duplicate' },
+      ),
+  })
+  .meta({ id: 'ApplyRulesRequest' })
+
+export const applyRulesResponseSchema = z
+  .object({ updated: z.number().int() })
+  .meta({ id: 'ApplyRulesResponse' })

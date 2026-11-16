@@ -62,6 +62,7 @@ export const apiErrorCodes = [
   'no_passkey',
   'email_mismatch',
   'last_admin',
+  'preview_outdated',
   'internal_error',
 ] as const
 

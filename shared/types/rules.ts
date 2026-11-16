@@ -1,6 +1,14 @@
 import type { z } from 'zod'
 import type {
+  applyRulesRequestSchema,
+  applyRulesResponseSchema,
   createRuleRequestSchema,
+  reappliedClassificationSchema,
+  reapplyRuleChangeSchema,
+  reapplyRuleSkipSchema,
+  reapplyRulesPreviewRequestSchema,
+  reapplyRulesPreviewSchema,
+  reapplySkipReasonSchema,
   reorderRulesRequestSchema,
   ruleMatchTypeSchema,
   ruleSchema,
@@ -45,3 +53,23 @@ export type RuleSubject = {
 }
 
 export type RegexMatcher = (pattern: string, text: string) => boolean
+
+export type ReapplySkipReason = z.infer<typeof reapplySkipReasonSchema>
+
+export type ReapplyRulesPreviewRequest = z.infer<
+  typeof reapplyRulesPreviewRequestSchema
+>
+
+export type ReappliedClassification = z.infer<
+  typeof reappliedClassificationSchema
+>
+
+export type ReapplyRuleChange = z.infer<typeof reapplyRuleChangeSchema>
+
+export type ReapplyRuleSkip = z.infer<typeof reapplyRuleSkipSchema>
+
+export type ReapplyRulesPreview = z.infer<typeof reapplyRulesPreviewSchema>
+
+export type ApplyRulesRequest = z.infer<typeof applyRulesRequestSchema>
+
+export type ApplyRulesResponse = z.infer<typeof applyRulesResponseSchema>

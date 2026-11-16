@@ -91,9 +91,11 @@ import {
   listStatementsRoute,
 } from './statements.js'
 import {
+  applyRulesReapplicationRoute,
   createRuleRoute,
   deleteRuleRoute,
   listRulesRoute,
+  previewRulesReapplicationRoute,
   reorderRulesRoute,
   suggestRuleRoute,
   updateRuleRoute,
@@ -255,6 +257,8 @@ export const apiRoutes: ApiRoute[] = [
   suggestRuleRoute,
   updateRuleRoute,
   deleteRuleRoute,
+  previewRulesReapplicationRoute,
+  applyRulesReapplicationRoute,
   listStatementsRoute,
   createStatementRoute,
   adjustStatementRoute,

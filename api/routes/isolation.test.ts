@@ -880,6 +880,26 @@ const scenarios: Record<string, Scenario> = {
   'get /rules/suggestion': crossRead(
     ({ operationId }) => `/rules/suggestion?operationId=${operationId}`,
   ),
+  'post /rules/reapply/preview': crossAccess(
+    'post',
+    () => '/rules/reapply/preview',
+    ({ operationId }) => ({ operationIds: [operationId] }),
+  ),
+  'post /rules/reapply': crossAccess(
+    'post',
+    () => '/rules/reapply',
+    ({ operationId, ruleId, categoryId }) => ({
+      changes: [
+        {
+          operationId,
+          ruleId,
+          categoryId,
+          transferAccountId: null,
+          tagIds: [],
+        },
+      ],
+    }),
+  ),
   'get /tags': ownListOnly('/tags'),
   'post /tags': async (actors) => {
     const response = await actors.aliceClient.post('/tags', {

@@ -1,6 +1,10 @@
 import { resourceIdParamsSchema } from '@mint/shared/schemas/admin'
 import {
+  applyRulesRequestSchema,
+  applyRulesResponseSchema,
   createRuleRequestSchema,
+  reapplyRulesPreviewRequestSchema,
+  reapplyRulesPreviewSchema,
   reorderRulesRequestSchema,
   ruleListResponseSchema,
   ruleSchema,
@@ -12,6 +16,11 @@ import { toIssues, validationFailed } from '../http/http-error.js'
 import { ensureSameMembers } from '../http/ordering.js'
 import { defineUserRoute } from '../http/route.js'
 import { findUserOperation } from '../operations/operations.js'
+import {
+  applyReapplication,
+  planReapplication,
+  toReapplyPreview,
+} from '../rules/reapply.js'
 import {
   findUserRule,
   nextRulePriority,
@@ -183,4 +192,55 @@ export const suggestRuleRoute = defineUserRoute({
       body: suggestRule(operation, await operationTagIds(app, operation.id)),
     }
   },
+})
+
+export const previewRulesReapplicationRoute = defineUserRoute({
+  method: 'post',
+  path: '/rules/reapply/preview',
+  summary:
+    'Preview what the active rules would change on selected operations: category, conversion into a transfer or tags, and why the others stay unchanged (REG-05)',
+  tag,
+  body: reapplyRulesPreviewRequestSchema,
+  params: noParams,
+  responses: {
+    200: {
+      description: 'Changes and skipped operations',
+      schema: reapplyRulesPreviewSchema,
+    },
+    400: errorResponse('Invalid request body'),
+    ...accessErrors,
+    404: errorResponse('Unknown operation'),
+  },
+  handle: async ({ app, user, body }) => ({
+    status: 200,
+    body: toReapplyPreview(
+      await planReapplication(app, user.id, body.operationIds),
+    ),
+  }),
+})
+
+export const applyRulesReapplicationRoute = defineUserRoute({
+  method: 'post',
+  path: '/rules/reapply',
+  summary:
+    'Apply the previewed changes kept by the user, all or nothing, refused when the rules or the operations changed since the preview (REG-05)',
+  tag,
+  body: applyRulesRequestSchema,
+  params: noParams,
+  responses: {
+    200: {
+      description: 'Number of operations updated',
+      schema: applyRulesResponseSchema,
+    },
+    400: errorResponse('Invalid request body'),
+    ...accessErrors,
+    404: errorResponse('Unknown operation'),
+    409: errorResponse('The preview is outdated'),
+  },
+  handle: async ({ app, user, body }) => ({
+    status: 200,
+    body: {
+      updated: await applyReapplication(app, user.id, body.changes),
+    },
+  }),
 })

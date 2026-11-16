@@ -1,5 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { ruleListResponseSchema } from '@mint/shared/schemas/rules'
+import {
+  operationListResponseSchema,
+  transferSchema,
+} from '@mint/shared/schemas/operations'
+import {
+  reapplyRulesPreviewSchema,
+  ruleListResponseSchema,
+} from '@mint/shared/schemas/rules'
+import type { CreateOperationRequest } from '@mint/shared/types/operations'
 import type { CreateRuleRequest } from '@mint/shared/types/rules'
 import { createTestContext } from '../tests/context.js'
 import {
@@ -9,6 +17,7 @@ import {
   createSavingsAccount,
   readId,
   signedInClient,
+  transferBody,
 } from '../tests/fixtures.js'
 import type { TestClient, TestContext } from '../types/tests.js'
 
@@ -252,5 +261,258 @@ describe('REG-03 rule suggested from an operation', () => {
       transferAccountId: null,
       tagIds: [],
     })
+  })
+})
+
+describe('REG-05 reapplying the rules to selected operations', () => {
+  async function bankOperation(
+    user: TestClient,
+    accountId: string,
+    bankLabel: string,
+    overrides: Partial<CreateOperationRequest> = {},
+  ): Promise<string> {
+    const id = await createOperation(user, accountId, overrides)
+    await context.dependencies.models.Transaction.update(
+      { bankLabel, origin: 'import' },
+      { where: { id } },
+    )
+    return id
+  }
+
+  async function createTag(user: TestClient, name: string): Promise<string> {
+    const response = await user.post('/tags', { name })
+    expect(response.status).toBe(201)
+    return readId(response.body)
+  }
+
+  async function preview(user: TestClient, operationIds: string[]) {
+    const response = await user.post('/rules/reapply/preview', {
+      operationIds,
+    })
+    expect(response.status).toBe(200)
+    return reapplyRulesPreviewSchema.parse(response.body)
+  }
+
+  async function operation(user: TestClient, id: string) {
+    const list = operationListResponseSchema.parse(
+      (await user.get('/operations?pageSize=100')).body,
+    )
+    const found = list.items.find((item) => item.id === id)
+    if (found === undefined) {
+      throw new Error(`No operation ${id}`)
+    }
+    return found
+  }
+
+  it('previews then applies the category and the tags of the first matching rule (REG-02, REG-05)', async () => {
+    const user = await client()
+    const checking = await createAccount(user)
+    const digital = await categoryId(user, 'Services numériques')
+    const groceries = await categoryId(user, 'Courses')
+    const subscription = await createTag(user, 'Abonnement')
+    const rule = readId(
+      (
+        await user.post(
+          '/rules',
+          ruleBody({ categoryId: digital, tagIds: [subscription] }),
+        )
+      ).body,
+    )
+    await user.post(
+      '/rules',
+      ruleBody({ pattern: 'PRLV', categoryId: groceries }),
+    )
+    const misfiled = await bankOperation(user, checking, 'PRLV DEEZER 06/12', {
+      categoryId: groceries,
+    })
+    const unmatched = await bankOperation(user, checking, 'CB BOULANGERIE')
+    const manual = await createOperation(user, checking)
+    const alreadyFiled = await bankOperation(user, checking, 'DEEZER', {
+      categoryId: digital,
+      tagIds: [subscription],
+    })
+
+    const previewed = await preview(user, [
+      misfiled,
+      unmatched,
+      manual,
+      alreadyFiled,
+    ])
+
+    expect(previewed.changes).toEqual([
+      {
+        operation: expect.objectContaining({
+          id: misfiled,
+          categoryId: groceries,
+        }),
+        after: {
+          operationId: misfiled,
+          ruleId: rule,
+          categoryId: digital,
+          transferAccountId: null,
+          tagIds: [subscription],
+        },
+      },
+    ])
+    expect(previewed.skipped).toEqual([
+      { operationId: unmatched, reason: 'no_matching_rule' },
+      { operationId: manual, reason: 'no_bank_label' },
+      { operationId: alreadyFiled, reason: 'unchanged' },
+    ])
+    expect((await operation(user, misfiled)).categoryId).toBe(groceries)
+
+    const applied = await user.post('/rules/reapply', {
+      changes: previewed.changes.map((change) => change.after),
+    })
+
+    expect(applied.status).toBe(200)
+    expect(applied.body).toEqual({ updated: 1 })
+    expect(await operation(user, misfiled)).toMatchObject({
+      categoryId: digital,
+      status: 'categorized',
+      tagIds: [subscription],
+    })
+
+    const replayed = await user.post('/rules/reapply', {
+      changes: previewed.changes.map((change) => change.after),
+    })
+
+    expect(replayed.status).toBe(409)
+    expect(replayed.body).toEqual({ error: 'preview_outdated' })
+  })
+
+  it('converts an operation into a transfer linked to its counterpart, and only adds tags to an existing transfer (OPE-07)', async () => {
+    const user = await client()
+    const checking = await createAccount(user)
+    const livret = await createSavingsAccount(user)
+    const digital = await categoryId(user, 'Services numériques')
+    const savingTag = await createTag(user, 'Epargne')
+    const counterpartTag = await createTag(user, 'Livret')
+    await user.post(
+      '/rules',
+      ruleBody({
+        pattern: 'VIR EPARGNE',
+        transferAccountId: livret,
+        tagIds: [savingTag],
+      }),
+    )
+    await user.post(
+      '/rules',
+      ruleBody({
+        pattern: 'VIR LIVRET',
+        categoryId: digital,
+        tagIds: [savingTag],
+      }),
+    )
+    const outgoing = await bankOperation(user, checking, 'VIR EPARGNE NOV', {
+      date: '2026-11-06',
+      amountCents: -10_000,
+    })
+    const incoming = await createOperation(user, livret, {
+      date: '2026-11-07',
+      amountCents: 10_000,
+      tagIds: [counterpartTag],
+    })
+    const transfer = await user.post(
+      '/transfers',
+      transferBody(checking, livret),
+    )
+    const transferSource = transferSchema.parse(transfer.body).source.id
+    await context.dependencies.models.Transaction.update(
+      { bankLabel: 'VIR LIVRET A' },
+      { where: { id: transferSource } },
+    )
+
+    const previewed = await preview(user, [outgoing, transferSource])
+
+    expect(previewed.skipped).toEqual([])
+    expect(previewed.changes.map((change) => change.after)).toEqual([
+      expect.objectContaining({
+        operationId: outgoing,
+        categoryId: null,
+        transferAccountId: livret,
+        tagIds: [savingTag, counterpartTag].sort(),
+      }),
+      expect.objectContaining({
+        operationId: transferSource,
+        categoryId: null,
+        transferAccountId: livret,
+        tagIds: [savingTag],
+      }),
+    ])
+
+    const applied = await user.post('/rules/reapply', {
+      changes: previewed.changes.map((change) => change.after),
+    })
+
+    expect(applied.body).toEqual({ updated: 2 })
+    const converted = await operation(user, outgoing)
+    const linked = await operation(user, incoming)
+    expect(converted).toMatchObject({
+      categoryId: null,
+      counterpartAccountId: livret,
+      tagIds: [savingTag, counterpartTag].sort(),
+    })
+    expect(linked.transferGroupId).toBe(converted.transferGroupId)
+    expect(linked.tagIds).toEqual([savingTag, counterpartTag].sort())
+    const transferred = await operation(user, transferSource)
+    expect(transferred).toMatchObject({
+      categoryId: null,
+      counterpartAccountId: livret,
+      tagIds: [savingTag],
+    })
+  })
+
+  it('skips an operation whose tags would exceed 20, or a transfer towards its own account', async () => {
+    const user = await client()
+    const checking = await createAccount(user)
+    const digital = await categoryId(user, 'Services numériques')
+    const tagIds: string[] = []
+    for (let index = 0; index < 21; index += 1) {
+      tagIds.push(await createTag(user, `Tag ${index}`))
+    }
+    await user.post(
+      '/rules',
+      ruleBody({
+        pattern: 'DEEZER',
+        categoryId: digital,
+        tagIds: tagIds.slice(20),
+      }),
+    )
+    await user.post(
+      '/rules',
+      ruleBody({ pattern: 'VIR', transferAccountId: checking }),
+    )
+    const crowded = await bankOperation(user, checking, 'DEEZER', {
+      tagIds: tagIds.slice(0, 20),
+    })
+    const toItself = await bankOperation(user, checking, 'VIR INTERNE')
+
+    expect((await preview(user, [crowded, toItself])).skipped).toEqual([
+      { operationId: crowded, reason: 'too_many_tags' },
+      { operationId: toItself, reason: 'same_account' },
+    ])
+  })
+
+  it('rejects an empty, oversized or unknown selection', async () => {
+    const user = await client()
+
+    const empty = await user.post('/rules/reapply/preview', {
+      operationIds: [],
+    })
+    const oversized = await user.post('/rules/reapply/preview', {
+      operationIds: Array.from(
+        { length: 51 },
+        (_, index) =>
+          `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+      ),
+    })
+    const unknown = await user.post('/rules/reapply/preview', {
+      operationIds: ['00000000-0000-4000-8000-000000000000'],
+    })
+
+    expect(empty.status).toBe(400)
+    expect(oversized.status).toBe(400)
+    expect(unknown.status).toBe(404)
   })
 })
