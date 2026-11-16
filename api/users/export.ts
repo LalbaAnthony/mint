@@ -119,6 +119,15 @@ async function loadUserData(
           },
           order: [['originalDate', 'ASC']],
         })
+  const envelopeMonthOverrides =
+    envelopes.length === 0
+      ? []
+      : await app.models.EnvelopeMonthOverride.findAll({
+          where: {
+            envelopeId: { [Op.in]: envelopes.map((envelope) => envelope.id) },
+          },
+          order: [['month', 'ASC']],
+        })
   return {
     accounts,
     paymentMethods,
@@ -131,6 +140,7 @@ async function loadUserData(
     scheduleOccurrences,
     envelopes,
     envelopeCategories,
+    envelopeMonthOverrides,
     rules,
     importMappings,
     imports,
@@ -218,6 +228,9 @@ function exportDocument(
       const { userId: _userId, ...envelope } = row.get({ plain: true })
       return { ...envelope, categoryIds: envelopeCategoryIds.get(row.id) ?? [] }
     }),
+    envelopeMonthOverrides: data.envelopeMonthOverrides.map((row) =>
+      row.get({ plain: true }),
+    ),
     rules: data.rules.map((row) => {
       const { userId: _userId, ...rule } = row.get({ plain: true })
       return rule

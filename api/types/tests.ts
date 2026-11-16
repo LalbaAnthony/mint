@@ -89,6 +89,7 @@ export type IsolationSnapshot = {
   schedules: unknown
   occurrences: unknown
   envelopes: unknown
+  envelopeMonth: unknown
 }
 
 export type IsolationActors = {

@@ -4,12 +4,16 @@ import { createEnvelopeRequestSchema } from '@mint/shared/schemas/envelopes'
 import { daysBetween, monthEnd, monthStart } from '@mint/shared/engines/dates'
 import {
   envelopeCategoryIndex,
+  envelopeMonthOverride,
   envelopeMonthStatus,
 } from '@mint/shared/engines/envelopes'
 import type {
   CreateEnvelopeRequest,
   Envelope,
+  EnvelopeMonthLine,
+  EnvelopeMonthOverrideView,
   EnvelopeMonthResponse,
+  EnvelopeMonthTotals,
 } from '@mint/shared/types/envelopes'
 import { findUserAccount } from '../accounts/accounts.js'
 import { findUserCategory } from '../categories/categories.js'
@@ -23,12 +27,16 @@ import { findUserPaymentMethod } from '../payment-methods/payment-methods.js'
 import {
   loadCategoryInputs,
   loadEnvelopeCategoryIds,
+  loadEnvelopeMonthOverrides,
   loadPaymentMethodsById,
   toEnvelopeInput,
   toOperationInput,
 } from '../planning/inputs.js'
 import type { EnvelopeSnapshot } from '../types/envelopes.js'
-import type { EnvelopeModel } from '../types/models.js'
+import type {
+  EnvelopeModel,
+  EnvelopeMonthOverrideModel,
+} from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
 
 export async function findUserEnvelope(
@@ -223,16 +231,16 @@ export async function envelopeMonth(
       ['id', 'ASC'],
     ],
   })
-  const categoryIds = await loadEnvelopeCategoryIds(
-    data,
-    envelopes.map((envelope) => envelope.id),
-  )
+  const envelopeIds = envelopes.map((envelope) => envelope.id)
+  const categoryIds = await loadEnvelopeCategoryIds(data, envelopeIds)
+  const monthOverrides = await loadEnvelopeMonthOverrides(data, envelopeIds)
   const paymentMethods = await loadPaymentMethodsById(data, userId)
   const inputs = envelopes.map((envelope) =>
     toEnvelopeInput(
       envelope,
       categoryIds.get(envelope.id) ?? [],
       paymentMethods,
+      monthOverrides.get(envelope.id) ?? [],
     ),
   )
   const index = envelopeCategoryIndex(
@@ -260,7 +268,7 @@ export async function envelopeMonth(
         ).map(toOperationInput)
   const remainingDays =
     month === currentMonth ? daysBetween(today, monthEnd(today)) + 1 : null
-  const lines = envelopes.flatMap((envelope, position) => {
+  const lines = envelopes.flatMap((envelope, position): EnvelopeMonthLine[] => {
     const input = inputs[position]
     if (input === undefined || !envelope.active) {
       return []
@@ -276,6 +284,7 @@ export async function envelopeMonth(
         envelope: toEnvelope(envelope, categoryIds.get(envelope.id) ?? []),
         status: {
           budgetCents: status.budgetCents,
+          overridden: envelopeMonthOverride(input, month) !== null,
           carriedOverCents: status.carriedOverCents,
           consumedCents: status.consumedCents,
           availableCents: status.availableCents,
@@ -292,10 +301,82 @@ export async function envelopeMonth(
     currentMonth,
     remainingDays,
     lines,
+    totals: envelopeMonthTotals(lines),
     inactive: envelopes
       .filter((envelope) => !envelope.active)
       .map((envelope) =>
         toEnvelope(envelope, categoryIds.get(envelope.id) ?? []),
       ),
   }
+}
+
+export function envelopeMonthTotals(
+  lines: readonly EnvelopeMonthLine[],
+): EnvelopeMonthTotals {
+  return lines.reduce<EnvelopeMonthTotals>(
+    (totals, { status }) => ({
+      budgetCents: totals.budgetCents + status.budgetCents,
+      carriedOverCents: totals.carriedOverCents + status.carriedOverCents,
+      consumedCents: totals.consumedCents + status.consumedCents,
+      availableCents: totals.availableCents + status.availableCents,
+    }),
+    {
+      budgetCents: 0,
+      carriedOverCents: 0,
+      consumedCents: 0,
+      availableCents: 0,
+    },
+  )
+}
+
+export function toEnvelopeMonthOverride(
+  override: EnvelopeMonthOverrideModel,
+): EnvelopeMonthOverrideView {
+  return {
+    envelopeId: override.envelopeId,
+    month: override.month,
+    amountCents: override.amountCents,
+  }
+}
+
+export async function setEnvelopeMonthAmount(
+  data: DataAccess,
+  userId: string,
+  envelopeId: string,
+  month: string,
+  amountCents: number,
+): Promise<EnvelopeMonthOverrideView> {
+  return data.sequelize.transaction(async (transaction) => {
+    const envelope = await findUserEnvelope(
+      data,
+      userId,
+      envelopeId,
+      transaction,
+    )
+    const existing = await data.models.EnvelopeMonthOverride.findOne({
+      where: { envelopeId: envelope.id, month },
+      transaction,
+    })
+    if (existing !== null) {
+      await existing.update({ amountCents }, { transaction })
+      return toEnvelopeMonthOverride(existing)
+    }
+    const created = await data.models.EnvelopeMonthOverride.create(
+      { envelopeId: envelope.id, month, amountCents },
+      { transaction },
+    )
+    return toEnvelopeMonthOverride(created)
+  })
+}
+
+export async function removeEnvelopeMonthAmount(
+  data: DataAccess,
+  userId: string,
+  envelopeId: string,
+  month: string,
+): Promise<void> {
+  const envelope = await findUserEnvelope(data, userId, envelopeId)
+  await data.models.EnvelopeMonthOverride.destroy({
+    where: { envelopeId: envelope.id, month },
+  })
 }

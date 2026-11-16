@@ -124,6 +124,7 @@ describe('createMigrator', () => {
       'categorization_rules',
       'email_change_tokens',
       'envelope_categories',
+      'envelope_month_overrides',
       'envelopes',
       'import_batches',
       'import_mappings',

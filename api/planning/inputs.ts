@@ -2,7 +2,10 @@ import { Op } from 'sequelize'
 import type { Transaction } from 'sequelize'
 import type { AccountInput } from '@mint/shared/types/accounts'
 import type { CategoryInput } from '@mint/shared/types/categories'
-import type { EnvelopeInput } from '@mint/shared/types/envelopes'
+import type {
+  EnvelopeInput,
+  EnvelopeMonthOverride,
+} from '@mint/shared/types/envelopes'
 import type { InterestSettings } from '@mint/shared/types/interest'
 import type {
   OccurrenceException,
@@ -323,10 +326,34 @@ export async function loadEnvelopeCategoryIds(
   return grouped
 }
 
+export async function loadEnvelopeMonthOverrides(
+  data: DataAccess,
+  envelopeIds: readonly string[],
+  transaction?: Transaction,
+): Promise<Map<string, EnvelopeMonthOverride[]>> {
+  const grouped = new Map<string, EnvelopeMonthOverride[]>()
+  if (envelopeIds.length === 0) {
+    return grouped
+  }
+  const rows = await data.models.EnvelopeMonthOverride.findAll({
+    where: { envelopeId: { [Op.in]: [...envelopeIds] } },
+    order: [['month', 'ASC']],
+    transaction,
+  })
+  for (const row of rows) {
+    grouped.set(row.envelopeId, [
+      ...(grouped.get(row.envelopeId) ?? []),
+      { month: row.month, amountCents: row.amountCents },
+    ])
+  }
+  return grouped
+}
+
 export function toEnvelopeInput(
   envelope: EnvelopeModel,
   categoryIds: readonly string[],
   paymentMethods: ReadonlyMap<string, PaymentMethodModel>,
+  monthOverrides: readonly EnvelopeMonthOverride[],
 ): EnvelopeInput {
   return {
     id: envelope.id,
@@ -337,6 +364,6 @@ export function toEnvelopeInput(
     active: envelope.active,
     createdOn: envelope.createdOn,
     categoryIds: [...categoryIds],
-    monthOverrides: [],
+    monthOverrides: [...monthOverrides],
   }
 }

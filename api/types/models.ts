@@ -426,6 +426,26 @@ export type EnvelopeCategoryModel = Model<
 > &
   EnvelopeCategoryAttributes
 
+export type EnvelopeMonthOverrideAttributes = {
+  id: string
+  envelopeId: string
+  month: string
+  amountCents: number
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type EnvelopeMonthOverrideCreationAttributes = Optional<
+  EnvelopeMonthOverrideAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>
+
+export type EnvelopeMonthOverrideModel = Model<
+  EnvelopeMonthOverrideAttributes,
+  EnvelopeMonthOverrideCreationAttributes
+> &
+  EnvelopeMonthOverrideAttributes
+
 export type Models = {
   User: ModelStatic<UserModel>
   Session: ModelStatic<SessionModel>
@@ -440,6 +460,7 @@ export type Models = {
   Transaction: ModelStatic<TransactionModel>
   Envelope: ModelStatic<EnvelopeModel>
   EnvelopeCategory: ModelStatic<EnvelopeCategoryModel>
+  EnvelopeMonthOverride: ModelStatic<EnvelopeMonthOverrideModel>
   ImportMapping: ModelStatic<ImportMappingModel>
   ImportBatch: ModelStatic<ImportBatchModel>
   ImportRow: ModelStatic<ImportRowModel>

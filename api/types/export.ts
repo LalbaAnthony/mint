@@ -6,6 +6,7 @@ import type {
   CategoryModel,
   EnvelopeCategoryModel,
   EnvelopeModel,
+  EnvelopeMonthOverrideModel,
   ImportBatchModel,
   ImportMappingModel,
   InterestRateModel,
@@ -74,6 +75,7 @@ export type ExportUserData = {
   scheduleOccurrences: ScheduleOccurrenceModel[]
   envelopes: EnvelopeModel[]
   envelopeCategories: EnvelopeCategoryModel[]
+  envelopeMonthOverrides: EnvelopeMonthOverrideModel[]
   rules: CategorizationRuleModel[]
   importMappings: ImportMappingModel[]
   imports: ImportBatchModel[]

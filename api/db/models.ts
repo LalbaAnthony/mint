@@ -12,6 +12,7 @@ import type {
   EmailChangeTokenModel,
   EnvelopeCategoryModel,
   EnvelopeModel,
+  EnvelopeMonthOverrideModel,
   InvitationModel,
   Models,
   PasswordResetTokenModel,
@@ -403,6 +404,24 @@ export function createModels(sequelize: Sequelize): Models {
     options('envelope_categories'),
   )
 
+  const EnvelopeMonthOverride = sequelize.define<EnvelopeMonthOverrideModel>(
+    'EnvelopeMonthOverride',
+    {
+      id: primaryKey,
+      envelopeId: { type: DataTypes.UUID, allowNull: false },
+      month: { type: DataTypes.DATEONLY, allowNull: false },
+      amountCents: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        get(this: EnvelopeMonthOverrideModel) {
+          return Number(this.getDataValue('amountCents'))
+        },
+      },
+      ...timestamps,
+    },
+    options('envelope_month_overrides'),
+  )
+
   const bigintCents = <T extends Model>(field: string) => ({
     type: DataTypes.BIGINT,
     allowNull: true,
@@ -747,6 +766,7 @@ export function createModels(sequelize: Sequelize): Models {
     Transaction,
     Envelope,
     EnvelopeCategory,
+    EnvelopeMonthOverride,
     ImportMapping,
     ImportBatch,
     ImportRow,

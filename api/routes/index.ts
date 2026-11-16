@@ -58,6 +58,8 @@ import {
   createEnvelopeRoute,
   deleteEnvelopeRoute,
   envelopeMonthRoute,
+  removeEnvelopeMonthAmountRoute,
+  setEnvelopeMonthAmountRoute,
   updateEnvelopeRoute,
 } from './envelopes.js'
 import { balanceCurveRoute, calendarMonthRoute } from './forecast.js'
@@ -243,6 +245,8 @@ export const apiRoutes: ApiRoute[] = [
   createEnvelopeRoute,
   updateEnvelopeRoute,
   deleteEnvelopeRoute,
+  setEnvelopeMonthAmountRoute,
+  removeEnvelopeMonthAmountRoute,
   balanceCurveRoute,
   calendarMonthRoute,
   listRulesRoute,

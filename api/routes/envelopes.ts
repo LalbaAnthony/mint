@@ -2,6 +2,9 @@ import { monthStart } from '@mint/shared/engines/dates'
 import { resourceIdParamsSchema } from '@mint/shared/schemas/admin'
 import {
   createEnvelopeRequestSchema,
+  envelopeMonthAmountRequestSchema,
+  envelopeMonthOverrideSchema,
+  envelopeMonthParamsSchema,
   envelopeMonthQuerySchema,
   envelopeMonthResponseSchema,
   envelopeSchema,
@@ -14,7 +17,9 @@ import {
   envelopeView,
   findUserEnvelope,
   parseEnvelopeFields,
+  removeEnvelopeMonthAmount,
   replaceEnvelopeCategories,
+  setEnvelopeMonthAmount,
   validateEnvelopeReferences,
 } from '../envelopes/envelopes.js'
 import { defineUserRoute } from '../http/route.js'
@@ -38,7 +43,7 @@ export const envelopeMonthRoute = defineUserRoute({
   method: 'get',
   path: '/envelopes',
   summary:
-    'Budget, carry-over, consumption and availability of each active envelope for one month, the current one by default (ENV-03 to ENV-06)',
+    'Budget, carry-over, consumption and availability of each active envelope for one month, the current one by default, with their totals (ENV-03 to ENV-08)',
   tag,
   body: noBody,
   params: noParams,
@@ -177,6 +182,54 @@ export const deleteEnvelopeRoute = defineUserRoute({
   handle: async ({ app, user, params }) => {
     const envelope = await findUserEnvelope(app, user.id, params.id)
     await envelope.destroy()
+    return { status: 204 }
+  },
+})
+
+export const setEnvelopeMonthAmountRoute = defineUserRoute({
+  method: 'post',
+  path: '/envelopes/:id/months/:month',
+  summary:
+    'Set the amount of an envelope for one month, possibly zero, without changing its monthly amount (ENV-07)',
+  tag,
+  body: envelopeMonthAmountRequestSchema,
+  params: envelopeMonthParamsSchema,
+  responses: {
+    200: {
+      description: 'Amount of the month set',
+      schema: envelopeMonthOverrideSchema,
+    },
+    400: errorResponse('Invalid amount'),
+    ...accessErrors,
+    404: errorResponse('Unknown envelope, or month not the first day of one'),
+  },
+  handle: async ({ app, user, params, body }) => ({
+    status: 200,
+    body: await setEnvelopeMonthAmount(
+      app,
+      user.id,
+      params.id,
+      params.month,
+      body.amountCents,
+    ),
+  }),
+})
+
+export const removeEnvelopeMonthAmountRoute = defineUserRoute({
+  method: 'delete',
+  path: '/envelopes/:id/months/:month',
+  summary:
+    'Remove the amount of an envelope for one month, which goes back to its monthly amount (ENV-07)',
+  tag,
+  body: noBody,
+  params: envelopeMonthParamsSchema,
+  responses: {
+    204: { description: 'Monthly amount restored' },
+    ...accessErrors,
+    404: errorResponse('Unknown envelope, or month not the first day of one'),
+  },
+  handle: async ({ app, user, params }) => {
+    await removeEnvelopeMonthAmount(app, user.id, params.id, params.month)
     return { status: 204 }
   },
 })

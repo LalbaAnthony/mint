@@ -229,6 +229,7 @@ export function envelopeLine(
     },
     status: {
       budgetCents: 30_000,
+      overridden: false,
       carriedOverCents: 0,
       consumedCents,
       availableCents: 30_000 - consumedCents,
@@ -251,6 +252,20 @@ export function envelopeMonth(
       isCurrent
         ? line
         : { ...line, status: { ...line.status, availablePerDayCents: null } },
+    ),
+    totals: lines.reduce(
+      (totals, { status }) => ({
+        budgetCents: totals.budgetCents + status.budgetCents,
+        carriedOverCents: totals.carriedOverCents + status.carriedOverCents,
+        consumedCents: totals.consumedCents + status.consumedCents,
+        availableCents: totals.availableCents + status.availableCents,
+      }),
+      {
+        budgetCents: 0,
+        carriedOverCents: 0,
+        consumedCents: 0,
+        availableCents: 0,
+      },
     ),
     inactive: [],
   }

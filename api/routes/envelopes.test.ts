@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { envelopeMonthResponseSchema } from '@mint/shared/schemas/envelopes'
+import {
+  envelopeMonthOverrideSchema,
+  envelopeMonthResponseSchema,
+} from '@mint/shared/schemas/envelopes'
+import { calendarMonthResponseSchema } from '@mint/shared/schemas/forecast'
 import { createTestContext } from '../tests/context.js'
 import {
   categoryId,
@@ -76,6 +80,7 @@ describe('ENV-01 to ENV-06 envelopes of the month', () => {
         }),
         status: {
           budgetCents: 30_000,
+          overridden: false,
           carriedOverCents: 0,
           consumedCents: 12_000,
           availableCents: 18_000,
@@ -117,6 +122,7 @@ describe('ENV-01 to ENV-06 envelopes of the month', () => {
     expect(december.remainingDays).toBeNull()
     expect(december.lines[0]?.status).toEqual({
       budgetCents: 30_000,
+      overridden: false,
       carriedOverCents: 0,
       consumedCents: 0,
       availableCents: 30_000,
@@ -139,6 +145,164 @@ describe('ENV-01 to ENV-06 envelopes of the month', () => {
     expect(view.lines).toEqual([])
     expect(view.inactive.map((envelope) => envelope.id)).toEqual([envelopeId])
     expect((await user.get('/envelopes?month=2026-11-15')).status).toBe(400)
+  })
+})
+
+describe('ENV-07 amount of one month', () => {
+  it('sets the amount of one month, zero included, used by the view, the carry-over and the forecast', async () => {
+    const user = await client()
+    const accountId = await createAccount(user, {
+      initialBalanceDate: '2026-09-01',
+    })
+    const groceries = await categoryId(user, 'Courses')
+    const envelopeId = await createEnvelope(
+      user,
+      envelopeBody(accountId, [groceries], { carryOver: true }),
+    )
+    await context.dependencies.models.Envelope.update(
+      { createdOn: '2026-10-10' },
+      { where: { id: envelopeId } },
+    )
+    await createOperation(user, accountId, {
+      date: '2026-10-15',
+      amountCents: -25_000,
+      categoryId: groceries,
+    })
+
+    const october = await user.post(
+      `/envelopes/${envelopeId}/months/2026-10-01`,
+      {
+        amountCents: 0,
+      },
+    )
+    const december = await user.post(
+      `/envelopes/${envelopeId}/months/2026-12-01`,
+      { amountCents: 31_000 },
+    )
+
+    expect(october.status).toBe(200)
+    expect(envelopeMonthOverrideSchema.parse(october.body)).toEqual({
+      envelopeId,
+      month: '2026-10-01',
+      amountCents: 0,
+    })
+    expect(december.status).toBe(200)
+    expect((await month(user, '?month=2026-10-01')).lines[0]?.status).toEqual(
+      expect.objectContaining({
+        budgetCents: 0,
+        overridden: true,
+        availableCents: -25_000,
+      }),
+    )
+    expect((await month(user)).lines[0]?.status).toEqual(
+      expect.objectContaining({
+        budgetCents: 30_000,
+        overridden: false,
+        carriedOverCents: -25_000,
+        availableCents: 5_000,
+      }),
+    )
+    expect((await month(user, '?month=2026-12-01')).lines[0]?.status).toEqual(
+      expect.objectContaining({ budgetCents: 31_000, overridden: true }),
+    )
+    const calendar = await user.get(
+      `/calendar/2026-12-01?accountId=${accountId}`,
+    )
+    expect(
+      calendarMonthResponseSchema
+        .parse(calendar.body)
+        .days.find((day) => day.date === '2026-12-01')?.envelopeShares,
+    ).toEqual([
+      expect.objectContaining({ label: 'Courses', amountCents: -1_000 }),
+    ])
+
+    const replaced = await user.post(
+      `/envelopes/${envelopeId}/months/2026-10-01`,
+      { amountCents: 10_000 },
+    )
+
+    expect(replaced.body).toEqual(
+      expect.objectContaining({ amountCents: 10_000 }),
+    )
+    expect((await month(user)).lines[0]?.status.carriedOverCents).toBe(-15_000)
+
+    const removed = await user.delete(
+      `/envelopes/${envelopeId}/months/2026-10-01`,
+    )
+
+    expect(removed.status).toBe(204)
+    expect((await month(user)).lines[0]?.status.carriedOverCents).toBe(5_000)
+    expect(
+      (await user.delete(`/envelopes/${envelopeId}/months/2026-10-01`)).status,
+    ).toBe(204)
+  })
+
+  it('rejects a negative amount, a day that is not the first of a month and an unknown envelope', async () => {
+    const user = await client()
+    const accountId = await createAccount(user)
+    const envelopeId = await createEnvelope(
+      user,
+      envelopeBody(accountId, [await categoryId(user, 'Courses')]),
+    )
+
+    const notFirstDay = await user.post(
+      `/envelopes/${envelopeId}/months/2026-12-15`,
+      { amountCents: 1_000 },
+    )
+    const negative = await user.post(
+      `/envelopes/${envelopeId}/months/2026-12-01`,
+      { amountCents: -1 },
+    )
+    const unknown = await user.post(
+      '/envelopes/00000000-0000-4000-8000-000000000000/months/2026-12-01',
+      { amountCents: 1_000 },
+    )
+
+    expect(notFirstDay.status).toBe(404)
+    expect(negative.status).toBe(400)
+    expect(negative.body.issues).toEqual([
+      { path: ['amountCents'], message: 'amount_out_of_range' },
+    ])
+    expect(unknown.status).toBe(404)
+  })
+})
+
+describe('ENV-08 totals of the month', () => {
+  it('adds up the budget, carry-over, consumption and availability of the active envelopes', async () => {
+    const user = await client()
+    const accountId = await createAccount(user)
+    const groceries = await categoryId(user, 'Courses')
+    const leisure = await categoryId(user, 'Loisirs')
+    await createEnvelope(user, envelopeBody(accountId, [groceries]))
+    await createEnvelope(
+      user,
+      envelopeBody(accountId, [leisure], {
+        label: 'Sorties',
+        monthlyAmountCents: 10_000,
+      }),
+    )
+    await createEnvelope(
+      user,
+      envelopeBody(accountId, [await categoryId(user, 'Alimentation')], {
+        label: 'Inactive',
+        active: false,
+      }),
+    )
+    await createOperation(user, accountId, {
+      amountCents: -4_000,
+      categoryId: groceries,
+    })
+    await createOperation(user, accountId, {
+      amountCents: -12_500,
+      categoryId: leisure,
+    })
+
+    expect((await month(user)).totals).toEqual({
+      budgetCents: 40_000,
+      carriedOverCents: 0,
+      consumedCents: 16_500,
+      availableCents: 23_500,
+    })
   })
 })
 

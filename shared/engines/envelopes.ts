@@ -1,6 +1,7 @@
 import type { CategoryInput } from '../types/categories.js'
 import type {
   EnvelopeInput,
+  EnvelopeMonthOverride,
   EnvelopeMonthStatus,
   EnvelopeShare,
   EnvelopeSharesInput,
@@ -40,14 +41,24 @@ export function envelopeCategoryIndex(
   return index
 }
 
+export function envelopeMonthOverride(
+  envelope: EnvelopeInput,
+  month: string,
+): EnvelopeMonthOverride | null {
+  return (
+    envelope.monthOverrides.find((candidate) => candidate.month === month) ??
+    null
+  )
+}
+
 export function envelopeBudgetCents(
   envelope: EnvelopeInput,
   month: string,
 ): number {
-  const override = envelope.monthOverrides.find(
-    (candidate) => candidate.month === month,
+  return (
+    envelopeMonthOverride(envelope, month)?.amountCents ??
+    envelope.monthlyAmountCents
   )
-  return override?.amountCents ?? envelope.monthlyAmountCents
 }
 
 export function spentCents(

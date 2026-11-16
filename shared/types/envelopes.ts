@@ -1,10 +1,14 @@
 import type { z } from 'zod'
 import type {
   createEnvelopeRequestSchema,
+  envelopeMonthAmountRequestSchema,
   envelopeMonthLineSchema,
+  envelopeMonthOverrideSchema,
+  envelopeMonthParamsSchema,
   envelopeMonthQuerySchema,
   envelopeMonthResponseSchema,
   envelopeMonthStatusSchema,
+  envelopeMonthTotalsSchema,
   envelopeSchema,
   updateEnvelopeRequestSchema,
 } from '../schemas/envelopes.js'
@@ -66,3 +70,15 @@ export type EnvelopeMonthStatusView = z.infer<typeof envelopeMonthStatusSchema>
 export type EnvelopeMonthLine = z.infer<typeof envelopeMonthLineSchema>
 
 export type EnvelopeMonthResponse = z.infer<typeof envelopeMonthResponseSchema>
+
+export type EnvelopeMonthParams = z.infer<typeof envelopeMonthParamsSchema>
+
+export type EnvelopeMonthAmountRequest = z.infer<
+  typeof envelopeMonthAmountRequestSchema
+>
+
+export type EnvelopeMonthOverrideView = z.infer<
+  typeof envelopeMonthOverrideSchema
+>
+
+export type EnvelopeMonthTotals = z.infer<typeof envelopeMonthTotalsSchema>

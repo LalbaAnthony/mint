@@ -521,6 +521,66 @@ describe('envelopes', () => {
   })
 })
 
+describe('envelope month overrides', () => {
+  it('stores one amount per envelope and first day of a month (ENV-07)', async () => {
+    const envelope = await models.Envelope.create({
+      userId: alice.id,
+      label: 'Cadeaux',
+      monthlyAmountCents: 5_000,
+      accountId: aliceAccount.id,
+    })
+    const override = await models.EnvelopeMonthOverride.create({
+      envelopeId: envelope.id,
+      month: '2026-12-01',
+      amountCents: 0,
+    })
+
+    expect(
+      (await models.EnvelopeMonthOverride.findByPk(override.id))?.amountCents,
+    ).toBe(0)
+    expect(
+      await rejection(
+        models.EnvelopeMonthOverride.create({
+          envelopeId: envelope.id,
+          month: '2026-12-01',
+          amountCents: 20_000,
+        }),
+      ),
+    ).toEqual({
+      code: '23505',
+      constraint: 'envelope_month_overrides_envelope_month_key',
+    })
+    expect(
+      await rejection(
+        models.EnvelopeMonthOverride.create({
+          envelopeId: envelope.id,
+          month: '2026-12-15',
+          amountCents: 20_000,
+        }),
+      ),
+    ).toEqual({
+      code: '23514',
+      constraint: 'envelope_month_overrides_month_check',
+    })
+    expect(
+      await rejection(
+        models.EnvelopeMonthOverride.create({
+          envelopeId: envelope.id,
+          month: '2027-01-01',
+          amountCents: -1,
+        }),
+      ),
+    ).toEqual({
+      code: '23514',
+      constraint: 'envelope_month_overrides_amount_cents_check',
+    })
+
+    await envelope.destroy()
+
+    expect(await models.EnvelopeMonthOverride.count()).toBe(0)
+  })
+})
+
 describe('user deletion', () => {
   it('removes the planning data of the user by cascade', async () => {
     await models.User.destroy({ where: { id: alice.id } })

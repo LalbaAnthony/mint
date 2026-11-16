@@ -24,6 +24,8 @@ import { apiRoutes } from './index.js'
 
 const testOrigin = 'http://mint.test'
 
+const isolationMonth = '2026-12-01'
+
 async function snapshotOf(
   client: Client,
   resources: IsolationResources,
@@ -39,6 +41,8 @@ async function snapshotOf(
       await client.get(`/schedules/${resources.scheduleId}/occurrences`)
     ).body,
     envelopes: (await client.get('/envelopes')).body,
+    envelopeMonth: (await client.get(`/envelopes?month=${isolationMonth}`))
+      .body,
     rules: (await client.get('/rules')).body,
     tags: (await client.get('/tags')).body,
     notifications: (await client.get('/notifications')).body,
@@ -728,6 +732,15 @@ const scenarios: Record<string, Scenario> = {
     'delete',
     ({ envelopeId }) => `/envelopes/${envelopeId}`,
   ),
+  'post /envelopes/:id/months/:month': crossAccess(
+    'post',
+    ({ envelopeId }) => `/envelopes/${envelopeId}/months/${isolationMonth}`,
+    () => ({ amountCents: 1 }),
+  ),
+  'delete /envelopes/:id/months/:month': crossAccess(
+    'delete',
+    ({ envelopeId }) => `/envelopes/${envelopeId}/months/${isolationMonth}`,
+  ),
   'get /forecast/curve': crossRead(
     ({ accountId }) => `/forecast/curve?accountId=${accountId}`,
   ),
@@ -1180,6 +1193,10 @@ async function createBobResources(
     '/envelopes',
     aliceEnvelope(account.body.id, [groceries.id]),
   )
+  const envelopeMonth = await bobClient.post(
+    `/envelopes/${envelope.body.id}/months/${isolationMonth}`,
+    { amountCents: 12_345 },
+  )
   const statement = await bobClient.post(
     `/accounts/${account.body.id}/statements`,
     { date: '2026-11-10', balanceCents: 100_000 },
@@ -1197,6 +1214,7 @@ async function createBobResources(
     transfer.status !== 201 ||
     schedule.status !== 201 ||
     envelope.status !== 201 ||
+    envelopeMonth.status !== 200 ||
     rule.status !== 201 ||
     statement.status !== 201 ||
     batch.status !== 201

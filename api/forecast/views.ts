@@ -31,6 +31,7 @@ import {
   loadCategoryInputs,
   loadInterestCategoryId,
   loadEnvelopeCategoryIds,
+  loadEnvelopeMonthOverrides,
   loadPaymentMethodsById,
   loadScheduleInputs,
   toEnvelopeInput,
@@ -53,10 +54,9 @@ export async function loadForecastData(
       ['id', 'ASC'],
     ],
   })
-  const categoryIds = await loadEnvelopeCategoryIds(
-    data,
-    envelopes.map((envelope) => envelope.id),
-  )
+  const envelopeIds = envelopes.map((envelope) => envelope.id)
+  const categoryIds = await loadEnvelopeCategoryIds(data, envelopeIds)
+  const monthOverrides = await loadEnvelopeMonthOverrides(data, envelopeIds)
   const paymentMethods = await loadPaymentMethodsById(data, userId)
   const transactions = await data.models.Transaction.findAll({
     where: { userId },
@@ -70,6 +70,7 @@ export async function loadForecastData(
         envelope,
         categoryIds.get(envelope.id) ?? [],
         paymentMethods,
+        monthOverrides.get(envelope.id) ?? [],
       ),
     ),
     categories: await loadCategoryInputs(data, userId),

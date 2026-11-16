@@ -38,6 +38,9 @@ const exportDocumentSchema = z.object({
     z.object({ label: z.string(), tagIds: z.array(z.uuid()) }),
   ),
   schedules: z.array(z.object({ isSystem: z.boolean() })),
+  envelopeMonthOverrides: z.array(
+    z.object({ month: z.string(), amountCents: z.number() }),
+  ),
   categories: z.array(z.unknown()),
   passkeys: z.array(z.object({ name: z.string() })),
 })
@@ -96,10 +99,21 @@ async function populate(client: TestClient): Promise<void> {
     ).status,
   ).toBe(201)
   await createSchedule(client, expenseScheduleBody(currentId, groceries))
+  const envelope = await client.post(
+    '/envelopes',
+    envelopeBody(currentId, [groceries]),
+  )
+  expect(envelope.status).toBe(201)
   expect(
-    (await client.post('/envelopes', envelopeBody(currentId, [groceries])))
-      .status,
-  ).toBe(201)
+    (
+      await client.post(
+        `/envelopes/${readId(envelope.body)}/months/2027-01-01`,
+        {
+          amountCents: 0,
+        },
+      )
+    ).status,
+  ).toBe(200)
   expect(
     (
       await client.post('/rules', {
@@ -237,6 +251,9 @@ describe('US-19 export (AUTH-08)', () => {
     expect(document.operations).toHaveLength(3)
     expect(document.operations[0]?.tagIds).toHaveLength(1)
     expect(document.schedules.filter((row) => row.isSystem)).toHaveLength(1)
+    expect(document.envelopeMonthOverrides).toEqual([
+      expect.objectContaining({ month: '2027-01-01', amountCents: 0 }),
+    ])
 
     expect(csvLines(entries.get('comptes.csv'))).toHaveLength(1 + 3)
     expect(csvLines(entries.get('echeances.csv'))).toHaveLength(1 + 1)
