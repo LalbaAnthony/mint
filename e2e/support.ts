@@ -7,6 +7,30 @@ export const administratorPassword = 'e2e administrator password'
 export const httpOrigin = `http://localhost:${process.env.E2E_HTTP_PORT ?? '8090'}`
 export const mailpitOrigin = `http://localhost:${process.env.E2E_MAILPIT_PORT ?? '8126'}`
 
+export const signedInViews = [
+  { path: '/', title: 'Accueil' },
+  { path: '/accounts', title: 'Comptes' },
+  { path: '/calendar', title: 'Calendrier' },
+  { path: '/operations', title: 'Opérations' },
+  { path: '/schedules', title: 'Échéances' },
+  { path: '/subscriptions', title: 'Abonnements' },
+  { path: '/envelopes', title: 'Enveloppes' },
+  { path: '/import', title: 'Import' },
+  { path: '/rules', title: 'Règles' },
+  { path: '/profile', title: 'Profil et préférences' },
+  { path: '/admin', title: 'Administration' },
+]
+
+export async function openView(
+  page: Page,
+  path: string,
+  title: string,
+): Promise<void> {
+  await page.goto(path)
+  await expect(page.locator('h1').filter({ hasText: title })).toBeVisible()
+  await page.waitForLoadState('networkidle')
+}
+
 export function uniqueEmail(prefix: string): string {
   return `${prefix}-${Date.now()}@mint.localhost`
 }

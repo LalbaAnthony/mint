@@ -6,6 +6,8 @@ import {
   administratorPassword,
   guardPage,
   login,
+  openView,
+  signedInViews,
 } from '../support.ts'
 
 const wcagTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
@@ -15,20 +17,6 @@ const blockingImpacts = ['serious', 'critical']
 const publicViews = [
   { path: '/login', title: 'Connexion' },
   { path: '/forgot-password', title: 'Mot de passe oublié' },
-]
-
-const signedInViews = [
-  { path: '/', title: 'Accueil' },
-  { path: '/accounts', title: 'Comptes' },
-  { path: '/calendar', title: 'Calendrier' },
-  { path: '/operations', title: 'Opérations' },
-  { path: '/schedules', title: 'Échéances' },
-  { path: '/subscriptions', title: 'Abonnements' },
-  { path: '/envelopes', title: 'Enveloppes' },
-  { path: '/import', title: 'Import' },
-  { path: '/rules', title: 'Règles' },
-  { path: '/profile', title: 'Profil et préférences' },
-  { path: '/admin', title: 'Administration' },
 ]
 
 async function blockingViolations(page: Page) {
@@ -49,12 +37,6 @@ async function blockingViolations(page: Page) {
           .join(': '),
       ),
     }))
-}
-
-async function openView(page: Page, path: string, title: string) {
-  await page.goto(path)
-  await expect(page.locator('h1').filter({ hasText: title })).toBeVisible()
-  await page.waitForLoadState('networkidle')
 }
 
 for (const colorScheme of ['light', 'dark'] as const) {
