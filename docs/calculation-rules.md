@@ -75,7 +75,7 @@ L'équivalent mensuel est arrondi au centime le plus proche, demi vers le haut, 
 La tâche planifiée de 00:05 appelle `planExecutions` avec la date du jour, les échéances et les comptes actifs. Une occurrence est à exécuter quand :
 
 - son échéance est active et tous les comptes qu'elle touche sont actifs ;
-- sa date effective est comprise entre sa borne basse et aujourd'hui, bornes incluses ; la borne basse est la plus tardive entre la date de création de l'échéance (Europe/Paris) et les dates de solde initial des comptes qu'elle touche ;
+- sa date effective est comprise entre sa borne basse et aujourd'hui, bornes incluses ; la borne basse est la plus tardive entre la date de création de l'échéance (`created_on`, Europe/Paris, ADR 0024) et les dates de solde initial des comptes qu'elle touche ;
 - elle n'a pas de ligne `skipped` ni `executed`.
 
 Avec cette borne, une échéance ressaisie avec une date de début passée (reprise Notion) n'exécute pas son historique, le rattrapage du worker ne couvre que les jours manqués depuis la création, et aucune opération générée ne précède le solde initial de son compte (ADR 0014). Chaque occurrence à exécuter donne ses mouvements : une dépense débite son compte, un revenu crédite le sien, avec le moyen de paiement et la catégorie de l'échéance ; un transfert débite la source et crédite la cible, sans catégorie. Le libellé de l'opération est celui de l'échéance, son origine « échéance », ses tags ceux de l'échéance (ADR 0018).

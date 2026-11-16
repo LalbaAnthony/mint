@@ -92,4 +92,4 @@ Les icônes, le favicon, le badge des notifications et les écrans de démarrage
 npm run pwa:assets --workspace @mint/front
 ```
 
-Le service worker n'est actif que dans le build de production (`nuxt generate`), pas sous `nuxt dev` ni sous Vitest.
+Le service worker n'est actif que dans le build de production (`nuxt generate`), pas sous `nuxt dev` ni sous Vitest. Les copies hors ligne des données (ADR 0023) ne dépendent pas de lui : sous `nuxt dev`, couper le réseau dans les outils de développement du navigateur (onglet Réseau, « Hors ligne ») affiche le bandeau, les données copiées et les écritures désactivées ; seule l'ouverture de l'application sans réseau demande le build de production. Les copies se consultent dans l'onglet Application, Stockage du cache, `mint-offline-data`.
