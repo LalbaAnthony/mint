@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { PieChart } from 'echarts/charts'
+import { chartInitOptions } from '~/charts/locale'
 import {
   AriaComponent,
   GraphicComponent,
@@ -91,6 +92,8 @@ function onSliceClick(params: { data?: unknown }): void {
     drilled.value = id
   }
 }
+
+const initOptions = computed(() => chartInitOptions(locale.value))
 </script>
 
 <template>
@@ -108,7 +111,7 @@ function onSliceClick(params: { data?: unknown }): void {
       />
       <VChart
         :option="option"
-        :init-options="{ renderer: 'svg' }"
+        :init-options="initOptions"
         autoresize
         style="height: 280px"
         class="w-full"

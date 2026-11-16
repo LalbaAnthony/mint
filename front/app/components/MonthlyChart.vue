@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
+import { chartInitOptions } from '~/charts/locale'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
   AriaComponent,
@@ -64,13 +65,15 @@ const option = computed(() =>
     animate: animate.value,
   }),
 )
+
+const initOptions = computed(() => chartInitOptions(locale.value))
 </script>
 
 <template>
   <div class="flex flex-col gap-3">
     <VChart
       :option="option"
-      :init-options="{ renderer: 'svg' }"
+      :init-options="initOptions"
       autoresize
       :style="{ height: isDesktop ? '320px' : '240px' }"
       class="w-full"

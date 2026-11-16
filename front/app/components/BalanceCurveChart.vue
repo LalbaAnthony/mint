@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMediaQuery } from '@vueuse/core'
+import { chartInitOptions } from '~/charts/locale'
 import type { TableColumn } from '@nuxt/ui'
 import { LineChart } from 'echarts/charts'
 import {
@@ -77,13 +78,15 @@ const columns = computed<TableColumn<BalanceCurvePoint>[]>(() => [
   { accessorKey: 'balanceCents', header: t('forecast.balance') },
   { accessorKey: 'forecast', header: t('forecast.nature') },
 ])
+
+const initOptions = computed(() => chartInitOptions(locale.value))
 </script>
 
 <template>
   <div class="flex flex-col gap-3">
     <VChart
       :option="option"
-      :init-options="{ renderer: 'svg' }"
+      :init-options="initOptions"
       autoresize
       :style="{ height: isDesktop ? '320px' : '240px' }"
       class="w-full"

@@ -1,9 +1,13 @@
 <script setup lang="ts">
-const { t } = useI18n()
+import { en, fr } from '@nuxt/ui/locale'
+
+const { t, locale } = useI18n()
 const localeHead = useLocaleHead({ dir: true, lang: true, seo: false })
 const toasterPosition = useToasterPosition()
 
 usePwaUpdates()
+
+const uiLocale = computed(() => (locale.value === 'en' ? en : fr))
 
 useHead({
   htmlAttrs: {
@@ -18,7 +22,7 @@ useHead({
 </script>
 
 <template>
-  <UApp :toaster="{ position: toasterPosition }">
+  <UApp :locale="uiLocale" :toaster="{ position: toasterPosition }">
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>

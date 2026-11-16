@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
+import { chartInitOptions } from '~/charts/locale'
 import { LineChart } from 'echarts/charts'
 import {
   AriaComponent,
@@ -51,13 +52,15 @@ const columns = computed<TableColumn<Valuation>[]>(() => [
   { accessorKey: 'date', header: t('valuations.date') },
   { accessorKey: 'valueCents', header: t('valuations.value') },
 ])
+
+const initOptions = computed(() => chartInitOptions(locale.value))
 </script>
 
 <template>
   <div class="flex flex-col gap-3">
     <VChart
       :option="option"
-      :init-options="{ renderer: 'svg' }"
+      :init-options="initOptions"
       autoresize
       style="height: 200px"
       class="w-full"
