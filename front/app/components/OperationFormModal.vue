@@ -307,6 +307,7 @@ async function submit(): Promise<void> {
           orientation="horizontal"
           variant="table"
           :legend="t('operations.fields.kind')"
+          :ui="scrollableRadioGroupUi"
           data-testid="operation-kind"
         />
         <template v-if="isTransfer">

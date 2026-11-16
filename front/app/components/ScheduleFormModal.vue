@@ -354,6 +354,7 @@ async function submit(): Promise<void> {
           orientation="horizontal"
           variant="table"
           :legend="t('schedules.fields.kind')"
+          :ui="scrollableRadioGroupUi"
           data-testid="schedule-kind"
         />
         <p v-else class="text-sm text-muted">

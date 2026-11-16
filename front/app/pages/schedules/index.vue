@@ -212,6 +212,7 @@ async function saved(
         orientation="horizontal"
         variant="table"
         :legend="t('schedules.filters.legend')"
+        :ui="scrollableRadioGroupUi"
         data-testid="schedule-kind-filter"
       />
 

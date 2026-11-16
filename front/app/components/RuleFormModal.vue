@@ -236,6 +236,7 @@ async function submit(): Promise<void> {
           orientation="horizontal"
           variant="table"
           :legend="t('rules.fields.action')"
+          :ui="scrollableRadioGroupUi"
         />
         <AppFormField
           v-if="state.action === 'category'"
