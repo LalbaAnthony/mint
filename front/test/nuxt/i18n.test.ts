@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it } from 'vitest'
+import { defineComponent, h } from 'vue'
+import MoneyAmount from '~/components/MoneyAmount.vue'
 import ValuationChart from '~/components/ValuationChart.vue'
 import { chartInitOptions, frenchChartLocale } from '~/charts/locale'
 
@@ -103,6 +105,37 @@ describe('chart descriptions in the profile language (NF-I18N-01, CHG-77)', () =
       renderer: 'svg',
       locale: 'EN',
     })
+    wrapper.unmount()
+  })
+})
+
+describe('formats of the profile language (NF-I18N-02)', () => {
+  it('formats amounts and dates with the English locale', async () => {
+    await useNuxtApp().$i18n.setLocale('en')
+    const wrapper = await mountSuspended(MoneyAmount, {
+      props: { cents: -123_456 },
+    })
+    const DateHost = defineComponent({
+      setup() {
+        const { formatDate } = useFormatters()
+        return () => h('span', formatDate('2026-11-16'))
+      },
+    })
+    const dated = await mountSuspended(DateHost)
+
+    expect(wrapper.text()).toContain(
+      new Intl.NumberFormat('en', {
+        style: 'currency',
+        currency: 'EUR',
+      }).format(-1234.56),
+    )
+    expect(dated.text()).toBe(
+      new Intl.DateTimeFormat('en', {
+        dateStyle: 'medium',
+        timeZone: 'UTC',
+      }).format(new Date('2026-11-16T00:00:00Z')),
+    )
+    dated.unmount()
     wrapper.unmount()
   })
 })

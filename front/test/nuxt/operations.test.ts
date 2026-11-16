@@ -229,6 +229,47 @@ describe('operation form (OPE-01, OPE-02)', () => {
     })
   })
 
+  it('warns without blocking when a transfer exceeds the cap of a passbook (LIV-02, US-15)', async () => {
+    const today = parisDate(new Date())
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'POST /transfers': () => ({
+        transferGroupId: ids.transferGroup,
+        source: operation({ transferGroupId: ids.transferGroup }),
+        target: operation({
+          id: '00000000-0000-4000-8000-0000000000d3',
+          accountId: ids.livret,
+          amountCents: 10_000,
+          transferGroupId: ids.transferGroup,
+        }),
+        capWarnings: [
+          { accountId: ids.livret, date: today, excessCents: 5_000 },
+        ],
+      }),
+    })
+    await openEditor(
+      () => useOperationEditorStore().create('transfer'),
+      '[data-testid="operation-source-account"]',
+    )
+    await fillInput('[data-testid="operation-amount"]', '100')
+    await fillInput('[data-testid="operation-label"]', 'Epargne')
+    submit('[data-testid="operation-form"]')
+
+    const expected = `Livret A dépasse son plafond de ${euros(5_000)} au ${new Intl.DateTimeFormat(
+      'fr',
+      { dateStyle: 'medium', timeZone: 'UTC' },
+    ).format(new Date(`${today}T00:00:00Z`))}.`
+    await vi.waitFor(() => {
+      expect(useToast().toasts.value.map((toast) => toast.title)).toContain(
+        expected,
+      )
+    })
+    expect(
+      useToast().toasts.value.find((toast) => toast.title === expected)?.color,
+    ).toBe('warning')
+    useToast().clear()
+  })
+
   it('edits both movements of a transfer through its group', async () => {
     const movement = operation({
       accountId: ids.livret,
