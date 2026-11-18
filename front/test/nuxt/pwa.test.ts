@@ -4,9 +4,24 @@ import { describe, expect, it } from 'vitest'
 import { appleSplashScreenLinks } from '~~/pwa/splash-screens'
 
 const publicDirectory = resolve(process.cwd(), 'front', 'public')
+const nuxtConfigSpecifier = '~~/nuxt.config'
 
 function publicFile(href: string): string {
   return resolve(publicDirectory, href.replace(/^\//, ''))
+}
+
+function readProperty(source: unknown, key: string): unknown {
+  if (typeof source !== 'object' || source === null) {
+    return undefined
+  }
+  return Reflect.get(source, key)
+}
+
+async function readManifestOptions(): Promise<unknown> {
+  const nuxtConfigModule: unknown = await import(
+    /* @vite-ignore */ String(nuxtConfigSpecifier)
+  )
+  return ['default', 'pwa', 'manifest'].reduce(readProperty, nuxtConfigModule)
 }
 
 describe('PWA resources (NF-PWA-01, CHG-80 to CHG-84)', () => {
@@ -44,5 +59,12 @@ describe('PWA resources (NF-PWA-01, CHG-80 to CHG-84)', () => {
     ]) {
       expect(existsSync(publicFile(name)), name).toBe(true)
     }
+  })
+
+  it('declares theme_color as undefined so the plugin default is not applied (ADR 0028)', async () => {
+    const manifestOptions = await readManifestOptions()
+
+    expect(manifestOptions).toHaveProperty('theme_color', undefined)
+    expect(manifestOptions).toHaveProperty('background_color', '#FBFBF9')
   })
 })

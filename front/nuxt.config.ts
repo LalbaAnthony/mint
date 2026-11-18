@@ -183,7 +183,7 @@ export default defineNuxtConfig({
       short_name: 'Mint',
       lang: 'fr',
       display: 'standalone',
-      theme_color: '#FFFFFF',
+      theme_color: undefined,
       background_color: '#FBFBF9',
       icons: [
         { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
