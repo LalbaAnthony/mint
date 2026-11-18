@@ -48,16 +48,16 @@ Les règles contrôlées sont celles de la section 7.5 du cahier des charges (CO
 
 `docs/` est la référence du projet.
 
-| Document                                               | Contenu                                                                      |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| [docs/specifications.md](docs/specifications.md)       | cahier des charges : exigences, user stories, modèle de données, lots        |
-| [docs/graphic-charter.md](docs/graphic-charter.md)     | charte graphique et règles d'interface                                       |
-| [docs/calculation-rules.md](docs/calculation-rules.md) | règles de calcul : prévision, exécution, rapprochement, enveloppes, intérêts |
-| [docs/development.md](docs/development.md)             | environnement local, jeu de données, tests                                   |
-| [docs/deployment.md](docs/deployment.md)               | CI/CD, secrets, VPS, Apache, déploiement, retour arrière, administrateurs    |
-| [docs/adr/](docs/adr/)                                 | décisions d'architecture, une par fichier                                    |
-| [docs/openapi.json](docs/openapi.json)                 | spécification OpenAPI 3 de l'API, générée depuis les schémas zod             |
+| Document                                               | Contenu                                                                                |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| [docs/specifications.md](docs/specifications.md)       | cahier des charges : exigences, user stories, modèle de données, lots                  |
+| [docs/graphic-charter.md](docs/graphic-charter.md)     | charte graphique et règles d'interface                                                 |
+| [docs/calculation-rules.md](docs/calculation-rules.md) | règles de calcul : prévision, exécution, rapprochement, enveloppes, intérêts           |
+| [docs/development.md](docs/development.md)             | environnement local, jeu de données, tests                                             |
+| [docs/deployment.md](docs/deployment.md)               | CI/CD, secrets, VPS, Apache, déploiement, retour arrière, administrateurs, sauvegardes |
+| [docs/adr/](docs/adr/)                                 | décisions d'architecture, une par fichier                                              |
+| [docs/openapi.json](docs/openapi.json)                 | spécification OpenAPI 3 de l'API, générée depuis les schémas zod                       |
 
 ## Production
 
-Mint est servi sur `mint.dev-it.app` derrière Apache (vhost de référence : [apache.conf](apache.conf)). Chaque push sur `main` contrôle, teste, publie les images et déploie, comme le run planifié du 1er de chaque mois qui reconstruit les images sur leurs images de base corrigées ; le retour arrière est un workflow manuel. Voir [docs/deployment.md](docs/deployment.md).
+Mint est servi sur `mint.dev-it.app` derrière Apache (vhost de référence : [apache.conf](apache.conf)). Chaque push sur `main` contrôle, teste, publie les images et déploie, comme le run planifié du 1er de chaque mois qui reconstruit les images sur leurs images de base corrigées ; le retour arrière est un workflow manuel. La base est sauvegardée chaque nuit sur un serveur distinct par le dépôt `../mint-backup`. Voir [docs/deployment.md](docs/deployment.md).

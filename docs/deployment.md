@@ -137,3 +137,21 @@ Les secrets `SESSION_SECRET` et `SMTP_*` doivent exister avant le premier déplo
 Les passkeys (ADR 0022) sont liées au nom d'hôte de `APP_ORIGIN` (`mint.dev-it.app`, fixé dans `docker-compose.yml`) : changer de domaine les rend toutes inutilisables, chaque utilisateur se reconnecte alors par mot de passe et réenregistre ses passkeys.
 
 Les trois secrets `VAPID_*` doivent exister avant le premier déploiement du sous-lot des notifications, sous peine du même échec. Générer la paire une seule fois, hors du VPS, avec `npx web-push generate-vapid-keys` (paquet `web-push`), puis copier « Public Key » et « Private Key » dans les secrets. Changer la paire invalide tous les abonnements : chaque appareil doit réactiver le push depuis son profil.
+
+## 10. Sauvegardes
+
+La base de production est sauvegardée depuis un serveur distinct par le dépôt `mint-backup`, cloné à côté de celui-ci (`../mint-backup`). Son script `src/main.sh` porte la configuration, codée en dur ; son dossier `docs/` décrit l'installation sur le serveur de sauvegarde et la restauration.
+
+| Élément     | Valeur                                                                                                                                                                                                              |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Méthode     | `pg_dump --format=custom` lancé par SSH dans le conteneur `mint-db-1` : instantané cohérent, sans arrêt de `api` ni de `worker`. L'archive transite par la sortie standard de SSH et n'est jamais écrite sur le VPS |
+| Contenu     | toute la base, lots d'import en attente compris ; `db-data` est le seul volume de production, les journaux sont gérés par Docker (NF-OPS-03), `.env` et `docker-compose.yml` sont régénérés à chaque déploiement    |
+| Horaire     | 02:00 chaque jour par cron, à l'heure locale du serveur de sauvegarde (supposée Europe/Paris) : après l'exécution de 00:05, avant la purge de 03:00 et hors du redéploiement mensuel, qui peut recréer `db`         |
+| Rétention   | 30 jours sur le serveur de sauvegarde, appliquée seulement après une sauvegarde réussie                                                                                                                             |
+| Accès       | utilisateur de déploiement du VPS (section 4), avec une clé propre au serveur de sauvegarde                                                                                                                         |
+| Supervision | aucun ping : chaque exécution, réussie ou non, est consignée dans `backup.log` à côté des archives                                                                                                                  |
+| Chiffrement | aucun : archives lisibles par le seul compte propriétaire (umask 077)                                                                                                                                               |
+
+- Le nom `mint-db-1` découle de `name: mint` et du service `db` de `docker-compose.yml` : renommer l'un ou l'autre casse la sauvegarde. Un changement d'hôte, de port ou d'utilisateur SSH du VPS se reporte aussi dans `src/main.sh` de `mint-backup`.
+- La clé du serveur de sauvegarde ouvre une session de l'utilisateur de déploiement, membre du groupe `docker` : elle donne un accès équivalent à root sur le VPS.
+- Restaurer remplace toute la base par l'archive : arrêt de `api` et `worker`, base recréée vide, `pg_restore` en une seule transaction, migrations, redémarrage. Les données écrites après l'archive sont perdues, et le `worker` rattrape à son redémarrage les exécutions manquées depuis sa date (ADR 0014).
