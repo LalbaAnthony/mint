@@ -244,7 +244,7 @@
     "preferences": "Préférences",
     "language": "Langue",
     "theme": "Thème",
-    "themeHint": "Système suit le réglage clair ou sombre de l'appareil.",
+    "themeHint": "Système suit le réglage de l'appareil.",
     "themes": {
       "system": "Système",
       "light": "Clair",

@@ -5,7 +5,12 @@ defineProps<AppFormFieldProps>()
 </script>
 
 <template>
-  <UFormField :label="label" :name="name" :hint="hint">
+  <UFormField
+    :label="label"
+    :name="name"
+    :hint="hint"
+    :ui="{ hint: 'text-xs font-medium' }"
+  >
     <slot />
     <template #error="{ error }">
       <span
