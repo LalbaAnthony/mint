@@ -628,6 +628,11 @@ export default defineConfig({
   body {
     background-color: var(--app-canvas);
   }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
 }
 ```
 
