@@ -1,6 +1,6 @@
 # ADR 0004 · Déploiement piloté par GitHub Actions et secrets de dépôt
 
-Statut : acceptée · 12 novembre 2026 · Exigences : NF-SEC-07, NF-OPS-01, NF-OPS-03, NF-QUA-05, sections 7.2 et 7.6
+Statut : acceptée, amendée par ADR 0030 (reconstruction mensuelle, pull de PostgreSQL) · 12 novembre 2026 · Exigences : NF-SEC-07, NF-OPS-01, NF-OPS-03, NF-QUA-05, sections 7.2 et 7.6
 
 ## Contexte
 

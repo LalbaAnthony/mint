@@ -1,17 +1,19 @@
 # Déploiement
 
-Exploitation de la chaîne de livraison décrite dans le cahier des charges (sections 7.2 et 7.6) : publication des images, déploiement sur le VPS, retour arrière. Les choix sont motivés dans l'ADR 0004 (déploiement) et l'ADR 0003 (CSP du conteneur `web`).
+Exploitation de la chaîne de livraison décrite dans le cahier des charges (sections 7.2 et 7.6) : publication des images, déploiement sur le VPS, retour arrière. Les choix sont motivés dans l'ADR 0004 (déploiement), l'ADR 0030 (reconstruction mensuelle) et l'ADR 0003 (CSP du conteneur `web`).
 
 ## 1. Workflows
 
-| Fichier             | Déclencheur                         | Rôle                                                                                                                       |
-| ------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `release.flow.yml`  | push sur `main`                     | `checks.inc.yml`, puis `tests.inc.yml`, puis `build.inc.yml`, puis `deploy.inc.yml` avec le SHA du commit poussé           |
-| `rollback.flow.yml` | déclenchement manuel, SHA en entrée | `deploy.inc.yml` avec le SHA fourni                                                                                        |
-| `build.inc.yml`     | appelé par `release.flow.yml`       | construction `linux/amd64` et publication sur Docker Hub de `mint-api` et `mint-web`, tags `latest` et SHA complet         |
-| `deploy.inc.yml`    | appelé par les deux flux            | validation des secrets, SSH vers le VPS avec empreinte d'hôte épinglée, exécution de `.github/deploy/remote.sh` sur le VPS |
+| Fichier             | Déclencheur                                         | Rôle                                                                                                                                                                 |
+| ------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `release.flow.yml`  | push sur `main` ; le 1er de chaque mois à 04:17 UTC | `checks.inc.yml`, puis `tests.inc.yml`, puis `build.inc.yml`, puis `deploy.inc.yml` avec le SHA du commit poussé, ou du dernier commit de `main` pour le run mensuel |
+| `rollback.flow.yml` | déclenchement manuel, SHA en entrée                 | `deploy.inc.yml` avec le SHA fourni                                                                                                                                  |
+| `build.inc.yml`     | appelé par `release.flow.yml`                       | construction `linux/amd64` et publication sur Docker Hub de `mint-api` et `mint-web`, tags `latest` et SHA complet                                                   |
+| `deploy.inc.yml`    | appelé par les deux flux                            | validation des secrets, SSH vers le VPS avec empreinte d'hôte épinglée, exécution de `.github/deploy/remote.sh` sur le VPS                                           |
 
 Un seul run de `release.flow.yml` s'exécute à la fois : un push arrivé pendant un run attend, et un push plus récent remplace celui qui attend. Le job de déploiement partage le groupe de concurrence `deploy-production` avec `rollback.flow.yml` : deux déploiements ne se chevauchent jamais.
+
+Le run planifié du 1er de chaque mois (04:17 UTC, soit 05:17 en hiver et 06:17 en été à Paris) rejoue toute la chaîne sur le dernier commit de `main` (ADR 0030). Le builder Buildx, neuf à chaque run, relit `node:24-alpine` et `nginx:alpine` sur Docker Hub : une image de base corrigée invalide le cache et les images publiées embarquent ses correctifs. Les dépendances npm restent celles de `package-lock.json`. Le tag SHA de ce commit et `latest` sont republiés avec un nouveau digest, que le déploiement tire comme une nouvelle version. GitHub peut retarder un run planifié de plusieurs minutes.
 
 ## 2. Images
 
@@ -91,11 +93,11 @@ Première mise en service : le vhost 443 référence un certificat qui n'existe 
 1. Validation du SHA (40 caractères hexadécimaux) et des secrets.
 2. Lecture de `docker-compose.yml` dans le commit déployé ; génération du `.env` de production sur le runner.
 3. Connexion SSH avec la clé d'hôte épinglée. Le script `.github/deploy/remote.sh` de la branche qui exécute le workflow est envoyé sur l'entrée standard de `bash`, précédé des variables du déploiement ; le `.env` et le fichier compose y voyagent encodés en base64, jamais en argument de commande.
-4. Sur le VPS, écriture de `.env.next` et `docker-compose.next.yml`, puis `docker compose pull api web worker` (le `worker` utilise l'image `mint-api`).
+4. Sur le VPS, écriture de `.env.next` et `docker-compose.next.yml`, relevé de l'identifiant local des images de `db`, `api` et `web`, puis `docker compose pull db api web worker` (le `worker` utilise l'image `mint-api`, `db` l'image `postgres:18-alpine`, qui reçoit ainsi les correctifs de la version 18).
 5. Migrations Umzug dans un conteneur éphémère : `docker compose run --rm api node dist/db/migrate.js up`, qui démarre `db` au besoin.
 6. Seulement si les migrations réussissent : `.env.next` et `docker-compose.next.yml` remplacent `.env` et `docker-compose.yml`, puis `docker compose up --detach --no-build --wait` attend que `db`, `api` et `web` soient sains et que `worker` tourne.
 7. Vérification par `curl` de `http://127.0.0.1:<API_HOST_PORT>/api/v1/health` et de `http://127.0.0.1:<WEB_HOST_PORT>/`.
-8. Suppression des tags locaux de `mint-api` et `mint-web` autres que le SHA déployé. Les images des autres services du VPS ne sont jamais touchées.
+8. Suppression des tags locaux de `mint-api` et `mint-web` autres que le SHA déployé, puis, par leur identifiant relevé au point 4, des images remplacées sous une même référence : SHA reconstruit par le run mensuel, nouvelle `postgres:18-alpine`. Si un autre conteneur du VPS utilise encore une de ces images, sa suppression échoue en simple avertissement. Les tags des autres services ne sont jamais supprimés.
 
 Si une étape échoue avant le point 6, les conteneurs en place continuent de tourner sans changement et les fichiers `.next` sont supprimés. Si `up --wait` ou la vérification échoue, les nouveaux conteneurs restent en place : lancer un retour arrière.
 
@@ -105,12 +107,15 @@ Actions, workflow `rollback`, Run workflow, puis saisir le SHA complet d'un comm
 
 - Les migrations déjà appliquées ne sont pas annulées : l'ancienne version doit tolérer le schéma courant.
 - Un SHA jamais publié échoue au pull, sans rien modifier sur le VPS.
+- Le run mensuel republie le tag du dernier commit de `main` : un retour arrière vers ce SHA redéploie sa reconstruction la plus récente, la précédente n'est plus disponible sur Docker Hub.
 - Un retour arrière lancé pendant qu'une release est en cours de contrôles ou de tests est écrasé par cette release quand elle arrive au déploiement.
 
 ## 8. Points d'attention
 
 - Changer `POSTGRES_PASSWORD` : PostgreSQL ne relit cette variable qu'à l'initialisation du volume. Modifier d'abord le mot de passe dans la base (`ALTER USER`), puis le secret. Sinon le déploiement suivant échoue à l'étape des migrations, sans interruption de la version en place.
-- Toute modification de la définition du service `db` dans `docker-compose.yml` (image, environnement) recrée le conteneur `db` dès l'étape des migrations, avant la bascule de l'API.
+- Toute modification de la définition du service `db` dans `docker-compose.yml` (image, environnement), ou une nouvelle `postgres:18-alpine` tirée au déploiement, recrée le conteneur `db` dès l'étape des migrations, avant la bascule de l'API : PostgreSQL redémarre.
+- Le tag `postgres:18-alpine` est commun à tous les projets Docker du VPS : après un pull qui le déplace, un autre service qui l'utilise bascule sur la nouvelle image à sa prochaine recréation.
+- Run mensuel : une vulnérabilité critique apparue dans `package-lock.json` le bloque aux contrôles (NF-SEC-08), sans redéploiement, jusqu'à sa correction. Le dépôt étant public, GitHub désactive les workflows planifiés après 60 jours sans activité, les runs planifiés ne comptant pas : réactiver alors le workflow `release` (Actions, release, Enable workflow).
 - Docker Compose signale `The "DB_HOST_PORT" variable is not set` à chaque commande sur le VPS : la variable ne sert qu'au service `db-dev` du profil `dev`. Avertissement sans effet.
 - Le service `worker` (`node dist/worker.js`, image `mint-api`) exécute les échéances à 00:05 (Europe/Paris) et au démarrage, pour rattraper les jours manqués (ADR 0014), dont la capitalisation des intérêts estimés des livrets (ADR 0020). Il n'a pas de port. Un verrou consultatif PostgreSQL empêche deux exécutions simultanées. Journaux : `docker compose logs worker` (événements `execution_completed`, `execution_failed`, `occurrence_execution_failed`, sans montant ni libellé). Il purge aussi à 03:00 les sessions expirées, les jetons de réinitialisation et de changement d'email expirés ou utilisés et les imports restés en attente plus de 24 heures avec leur fichier, sous un second verrou (événements `purge_completed`, avec les nombres de lignes supprimées, et `purge_failed`) ; les invitations sont conservées pour l'historique de la console (ADM-02). Avec `HEALTHCHECK_EXECUTION_URL` et `HEALTHCHECK_PURGE_URL`, chaque tâche appelle `/start` sur sa propre URL, puis l'URL en cas de succès ou `/fail` en cas d'échec : configurer côté supervision un contrôle par tâche, d'une période d'un jour, avec une alerte vers l'administrateur. Il évalue aussi les notifications à 08:00 et à son démarrage, sous un troisième verrou (événements `notifications_completed`, avec les nombres d'utilisateurs, de notifications créées, de push envoyés et d'échecs, `user_notification_failed` et `notifications_failed`, sans montant ni libellé), et ping `HEALTHCHECK_NOTIFICATIONS_URL` de la même façon. La purge supprime en plus les notifications lues depuis plus de 90 jours.
 

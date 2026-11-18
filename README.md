@@ -60,4 +60,4 @@ Les règles contrôlées sont celles de la section 7.5 du cahier des charges (CO
 
 ## Production
 
-Mint est servi sur `mint.dev-it.app` derrière Apache (vhost de référence : [apache.conf](apache.conf)). Chaque push sur `main` contrôle, teste, publie les images et déploie ; le retour arrière est un workflow manuel. Voir [docs/deployment.md](docs/deployment.md).
+Mint est servi sur `mint.dev-it.app` derrière Apache (vhost de référence : [apache.conf](apache.conf)). Chaque push sur `main` contrôle, teste, publie les images et déploie, comme le run planifié du 1er de chaque mois qui reconstruit les images sur leurs images de base corrigées ; le retour arrière est un workflow manuel. Voir [docs/deployment.md](docs/deployment.md).
