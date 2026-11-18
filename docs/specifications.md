@@ -665,12 +665,12 @@ Ces règles s'appliquent à tout le dépôt et sont contrôlées automatiquement
 
 Quatre workflows réutilisables (`*.inc.yml`) sont assemblés par trois workflows de déclenchement (`*.flow.yml`), tous placés dans `.github/workflows/`.
 
-| Workflow réutilisable | Rôle                                                                                                                                          |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `checks.inc.yml`      | ESLint, Prettier `--check`, typecheck (`tsc --noEmit`, `vue-tsc --noEmit`), scan des caractères interdits, commitlint sur les commits poussés |
-| `tests.inc.yml`       | Vitest unitaires et intégration avec un service PostgreSQL, rapport de couverture, Playwright                                                 |
-| `build.inc.yml`       | Construction et publication sur Docker Hub de `mint-web` et `mint-api`, tags `latest` et SHA du commit                                        |
-| `deploy.inc.yml`      | Entrée : un SHA. SSH vers le VPS, pull des images, migrations, `docker compose up -d`, vérification de l'endpoint de santé                    |
+| Workflow réutilisable | Rôle                                                                                                                                                                                                                 |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `checks.inc.yml`      | ESLint, Prettier `--check`, typecheck (`tsc --noEmit`, `vue-tsc --noEmit`), scan des caractères interdits, commitlint sur les commits poussés, audit des dépendances (`npm audit --audit-level=critical`, NF-SEC-08) |
+| `tests.inc.yml`       | Vitest unitaires et intégration avec un service PostgreSQL, rapport de couverture, Playwright                                                                                                                        |
+| `build.inc.yml`       | Construction et publication sur Docker Hub de `mint-web` et `mint-api`, tags `latest` et SHA du commit                                                                                                               |
+| `deploy.inc.yml`      | Entrée : un SHA. SSH vers le VPS, pull des images, migrations, `docker compose up -d`, vérification de l'endpoint de santé                                                                                           |
 
 | Workflow de déclenchement | Déclencheur                         | Enchaînement                                                                                              |
 | ------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------- |
