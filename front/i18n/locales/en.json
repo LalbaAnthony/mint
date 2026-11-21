@@ -260,6 +260,9 @@
       "dark": "Dark"
     },
     "forecastHorizon": "Forecast horizon",
+    "defaultAccount": "Default account",
+    "defaultAccountHint": "Preselected when adding and in the forecast views.",
+    "noDefaultAccount": "None",
     "monthCount": "{n} month | {n} months",
     "targets": "Allocation targets (%)",
     "targetsRule": "The sum must be 100",

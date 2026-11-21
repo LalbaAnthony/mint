@@ -35,6 +35,7 @@ export type ProfileFormState = {
   theme: ThemePreference
   forecastHorizonMonths: number
   targets: Record<keyof AllocationTargets, number | null>
+  defaultAccountId: string
 }
 
 export type SelectItem<Value> = {

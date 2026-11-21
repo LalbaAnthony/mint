@@ -3,7 +3,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminPage from '~/pages/admin/index.vue'
 import ProfilePage from '~/pages/profile/index.vue'
 import { installFakeApi } from '../fake-api'
+import {
+  account,
+  focusedTestId,
+  ids,
+  livret,
+  overview,
+  referentialHandlers,
+  selectByTestId,
+} from '../planning-fixtures'
 import { signIn, testProfile } from '../session'
+
+const archivedAccountId = '00000000-0000-4000-8000-0000000000a9'
+
+function patchedDefaultAccount(body: unknown): string | null | undefined {
+  if (typeof body !== 'object' || body === null) {
+    return undefined
+  }
+  const value: unknown = Reflect.get(body, 'defaultAccountId')
+  return typeof value === 'string' || value === null ? value : undefined
+}
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -138,9 +157,8 @@ describe('profile (AUTH-05, AUTH-07)', () => {
   it('lists the sessions and flags the current one', async () => {
     signIn('user')
     installFakeApi(fetchMock, {
+      ...referentialHandlers(),
       'GET /profile/sessions': () => sessions,
-      'GET /categories': () => [],
-      'GET /tags': () => [],
     })
 
     const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
@@ -161,9 +179,8 @@ describe('profile (AUTH-05, AUTH-07)', () => {
   it('saves the preferences and applies the returned profile, theme included (NF-UX-02)', async () => {
     signIn('user')
     const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
       'GET /profile/sessions': () => sessions,
-      'GET /categories': () => [],
-      'GET /tags': () => [],
       'PATCH /profile': () => ({
         ...testProfile,
         theme: 'dark',
@@ -184,9 +201,99 @@ describe('profile (AUTH-05, AUTH-07)', () => {
       theme: 'system',
       forecastHorizonMonths: 3,
       targets: { needs: 50, wants: 30, save: 20 },
+      defaultAccountId: null,
     })
     await vi.waitFor(() => {
       expect(useColorMode().preference).toBe('dark')
     })
+  })
+
+  it('offers None and the active accounts as default account, without focusing None (ADR 0033, CHG-69)', async () => {
+    signIn('user')
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /accounts/overview': () => ({
+        ...overview([account(), livret]),
+        archived: [
+          account({
+            id: archivedAccountId,
+            name: 'Ancien compte',
+            archivedAt: '2026-11-01T08:00:00.000Z',
+          }),
+        ],
+      }),
+      'GET /profile/sessions': () => sessions,
+    })
+    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+    const select = () => selectByTestId(wrapper, 'preferences-default-account')
+
+    await vi.waitFor(() => {
+      expect(select()?.items()).toEqual([
+        { label: 'Aucun', value: 'none' },
+        { label: 'Compte courant', value: ids.current },
+        { label: 'Livret A', value: ids.livret },
+      ])
+    })
+    expect(select()?.value()).toBe('none')
+    expect(focusedTestId()).toBeNull()
+  })
+
+  it('shows None when the default account of the session is no longer active (ADR 0033)', async () => {
+    signIn('user', { defaultAccountId: archivedAccountId })
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /accounts/overview': () => ({
+        ...overview([account(), livret]),
+        archived: [
+          account({
+            id: archivedAccountId,
+            name: 'Ancien compte',
+            archivedAt: '2026-11-01T08:00:00.000Z',
+          }),
+        ],
+      }),
+      'GET /profile/sessions': () => sessions,
+    })
+    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+
+    await vi.waitFor(() => {
+      expect(
+        selectByTestId(wrapper, 'preferences-default-account')?.value(),
+      ).toBe('none')
+    })
+  })
+
+  it('saves the chosen default account, then None as null (ADR 0033)', async () => {
+    signIn('user', { defaultAccountId: ids.current })
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /profile/sessions': () => sessions,
+      'PATCH /profile': (request) => ({
+        ...testProfile,
+        defaultAccountId: patchedDefaultAccount(request.body),
+      }),
+    })
+    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+    const select = () => selectByTestId(wrapper, 'preferences-default-account')
+    await vi.waitFor(() => {
+      expect(select()?.value()).toBe(ids.current)
+    })
+
+    select()?.choose(ids.livret)
+    await wrapper.get('[data-testid="preferences-form"]').trigger('submit')
+    await vi.waitFor(() => {
+      expect(useSessionStore().user?.defaultAccountId).toBe(ids.livret)
+    })
+
+    select()?.choose('none')
+    await wrapper.get('[data-testid="preferences-form"]').trigger('submit')
+    await vi.waitFor(() => {
+      expect(useSessionStore().user?.defaultAccountId).toBeNull()
+    })
+    expect(
+      api.requests
+        .filter((request) => request.method === 'PATCH')
+        .map((request) => patchedDefaultAccount(request.body)),
+    ).toEqual([ids.livret, null])
   })
 })

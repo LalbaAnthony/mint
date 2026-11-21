@@ -111,10 +111,9 @@ watch(
 )
 
 function applyDefaults(): void {
-  const [first, second] = referentials.activeAccounts
-  state.source ??= paymentSourceValue(first?.id ?? null, null)
-  state.sourceAccountId ??= first?.id
-  state.targetAccountId ??= second?.id
+  const accountId = referentials.prefilledAccountId
+  state.source ??= paymentSourceValue(accountId, null)
+  state.sourceAccountId ??= accountId ?? undefined
 }
 
 const kindItems = computed<SelectItem<QuickAddKind>[]>(() => {

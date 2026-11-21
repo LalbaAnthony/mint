@@ -14,6 +14,7 @@ import type { AccountAction, PaymentMethodAction } from '~~/types/referentials'
 
 const { t } = useI18n()
 const toast = useToast()
+const session = useSessionStore()
 const { errorMessage } = useFormValidation()
 const { loadUsage, accountNotice, paymentMethodNotice } = useUsageNotice()
 
@@ -75,9 +76,21 @@ function openAccountForm(account: Account | null): void {
   accountFormOpen.value = true
 }
 
+async function refreshDefaultAccount(): Promise<void> {
+  try {
+    await session.refresh()
+  } catch (error) {
+    notifyFailure(error)
+  }
+}
+
 async function accountSaved(account: Account): Promise<void> {
+  const created = editedAccount.value === null
   notify(t('accounts.saved', { name: account.name }))
   await load()
+  if (created) {
+    await refreshDefaultAccount()
+  }
 }
 
 const paymentMethodFormOpen = ref(false)
@@ -158,6 +171,7 @@ function deleteAccount(): Promise<void> {
     await apiCommand('DELETE', `/accounts/${account.id}`)
     accountToDelete.value = null
     notify(t('accounts.deleted', { name: account.name }))
+    await refreshDefaultAccount()
   })
 }
 
@@ -217,6 +231,7 @@ function onAccountAction({ kind, account }: AccountAction): Promise<void> {
         notify(
           t('accounts.archivedNotice', { name: account.name, n: count }, count),
         )
+        await refreshDefaultAccount()
       })
     case 'restore':
       return run(async () => {

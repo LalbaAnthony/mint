@@ -11,12 +11,16 @@ import {
   fillInput,
   findInBody,
   ids,
+  livret,
   operation,
+  overview,
   referentialHandlers,
+  selectByTestId,
   setViewportWidth,
   submit,
   typeInto,
 } from '../planning-fixtures'
+import { setDefaultAccount } from '../session'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -144,14 +148,28 @@ describe('operations list (OPE-03 to OPE-05)', () => {
 
 describe('operation form (OPE-01, OPE-02)', () => {
   async function openEditor(open: () => void, ready: string) {
-    await mountForm()
+    const wrapper = await mountForm()
     open()
     await vi.waitFor(() => {
       expect(findInBody(ready)).not.toBeNull()
     })
+    return wrapper
   }
 
-  it('records an expense on the first account, typed in euros and sent as a debit in cents', async () => {
+  async function chooseTarget(
+    wrapper: Awaited<ReturnType<typeof mountForm>>,
+    accountId: string,
+  ) {
+    const target = selectByTestId(wrapper, 'operation-target-account')
+    expect(target?.value()).toBeUndefined()
+    target?.choose(accountId)
+    await vi.waitFor(() => {
+      expect(target?.value()).toBe(accountId)
+    })
+  }
+
+  it('records an expense on the default account, typed in euros and sent as a debit in cents (ADR 0033)', async () => {
+    setDefaultAccount(ids.livret)
     const api = installFakeApi(fetchMock, {
       ...referentialHandlers(),
       'POST /operations': () => ({ ...operation(), capWarnings: [] }),
@@ -174,7 +192,7 @@ describe('operation form (OPE-01, OPE-02)', () => {
       expect(
         api.requests.find((request) => request.method === 'POST')?.body,
       ).toEqual({
-        accountId: ids.current,
+        accountId: ids.livret,
         paymentMethodId: null,
         date: parisDate(new Date()),
         amountCents: -1_250,
@@ -186,7 +204,39 @@ describe('operation form (OPE-01, OPE-02)', () => {
     })
   })
 
-  it('records a transfer between the first two accounts', async () => {
+  it('leaves the payment source empty without default account among several accounts (ADR 0033)', async () => {
+    installFakeApi(fetchMock, referentialHandlers())
+    const wrapper = await mountForm()
+
+    useOperationEditorStore().create('expense')
+
+    await vi.waitFor(() => {
+      expect(findInBody('[data-testid="operation-source"]')).not.toBeNull()
+    })
+    await vi.waitFor(() => {
+      expect(useReferentialsStore().activeAccounts).toHaveLength(2)
+    })
+    expect(selectByTestId(wrapper, 'operation-source')?.value()).toBeUndefined()
+  })
+
+  it('preselects the only active account without default account (ADR 0033)', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /accounts/overview': () => overview([livret]),
+    })
+    const wrapper = await mountForm()
+
+    useOperationEditorStore().create('expense')
+
+    await vi.waitFor(() => {
+      expect(selectByTestId(wrapper, 'operation-source')?.value()).toBe(
+        `account:${ids.livret}`,
+      )
+    })
+  })
+
+  it('records a transfer from the default account to the chosen target (ADR 0033)', async () => {
+    setDefaultAccount(ids.current)
     const api = installFakeApi(fetchMock, {
       ...referentialHandlers(),
       'POST /transfers': () => ({
@@ -201,16 +251,17 @@ describe('operation form (OPE-01, OPE-02)', () => {
         capWarnings: [],
       }),
     })
-    await openEditor(
+    const wrapper = await openEditor(
       () => useOperationEditorStore().create('transfer'),
       '[data-testid="operation-source-account"]',
     )
     await vi.waitFor(() => {
-      expect(
-        api.requests.some((request) => request.path === '/categories'),
-      ).toBe(true)
+      expect(selectByTestId(wrapper, 'operation-source-account')?.value()).toBe(
+        ids.current,
+      )
     })
 
+    await chooseTarget(wrapper, ids.livret)
     await fillInput('[data-testid="operation-amount"]', '100')
     await fillInput('[data-testid="operation-label"]', 'Epargne')
     submit('[data-testid="operation-form"]')
@@ -231,6 +282,7 @@ describe('operation form (OPE-01, OPE-02)', () => {
   })
 
   it('warns without blocking when a transfer exceeds the cap of a passbook (LIV-02, US-15)', async () => {
+    setDefaultAccount(ids.current)
     const today = parisDate(new Date())
     installFakeApi(fetchMock, {
       ...referentialHandlers(),
@@ -248,10 +300,16 @@ describe('operation form (OPE-01, OPE-02)', () => {
         ],
       }),
     })
-    await openEditor(
+    const wrapper = await openEditor(
       () => useOperationEditorStore().create('transfer'),
       '[data-testid="operation-source-account"]',
     )
+    await vi.waitFor(() => {
+      expect(selectByTestId(wrapper, 'operation-source-account')?.value()).toBe(
+        ids.current,
+      )
+    })
+    await chooseTarget(wrapper, ids.livret)
     await fillInput('[data-testid="operation-amount"]', '100')
     await fillInput('[data-testid="operation-label"]', 'Epargne')
     submit('[data-testid="operation-form"]')
@@ -351,6 +409,7 @@ describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () =
   })
 
   it('proposes the best occurrence after a manual entry and reconciles it on confirmation', async () => {
+    setDefaultAccount(ids.current)
     const created = operation({ id: '00000000-0000-4000-8000-0000000000d9' })
     const api = installFakeApi(fetchMock, {
       ...referentialHandlers(),

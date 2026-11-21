@@ -13,8 +13,10 @@ import {
   operation,
   referentialHandlers,
   schedule,
+  selectByTestId,
   setViewportWidth,
 } from '../planning-fixtures'
+import { setDefaultAccount } from '../session'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -263,6 +265,26 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
     )
     expect(api.requests.map((request) => request.path)).toContain(
       '/calendar/2026-11-01?horizonMonths=3',
+    )
+  })
+
+  it('opens on the default account of the profile (ADR 0033)', async () => {
+    setDefaultAccount(ids.current)
+    const path = `/calendar/2026-11-01?accountId=${ids.current}&horizonMonths=3`
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      [`GET ${path}`]: () => novemberUs12(),
+    })
+
+    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
+    })
+    expect(api.requests.map((request) => request.path)).toContain(path)
+    expect(selectByTestId(wrapper, 'forecast-account')?.value()).toBe(
+      ids.current,
     )
   })
 

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 import { UApp } from '#components'
 import EnvelopeConsumption from '~/components/EnvelopeConsumption.vue'
+import EnvelopeFormModal from '~/components/EnvelopeFormModal.vue'
 import EnvelopeMonthAmountModal from '~/components/EnvelopeMonthAmountModal.vue'
 import EnvelopesPage from '~/pages/envelopes/index.vue'
 import { installFakeApi } from '../fake-api'
@@ -13,10 +14,14 @@ import {
   fillInput,
   findInBody,
   ids,
+  livret,
+  overview,
   referentialHandlers,
+  selectByTestId,
   setViewportWidth,
   submit,
 } from '../planning-fixtures'
+import { setDefaultAccount } from '../session'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -327,5 +332,39 @@ describe('amount of one month (ENV-07)', () => {
       expect(wrapper.emitted('saved')).toEqual([['Courses']])
     })
     expect(api.requests.map((request) => request.method)).toContain('DELETE')
+  })
+})
+
+describe('envelope form default account (ENV-01, ADR 0033)', () => {
+  async function openCreation(handlers = referentialHandlers()) {
+    installFakeApi(fetchMock, handlers)
+    await useReferentialsStore().load()
+    const wrapper = await mountSuspended(EnvelopeFormModal, {
+      props: { open: true, envelope: null, takenCategoryIds: [] },
+    })
+    mounted.push(wrapper)
+    await vi.waitFor(() => {
+      expect(findInBody('[data-testid="envelope-form"]')).not.toBeNull()
+    })
+    return selectByTestId(wrapper, 'envelope-source')?.value()
+  }
+
+  it('prefills the payment source with the default account', async () => {
+    setDefaultAccount(ids.livret)
+
+    expect(await openCreation()).toBe(`account:${ids.livret}`)
+  })
+
+  it('leaves the payment source empty without default account among several accounts', async () => {
+    expect(await openCreation()).toBeUndefined()
+  })
+
+  it('preselects the only active account without default account', async () => {
+    expect(
+      await openCreation({
+        ...referentialHandlers(),
+        'GET /accounts/overview': () => overview([livret]),
+      }),
+    ).toBe(`account:${ids.livret}`)
   })
 })

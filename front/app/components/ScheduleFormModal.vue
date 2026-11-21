@@ -115,10 +115,9 @@ watch(
         props.schedule === null ? emptyState() : stateFrom(props.schedule),
       )
       if (props.schedule === null) {
-        const [first, second] = referentials.activeAccounts
-        state.source = paymentSourceValue(first?.id ?? null, null)
-        state.sourceAccountId = first?.id
-        state.targetAccountId = second?.id
+        const accountId = referentials.prefilledAccountId
+        state.source = paymentSourceValue(accountId, null)
+        state.sourceAccountId = accountId ?? undefined
       }
     }
   },

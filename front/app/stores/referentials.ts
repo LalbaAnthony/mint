@@ -53,6 +53,21 @@ export const useReferentialsStore = defineStore('referentials', () => {
     accounts.value.filter((account) => account.archivedAt === null),
   )
 
+  const session = useSessionStore()
+
+  const defaultAccountId = computed(() => {
+    const id = session.user?.defaultAccountId ?? null
+    return activeAccounts.value.some((account) => account.id === id) ? id : null
+  })
+
+  const prefilledAccountId = computed(() => {
+    if (defaultAccountId.value !== null) {
+      return defaultAccountId.value
+    }
+    const [only, ...others] = activeAccounts.value
+    return only !== undefined && others.length === 0 ? only.id : null
+  })
+
   function accountName(id: string | null): string {
     return accounts.value.find((account) => account.id === id)?.name ?? ''
   }
@@ -83,6 +98,8 @@ export const useReferentialsStore = defineStore('referentials', () => {
     categories,
     tags,
     activeAccounts,
+    defaultAccountId,
+    prefilledAccountId,
     load,
     loadTags,
     createTag,

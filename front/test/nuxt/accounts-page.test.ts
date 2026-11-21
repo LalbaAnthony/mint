@@ -2,8 +2,10 @@ import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Account, AccountOverview } from '@mint/shared/types/accounts'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
+import AccountGroupCard from '~/components/AccountGroupCard.vue'
 import AccountsPage from '~/pages/accounts/index.vue'
 import { installFakeApi } from '../fake-api'
+import { signIn, testProfile } from '../session'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -323,6 +325,10 @@ describe('account form (CPT-01)', () => {
       }),
       'GET /payment-methods': () => [],
       'POST /accounts': () => current,
+      'GET /auth/session': () => ({
+        ...testProfile,
+        defaultAccountId: current.id,
+      }),
     })
     const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
@@ -354,6 +360,37 @@ describe('account form (CPT-01)', () => {
         lowBalanceThresholdCents: 20_000,
       })
     })
+    await vi.waitFor(() => {
+      expect(useSessionStore().user?.defaultAccountId).toBe(current.id)
+    })
+  })
+
+  it('reloads the default account of the profile after archiving an account (ADR 0033)', async () => {
+    signIn('user', { defaultAccountId: current.id })
+    const api = installFakeApi(fetchMock, {
+      'GET /accounts/overview': () => usOverview,
+      'GET /payment-methods': () => [],
+      [`POST /accounts/${current.id}/archive`]: () => ({
+        ...current,
+        archivedAt: '2026-11-11T10:00:00.000Z',
+      }),
+      'GET /auth/session': () => testProfile,
+    })
+    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    await vi.waitFor(() => {
+      expect(wrapper.findComponent(AccountGroupCard).exists()).toBe(true)
+    })
+
+    wrapper
+      .getComponent(AccountGroupCard)
+      .vm.$emit('accountAction', { kind: 'archive', account: current })
+
+    await vi.waitFor(() => {
+      expect(useSessionStore().user?.defaultAccountId).toBeNull()
+    })
+    expect(api.requests.map((request) => request.path)).toContain(
+      `/accounts/${current.id}/archive`,
+    )
   })
 
   it('refuses an amount that is not a number', async () => {

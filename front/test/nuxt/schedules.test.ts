@@ -9,11 +9,15 @@ import {
   fillInput,
   findInBody,
   ids,
+  livret,
+  overview,
   referentialHandlers,
   schedule,
+  selectByTestId,
   setViewportWidth,
   submit,
 } from '../planning-fixtures'
+import { setDefaultAccount } from '../session'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -137,9 +141,9 @@ describe('schedules view (ECH-09, ECH-10)', () => {
 })
 
 describe('schedule form (ECH-01 to ECH-06)', () => {
-  it('creates a monthly transfer between the first two accounts', async () => {
+  async function openCreation(handlers = referentialHandlers()) {
     const api = installFakeApi(fetchMock, {
-      ...referentialHandlers(),
+      ...handlers,
       'POST /schedules': () => schedule({ kind: 'transfer' }),
     })
     await useReferentialsStore().load()
@@ -150,6 +154,39 @@ describe('schedule form (ECH-01 to ECH-06)', () => {
     await vi.waitFor(() => {
       expect(findInBody('[data-testid="schedule-form"]')).not.toBeNull()
     })
+    return { api, wrapper }
+  }
+
+  it('prefills the payment source with the default account (ADR 0033)', async () => {
+    setDefaultAccount(ids.livret)
+
+    const { wrapper } = await openCreation()
+
+    expect(selectByTestId(wrapper, 'schedule-source')?.value()).toBe(
+      `account:${ids.livret}`,
+    )
+  })
+
+  it('leaves the payment source empty without default account among several accounts (ADR 0033)', async () => {
+    const { wrapper } = await openCreation()
+
+    expect(selectByTestId(wrapper, 'schedule-source')?.value()).toBeUndefined()
+  })
+
+  it('preselects the only active account without default account (ADR 0033)', async () => {
+    const { wrapper } = await openCreation({
+      ...referentialHandlers(),
+      'GET /accounts/overview': () => overview([livret]),
+    })
+
+    expect(selectByTestId(wrapper, 'schedule-source')?.value()).toBe(
+      `account:${ids.livret}`,
+    )
+  })
+
+  it('creates a monthly transfer from the default account to the chosen target (ADR 0033)', async () => {
+    setDefaultAccount(ids.current)
+    const { api, wrapper } = await openCreation()
 
     findInBody('[data-testid="schedule-kind"] [value="transfer"]')?.click()
     await vi.waitFor(() => {
@@ -157,6 +194,12 @@ describe('schedule form (ECH-01 to ECH-06)', () => {
         findInBody('[data-testid="schedule-source-account"]'),
       ).not.toBeNull()
     })
+    expect(selectByTestId(wrapper, 'schedule-source-account')?.value()).toBe(
+      ids.current,
+    )
+    const target = selectByTestId(wrapper, 'schedule-target-account')
+    expect(target?.value()).toBeUndefined()
+    target?.choose(ids.livret)
     await fillInput('[data-testid="schedule-label"]', 'Epargne')
     await fillInput('[data-testid="schedule-amount"]', '100')
     await fillInput('[data-testid="schedule-start-date"]', '2026-12-06')

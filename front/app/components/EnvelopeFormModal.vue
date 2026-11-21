@@ -55,10 +55,7 @@ watch(
         props.envelope === null ? emptyState() : stateFrom(props.envelope),
       )
       if (props.envelope === null) {
-        state.source = paymentSourceValue(
-          referentials.activeAccounts[0]?.id ?? null,
-          null,
-        )
+        state.source = paymentSourceValue(referentials.prefilledAccountId, null)
       }
     }
   },

@@ -21,6 +21,7 @@ import DashboardPage from '~/pages/index.vue'
 import type { ChartTheme } from '~~/types/forecast'
 import { installFakeApi } from '../fake-api'
 import { euros, ids, percents, referentialHandlers } from '../planning-fixtures'
+import { setDefaultAccount } from '../session'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -270,6 +271,32 @@ describe('dashboard view (DSH-01)', () => {
     expect(table.text()).toContain('Prévu')
     expect(table.text()).toContain('Réel')
     expect(api.requests.map((request) => request.path)).toContain(
+      '/forecast/curve?horizonMonths=3',
+    )
+  })
+
+  it('opens the forecast curve on the default account of the profile (ADR 0033)', async () => {
+    setDefaultAccount(ids.current)
+    const path = `/forecast/curve?accountId=${ids.current}&horizonMonths=3`
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      [`GET ${path}`]: () => curve(),
+      ...dashboardHandlers(),
+    })
+
+    const wrapper = await mountSuspended(DashboardPage, {
+      route: '/',
+      global: { stubs: { Echarts: true } },
+    })
+    mounted.push(wrapper)
+
+    await vi.waitFor(
+      () => {
+        expect(api.requests.map((request) => request.path)).toContain(path)
+      },
+      { timeout: 10_000 },
+    )
+    expect(api.requests.map((request) => request.path)).not.toContain(
       '/forecast/curve?horizonMonths=3',
     )
   })

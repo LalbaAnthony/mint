@@ -47,6 +47,10 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  async function refresh(): Promise<void> {
+    setUser(await apiGet('/auth/session', userProfileSchema))
+  }
+
   async function login(email: string, password: string): Promise<void> {
     const profile = await apiCall('POST', '/auth/login', userProfileSchema, {
       email,
@@ -81,6 +85,7 @@ export const useSessionStore = defineStore('session', () => {
     setUser,
     clear,
     load,
+    refresh,
     login,
     loginWithPasskey,
     logout,

@@ -18,15 +18,26 @@ import {
 } from '@mint/shared/schemas/common'
 import { noteMaxLength } from '@mint/shared/schemas/operations'
 import { passkeyNameSchema } from '@mint/shared/schemas/passkeys'
+import { updateProfileRequestSchema } from '@mint/shared/schemas/profile'
 import { rulePatternMaxLength } from '@mint/shared/schemas/rules'
 import { maxScheduleInterval } from '@mint/shared/schemas/schedules'
 import {
   currentPasswordSchema,
+  defaultAccountIdSchema,
   emailSchema,
   localeSchema,
   newPasswordSchema,
 } from '@mint/shared/schemas/user'
 import { parseAmountInput, parseRateInput } from '../app/utils/money'
+
+export const noDefaultAccount = 'none'
+
+export const profileFormSchema = updateProfileRequestSchema.extend({
+  defaultAccountId: z
+    .string()
+    .transform((id) => (id === noDefaultAccount ? null : id))
+    .pipe(defaultAccountIdSchema),
+})
 
 function confirms(state: { password: string; confirmation: string }): boolean {
   return state.password === state.confirmation

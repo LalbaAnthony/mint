@@ -260,6 +260,9 @@
       "dark": "Sombre"
     },
     "forecastHorizon": "Horizon de prévision",
+    "defaultAccount": "Compte par défaut",
+    "defaultAccountHint": "Présélectionné à la saisie et dans les vues de prévision.",
+    "noDefaultAccount": "Aucun",
     "monthCount": "{n} mois",
     "targets": "Cibles de répartition (%)",
     "targetsRule": "La somme doit faire 100",

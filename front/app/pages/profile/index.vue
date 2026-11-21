@@ -2,12 +2,15 @@
 import {
   emailChangeRequestSchema,
   sessionListResponseSchema,
-  updateProfileRequestSchema,
 } from '@mint/shared/schemas/profile'
 import { userProfileSchema } from '@mint/shared/schemas/user'
 import type { SessionSummary } from '@mint/shared/types/profile'
 import type { ThemePreference } from '@mint/shared/types/user'
-import { changePasswordFormSchema } from '~~/schemas/forms'
+import {
+  changePasswordFormSchema,
+  noDefaultAccount,
+  profileFormSchema,
+} from '~~/schemas/forms'
 import type {
   ChangePasswordFormState,
   ProfileFormState,
@@ -17,6 +20,7 @@ import type {
 const { t } = useI18n()
 const toast = useToast()
 const session = useSessionStore()
+const referentials = useReferentialsStore()
 const { validator, errorMessage } = useFormValidation()
 const { formatDateTime } = useFormatters()
 
@@ -29,7 +33,16 @@ const preferences = reactive<ProfileFormState>({
     wants: session.user?.targets.wants ?? 30,
     save: session.user?.targets.save ?? 20,
   },
+  defaultAccountId: session.user?.defaultAccountId ?? noDefaultAccount,
 })
+
+const defaultAccountItems = computed<SelectItem<string>[]>(() => [
+  { label: t('profile.noDefaultAccount'), value: noDefaultAccount },
+  ...referentials.activeAccounts.map((account) => ({
+    label: account.name,
+    value: account.id,
+  })),
+])
 const savingPreferences = ref(false)
 
 const localeItems = computed<SelectItem<'fr' | 'en'>[]>(() => [
@@ -63,7 +76,7 @@ function notifyFailure(error: unknown): void {
 async function savePreferences(): Promise<void> {
   savingPreferences.value = true
   try {
-    const body = updateProfileRequestSchema.parse(preferences)
+    const body = profileFormSchema.parse(preferences)
     session.setUser(await apiCall('PATCH', '/profile', userProfileSchema, body))
     toast.add({
       title: t('profile.preferencesSaved'),
@@ -161,7 +174,20 @@ async function revokeAllSessions(): Promise<void> {
   }
 }
 
-onMounted(loadSessions)
+async function loadAccounts(): Promise<void> {
+  try {
+    await referentials.load()
+  } catch (error) {
+    notifyFailure(error)
+    return
+  }
+  preferences.defaultAccountId =
+    referentials.defaultAccountId ?? noDefaultAccount
+}
+
+onMounted(async () => {
+  await Promise.all([loadSessions(), loadAccounts()])
+})
 </script>
 
 <template>
@@ -175,7 +201,7 @@ onMounted(loadSessions)
         </template>
         <AppForm
           :state="preferences"
-          :validate="validator(updateProfileRequestSchema)"
+          :validate="validator(profileFormSchema)"
           class="flex flex-col gap-4"
           data-testid="preferences-form"
           @submit="savePreferences"
@@ -207,6 +233,18 @@ onMounted(loadSessions)
               v-model="preferences.forecastHorizonMonths"
               :items="horizonItems"
               class="w-full"
+            />
+          </AppFormField>
+          <AppFormField
+            :label="t('profile.defaultAccount')"
+            :hint="t('profile.defaultAccountHint')"
+            name="defaultAccountId"
+          >
+            <USelect
+              v-model="preferences.defaultAccountId"
+              :items="defaultAccountItems"
+              class="w-full"
+              data-testid="preferences-default-account"
             />
           </AppFormField>
           <AppFormField

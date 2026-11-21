@@ -17,6 +17,7 @@ import {
   operation,
   referentialHandlers,
 } from '../planning-fixtures'
+import { setDefaultAccount } from '../session'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -236,6 +237,7 @@ describe('form autofocus in the modals (CHG-69)', () => {
   })
 
   it('focuses the amount of a new expense once the payment source is prefilled', async () => {
+    setDefaultAccount(ids.current)
     installFakeApi(fetchMock, referentialHandlers())
     const wrapper = await mountSuspended(OperationFormModal)
     mounted.push(wrapper)
@@ -244,6 +246,18 @@ describe('form autofocus in the modals (CHG-69)', () => {
 
     await vi.waitFor(() => {
       expect(focusedTestId()).toBe('operation-amount')
+    })
+  })
+
+  it('focuses the payment source of a new expense without default account (ADR 0033)', async () => {
+    installFakeApi(fetchMock, referentialHandlers())
+    const wrapper = await mountSuspended(OperationFormModal)
+    mounted.push(wrapper)
+
+    useOperationEditorStore().create('expense')
+
+    await vi.waitFor(() => {
+      expect(focusedTestId()).toBe('operation-source')
     })
   })
 

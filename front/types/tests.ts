@@ -11,3 +11,9 @@ export type FakeFailure = {
   statusCode: number
   data: unknown
 }
+
+export type SelectHandle = {
+  value: () => unknown
+  items: () => unknown
+  choose: (value: string) => void
+}

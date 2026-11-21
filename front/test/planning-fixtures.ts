@@ -1,3 +1,4 @@
+import type { VueWrapper } from '@vue/test-utils'
 import { accountUsages } from '@mint/shared/schemas/accounts'
 import type { Account, AccountOverview } from '@mint/shared/types/accounts'
 import type { Category } from '@mint/shared/types/categories'
@@ -9,7 +10,7 @@ import type { Operation } from '@mint/shared/types/operations'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
 import type { Schedule } from '@mint/shared/types/schedules'
 import type { Tag } from '@mint/shared/types/tags'
-import type { FakeHandler } from '~~/types/tests'
+import type { FakeHandler, SelectHandle } from '~~/types/tests'
 
 export const ids = {
   current: '00000000-0000-4000-8000-0000000000a1',
@@ -306,6 +307,31 @@ export async function fillInput(
   input.value = value
   input.dispatchEvent(new Event('input', { bubbles: true }))
   input.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
+export function selectByTestId(
+  wrapper: VueWrapper,
+  testId: string,
+): SelectHandle | undefined {
+  const select = wrapper
+    .findAllComponents({ name: 'USelect' })
+    .find(
+      (candidate) => Reflect.get(candidate.vm.$attrs, 'data-testid') === testId,
+    )
+  if (select === undefined) {
+    return undefined
+  }
+  function prop(name: string): unknown {
+    const value: unknown = Reflect.get(select?.props() ?? {}, name)
+    return value
+  }
+  return {
+    value: () => prop('modelValue'),
+    items: () => prop('items'),
+    choose: (value) => {
+      select.vm.$emit('update:modelValue', value)
+    },
+  }
 }
 
 export function submit(selector: string): void {
