@@ -377,6 +377,64 @@ describe('archive, restore and delete (CPT-07)', () => {
   })
 })
 
+describe('default account (ADR 0033)', () => {
+  async function defaultAccountId(client: TestClient) {
+    return (await client.get('/auth/session')).body.defaultAccountId
+  }
+
+  it('makes the first created account the default, and keeps it afterwards', async () => {
+    const client = await loggedInClient()
+
+    const first = await createAccount(client, { name: 'Premier' })
+    await createAccount(client, { name: 'Second' })
+
+    expect(await defaultAccountId(client)).toBe(first)
+  })
+
+  it('makes a created account the default when none is set', async () => {
+    const client = await loggedInClient()
+    await createAccount(client, { name: 'Premier' })
+    expect(
+      (await client.patch('/profile', { defaultAccountId: null })).status,
+    ).toBe(200)
+
+    const created = await createAccount(client, { name: 'Second' })
+
+    expect(await defaultAccountId(client)).toBe(created)
+  })
+
+  it('clears the default account when it is archived, not when another one is', async () => {
+    const client = await loggedInClient()
+    const first = await createAccount(client, { name: 'Premier' })
+    const second = await createAccount(client, { name: 'Second' })
+
+    await client.post(`/accounts/${second}/archive`)
+    expect(await defaultAccountId(client)).toBe(first)
+
+    await client.post(`/accounts/${first}/archive`)
+    expect(await defaultAccountId(client)).toBeNull()
+  })
+
+  it('leaves the default account unset when an account is restored', async () => {
+    const client = await loggedInClient()
+    const first = await createAccount(client, { name: 'Premier' })
+    await client.post(`/accounts/${first}/archive`)
+
+    expect((await client.post(`/accounts/${first}/restore`)).status).toBe(200)
+
+    expect(await defaultAccountId(client)).toBeNull()
+  })
+
+  it('clears the default account when it is deleted', async () => {
+    const client = await loggedInClient()
+    const first = await createAccount(client, { name: 'Premier' })
+
+    expect((await client.delete(`/accounts/${first}`)).status).toBe(204)
+
+    expect(await defaultAccountId(client)).toBeNull()
+  })
+})
+
 describe('POST /api/v1/accounts/reorder', () => {
   it('orders the active accounts of one usage', async () => {
     const client = await loggedInClient()

@@ -87,6 +87,7 @@ export function createModels(sequelize: Sequelize): Models {
         allowNull: false,
         defaultValue: 20,
       },
+      defaultAccountId: { type: DataTypes.UUID, allowNull: true },
       lastLoginAt: { type: DataTypes.DATE, allowNull: true },
       ...timestamps,
     },

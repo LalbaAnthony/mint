@@ -11,7 +11,7 @@ import { issueEmailChange } from '../auth/email-change.js'
 import { confirmCurrentPassword } from '../auth/password-confirmation.js'
 import { hashPassword } from '../auth/passwords.js'
 import { endSession, revokeUserSessions } from '../auth/session.js'
-import { HttpError } from '../http/http-error.js'
+import { conflict, HttpError, notFound } from '../http/http-error.js'
 import { defineUserRoute } from '../http/route.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
 import { toUserProfile } from '../users/users.js'
@@ -22,7 +22,7 @@ export const updateProfileRoute = defineUserRoute({
   method: 'patch',
   path: '/profile',
   summary:
-    'Update language, theme (NF-UX-02), forecast horizon and allocation targets',
+    'Update language, theme (NF-UX-02), forecast horizon, allocation targets and default account (ADR 0033)',
   tag,
   body: updateProfileRequestSchema,
   params: noParams,
@@ -30,21 +30,43 @@ export const updateProfileRoute = defineUserRoute({
     200: { description: 'Updated profile', schema: userProfileSchema },
     400: errorResponse('Invalid request body'),
     401: errorResponse('No valid session'),
+    404: errorResponse('Unknown default account'),
+    409: errorResponse('Archived default account'),
   },
-  handle: async ({ user, body }) => {
-    await user.update({
-      ...(body.locale === undefined ? {} : { locale: body.locale }),
-      ...(body.theme === undefined ? {} : { theme: body.theme }),
-      ...(body.forecastHorizonMonths === undefined
-        ? {}
-        : { forecastHorizonMonths: body.forecastHorizonMonths }),
-      ...(body.targets === undefined
-        ? {}
-        : {
-            targetNeedsPct: body.targets.needs,
-            targetWantsPct: body.targets.wants,
-            targetSavePct: body.targets.save,
-          }),
+  handle: async ({ app, user, body }) => {
+    await app.sequelize.transaction(async (transaction) => {
+      const defaultAccountId = body.defaultAccountId
+      if (defaultAccountId !== undefined && defaultAccountId !== null) {
+        const account = await app.models.Account.findOne({
+          where: { id: defaultAccountId, userId: user.id },
+          lock: transaction.LOCK.UPDATE,
+          transaction,
+        })
+        if (account === null) {
+          throw notFound()
+        }
+        if (account.archivedAt !== null) {
+          throw conflict('account_archived')
+        }
+      }
+      await user.update(
+        {
+          ...(body.locale === undefined ? {} : { locale: body.locale }),
+          ...(body.theme === undefined ? {} : { theme: body.theme }),
+          ...(body.forecastHorizonMonths === undefined
+            ? {}
+            : { forecastHorizonMonths: body.forecastHorizonMonths }),
+          ...(body.targets === undefined
+            ? {}
+            : {
+                targetNeedsPct: body.targets.needs,
+                targetWantsPct: body.targets.wants,
+                targetSavePct: body.targets.save,
+              }),
+          ...(defaultAccountId === undefined ? {} : { defaultAccountId }),
+        },
+        { transaction },
+      )
     })
     return { status: 200, body: toUserProfile(user) }
   },

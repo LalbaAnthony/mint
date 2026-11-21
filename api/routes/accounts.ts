@@ -85,7 +85,8 @@ export const accountOverviewRoute = defineUserRoute({
 export const createAccountRoute = defineUserRoute({
   method: 'post',
   path: '/accounts',
-  summary: 'Create an account, placed last in its usage',
+  summary:
+    'Create an account, placed last in its usage; it becomes the default account when none is set (ADR 0033)',
   tag,
   body: createAccountRequestSchema,
   params: noParams,
@@ -110,6 +111,10 @@ export const createAccountRoute = defineUserRoute({
           ),
         },
         { transaction },
+      )
+      await app.models.User.update(
+        { defaultAccountId: created.id },
+        { where: { id: user.id, defaultAccountId: null }, transaction },
       )
       await syncInterestSchedule(app, created, user.locale, transaction)
       return created
@@ -188,7 +193,8 @@ export const updateAccountRoute = defineUserRoute({
 export const archiveAccountRoute = defineUserRoute({
   method: 'post',
   path: '/accounts/:id/archive',
-  summary: 'Archive an account and its active payment methods (CPT-07)',
+  summary:
+    'Archive an account and its active payment methods (CPT-07); an archived default account is cleared from the profile (ADR 0033)',
   tag,
   body: noBody,
   params: resourceIdParamsSchema,
@@ -211,6 +217,10 @@ export const archiveAccountRoute = defineUserRoute({
           where: { userId: user.id, accountId: found.id, archivedAt: null },
           transaction,
         },
+      )
+      await app.models.User.update(
+        { defaultAccountId: null },
+        { where: { id: user.id, defaultAccountId: found.id }, transaction },
       )
       return found
     })

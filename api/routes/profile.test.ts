@@ -1,12 +1,13 @@
 import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { accountSchema } from '@mint/shared/schemas/accounts'
 import {
   createClient,
   createTestContext,
   createTestUser,
   testPassword,
 } from '../tests/context.js'
-import type { TestContext } from '../types/tests.js'
+import type { TestClient, TestContext } from '../types/tests.js'
 
 const minute = 60 * 1000
 
@@ -77,6 +78,7 @@ describe('PATCH /api/v1/profile (AUTH-07)', () => {
     ],
     [{ locale: 'de' }, ['locale'], 'invalid_locale'],
     [{ theme: 'sepia' }, ['theme'], 'invalid_theme'],
+    [{ defaultAccountId: 'current' }, ['defaultAccountId'], 'invalid'],
   ])('rejects %j', async (body, path, message) => {
     const { client } = await loggedInUser()
 
@@ -90,6 +92,86 @@ describe('PATCH /api/v1/profile (AUTH-07)', () => {
     const client = createClient(context.server)
 
     expect((await client.patch('/profile', { locale: 'en' })).status).toBe(401)
+  })
+})
+
+describe('default account (ADR 0033)', () => {
+  async function createAccount(client: TestClient, name: string) {
+    const response = await client.post('/accounts', {
+      name,
+      nature: 'current_account',
+      regulatedProduct: null,
+      usage: 'current',
+      institution: null,
+      initialBalanceCents: 0,
+      initialBalanceDate: '2026-01-01',
+      lowBalanceThresholdCents: null,
+    })
+    expect(response.status).toBe(201)
+    return accountSchema.parse(response.body).id
+  }
+
+  async function defaultAccountId(client: TestClient) {
+    return (await client.get('/auth/session')).body.defaultAccountId
+  }
+
+  it('starts without default account', async () => {
+    const { client } = await loggedInUser()
+
+    expect(await defaultAccountId(client)).toBeNull()
+  })
+
+  it('sets and clears the default account', async () => {
+    const { client } = await loggedInUser()
+    await createAccount(client, 'Compte courant')
+    const revolut = await createAccount(client, 'Revolut')
+
+    const set = await client.patch('/profile', { defaultAccountId: revolut })
+
+    expect(set.status).toBe(200)
+    expect(set.body.defaultAccountId).toBe(revolut)
+    expect(await defaultAccountId(client)).toBe(revolut)
+
+    const cleared = await client.patch('/profile', { defaultAccountId: null })
+
+    expect(cleared.status).toBe(200)
+    expect(cleared.body.defaultAccountId).toBeNull()
+    expect(await defaultAccountId(client)).toBeNull()
+  })
+
+  it('keeps the default account when the body leaves it out', async () => {
+    const { client } = await loggedInUser()
+    const current = await createAccount(client, 'Compte courant')
+
+    const response = await client.patch('/profile', { locale: 'en' })
+
+    expect(response.body.defaultAccountId).toBe(current)
+  })
+
+  it('answers 404 for an unknown account', async () => {
+    const { client } = await loggedInUser()
+    const current = await createAccount(client, 'Compte courant')
+
+    const response = await client.patch('/profile', {
+      defaultAccountId: '00000000-0000-4000-8000-000000000000',
+    })
+
+    expect(response.status).toBe(404)
+    expect(response.body).toEqual({ error: 'not_found' })
+    expect(await defaultAccountId(client)).toBe(current)
+  })
+
+  it('refuses an archived account', async () => {
+    const { client } = await loggedInUser()
+    const current = await createAccount(client, 'Compte courant')
+    const old = await createAccount(client, 'Ancien compte')
+    expect((await client.post(`/accounts/${old}/archive`)).status).toBe(200)
+
+    const response = await client.patch('/profile', { defaultAccountId: old })
+
+    expect(response.status).toBe(409)
+    expect(response.body).toEqual({ error: 'account_archived' })
+    expect(await defaultAccountId(client)).toBe(current)
   })
 })
 

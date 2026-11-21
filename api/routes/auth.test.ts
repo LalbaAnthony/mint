@@ -125,6 +125,7 @@ describe('POST /api/v1/auth/login (AUTH-02, AUTH-05)', () => {
       theme: 'system',
       forecastHorizonMonths: 3,
       targets: { needs: 50, wants: 30, save: 20 },
+      defaultAccountId: null,
     })
     const cookie = findSetCookie(response, 'mint-session')
     expect(cookie).toMatch(/HttpOnly/)

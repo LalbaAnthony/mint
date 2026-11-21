@@ -334,6 +334,14 @@ const scenarios: Record<string, Scenario> = {
       forecastHorizonMonths: 6,
     })
     expect(response.body.id).toBe(actors.alice.id)
+    expectNotFound(
+      await actors.aliceClient.patch('/profile', {
+        defaultAccountId: actors.bobResources.accountId,
+      }),
+    )
+    expect(
+      (await actors.aliceClient.get('/auth/session')).body.defaultAccountId,
+    ).not.toBe(actors.bobResources.accountId)
     await expectBobUntouched(actors)
   },
   'post /profile/password': async (actors) => {

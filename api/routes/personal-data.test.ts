@@ -32,8 +32,11 @@ const origin = 'http://mint.test'
 const exportDocumentSchema = z.object({
   format: z.literal('mint-export'),
   version: z.literal(1),
-  profile: z.object({ email: z.string() }),
-  accounts: z.array(z.object({ name: z.string() })),
+  profile: z.object({
+    email: z.string(),
+    defaultAccountId: z.uuid().nullable(),
+  }),
+  accounts: z.array(z.object({ id: z.uuid(), name: z.string() })),
   operations: z.array(
     z.object({ label: z.string(), tagIds: z.array(z.uuid()) }),
   ),
@@ -248,6 +251,10 @@ describe('US-19 export (AUTH-08)', () => {
       'Livret A',
       'PEA',
     ])
+    expect(document.profile.defaultAccountId).toBe(
+      document.accounts.find((account) => account.name === 'Compte courant')
+        ?.id,
+    )
     expect(document.operations).toHaveLength(3)
     expect(document.operations[0]?.tagIds).toHaveLength(1)
     expect(document.schedules.filter((row) => row.isSystem)).toHaveLength(1)
@@ -312,6 +319,9 @@ describe('US-19 account deletion (AUTH-09)', () => {
     const before = await rowsOwnedBy(user.id)
     expect(before['transactions']).toBe(3)
     expect(before['webauthn_credentials']).toBe(1)
+    expect(
+      (await models.User.findByPk(user.id))?.defaultAccountId,
+    ).not.toBeNull()
 
     const response = await client.post('/profile/delete', {
       method: 'password',

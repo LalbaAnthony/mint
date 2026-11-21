@@ -26,6 +26,7 @@ import * as createWebauthnCredentials from './0024-create-webauthn-credentials.j
 import * as addCreatedOn from './0025-add-created-on.js'
 import * as createEnvelopeMonthOverrides from './0026-create-envelope-month-overrides.js'
 import * as addUserTheme from './0027-add-user-theme.js'
+import * as addUserDefaultAccount from './0028-add-user-default-account.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -58,4 +59,5 @@ export const migrations: Migration[] = [
     ...createEnvelopeMonthOverrides,
   },
   { name: '0027-add-user-theme', ...addUserTheme },
+  { name: '0028-add-user-default-account', ...addUserDefaultAccount },
 ]

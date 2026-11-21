@@ -48,7 +48,8 @@
             "minimum": 1,
             "maximum": 12
           },
-          "targets": { "$ref": "#/components/schemas/AllocationTargets" }
+          "targets": { "$ref": "#/components/schemas/AllocationTargets" },
+          "defaultAccountId": { "type": ["string", "null"], "format": "uuid" }
         },
         "required": [
           "id",
@@ -57,7 +58,8 @@
           "locale",
           "theme",
           "forecastHorizonMonths",
-          "targets"
+          "targets",
+          "defaultAccountId"
         ]
       },
       "UserRole": { "type": "string", "enum": ["admin", "user"] },
@@ -285,7 +287,8 @@
             "minimum": 1,
             "maximum": 12
           },
-          "targets": { "$ref": "#/components/schemas/AllocationTargets" }
+          "targets": { "$ref": "#/components/schemas/AllocationTargets" },
+          "defaultAccountId": { "type": ["string", "null"], "format": "uuid" }
         }
       },
       "ChangePasswordRequest": {
@@ -3645,7 +3648,7 @@
     },
     "/api/v1/profile": {
       "patch": {
-        "summary": "Update language, theme (NF-UX-02), forecast horizon and allocation targets",
+        "summary": "Update language, theme (NF-UX-02), forecast horizon, allocation targets and default account (ADR 0033)",
         "tags": ["profile"],
         "security": [{ "session": [] }],
         "parameters": [
@@ -3687,6 +3690,22 @@
           },
           "401": {
             "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown default account",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Archived default account",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }
@@ -4823,7 +4842,7 @@
     },
     "/api/v1/accounts": {
       "post": {
-        "summary": "Create an account, placed last in its usage",
+        "summary": "Create an account, placed last in its usage; it becomes the default account when none is set (ADR 0033)",
         "tags": ["accounts"],
         "security": [{ "session": [] }],
         "parameters": [
@@ -5057,7 +5076,7 @@
     },
     "/api/v1/accounts/{id}/archive": {
       "post": {
-        "summary": "Archive an account and its active payment methods (CPT-07)",
+        "summary": "Archive an account and its active payment methods (CPT-07); an archived default account is cleared from the profile (ADR 0033)",
         "tags": ["accounts"],
         "security": [{ "session": [] }],
         "parameters": [

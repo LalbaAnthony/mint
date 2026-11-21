@@ -17,6 +17,7 @@ export function toUserProfile(user: UserModel): UserProfile {
       wants: user.targetWantsPct,
       save: user.targetSavePct,
     },
+    defaultAccountId: user.defaultAccountId,
   }
 }
 

@@ -47,6 +47,7 @@ export type UserAttributes = {
   targetNeedsPct: number
   targetWantsPct: number
   targetSavePct: number
+  defaultAccountId: string | null
   lastLoginAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -61,6 +62,7 @@ export type UserCreationAttributes = Optional<
   | 'targetNeedsPct'
   | 'targetWantsPct'
   | 'targetSavePct'
+  | 'defaultAccountId'
   | 'lastLoginAt'
   | 'createdAt'
   | 'updatedAt'

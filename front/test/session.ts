@@ -8,10 +8,18 @@ export const testProfile: UserProfile = {
   theme: 'system',
   forecastHorizonMonths: 3,
   targets: { needs: 50, wants: 30, save: 20 },
+  defaultAccountId: null,
 }
 
-export function signIn(role: UserRole = 'user'): void {
-  useSessionStore().setUser({ ...testProfile, role })
+export function signIn(
+  role: UserRole = 'user',
+  overrides: Partial<UserProfile> = {},
+): void {
+  useSessionStore().setUser({ ...testProfile, role, ...overrides })
+}
+
+export function setDefaultAccount(defaultAccountId: string | null): void {
+  signIn('user', { defaultAccountId })
 }
 
 export function signOut(): void {

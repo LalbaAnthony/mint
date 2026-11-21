@@ -3,6 +3,7 @@ import { passkeyAuthenticationResponseSchema } from './passkeys.js'
 import {
   allocationTargetsSchema,
   currentPasswordSchema,
+  defaultAccountIdSchema,
   emailSchema,
   forecastHorizonSchema,
   localeSchema,
@@ -16,6 +17,7 @@ export const updateProfileRequestSchema = z
     theme: themePreferenceSchema.optional(),
     forecastHorizonMonths: forecastHorizonSchema.optional(),
     targets: allocationTargetsSchema.optional(),
+    defaultAccountId: defaultAccountIdSchema.optional(),
   })
   .meta({ id: 'UpdateProfileRequest' })
 

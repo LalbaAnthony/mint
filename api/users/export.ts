@@ -190,6 +190,7 @@ function exportDocument(
         wants: user.targetWantsPct,
         save: user.targetSavePct,
       },
+      defaultAccountId: user.defaultAccountId,
       createdAt: user.createdAt.toISOString(),
       lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
     },

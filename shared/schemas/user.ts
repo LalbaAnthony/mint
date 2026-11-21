@@ -57,6 +57,8 @@ export const allocationTargetsSchema = z
   })
   .meta({ id: 'AllocationTargets' })
 
+export const defaultAccountIdSchema = z.uuid({ error: 'invalid' }).nullable()
+
 export const userProfileSchema = z
   .object({
     id: z.uuid(),
@@ -66,5 +68,6 @@ export const userProfileSchema = z
     theme: themePreferenceSchema,
     forecastHorizonMonths: forecastHorizonSchema,
     targets: allocationTargetsSchema,
+    defaultAccountId: defaultAccountIdSchema,
   })
   .meta({ id: 'UserProfile' })
