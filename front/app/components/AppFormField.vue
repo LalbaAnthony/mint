@@ -9,7 +9,7 @@ defineProps<AppFormFieldProps>()
     :label="label"
     :name="name"
     :hint="hint"
-    :ui="{ hint: 'text-xs font-medium' }"
+    :ui="{ hint: 'text-xs font-medium', error: 'empty:hidden' }"
   >
     <slot />
     <template #error="{ error }">
