@@ -37,6 +37,18 @@ export function euros(
   }).format(cents / 100)
 }
 
+export function percents(
+  value: number,
+  signDisplay: 'auto' | 'exceptZero' = 'auto',
+  locale = 'fr',
+) {
+  return new Intl.NumberFormat(locale, {
+    style: 'percent',
+    maximumFractionDigits: 1,
+    signDisplay,
+  }).format(value / 100)
+}
+
 export function account(overrides: Partial<Account> = {}): Account {
   return {
     id: ids.current,

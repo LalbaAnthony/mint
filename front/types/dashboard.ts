@@ -62,6 +62,7 @@ export type DonutOptionInput = {
   totalLabel: string
   theme: ChartTheme
   money: (cents: number) => string
+  percent: (value: number) => string
   animate: boolean
   ariaDescription: string | null
 }

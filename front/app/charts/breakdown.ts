@@ -98,6 +98,7 @@ export function donutOption({
   totalLabel,
   theme,
   money,
+  percent,
   animate,
   ariaDescription,
 }: DonutOptionInput): DonutChartOption {
@@ -137,9 +138,11 @@ export function donutOption({
         type: 'pie',
         radius: ['55%', '80%'],
         avoidLabelOverlap: true,
+        percentPrecision: 1,
         label: {
           color: theme.textMuted,
-          formatter: (params) => `${params.name} ${params.percent ?? 0} %`,
+          formatter: (params) =>
+            `${params.name} ${percent(params.percent ?? 0)}`,
         },
         data: slices.map((slice) => ({
           id: slice.id,

@@ -20,7 +20,7 @@ import { toSrgbHex } from '~/charts/theme'
 import DashboardPage from '~/pages/index.vue'
 import type { ChartTheme } from '~~/types/forecast'
 import { installFakeApi } from '../fake-api'
-import { euros, ids, referentialHandlers } from '../planning-fixtures'
+import { euros, ids, percents, referentialHandlers } from '../planning-fixtures'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -429,10 +429,42 @@ describe('breakdown chart (DSH-02, CHG-74, CHG-22)', () => {
       totalLabel: 'Total',
       theme,
       money: (cents) => `${cents / 100} €`,
+      percent: (value) => percents(value),
       animate: false,
       ariaDescription: null,
     })
     expect(JSON.stringify(option.graphic)).toContain('Total\\n1000 €')
+  })
+
+  it('labels the donut slices with one-decimal percentages of the locale (CHG-20)', () => {
+    const option = donutOption({
+      slices: groupSlices(breakdownFixture(), names, theme),
+      totalLabel: 'Total',
+      theme,
+      money: String,
+      percent: (value) => percents(value, 'auto', 'en'),
+      animate: false,
+      ariaDescription: null,
+    })
+    const [pie] = Array.isArray(option.series) ? option.series : []
+    const formatter = pie?.label?.formatter
+
+    expect(pie?.percentPrecision).toBe(1)
+    expect(
+      typeof formatter === 'function'
+        ? formatter({
+            componentType: 'series',
+            componentSubType: 'pie',
+            componentIndex: 0,
+            name: 'Needs',
+            dataIndex: 0,
+            data: 60_000,
+            value: 60_000,
+            percent: 33.3,
+            $vars: [],
+          })
+        : null,
+    ).toBe(`Needs ${percents(33.3, 'auto', 'en')}`)
   })
 })
 
@@ -562,8 +594,9 @@ describe('masked dashboard (DSH-05, CHG-45)', () => {
     ).toBe('negative')
     const save = wrapper.get('[data-testid="breakdown-row-save"]')
     expect(save.text()).not.toContain(euros(10_000))
-    expect(save.text()).toContain('10 %')
-    expect(save.text()).toContain('20 %')
+    expect(save.text()).toContain(percents(10))
+    expect(save.text()).toContain(percents(20))
+    expect(save.text()).toContain(percents(-10, 'exceptZero'))
     const charts = wrapper.findAllComponents({ name: 'Echarts' })
     expect(charts.length).toBeGreaterThan(0)
     for (const chart of charts) {

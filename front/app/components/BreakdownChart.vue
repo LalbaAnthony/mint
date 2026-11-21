@@ -70,18 +70,13 @@ const option = computed(() =>
         : groupNames.value[drilled.value],
     theme: theme.value,
     money: chartMoney(roundedMoney),
+    percent: (value) => formatPercent(value, locale.value),
     animate: animate.value,
     ariaDescription: chartDescription.value,
   }),
 )
 
 const rows = computed(() => groupRows(props.breakdown, groupNames.value))
-
-function percent(value: number): string {
-  return new Intl.NumberFormat(locale.value, {
-    maximumFractionDigits: 1,
-  }).format(value)
-}
 
 function onSliceClick(params: { data?: unknown }): void {
   const data = params.data
@@ -179,17 +174,17 @@ const initOptions = computed(() => chartInitOptions(locale.value))
             <MoneyAmount :cents="row.actualCents" class="text-xs" concealable />
           </td>
           <td class="py-1 text-right tabular-nums">
-            {{ percent(row.actualPct) }} %
+            {{ formatPercent(row.actualPct, locale) }}
           </td>
           <td class="py-1 text-right tabular-nums">
-            {{ percent(row.targetPct) }} %
+            {{ formatPercent(row.targetPct, locale) }}
           </td>
           <td
             class="py-1 text-right tabular-nums"
             :class="row.unfavourable ? 'text-warning' : 'text-default'"
             :data-unfavourable="row.unfavourable"
           >
-            {{ row.gapPct > 0 ? '+' : '' }}{{ percent(row.gapPct) }} %
+            {{ formatPercent(row.gapPct, locale, 'exceptZero') }}
           </td>
         </tr>
       </tbody>
