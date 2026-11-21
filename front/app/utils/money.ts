@@ -1,3 +1,5 @@
+export const maskedAmountGlyph = '****'
+
 const amountPattern = /^([+-]?)(\d+)(?:[.,](\d{1,2}))?$/
 
 const ignoredCharacters = /[\s  ]/g

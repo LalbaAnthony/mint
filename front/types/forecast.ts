@@ -62,6 +62,7 @@ export type BalanceCurveOptionInput = {
   labels: BalanceCurveLabels
   formatters: BalanceCurveFormatters
   animate: boolean
+  ariaDescription: string | null
 }
 
 export type ForecastScopeValue = string

@@ -1,4 +1,5 @@
 import type { BalanceCurvePoint } from '@mint/shared/types/forecast'
+import { chartAria } from '~/charts/aria'
 import type {
   BalanceCurveChartOption,
   BalanceCurveOptionInput,
@@ -53,6 +54,7 @@ export function balanceCurveOption({
   labels,
   formatters,
   animate,
+  ariaDescription,
 }: BalanceCurveOptionInput): BalanceCurveChartOption {
   const { dates, real, forecast } = balanceCurveSeries(curve.points)
   const byDate = new Map(curve.points.map((point) => [point.date, point]))
@@ -76,7 +78,7 @@ export function balanceCurveOption({
     animation: animate,
     animationDuration: 300,
     textStyle: { fontFamily: theme.fontFamily, fontSize: 12 },
-    aria: { enabled: true, decal: { show: true } },
+    aria: chartAria(ariaDescription),
     grid: { left: 8, right: 16, top: 32, bottom: 40, containLabel: true },
     legend: {
       bottom: 0,

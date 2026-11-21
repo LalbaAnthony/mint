@@ -12,7 +12,8 @@ import type {
 const { t } = useI18n()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
-const { formatMoney, formatMonth } = useFormatters()
+const { formatMonth } = useFormatters()
+const { money, spokenMoney } = useAmountMask()
 const referentials = useReferentialsStore()
 const editor = useOperationEditorStore()
 const labels = usePlanningLabels()
@@ -260,6 +261,7 @@ async function deleteEnvelope(): Promise<void> {
               <MoneyAmount
                 :cents="row.original.status.carriedOverCents"
                 variant="flow"
+                concealable
               />
             </div>
           </template>
@@ -270,6 +272,7 @@ async function deleteEnvelope(): Promise<void> {
             <div class="text-right">
               <MoneyAmount
                 :cents="row.original.status.availableCents"
+                concealable
                 data-testid="envelope-available"
               />
             </div>
@@ -279,6 +282,7 @@ async function deleteEnvelope(): Promise<void> {
               <MoneyAmount
                 v-if="row.original.status.availablePerDayCents !== null"
                 :cents="row.original.status.availablePerDayCents"
+                concealable
                 data-testid="envelope-per-day"
               />
             </div>
@@ -316,12 +320,14 @@ async function deleteEnvelope(): Promise<void> {
               <td class="p-4 text-right">
                 <MoneyAmount
                   :cents="result.totals.budgetCents"
+                  concealable
                   data-testid="envelopes-total-budget"
                 />
               </td>
               <td class="p-4 text-right">
                 <MoneyAmount
                   :cents="result.totals.carriedOverCents"
+                  concealable
                   variant="flow"
                   data-testid="envelopes-total-carried-over"
                 />
@@ -330,11 +336,15 @@ async function deleteEnvelope(): Promise<void> {
                 class="p-4 tabular-nums text-default"
                 data-testid="envelopes-total-consumed"
               >
-                {{ formatMoney(result.totals.consumedCents) }}
+                <ConcealedText
+                  :text="money(result.totals.consumedCents)"
+                  :spoken-text="spokenMoney(result.totals.consumedCents)"
+                />
               </td>
               <td class="p-4 text-right">
                 <MoneyAmount
                   :cents="result.totals.availableCents"
+                  concealable
                   data-testid="envelopes-total-available"
                 />
               </td>
@@ -370,6 +380,7 @@ async function deleteEnvelope(): Promise<void> {
                 <dd>
                   <MoneyAmount
                     :cents="result.totals.budgetCents"
+                    concealable
                     data-testid="envelopes-total-budget"
                   />
                 </dd>
@@ -381,6 +392,7 @@ async function deleteEnvelope(): Promise<void> {
                 <dd>
                   <MoneyAmount
                     :cents="result.totals.carriedOverCents"
+                    concealable
                     variant="flow"
                     data-testid="envelopes-total-carried-over"
                   />
@@ -394,7 +406,10 @@ async function deleteEnvelope(): Promise<void> {
                   class="tabular-nums text-default"
                   data-testid="envelopes-total-consumed"
                 >
-                  {{ formatMoney(result.totals.consumedCents) }}
+                  <ConcealedText
+                    :text="money(result.totals.consumedCents)"
+                    :spoken-text="spokenMoney(result.totals.consumedCents)"
+                  />
                 </dd>
               </div>
               <div>
@@ -404,6 +419,7 @@ async function deleteEnvelope(): Promise<void> {
                 <dd>
                   <MoneyAmount
                     :cents="result.totals.availableCents"
+                    concealable
                     data-testid="envelopes-total-available"
                   />
                 </dd>

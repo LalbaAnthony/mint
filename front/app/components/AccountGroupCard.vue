@@ -127,6 +127,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
         </h2>
         <MoneyAmount
           :cents="group.subtotalCents"
+          concealable
           class="text-base font-semibold"
           data-testid="usage-subtotal"
         />
@@ -186,12 +187,14 @@ function actionItems(account: Account): DropdownMenuItem[][] {
             <MoneyAmount
               :cents="account.currentBalanceCents"
               :threshold="account.lowBalanceThresholdCents"
+              concealable
               class="text-sm font-semibold"
               data-testid="account-balance"
             />
             <InvestmentGain
               v-if="account.investment !== null"
               :summary="account.investment"
+              concealable
             />
             <span
               v-if="
@@ -204,11 +207,13 @@ function actionItems(account: Account): DropdownMenuItem[][] {
               <MoneyAmount
                 :cents="account.interest.acquiredCents"
                 variant="flow"
+                concealable
               />
             </span>
             <CapExcessBadge
               v-if="account.depositCapExcessCents !== null"
               :excess-cents="account.depositCapExcessCents"
+              concealable
             />
           </div>
           <template v-if="reordering">

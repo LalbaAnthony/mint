@@ -1,4 +1,5 @@
 import type { BreakdownResponse } from '@mint/shared/types/dashboard'
+import { chartAria } from '~/charts/aria'
 import type {
   BreakdownGroup,
   BreakdownRow,
@@ -98,13 +99,14 @@ export function donutOption({
   theme,
   money,
   animate,
+  ariaDescription,
 }: DonutOptionInput): DonutChartOption {
   const total = slices.reduce((sum, slice) => sum + slice.valueCents, 0)
   return {
     animation: animate,
     animationDuration: 300,
     textStyle: { fontFamily: theme.fontFamily, fontSize: 12 },
-    aria: { enabled: true, decal: { show: true } },
+    aria: chartAria(ariaDescription),
     tooltip: {
       trigger: 'item',
       backgroundColor: theme.background,

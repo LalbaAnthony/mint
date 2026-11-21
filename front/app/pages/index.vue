@@ -192,6 +192,7 @@ const indicators = computed(() => curve.value?.indicators ?? null)
               <MoneyAmount
                 :cents="indicators.minBalanceCents"
                 :threshold="curve.thresholdCents"
+                concealable
               />
             </li>
             <li

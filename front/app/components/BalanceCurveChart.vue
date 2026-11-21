@@ -36,6 +36,7 @@ const props = defineProps<BalanceCurveChartProps>()
 const { t, locale } = useI18n()
 const { formatDate } = useFormatters()
 const { theme, animate } = useChartTheme()
+const { chartMoney, chartDescription } = useAmountMask()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 const showData = ref(false)
 
@@ -65,7 +66,12 @@ const option = computed(() =>
       threshold: t('forecast.threshold'),
       minimum: t('forecast.minimum'),
     },
-    formatters: { money: roundedMoney, axisDate, longDate: formatDate },
+    formatters: {
+      money: chartMoney(roundedMoney),
+      axisDate,
+      longDate: formatDate,
+    },
+    ariaDescription: chartDescription.value,
   }),
 )
 
@@ -117,6 +123,7 @@ const initOptions = computed(() => chartInitOptions(locale.value))
             v-if="row.original.balanceCents !== null"
             :cents="row.original.balanceCents"
             :threshold="curve.thresholdCents"
+            concealable
           />
         </template>
         <template #forecast-cell="{ row }">

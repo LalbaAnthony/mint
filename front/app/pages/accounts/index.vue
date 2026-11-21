@@ -370,6 +370,7 @@ onMounted(load)
           </p>
           <MoneyAmount
             :cents="overview.totalCents"
+            concealable
             class="text-3xl font-bold"
           />
         </UCard>

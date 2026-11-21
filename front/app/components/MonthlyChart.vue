@@ -30,6 +30,7 @@ const props = defineProps<MonthlyChartProps>()
 
 const { t, locale } = useI18n()
 const { theme, animate } = useChartTheme()
+const { chartMoney, chartDescription } = useAmountMask()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 const showData = ref(false)
 
@@ -60,9 +61,10 @@ const option = computed(() =>
       net: t('dashboard.net'),
       today: t('forecast.today'),
     },
-    money: roundedMoney,
+    money: chartMoney(roundedMoney),
     monthLabel,
     animate: animate.value,
+    ariaDescription: chartDescription.value,
   }),
 )
 
@@ -114,19 +116,19 @@ const initOptions = computed(() => chartInitOptions(locale.value))
               {{ monthLabel(month.month) }}
             </td>
             <td class="py-1 text-right">
-              <MoneyAmount :cents="month.real.incomeCents" />
+              <MoneyAmount :cents="month.real.incomeCents" concealable />
             </td>
             <td class="py-1 text-right">
-              <MoneyAmount :cents="month.planned.incomeCents" />
+              <MoneyAmount :cents="month.planned.incomeCents" concealable />
             </td>
             <td class="py-1 text-right">
-              <MoneyAmount :cents="month.real.expenseCents" />
+              <MoneyAmount :cents="month.real.expenseCents" concealable />
             </td>
             <td class="py-1 text-right">
-              <MoneyAmount :cents="month.planned.expenseCents" />
+              <MoneyAmount :cents="month.planned.expenseCents" concealable />
             </td>
             <td class="py-1 text-right">
-              <MoneyAmount :cents="month.balanceCents" />
+              <MoneyAmount :cents="month.balanceCents" concealable />
             </td>
           </tr>
         </tbody>

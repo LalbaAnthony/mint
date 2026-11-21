@@ -40,6 +40,7 @@ afterEach(() => {
   }
   vi.useRealTimers()
   fetchMock.mockReset()
+  useAmountMaskStore().forget()
   document.body.innerHTML = ''
 })
 
@@ -98,7 +99,10 @@ function curve(
   }
 }
 
-function optionOf(response: BalanceCurveResponse) {
+function optionOf(
+  response: BalanceCurveResponse,
+  ariaDescription: string | null = null,
+) {
   return balanceCurveOption({
     curve: response,
     theme,
@@ -115,6 +119,7 @@ function optionOf(response: BalanceCurveResponse) {
       axisDate: (date) => date,
       longDate: (date) => date,
     },
+    ariaDescription,
   })
 }
 
@@ -151,6 +156,14 @@ describe('balance curve option (DSH-01, CHG-73, CHG-24, CHG-77)', () => {
     })
     expect(optionOf(curve()).aria).toEqual({
       enabled: true,
+      decal: { show: true },
+    })
+  })
+
+  it('replaces the generated description when the amounts are masked (DSH-05, CHG-45)', () => {
+    expect(optionOf(curve(), 'Montants masqués.').aria).toEqual({
+      enabled: true,
+      label: { description: 'Montants masqués.' },
       decal: { show: true },
     })
   })
@@ -208,6 +221,7 @@ describe('balance curve option (DSH-01, CHG-73, CHG-24, CHG-77)', () => {
           axisDate: String,
           longDate: String,
         },
+        ariaDescription: null,
       }).animation,
     ).toBe(false)
   })
@@ -416,6 +430,7 @@ describe('breakdown chart (DSH-02, CHG-74, CHG-22)', () => {
       theme,
       money: (cents) => `${cents / 100} €`,
       animate: false,
+      ariaDescription: null,
     })
     expect(JSON.stringify(option.graphic)).toContain('Total\\n1000 €')
   })
@@ -437,6 +452,7 @@ describe('monthly chart (DSH-03, CHG-75)', () => {
       money: String,
       monthLabel: String,
       animate: false,
+      ariaDescription: null,
     })
     const series = Array.isArray(option.series) ? option.series : []
 
@@ -500,5 +516,62 @@ describe('dashboard banner (DSH-04, CHG-65)', () => {
         .get('[data-testid="breakdown-row-save"] [data-unfavourable]')
         .attributes('data-unfavourable'),
     ).toBe('true')
+  })
+})
+
+describe('masked dashboard (DSH-05, CHG-45)', () => {
+  it('masks the amounts and the chart values but keeps the states and the percentages', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /forecast/curve?horizonMonths=3': () => curve(),
+      ...dashboardHandlers(),
+    })
+    useAmountMaskStore().toggle()
+
+    const wrapper = await mountSuspended(DashboardPage, {
+      route: '/',
+      global: { stubs: { Echarts: true } },
+    })
+    mounted.push(wrapper)
+
+    await vi.waitFor(
+      () => {
+        expect(
+          wrapper.find('[data-testid="breakdown-row-save"]').exists(),
+        ).toBe(true)
+      },
+      { timeout: 10_000 },
+    )
+    const wealth = wrapper.get('[data-testid="dashboard-wealth"]')
+    expect(wealth.attributes('data-masked')).toBe('true')
+    expect(wealth.text()).toContain('****')
+    expect(wealth.text()).not.toContain(euros(1_900_000))
+    const alerts = wrapper.get('[data-testid="dashboard-alerts"]')
+    expect(alerts.text()).toContain('Compte courant')
+    expect(alerts.text()).not.toContain(euros(15_000))
+    expect(
+      alerts.get('[data-testid="money-amount"]').attributes('data-state'),
+    ).toBe('belowThreshold')
+    expect(wrapper.get('[data-testid="dashboard-cap-alert"]').text()).toContain(
+      'dépasse le plafond de ****',
+    )
+    const minimum = wrapper.get('[data-testid="dashboard-minimum"]')
+    expect(minimum.text()).not.toContain(euros(-5_000))
+    expect(
+      minimum.get('[data-testid="money-amount"]').attributes('data-state'),
+    ).toBe('negative')
+    const save = wrapper.get('[data-testid="breakdown-row-save"]')
+    expect(save.text()).not.toContain(euros(10_000))
+    expect(save.text()).toContain('10 %')
+    expect(save.text()).toContain('20 %')
+    const charts = wrapper.findAllComponents({ name: 'Echarts' })
+    expect(charts.length).toBeGreaterThan(0)
+    for (const chart of charts) {
+      expect(chart.props('option')).toMatchObject({
+        aria: {
+          label: { description: 'Graphique dont les montants sont masqués.' },
+        },
+      })
+    }
   })
 })

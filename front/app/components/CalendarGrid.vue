@@ -12,7 +12,7 @@ const props = defineProps<CalendarGridProps>()
 const emit = defineEmits<CalendarGridEmits>()
 
 const { t, locale } = useI18n()
-const { formatMoney } = useFormatters()
+const { money, spokenMoney } = useAmountMask()
 
 const firstMonday = '2026-11-16'
 
@@ -76,7 +76,7 @@ function cellLabel(cell: CalendarCell): string {
   ) {
     return date
   }
-  return t('calendar.cellLabel', { date, balance: formatMoney(balance) })
+  return t('calendar.cellLabel', { date, balance: spokenMoney(balance) })
 }
 
 function visibleOccurrences(day: CalendarDay) {
@@ -217,14 +217,23 @@ function numberClasses(cell: CalendarCell): string {
               <span>
                 {{ t('calendar.operationCount', cell.day.operations.length) }}
               </span>
-              <span class="tabular-nums">
-                {{ formatMoney(operationsTotalCents(cell.day), 'exceptZero') }}
+              <span
+                class="tabular-nums"
+                data-testid="calendar-operations-total"
+              >
+                <ConcealedText
+                  :text="money(operationsTotalCents(cell.day), 'exceptZero')"
+                  :spoken-text="
+                    spokenMoney(operationsTotalCents(cell.day), 'exceptZero')
+                  "
+                />
               </span>
             </p>
             <MoneyAmount
               v-if="cell.day.balanceCents !== null"
               :cents="cell.day.balanceCents"
               :threshold="thresholdCents"
+              concealable
               class="pointer-events-none mt-auto self-end text-xs font-semibold"
               data-testid="calendar-balance"
             />

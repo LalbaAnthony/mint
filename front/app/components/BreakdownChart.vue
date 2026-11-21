@@ -22,8 +22,8 @@ use([SVGRenderer, PieChart, TooltipComponent, AriaComponent, GraphicComponent])
 const props = defineProps<BreakdownChartProps>()
 
 const { t, locale } = useI18n()
-const { formatMoney } = useFormatters()
 const { theme, animate } = useChartTheme()
+const { chartMoney, chartDescription, money, spokenMoney } = useAmountMask()
 const referentials = useReferentialsStore()
 
 const drilled = ref<'needs' | 'wants' | null>(null)
@@ -69,8 +69,9 @@ const option = computed(() =>
         ? t('dashboard.totalSpending')
         : groupNames.value[drilled.value],
     theme: theme.value,
-    money: roundedMoney,
+    money: chartMoney(roundedMoney),
     animate: animate.value,
+    ariaDescription: chartDescription.value,
   }),
 )
 
@@ -150,7 +151,7 @@ const initOptions = computed(() => chartInitOptions(locale.value))
           class="flex justify-between gap-2 py-1"
         >
           <span>{{ slice.name }}</span>
-          <MoneyAmount :cents="slice.valueCents" />
+          <MoneyAmount :cents="slice.valueCents" concealable />
         </li>
       </ul>
     </div>
@@ -175,7 +176,7 @@ const initOptions = computed(() => chartInitOptions(locale.value))
               <DataDot :tone="row.group" />
               {{ row.name }}
             </span>
-            <MoneyAmount :cents="row.actualCents" class="text-xs" />
+            <MoneyAmount :cents="row.actualCents" class="text-xs" concealable />
           </td>
           <td class="py-1 text-right tabular-nums">
             {{ percent(row.actualPct) }} %
@@ -197,11 +198,18 @@ const initOptions = computed(() => chartInitOptions(locale.value))
       v-if="breakdown.toCategorizeCents > 0"
       class="text-xs text-muted lg:hidden"
     >
-      {{
-        t('dashboard.toCategorizeAmount', {
-          amount: formatMoney(breakdown.toCategorizeCents),
-        })
-      }}
+      <ConcealedText
+        :text="
+          t('dashboard.toCategorizeAmount', {
+            amount: money(breakdown.toCategorizeCents),
+          })
+        "
+        :spoken-text="
+          t('dashboard.toCategorizeAmount', {
+            amount: spokenMoney(breakdown.toCategorizeCents),
+          })
+        "
+      />
     </p>
   </div>
 </template>

@@ -28,6 +28,7 @@ export const useSessionStore = defineStore('session', () => {
     user.value = null
     status.value = 'anonymous'
     resetCsrfToken()
+    useAmountMaskStore().forget()
     void forgetDeviceData()
   }
 

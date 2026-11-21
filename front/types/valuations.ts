@@ -27,6 +27,7 @@ export type ValuationsModalEmits = {
 
 export interface InvestmentGainProps {
   summary: InvestmentSummary
+  concealable?: boolean
 }
 
 export interface ValuationChartProps {

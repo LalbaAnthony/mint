@@ -141,7 +141,7 @@ function remove(valuation: Valuation): Promise<void> {
               {{ t('valuations.paidIn') }}
             </dt>
             <dd data-testid="valuation-paid-in">
-              <MoneyAmount :cents="summary.paidInCents" />
+              <MoneyAmount :cents="summary.paidInCents" concealable />
             </dd>
           </div>
           <div>
@@ -149,7 +149,10 @@ function remove(valuation: Valuation): Promise<void> {
               {{ t('valuations.lastValuation') }}
             </dt>
             <dd v-if="summary.lastValuation !== null">
-              <MoneyAmount :cents="summary.lastValuation.valueCents" />
+              <MoneyAmount
+                :cents="summary.lastValuation.valueCents"
+                concealable
+              />
               <span class="block text-xs text-muted tabular-nums">
                 {{ formatDate(summary.lastValuation.date) }}
               </span>
@@ -166,6 +169,7 @@ function remove(valuation: Valuation): Promise<void> {
               <InvestmentGain
                 v-if="summary.latentGainCents !== null"
                 :summary="summary"
+                concealable
               />
               <span v-else class="text-sm text-muted">-</span>
             </dd>

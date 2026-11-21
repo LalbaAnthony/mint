@@ -4,7 +4,7 @@ import type { EnvelopeConsumptionProps } from '~~/types/planning'
 const props = defineProps<EnvelopeConsumptionProps>()
 
 const { t } = useI18n()
-const { formatMoney } = useFormatters()
+const { money, spokenMoney } = useAmountMask()
 
 const allowance = computed(
   () => props.status.budgetCents + props.status.carriedOverCents,
@@ -28,8 +28,8 @@ const overrun = computed(() =>
       size="md"
       :aria-label="
         t('envelopes.progressLabel', {
-          consumed: formatMoney(status.consumedCents),
-          budget: formatMoney(allowance),
+          consumed: spokenMoney(status.consumedCents),
+          budget: spokenMoney(allowance),
         })
       "
       :data-tone="tone"
@@ -37,19 +37,32 @@ const overrun = computed(() =>
     />
     <div class="flex flex-wrap items-baseline justify-between gap-x-2 text-sm">
       <span class="tabular-nums text-default" data-testid="envelope-consumed">
-        {{
-          t('envelopes.consumedOfBudget', {
-            consumed: formatMoney(status.consumedCents),
-            budget: formatMoney(allowance),
-          })
-        }}
+        <ConcealedText
+          :text="
+            t('envelopes.consumedOfBudget', {
+              consumed: money(status.consumedCents),
+              budget: money(allowance),
+            })
+          "
+          :spoken-text="
+            t('envelopes.consumedOfBudget', {
+              consumed: spokenMoney(status.consumedCents),
+              budget: spokenMoney(allowance),
+            })
+          "
+        />
       </span>
       <span
         v-if="overrun > 0"
         class="tabular-nums text-error"
         data-testid="envelope-overrun"
       >
-        {{ t('envelopes.overrun', { amount: formatMoney(overrun) }) }}
+        <ConcealedText
+          :text="t('envelopes.overrun', { amount: money(overrun) })"
+          :spoken-text="
+            t('envelopes.overrun', { amount: spokenMoney(overrun) })
+          "
+        />
       </span>
     </div>
   </div>

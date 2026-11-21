@@ -69,6 +69,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
             </div>
             <MoneyAmount
               :cents="account.currentBalanceCents"
+              concealable
               class="text-sm font-semibold"
             />
             <UDropdownMenu

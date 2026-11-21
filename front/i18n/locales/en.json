@@ -46,7 +46,13 @@
   },
   "money": {
     "symbol": "€",
-    "belowThreshold": "below the alert threshold"
+    "belowThreshold": "below the alert threshold",
+    "masked": "hidden amount"
+  },
+  "amountMask": {
+    "toggle": "Hide amounts",
+    "saveFailed": "Hidden mode could not be saved on this device: it will only last until the next reload.",
+    "chartDescription": "Chart with hidden amounts."
   },
   "locales": {
     "fr": "Français",

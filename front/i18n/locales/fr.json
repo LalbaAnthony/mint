@@ -46,7 +46,13 @@
   },
   "money": {
     "symbol": "€",
-    "belowThreshold": "sous le seuil d'alerte"
+    "belowThreshold": "sous le seuil d'alerte",
+    "masked": "montant masqué"
+  },
+  "amountMask": {
+    "toggle": "Masquer les montants",
+    "saveFailed": "Le mode masqué n'a pas pu être mémorisé sur cet appareil : il ne durera que jusqu'au prochain rechargement.",
+    "chartDescription": "Graphique dont les montants sont masqués."
   },
   "locales": {
     "fr": "Français",

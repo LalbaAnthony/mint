@@ -48,6 +48,12 @@ export interface MoneyAmountProps {
   cents: number
   variant?: MoneyVariant
   threshold?: number | null
+  concealable?: boolean
+}
+
+export interface ConcealedTextProps {
+  text: string
+  spokenText: string
 }
 
 export interface DataDotProps {
@@ -143,6 +149,7 @@ export type TagFormModalEmits = {
 
 export interface CapExcessBadgeProps {
   excessCents: number
+  concealable?: boolean
 }
 
 export interface InterestModalProps {

@@ -63,6 +63,7 @@ export type DonutOptionInput = {
   theme: ChartTheme
   money: (cents: number) => string
   animate: boolean
+  ariaDescription: string | null
 }
 
 export type MonthlyLabels = {
@@ -81,6 +82,7 @@ export type MonthlyOptionInput = {
   money: (cents: number) => string
   monthLabel: (month: string) => string
   animate: boolean
+  ariaDescription: string | null
 }
 
 export type BreakdownPeriodMode = 'month' | 'custom'

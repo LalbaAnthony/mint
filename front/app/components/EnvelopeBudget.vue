@@ -4,7 +4,7 @@ import type { EnvelopeBudgetProps } from '~~/types/planning'
 defineProps<EnvelopeBudgetProps>()
 
 const { t } = useI18n()
-const { formatMoney } = useFormatters()
+const { money, spokenMoney } = useAmountMask()
 </script>
 
 <template>
@@ -13,7 +13,7 @@ const { formatMoney } = useFormatters()
       v-if="line.status.overridden"
       :text="
         t('envelopes.monthlyReference', {
-          amount: formatMoney(line.envelope.monthlyAmountCents),
+          amount: money(line.envelope.monthlyAmountCents),
         })
       "
     >
@@ -27,7 +27,7 @@ const { formatMoney } = useFormatters()
         <span class="sr-only">
           {{
             t('envelopes.monthlyReference', {
-              amount: formatMoney(line.envelope.monthlyAmountCents),
+              amount: spokenMoney(line.envelope.monthlyAmountCents),
             })
           }}
         </span>
@@ -35,6 +35,7 @@ const { formatMoney } = useFormatters()
     </UTooltip>
     <MoneyAmount
       :cents="line.status.budgetCents"
+      concealable
       data-testid="envelope-budget"
     />
   </span>

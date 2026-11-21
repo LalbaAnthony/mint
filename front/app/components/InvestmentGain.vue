@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { InvestmentGainProps } from '~~/types/valuations'
 
-const props = defineProps<InvestmentGainProps>()
+const props = withDefaults(defineProps<InvestmentGainProps>(), {
+  concealable: false,
+})
 
 const { t, locale } = useI18n()
 
@@ -33,7 +35,7 @@ const percent = computed(() =>
     :aria-label="t('valuations.gainLabel')"
     data-testid="investment-gain"
   >
-    <MoneyAmount :cents="gainCents" variant="flow" />
+    <MoneyAmount :cents="gainCents" variant="flow" :concealable="concealable" />
     <span
       v-if="percent !== null"
       class="tabular-nums"

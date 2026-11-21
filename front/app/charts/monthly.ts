@@ -1,3 +1,4 @@
+import { chartAria } from '~/charts/aria'
 import type { MonthlyChartOption, MonthlyOptionInput } from '~~/types/dashboard'
 
 function hatch() {
@@ -20,6 +21,7 @@ export function monthlyOption({
   money,
   monthLabel,
   animate,
+  ariaDescription,
 }: MonthlyOptionInput): MonthlyChartOption {
   const months = report.months.map((month) => month.month)
   const barStyle = (color: string, planned: boolean) => ({
@@ -31,7 +33,7 @@ export function monthlyOption({
     animation: animate,
     animationDuration: 300,
     textStyle: { fontFamily: theme.fontFamily, fontSize: 12 },
-    aria: { enabled: true, decal: { show: true } },
+    aria: chartAria(ariaDescription),
     grid: { left: 8, right: 16, top: 24, bottom: 56, containLabel: true },
     legend: {
       bottom: 0,

@@ -57,7 +57,11 @@ const actions = computed<DropdownMenuItem[][]>(() =>
           {{ t('envelopes.carriedOver') }}
         </dt>
         <dd>
-          <MoneyAmount :cents="line.status.carriedOverCents" variant="flow" />
+          <MoneyAmount
+            :cents="line.status.carriedOverCents"
+            variant="flow"
+            concealable
+          />
         </dd>
       </div>
       <div>
@@ -67,6 +71,7 @@ const actions = computed<DropdownMenuItem[][]>(() =>
         <dd>
           <MoneyAmount
             :cents="line.status.availableCents"
+            concealable
             data-testid="envelope-available"
           />
         </dd>
@@ -78,6 +83,7 @@ const actions = computed<DropdownMenuItem[][]>(() =>
         <dd>
           <MoneyAmount
             :cents="line.status.availablePerDayCents"
+            concealable
             data-testid="envelope-per-day"
           />
         </dd>

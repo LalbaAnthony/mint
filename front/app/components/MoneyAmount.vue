@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import type { MoneyAmountProps } from '~~/types/components'
-import type { MoneyState } from '~~/types/referentials'
+import type { MoneySignDisplay, MoneyState } from '~~/types/referentials'
 
 const props = withDefaults(defineProps<MoneyAmountProps>(), {
   variant: 'balance',
   threshold: null,
+  concealable: false,
 })
 
 const { t } = useI18n()
 const { formatMoney } = useFormatters()
+const mask = useAmountMask()
 
 const stateClasses = {
   normal: 'text-highlighted',
@@ -42,8 +44,22 @@ const icon = computed(() => {
   }
 })
 
+const signDisplay = computed<MoneySignDisplay>(() =>
+  props.variant === 'flow' ? 'exceptZero' : 'auto',
+)
+
+const concealed = computed(() => props.concealable && mask.masked.value)
+
 const text = computed(() =>
-  formatMoney(props.cents, props.variant === 'flow' ? 'exceptZero' : 'auto'),
+  concealed.value
+    ? mask.maskedText(props.cents, signDisplay.value)
+    : formatMoney(props.cents, signDisplay.value),
+)
+
+const spokenText = computed(() =>
+  concealed.value
+    ? mask.maskedSpeech(props.cents, signDisplay.value)
+    : text.value,
 )
 </script>
 
@@ -52,6 +68,7 @@ const text = computed(() =>
     class="inline-flex items-center gap-1 whitespace-nowrap tabular-nums"
     :class="stateClasses[state]"
     :data-state="state"
+    :data-masked="concealed"
     data-testid="money-amount"
   >
     <UIcon
@@ -63,6 +80,6 @@ const text = computed(() =>
     <span v-if="state === 'belowThreshold'" class="sr-only">
       {{ t('money.belowThreshold') }}
     </span>
-    <span>{{ text }}</span>
+    <span><ConcealedText :text="text" :spoken-text="spokenText" /></span>
   </span>
 </template>

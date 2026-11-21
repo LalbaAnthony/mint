@@ -35,6 +35,7 @@ afterEach(() => {
   }
   setViewportWidth(initialWidth)
   fetchMock.mockReset()
+  useAmountMaskStore().forget()
   document.body.innerHTML = ''
 })
 
@@ -132,6 +133,51 @@ describe('envelopes view (ENV-06, ENV-08)', () => {
     expect(
       wrapper.get('[data-testid="envelopes-total-available"]').text(),
     ).toBe(euros(15_500))
+  })
+
+  it('masks the budgets, the consumption, the availability and the totals in masked mode (DSH-05)', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /envelopes': () =>
+        envelopeMonth([envelopeLine(12_000), secondLine()]),
+    })
+    useAmountMaskStore().toggle()
+
+    const wrapper = await mountSuspended(EnvelopesPage, { route: '/envelopes' })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="envelopes-table"]').exists()).toBe(
+        true,
+      )
+    })
+    const consumed = wrapper.get('[data-testid="envelope-consumed"]')
+    expect(consumed.get('[aria-hidden="true"]').text()).toBe('**** sur ****')
+    expect(consumed.get('.sr-only').text()).toBe(
+      'montant masqué sur montant masqué',
+    )
+    expect(
+      wrapper.get('[data-testid="envelope-progress"]').attributes('aria-label'),
+    ).not.toContain(euros(12_000))
+    expect(
+      wrapper.get('[data-testid="envelope-progress"]').attributes('data-tone'),
+    ).toBe('primary')
+    for (const testId of [
+      'envelope-budget',
+      'envelope-available',
+      'envelope-per-day',
+      'envelopes-total-budget',
+      'envelopes-total-available',
+    ]) {
+      expect(
+        wrapper.get(`[data-testid="${testId}"]`).attributes('data-masked'),
+      ).toBe('true')
+    }
+    expect(
+      wrapper.get('[data-testid="envelopes-total-consumed"]').text(),
+    ).toContain('****')
+    expect(wrapper.text()).not.toContain(euros(24_500))
+    expect(wrapper.text()).not.toContain(euros(15_500))
   })
 
   it('lists the envelopes in rows with their totals under 1024 px', async () => {

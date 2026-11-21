@@ -10,7 +10,7 @@ const emit = defineEmits<CalendarDayDetailEmits>()
 
 const { t, locale } = useI18n()
 const connectivity = useConnectivityStore()
-const { formatMoney } = useFormatters()
+const { money, spokenMoney } = useAmountMask()
 const referentials = useReferentialsStore()
 const editor = useOperationEditorStore()
 
@@ -63,6 +63,7 @@ function accountSuffix(accountId: string): string {
         <MoneyAmount
           :cents="day.balanceCents"
           :threshold="thresholdCents"
+          concealable
           class="font-semibold"
           data-testid="calendar-detail-balance"
         />
@@ -157,7 +158,10 @@ function accountSuffix(accountId: string): string {
           class="tabular-nums"
           data-testid="calendar-detail-total"
         >
-          {{ formatMoney(operationsTotalCents(day), 'exceptZero') }}
+          <ConcealedText
+            :text="money(operationsTotalCents(day), 'exceptZero')"
+            :spoken-text="spokenMoney(operationsTotalCents(day), 'exceptZero')"
+          />
         </span>
       </h3>
       <ul class="flex flex-col divide-y divide-default">

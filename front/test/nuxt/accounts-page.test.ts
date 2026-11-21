@@ -107,6 +107,7 @@ beforeEach(() => {
 
 afterEach(() => {
   fetchMock.mockReset()
+  useAmountMaskStore().forget()
   document.body.innerHTML = ''
 })
 
@@ -143,6 +144,32 @@ describe('US-04 where my money is (CPT-08)', () => {
       'Compte courant · Crédit Agricole · 1 moyen de paiement',
     )
     expect(groups[0]?.find('.bg-data-current').exists()).toBe(true)
+  })
+
+  it('masks the total, the subtotals and the balances in masked mode (DSH-05)', async () => {
+    installFakeApi(fetchMock, {
+      'GET /accounts/overview': () => usOverview,
+      'GET /payment-methods': () => [card],
+    })
+    useAmountMaskStore().toggle()
+
+    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="accounts-total"]').exists()).toBe(true)
+    })
+    const total = wrapper.get('[data-testid="accounts-total"]')
+    expect(total.text()).toContain('****')
+    expect(total.text()).not.toContain(euros(1_900_000))
+    const amounts = wrapper.findAll(
+      '[data-testid="usage-subtotal"], [data-testid="account-balance"]',
+    )
+    expect(amounts).toHaveLength(6)
+    expect(amounts.map((amount) => amount.attributes('data-masked'))).toEqual(
+      Array.from({ length: 6 }, () => 'true'),
+    )
+    expect(wrapper.text()).not.toContain(euros(500_000))
+    expect(wrapper.text()).toContain('Livret A')
   })
 
   it('flags a balance below its alert threshold (CHG-20)', async () => {

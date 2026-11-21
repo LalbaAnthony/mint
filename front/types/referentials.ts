@@ -4,6 +4,8 @@ import type { PaymentMethod } from '@mint/shared/types/payment-methods'
 
 export type MoneyVariant = 'balance' | 'flow'
 
+export type MoneySignDisplay = 'auto' | 'exceptZero'
+
 export type MoneyState =
   'normal' | 'belowThreshold' | 'negative' | 'credit' | 'debit'
 

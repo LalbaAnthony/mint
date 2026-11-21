@@ -291,32 +291,34 @@ Exception assumée au seuil de 3:1 de la section 3.7 : plusieurs nuances de la s
 
 ## 6. Formes, densité, icônes, mouvement
 
-| ID     | Règle                                                                                                                                                                                                                                                                                                                               |
-| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| CHG-40 | `--ui-radius: 0.5rem`, rayons des composants dérivés par Nuxt UI. Bouton flottant, compteurs et pastilles : `rounded-full`.                                                                                                                                                                                                         |
-| CHG-41 | Taille par défaut des composants : `md`, identique sur mobile et desktop. Cibles tactiles d'au moins 44 x 44 px dans la barre basse et pour les boutons d'icône sur mobile ; bouton flottant de 56 px.                                                                                                                              |
-| CHG-42 | Icônes : collection Lucide (`@iconify-json/lucide`, dépendance de développement), embarquées dans le bundle client, aucune requête réseau (section 12.3). Tailles : 16 px en ligne (`size-4`), 20 px dans la barre latérale et les boutons (`size-5`), 24 px dans la barre basse (`size-6`), 32 px dans les états vides (`size-8`). |
-| CHG-43 | Mouvement : transitions de couleur Nuxt UI par défaut ; aucune animation décorative, aucun compteur animé. `prefers-reduced-motion: reduce` désactive l'animation des graphiques.                                                                                                                                                   |
-| CHG-44 | Correspondance des icônes métier (tableau ci-dessous), centralisée dans un module unique de constantes.                                                                                                                                                                                                                             |
+| ID     | Règle                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CHG-40 | `--ui-radius: 0.5rem`, rayons des composants dérivés par Nuxt UI. Bouton flottant, compteurs et pastilles : `rounded-full`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| CHG-41 | Taille par défaut des composants : `md`, identique sur mobile et desktop. Cibles tactiles d'au moins 44 x 44 px dans la barre basse et pour les boutons d'icône sur mobile ; bouton flottant de 56 px.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| CHG-42 | Icônes : collection Lucide (`@iconify-json/lucide`, dépendance de développement), embarquées dans le bundle client, aucune requête réseau (section 12.3). Tailles : 16 px en ligne (`size-4`), 20 px dans la barre latérale et les boutons (`size-5`), 24 px dans la barre basse (`size-6`), 32 px dans les états vides (`size-8`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| CHG-43 | Mouvement : transitions de couleur Nuxt UI par défaut ; aucune animation décorative, aucun compteur animé. `prefers-reduced-motion: reduce` désactive l'animation des graphiques.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| CHG-44 | Correspondance des icônes métier (tableau ci-dessous), centralisée dans un module unique de constantes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| CHG-45 | Mode masqué (DSH-05, ADR 0031). Bouton : icône seule `ghost` neutre dans l'en-tête de toutes les vues (CHG-51, CHG-56), entre les actions de vue et la cloche de notifications, cible tactile de 44 px sur mobile (CHG-41) ; icône `eye` quand les montants sont visibles, `eye-off` quand ils sont masqués ; nom accessible fixe « Masquer les montants », état porté par `aria-pressed`, infobulle. Montant masqué : `****` de longueur fixe, sans symbole €, précédé du signe de CHG-20 ; couleur et icône d'état conservées ; restitué aux lecteurs d'écran par « montant masqué ». Graphiques : forme visible ; graduations de l'axe des montants, infobulles, annotation du minimum et total de l'anneau en `****` ; description ARIA générée remplacée par « Graphique dont les montants sont masqués. » ; tableau équivalent (CHG-77) masqué. Pourcentages et remplissage des barres d'enveloppe restent visibles. |
 
-| Sujet          | Icône              | Sujet                       | Icône              |
-| -------------- | ------------------ | --------------------------- | ------------------ |
-| Accueil        | `layout-dashboard` | Dépense                     | `arrow-up-right`   |
-| Comptes        | `wallet`           | Revenu                      | `arrow-down-left`  |
-| Calendrier     | `calendar-days`    | Transfert                   | `arrow-left-right` |
-| Opérations     | `receipt`          | Mode Manuel                 | `hand`             |
-| Plus           | `ellipsis`         | Abonnement                  | `repeat`           |
-| Échéances      | `calendar-clock`   | Sous le seuil               | `triangle-alert`   |
-| Abonnements    | `repeat`           | Négatif                     | `circle-alert`     |
-| Enveloppes     | `mail`             | Non confirmée par la banque | `circle-dashed`    |
-| Import         | `file-up`          | Rapprochée                  | `link`             |
-| Règles         | `wand-sparkles`    | À catégoriser               | `tag`              |
-| Notifications  | `bell`             | Origine manuelle            | `pencil`           |
-| Profil         | `circle-user`      | Ajustement                  | `scale`            |
-| Administration | `shield`           | Hors ligne                  | `wifi-off`         |
-| Ajouter        | `plus`             | Recharger                   | `refresh-cw`       |
-| Passkey        | `key-round`        | Afficher les données        | `table`            |
-| Déconnexion    | `log-out`          |                             |                    |
+| Sujet            | Icône              | Sujet                       | Icône              |
+| ---------------- | ------------------ | --------------------------- | ------------------ |
+| Accueil          | `layout-dashboard` | Dépense                     | `arrow-up-right`   |
+| Comptes          | `wallet`           | Revenu                      | `arrow-down-left`  |
+| Calendrier       | `calendar-days`    | Transfert                   | `arrow-left-right` |
+| Opérations       | `receipt`          | Mode Manuel                 | `hand`             |
+| Plus             | `ellipsis`         | Abonnement                  | `repeat`           |
+| Échéances        | `calendar-clock`   | Sous le seuil               | `triangle-alert`   |
+| Abonnements      | `repeat`           | Négatif                     | `circle-alert`     |
+| Enveloppes       | `mail`             | Non confirmée par la banque | `circle-dashed`    |
+| Import           | `file-up`          | Rapprochée                  | `link`             |
+| Règles           | `wand-sparkles`    | À catégoriser               | `tag`              |
+| Notifications    | `bell`             | Origine manuelle            | `pencil`           |
+| Profil           | `circle-user`      | Ajustement                  | `scale`            |
+| Administration   | `shield`           | Hors ligne                  | `wifi-off`         |
+| Ajouter          | `plus`             | Recharger                   | `refresh-cw`       |
+| Passkey          | `key-round`        | Afficher les données        | `table`            |
+| Déconnexion      | `log-out`          | Montants visibles           | `eye`              |
+| Montants masqués | `eye-off`          |                             |                    |
 
 ## 7. Mise en page et navigation
 
@@ -726,6 +728,8 @@ export default defineNuxtConfig({
         'lucide:credit-card',
         'lucide:shield-check',
         'lucide:trending-up',
+        'lucide:eye',
+        'lucide:eye-off',
       ],
     },
   },
@@ -812,7 +816,7 @@ Un fichier par décision dans `docs/` (CODE-10) : CSP (empreinte du script inlin
 | 1   | CHG-01 à CHG-12, CHG-20, CHG-21, CHG-23, CHG-24, CHG-30, CHG-40 à CHG-44, CHG-50 à CHG-59 (sans la cloche de notifications), CHG-60, CHG-61 (archivé, origine, Manuel, abonnement), CHG-62 à CHG-64, CHG-66, CHG-69, CHG-70 à CHG-73, CHG-77, CHG-80 à CHG-84 (écrans de démarrage clairs), CHG-90, CHG-91, CHG-100 à CHG-105 |
 | 2   | CHG-22, CHG-61 (à catégoriser, rapprochée, non confirmée, ajustement), CHG-65, CHG-74, CHG-75                                                                                                                                                                                                                                 |
 | 3   | CHG-51 et CHG-56 (cloche de notifications), CHG-61 (plafond), CHG-65 (plafonds dans les alertes actives), CHG-67, CHG-68, CHG-76, CHG-85                                                                                                                                                                                      |
-| 4   | CHG-92                                                                                                                                                                                                                                                                                                                        |
+| 4   | CHG-45, CHG-92                                                                                                                                                                                                                                                                                                                |
 
 ### 13.2 Critères d'acceptation
 
@@ -879,3 +883,8 @@ Un fichier par décision dans `docs/` (CODE-10) : CSP (empreinte du script inlin
 | Thème au lot 4                 | suit le système par défaut, choix Système, Clair ou Sombre enregistré dans le profil | système seul, choix mémorisé sur l'appareil                                |
 | Texte atténué en clair         | `text-muted` en olive-600                                                            | olive-500 par défaut de Nuxt UI (4,3:1), teinte intermédiaire hors palette |
 | Jours non ouvrés du calendrier | `text-muted`                                                                         | `text-dimmed` relevé, fond de case teinté                                  |
+| Mode masqué : rendu            | `****` avec signe, couleur et icône d'état                                           | `****` neutre, `**** €` neutre                                             |
+| Mode masqué : graphiques       | forme visible, valeurs en `****`                                                     | axe des montants retiré, graphique remplacé par un encart                  |
+| Mode masqué : pourcentages     | visibles                                                                             | masqués                                                                    |
+| Mode masqué : bouton           | avant la cloche, nom fixe et `aria-pressed`                                          | après la cloche, icône inversée, nom variable                              |
+| Mode masqué : mémorisation     | par appareil, effacée à la déconnexion                                               | profil serveur, onglet seulement                                           |

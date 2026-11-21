@@ -35,6 +35,7 @@ const proposalsLink = computed(() => {
           </p>
           <MoneyAmount
             :cents="summary.wealthCents"
+            concealable
             class="text-3xl font-bold"
             data-testid="dashboard-wealth"
           />
@@ -65,6 +66,7 @@ const proposalsLink = computed(() => {
           <MoneyAmount
             :cents="alert.minBalanceCents"
             :threshold="alert.thresholdCents"
+            concealable
           />
         </li>
         <li
@@ -79,7 +81,7 @@ const proposalsLink = computed(() => {
           <span class="text-muted">
             {{ t('dashboard.capFrom', { date: formatDate(alert.date) }) }}
           </span>
-          <CapExcessBadge :excess-cents="alert.excessCents" />
+          <CapExcessBadge :excess-cents="alert.excessCents" concealable />
         </li>
       </ul>
       <p v-else class="mt-2 text-sm text-muted">

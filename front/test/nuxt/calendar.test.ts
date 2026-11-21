@@ -35,6 +35,7 @@ afterEach(() => {
   }
   vi.useRealTimers()
   fetchMock.mockReset()
+  useAmountMaskStore().forget()
   document.body.innerHTML = ''
 })
 
@@ -307,6 +308,64 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
     expect(detail.get('[data-testid="calendar-detail-balance"]').text()).toBe(
       euros(95_000),
     )
+  })
+
+  it('masks the balances and the day totals but keeps the occurrences and the operations in clear (DSH-05)', async () => {
+    const response = novemberUs12()
+    response.days = response.days.map((entry) =>
+      entry.date === '2026-11-05'
+        ? {
+            ...entry,
+            operations: [operation({ amountCents: -4_500 })],
+            balanceCents: 95_500,
+          }
+        : entry,
+    )
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /calendar/2026-11-01?horizonMonths=3': () => response,
+    })
+    useAmountMaskStore().toggle()
+
+    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    mounted.push(wrapper)
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
+    })
+
+    const twentieth = wrapper.get('[data-testid="calendar-day-2026-11-20"]')
+    const balance = twentieth.get('[data-testid="calendar-balance"]')
+    expect(balance.attributes('data-masked')).toBe('true')
+    expect(balance.text()).not.toContain(euros(95_000))
+    expect(
+      twentieth
+        .get(
+          `[data-testid="calendar-occurrence-${ids.schedule}-2026-11-20"] [data-testid="money-amount"]`,
+        )
+        .text(),
+    ).toBe(euros(-5_000, 'exceptZero'))
+    expect(
+      wrapper
+        .get('[data-testid="calendar-select-2026-11-20"]')
+        .attributes('aria-label'),
+    ).toContain('montant masqué')
+    const fifth = wrapper.get('[data-testid="calendar-day-2026-11-05"]')
+    expect(
+      fifth.get('[data-testid="calendar-operations-total"]').text(),
+    ).toContain('****')
+
+    await wrapper
+      .get('[data-testid="calendar-select-2026-11-05"]')
+      .trigger('click')
+
+    const detail = wrapper.get('[data-testid="calendar-day-detail"]')
+    expect(
+      detail.get('[data-testid="calendar-detail-balance"]').text(),
+    ).not.toContain(euros(95_500))
+    expect(
+      detail.get('[data-testid="calendar-detail-total"]').text(),
+    ).toContain('****')
+    expect(detail.text()).toContain(euros(-4_500, 'exceptZero'))
   })
 
   it('switches to compact dots under 768 px with the detail under the grid (CAL-06)', async () => {

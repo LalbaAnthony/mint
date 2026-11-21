@@ -145,7 +145,11 @@ function remove(rate: InterestRate): Promise<void> {
               }}
             </dt>
             <dd data-testid="interest-acquired">
-              <MoneyAmount :cents="summary.acquiredCents" variant="flow" />
+              <MoneyAmount
+                :cents="summary.acquiredCents"
+                variant="flow"
+                concealable
+              />
             </dd>
           </div>
           <div>
@@ -157,7 +161,11 @@ function remove(rate: InterestRate): Promise<void> {
               }}
             </dt>
             <dd data-testid="interest-projected">
-              <MoneyAmount :cents="summary.projectedCents" variant="flow" />
+              <MoneyAmount
+                :cents="summary.projectedCents"
+                variant="flow"
+                concealable
+              />
             </dd>
           </div>
         </dl>

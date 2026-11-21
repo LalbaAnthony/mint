@@ -30,6 +30,8 @@ export const icons = {
   offline: 'lucide:wifi-off',
   reload: 'lucide:refresh-cw',
   showData: 'lucide:table',
+  amountsShown: 'lucide:eye',
+  amountsMasked: 'lucide:eye-off',
   groupNeeds: 'lucide:house',
   groupWants: 'lucide:sparkles',
   groupSave: 'lucide:piggy-bank',
