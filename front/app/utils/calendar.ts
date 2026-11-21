@@ -10,6 +10,7 @@ import type {
   CalendarAlert,
   CalendarCell,
   CalendarDotKind,
+  CalendarMonthRange,
 } from '~~/types/forecast'
 
 export const calendarOccurrencesPerCell = 3
@@ -17,6 +18,7 @@ export const calendarOccurrencesPerCell = 3
 export function calendarCells(
   month: string,
   days: readonly CalendarDay[],
+  range: CalendarMonthRange,
 ): CalendarCell[] {
   const byDate = new Map(days.map((day) => [day.date, day]))
   const first = addDays(monthStart(month), 1 - isoWeekday(monthStart(month)))
@@ -24,9 +26,13 @@ export function calendarCells(
   const cells: CalendarCell[] = []
   for (let date = first; date <= last; date = addDays(date, 1)) {
     const inMonth = date >= monthStart(month) && date <= monthEnd(month)
+    const cellMonth = monthStart(date)
     cells.push({
       date,
       inMonth,
+      selectable:
+        inMonth ||
+        (cellMonth >= range.firstMonth && cellMonth <= range.lastMonth),
       day: inMonth ? (byDate.get(date) ?? null) : null,
       nonWorking: !isBusinessDay(date),
     })

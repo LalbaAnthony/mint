@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core'
+import { useMediaQuery, useSwipe } from '@vueuse/core'
+import type { UseSwipeDirection } from '@vueuse/core'
 import { addMonthsToMonth, monthStart } from '@mint/shared/engines/dates'
 import { calendarMonthResponseSchema } from '@mint/shared/schemas/forecast'
 import {
@@ -145,6 +146,26 @@ function shift(offset: number): void {
   selectedDate.value = null
 }
 
+function selectDay(date: string): void {
+  month.value = monthStart(date)
+  selectedDate.value = date
+}
+
+const monthCard = useTemplateRef<HTMLElement>('monthCard')
+
+function onSwipeEnd(event: TouchEvent, direction: UseSwipeDirection): void {
+  if (event.type !== 'touchend') {
+    return
+  }
+  if (direction === 'left' && canGoForward.value) {
+    shift(1)
+  } else if (direction === 'right' && canGoBack.value) {
+    shift(-1)
+  }
+}
+
+useSwipe(monthCard, { onSwipeEnd })
+
 function goToToday(): void {
   selectedDate.value = null
   if (month.value === currentMonth) {
@@ -155,7 +176,12 @@ function goToToday(): void {
 }
 
 const cells = computed(() =>
-  result.value === null ? [] : calendarCells(month.value, result.value.days),
+  result.value === null
+    ? []
+    : calendarCells(month.value, result.value.days, {
+        firstMonth: result.value.firstMonth,
+        lastMonth: result.value.lastMonth,
+      }),
 )
 
 const selectedDay = computed(
@@ -275,56 +301,62 @@ async function scheduleChanged(): Promise<void> {
           <ForecastScopeControls v-model:account-id="view.calendarAccountId" />
         </UCard>
         <div class="flex flex-col gap-4 xl:flex-row xl:items-start">
-          <UCard class="min-w-0 xl:flex-1" :ui="{ body: 'p-0 sm:p-0' }">
-            <template #header>
-              <div class="flex items-center justify-between gap-2">
-                <UButton
-                  :icon="icons.previous"
-                  :aria-label="t('calendar.previousMonth')"
-                  :disabled="!canGoBack"
-                  color="neutral"
-                  variant="ghost"
-                  data-testid="calendar-previous"
-                  @click="shift(-1)"
-                />
-                <div class="flex items-center gap-2">
-                  <h2
-                    class="text-base font-semibold text-highlighted first-letter:uppercase"
-                    data-testid="calendar-month"
-                  >
-                    {{ monthLabel }}
-                  </h2>
+          <div
+            ref="monthCard"
+            class="min-w-0 xl:flex-1"
+            data-testid="calendar-month-card"
+          >
+            <UCard :ui="{ body: 'p-0 sm:p-0' }">
+              <template #header>
+                <div class="flex items-center justify-between gap-2">
                   <UButton
-                    :label="t('forecast.today')"
+                    :icon="icons.previous"
+                    :aria-label="t('calendar.previousMonth')"
+                    :disabled="!canGoBack"
                     color="neutral"
-                    variant="outline"
-                    size="sm"
-                    data-testid="calendar-today"
-                    @click="goToToday"
+                    variant="ghost"
+                    data-testid="calendar-previous"
+                    @click="shift(-1)"
+                  />
+                  <div class="flex items-center gap-2">
+                    <h2
+                      class="text-base font-semibold text-highlighted first-letter:uppercase"
+                      data-testid="calendar-month"
+                    >
+                      {{ monthLabel }}
+                    </h2>
+                    <UButton
+                      :label="t('forecast.today')"
+                      color="neutral"
+                      variant="outline"
+                      size="sm"
+                      data-testid="calendar-today"
+                      @click="goToToday"
+                    />
+                  </div>
+                  <UButton
+                    :icon="icons.next"
+                    :aria-label="t('calendar.nextMonth')"
+                    :disabled="!canGoForward"
+                    color="neutral"
+                    variant="ghost"
+                    data-testid="calendar-next"
+                    @click="shift(1)"
                   />
                 </div>
-                <UButton
-                  :icon="icons.next"
-                  :aria-label="t('calendar.nextMonth')"
-                  :disabled="!canGoForward"
-                  color="neutral"
-                  variant="ghost"
-                  data-testid="calendar-next"
-                  @click="shift(1)"
-                />
-              </div>
-            </template>
-            <CalendarGrid
-              v-if="result !== null"
-              :cells="cells"
-              :today="result.today"
-              :selected-date="selectedDate"
-              :threshold-cents="result.thresholdCents"
-              :compact="!isWide"
-              @select="(date) => (selectedDate = date)"
-              @occurrence-action="onOccurrenceAction"
-            />
-          </UCard>
+              </template>
+              <CalendarGrid
+                v-if="result !== null"
+                :cells="cells"
+                :today="result.today"
+                :selected-date="selectedDate"
+                :threshold-cents="result.thresholdCents"
+                :compact="!isWide"
+                @select="selectDay"
+                @occurrence-action="onOccurrenceAction"
+              />
+            </UCard>
+          </div>
           <UCard
             v-if="result !== null && selectedDay !== null"
             class="xl:w-96 xl:shrink-0"

@@ -133,7 +133,7 @@ function numberClasses(cell: CalendarCell): string {
         :data-alert="alertOf(cell)"
       >
         <button
-          v-if="cell.inMonth"
+          v-if="cell.selectable"
           type="button"
           class="absolute inset-0 focus-visible:outline-2 focus-visible:outline-primary"
           :aria-label="cellLabel(cell)"

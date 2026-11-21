@@ -12,6 +12,7 @@ import type { ComposeOption } from 'echarts/core'
 import type {
   BalanceCurveResponse,
   CalendarDay,
+  CalendarMonthResponse,
   CalendarOccurrence,
 } from '@mint/shared/types/forecast'
 import type { Schedule } from '@mint/shared/types/schedules'
@@ -74,9 +75,15 @@ export interface BalanceCurveChartProps {
 export type CalendarCell = {
   date: string
   inMonth: boolean
+  selectable: boolean
   day: CalendarDay | null
   nonWorking: boolean
 }
+
+export type CalendarMonthRange = Pick<
+  CalendarMonthResponse,
+  'firstMonth' | 'lastMonth'
+>
 
 export type CalendarDotKind = 'credit' | 'debit' | 'manual'
 

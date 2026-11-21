@@ -120,22 +120,68 @@ function novemberUs12(
   }
 }
 
+function december(): CalendarMonthResponse {
+  const days: CalendarDay[] = []
+  for (let index = 1; index <= 31; index += 1) {
+    days.push(
+      day({
+        date: `2026-12-${String(index).padStart(2, '0')}`,
+        period: 'future',
+      }),
+    )
+  }
+  return { ...novemberUs12(), month: '2026-12-01', days }
+}
+
+function swipe(
+  target: Element,
+  deltaX: number,
+  deltaY: number,
+  end: 'touchend' | 'touchcancel' = 'touchend',
+): void {
+  const touchAt = (clientX: number, clientY: number) =>
+    new Touch({ identifier: 0, target, clientX, clientY })
+  target.dispatchEvent(
+    new TouchEvent('touchstart', {
+      bubbles: true,
+      touches: [touchAt(200, 200)],
+    }),
+  )
+  target.dispatchEvent(
+    new TouchEvent('touchmove', {
+      bubbles: true,
+      touches: [touchAt(200 + deltaX, 200 + deltaY)],
+    }),
+  )
+  target.dispatchEvent(new TouchEvent(end, { bubbles: true, touches: [] }))
+}
+
 describe('calendar utilities (CAL-01, CHG-62, CHG-63)', () => {
   it('starts the weeks on Monday and pads the month with days of the neighbour months', () => {
-    const cells = calendarCells('2026-11-01', novemberUs12().days)
+    const cells = calendarCells('2026-11-01', novemberUs12().days, {
+      firstMonth: '2026-11-01',
+      lastMonth: '2027-02-01',
+    })
 
     expect(cells).toHaveLength(42)
     expect(cells[0]).toMatchObject({
       date: '2026-10-26',
       inMonth: false,
+      selectable: false,
       day: null,
     })
     expect(cells[6]).toMatchObject({
       date: '2026-11-01',
       inMonth: true,
+      selectable: true,
       nonWorking: true,
     })
-    expect(cells.at(-1)?.date).toBe('2026-12-06')
+    expect(cells.at(-1)).toMatchObject({
+      date: '2026-12-06',
+      inMonth: false,
+      selectable: true,
+      day: null,
+    })
     expect(cells.find((cell) => cell.date === '2026-11-11')?.nonWorking).toBe(
       true,
     )
@@ -393,6 +439,106 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
     expect(wrapper.find('[data-testid="calendar-day-detail"]').exists()).toBe(
       true,
     )
+  })
+
+  it('opens the month of a day of a neighbour month and selects it, within the navigation only (CAL-01)', async () => {
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /calendar/2026-11-01?horizonMonths=3': () => novemberUs12(),
+      'GET /calendar/2026-12-01?horizonMonths=3': () => december(),
+    })
+
+    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    mounted.push(wrapper)
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
+    })
+
+    expect(
+      wrapper.find('[data-testid="calendar-select-2026-10-26"]').exists(),
+    ).toBe(false)
+    await wrapper
+      .get('[data-testid="calendar-select-2026-12-03"]')
+      .trigger('click')
+
+    await vi.waitFor(() => {
+      expect(wrapper.get('[data-testid="calendar-month"]').text()).toBe(
+        'décembre 2026',
+      )
+      expect(wrapper.find('[data-testid="calendar-day-detail"]').exists()).toBe(
+        true,
+      )
+    })
+    expect(
+      wrapper
+        .get('[data-testid="calendar-select-2026-12-03"]')
+        .attributes('aria-pressed'),
+    ).toBe('true')
+    expect(wrapper.get('[data-testid="calendar-day-detail"] h2').text()).toBe(
+      'jeudi 3 décembre 2026',
+    )
+    expect(api.requests.map((request) => request.path)).toContain(
+      '/calendar/2026-12-01?horizonMonths=3',
+    )
+  })
+
+  it('changes the month with a horizontal swipe on the month card (CAL-01)', async () => {
+    setViewportWidth(375)
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /calendar/2026-11-01?horizonMonths=3': () => novemberUs12(),
+      'GET /calendar/2026-12-01?horizonMonths=3': () => december(),
+    })
+
+    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    mounted.push(wrapper)
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
+    })
+
+    swipe(
+      wrapper.get('[data-testid="calendar-day-2026-11-18"]').element,
+      -120,
+      10,
+    )
+    await vi.waitFor(() => {
+      expect(wrapper.get('[data-testid="calendar-month"]').text()).toBe(
+        'décembre 2026',
+      )
+    })
+
+    swipe(wrapper.get('[data-testid="calendar-month"]').element, 120, -10)
+    await vi.waitFor(() => {
+      expect(wrapper.get('[data-testid="calendar-month"]').text()).toBe(
+        'novembre 2026',
+      )
+    })
+  })
+
+  it('ignores a vertical, cancelled or out of navigation swipe on every screen width (CAL-01)', async () => {
+    const api = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /calendar/2026-11-01?horizonMonths=3': () => novemberUs12(),
+    })
+
+    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    mounted.push(wrapper)
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
+    })
+    const card = wrapper.get('[data-testid="calendar-month-card"]').element
+
+    swipe(card, 120, 0)
+    swipe(card, -20, -150)
+    swipe(card, -120, 0, 'touchcancel')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-testid="calendar-month"]').text()).toBe(
+      'novembre 2026',
+    )
+    expect(
+      api.requests.filter((request) => request.path.startsWith('/calendar/')),
+    ).toHaveLength(1)
   })
 
   it('opens the schedule of an occurrence from its menu (CAL-05)', async () => {
