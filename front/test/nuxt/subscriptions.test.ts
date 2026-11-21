@@ -25,6 +25,7 @@ afterEach(() => {
     wrapper.unmount()
   }
   fetchMock.mockReset()
+  useAmountMaskStore().forget()
   document.body.innerHTML = ''
 })
 
@@ -62,6 +63,40 @@ describe('subscriptions view (ECH-09)', () => {
     expect(wrapper.get('[data-testid="subscriptions-annual"]').text()).toBe(
       euros(4_416),
     )
+  })
+
+  it('masks the monthly and annual totals but keeps the subscriptions in clear in masked mode (DSH-05)', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /subscriptions': () => ({
+        subscriptions: [schedule()],
+        totals: { monthlyCents: 368, annualCents: 4_416 },
+      }),
+    })
+    useAmountMaskStore().toggle()
+
+    const wrapper = await mountSuspended(SubscriptionsPage, {
+      route: '/subscriptions',
+    })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="subscriptions-table"]').exists()).toBe(
+        true,
+      )
+    })
+    for (const testId of ['subscriptions-monthly', 'subscriptions-annual']) {
+      expect(
+        wrapper.get(`[data-testid="${testId}"]`).attributes('data-masked'),
+      ).toBe('true')
+    }
+    const totalCards = wrapper.get('[data-testid="subscription-totals"]').text()
+    expect(totalCards).toContain('****')
+    expect(totalCards).not.toContain(euros(368))
+    expect(totalCards).not.toContain(euros(4_416))
+    const table = wrapper.get('[data-testid="subscriptions-table"]').text()
+    expect(table).toContain(euros(368))
+    expect(table).toContain(euros(-4_416, 'exceptZero'))
   })
 
   it('invites to mark a schedule as a subscription when there is none', async () => {

@@ -99,6 +99,7 @@ const columns = computed<TableColumn<Schedule>[]>(() => [
           <MoneyAmount
             :cents="result.totals.monthlyCents"
             class="text-xl font-semibold"
+            concealable
             data-testid="subscriptions-monthly"
           />
         </UCard>
@@ -109,6 +110,7 @@ const columns = computed<TableColumn<Schedule>[]>(() => [
           <MoneyAmount
             :cents="result.totals.annualCents"
             class="text-xl font-semibold"
+            concealable
             data-testid="subscriptions-annual"
           />
         </UCard>

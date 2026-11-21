@@ -38,6 +38,7 @@ afterEach(() => {
   }
   setViewportWidth(initialWidth)
   fetchMock.mockReset()
+  useAmountMaskStore().forget()
   document.body.innerHTML = ''
 })
 
@@ -69,6 +70,41 @@ describe('schedules view (ECH-09, ECH-10)', () => {
     expect(wrapper.get('[data-testid="total-expenses"]').text()).toBe(
       euros(368),
     )
+  })
+
+  it('masks the totals but keeps the schedules in clear in masked mode (DSH-05)', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /schedules': () => ({
+        schedules: [schedule()],
+        totals: {
+          expensesCents: 368,
+          incomesCents: 250_000,
+          savingsTransfersCents: 30_000,
+        },
+      }),
+    })
+    useAmountMaskStore().toggle()
+
+    const wrapper = await mountSuspended(SchedulesPage, { route: '/schedules' })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('Musique')
+    })
+    for (const testId of ['total-expenses', 'total-incomes', 'total-savings']) {
+      expect(
+        wrapper.get(`[data-testid="${testId}"]`).attributes('data-masked'),
+      ).toBe('true')
+    }
+    const totalCards = wrapper.get('[data-testid="schedule-totals"]').text()
+    expect(totalCards).toContain('****')
+    expect(totalCards).not.toContain(euros(368))
+    expect(totalCards).not.toContain(euros(250_000))
+    expect(totalCards).not.toContain(euros(30_000))
+    const list = wrapper.get('[data-testid="schedules-list"]').text()
+    expect(list).toContain(euros(368))
+    expect(list).toContain(euros(-4_416, 'exceptZero'))
   })
 
   it('folds inactive and ended schedules apart', async () => {

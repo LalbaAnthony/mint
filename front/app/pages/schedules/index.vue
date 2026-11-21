@@ -181,6 +181,7 @@ async function saved(
           <MoneyAmount
             :cents="result.totals.expensesCents"
             class="text-xl font-semibold"
+            concealable
             data-testid="total-expenses"
           />
         </UCard>
@@ -191,6 +192,7 @@ async function saved(
           <MoneyAmount
             :cents="result.totals.incomesCents"
             class="text-xl font-semibold"
+            concealable
             data-testid="total-incomes"
           />
         </UCard>
@@ -201,6 +203,7 @@ async function saved(
           <MoneyAmount
             :cents="result.totals.savingsTransfersCents"
             class="text-xl font-semibold"
+            concealable
             data-testid="total-savings"
           />
         </UCard>
