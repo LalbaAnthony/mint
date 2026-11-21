@@ -28,7 +28,7 @@ function normalize(): void {
     inputmode="decimal"
     :placeholder="placeholder"
     class="w-full"
-    :ui="{ base: 'text-right tabular-nums' }"
+    :ui="{ base: 'tabular-nums' }"
     @blur="normalize"
   >
     <template #trailing>

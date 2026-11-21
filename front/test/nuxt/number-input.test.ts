@@ -228,7 +228,7 @@ async function typeAndLeave(
 }
 
 describe('AmountInput (CHG-69)', () => {
-  it('is a right-aligned decimal field with the euro suffix and an example', async () => {
+  it('is a left-aligned decimal field with the euro suffix and an example', async () => {
     const { host } = boundTo(AmountInput)
     const wrapper = await mountSuspended(host)
     mounted.push(wrapper)
@@ -236,9 +236,8 @@ describe('AmountInput (CHG-69)', () => {
     const input = wrapper.get('input')
     expect(input.attributes('inputmode')).toBe('decimal')
     expect(input.attributes('placeholder')).toBe(amountInputPlaceholder('fr'))
-    expect(input.classes()).toEqual(
-      expect.arrayContaining(['text-right', 'tabular-nums']),
-    )
+    expect(input.classes()).toContain('tabular-nums')
+    expect(input.classes()).not.toContain('text-right')
     expect(wrapper.get('[data-slot="trailing"]').text()).toBe('€')
   })
 
@@ -287,6 +286,8 @@ describe('RateInput (CHG-69)', () => {
     mounted.push(wrapper)
 
     expect(wrapper.get('[data-slot="trailing"]').text()).toBe('%')
+    expect(wrapper.get('input').classes()).toContain('tabular-nums')
+    expect(wrapper.get('input').classes()).not.toContain('text-right')
     await typeAndLeave(wrapper, '3')
 
     expect(text.value).toBe(rateText(3, 'fr'))
