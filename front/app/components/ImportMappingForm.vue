@@ -42,6 +42,16 @@ const amountMode = ref<AmountMode>(
   props.view.mapping.colAmount === null ? 'split' : 'signed',
 )
 
+provideFieldAutofocus({
+  values: () => ({
+    ...mapping,
+    amountMode: amountMode.value,
+    colAmount: amountColumn.value,
+    colDebit: debitColumn.value,
+    colCredit: creditColumn.value,
+  }),
+})
+
 watch(
   () => props.view.mapping,
   (next) => {

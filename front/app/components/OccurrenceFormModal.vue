@@ -83,7 +83,7 @@ async function submit(): Promise<void> {
     "
   >
     <template #body>
-      <UForm
+      <AppForm
         :state="state"
         :validate="validator(schema)"
         :validate-on="['blur']"
@@ -124,7 +124,7 @@ async function submit(): Promise<void> {
             data-testid="occurrence-submit"
           />
         </OfflineGuard>
-      </UForm>
+      </AppForm>
     </template>
   </UModal>
 </template>

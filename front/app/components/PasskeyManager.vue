@@ -267,7 +267,7 @@ onMounted(() => {
       :description="t('passkeys.addHelp')"
     >
       <template #body>
-        <UForm
+        <AppForm
           :state="addState"
           :validate="validator(passkeyFormSchema)"
           :validate-on="['blur']"
@@ -304,13 +304,13 @@ onMounted(() => {
               data-testid="passkey-submit"
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
       </template>
     </UModal>
 
     <UModal v-model:open="renameOpen" :title="t('passkeys.renameTitle')">
       <template #body>
-        <UForm
+        <AppForm
           :state="renameState"
           :validate="validator(passkeyRenameFormSchema)"
           :validate-on="['blur']"
@@ -337,7 +337,7 @@ onMounted(() => {
               data-testid="passkey-rename-submit"
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
       </template>
     </UModal>
 

@@ -181,7 +181,7 @@ function remove(valuation: Valuation): Promise<void> {
           v-if="valuations.length > 0"
           :valuations="valuations"
         />
-        <UForm
+        <AppForm
           v-if="!archived"
           :state="state"
           :validate="validator(schema)"
@@ -216,7 +216,7 @@ function remove(valuation: Valuation): Promise<void> {
             variant="ghost"
             @click="resetForm"
           />
-        </UForm>
+        </AppForm>
         <p v-if="valuations.length === 0" class="text-sm text-muted">
           {{ t('valuations.empty') }}
         </p>

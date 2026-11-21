@@ -182,7 +182,7 @@ async function deleteWithPasskey(): Promise<void> {
       :description="t('personalData.exportContent')"
     >
       <template #body>
-        <UForm
+        <AppForm
           :state="exportState"
           :validate="validator(exportFormSchema)"
           :validate-on="['blur']"
@@ -212,7 +212,7 @@ async function deleteWithPasskey(): Promise<void> {
               data-testid="export-submit"
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
       </template>
     </UModal>
 
@@ -222,7 +222,7 @@ async function deleteWithPasskey(): Promise<void> {
       :description="t('personalData.deleteEffect')"
     >
       <template #body>
-        <UForm
+        <AppForm
           :state="deleteState"
           :validate="validator(accountDeletionFormSchema)"
           :validate-on="['blur']"
@@ -264,7 +264,7 @@ async function deleteWithPasskey(): Promise<void> {
               data-testid="delete-account-submit"
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
         <template v-if="passkeyConfirmation">
           <USeparator :label="t('auth.or')" class="my-4" />
           <OfflineGuard block v-slot="{ offline }">

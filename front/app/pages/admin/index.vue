@@ -388,7 +388,7 @@ onMounted(load)
 
     <UModal v-model:open="inviteOpen" :title="t('admin.invite')">
       <template #body>
-        <UForm
+        <AppForm
           :state="inviteState"
           :validate="validator(createInvitationRequestSchema)"
           :validate-on="['blur']"
@@ -417,7 +417,7 @@ onMounted(load)
               data-testid="invite-submit"
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
       </template>
     </UModal>
 

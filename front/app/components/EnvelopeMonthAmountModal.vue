@@ -97,7 +97,7 @@ async function restore(): Promise<void> {
     "
   >
     <template #body>
-      <UForm
+      <AppForm
         :state="state"
         :validate="validator(schema)"
         :validate-on="['blur']"
@@ -137,7 +137,7 @@ async function restore(): Promise<void> {
             />
           </OfflineGuard>
         </div>
-      </UForm>
+      </AppForm>
     </template>
   </UModal>
 </template>

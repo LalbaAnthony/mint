@@ -113,7 +113,7 @@ function remove(statement: Statement): Promise<void> {
   >
     <template #body>
       <div class="flex flex-col gap-4" data-testid="statements">
-        <UForm
+        <AppForm
           :state="state"
           :validate="validator(schema)"
           :validate-on="['blur']"
@@ -141,7 +141,7 @@ function remove(statement: Statement): Promise<void> {
               data-testid="statement-submit"
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
         <p v-if="statements.length === 0" class="text-sm text-muted">
           {{ t('statements.empty') }}
         </p>

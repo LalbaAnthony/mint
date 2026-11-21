@@ -97,7 +97,7 @@ async function submit(): Promise<void> {
     <p v-if="checking" class="text-sm text-muted">
       {{ t('invitation.checking') }}
     </p>
-    <UForm
+    <AppForm
       v-else-if="email !== null"
       :state="state"
       :validate="validator(acceptInvitationFormSchema)"
@@ -148,6 +148,6 @@ async function submit(): Promise<void> {
         block
         data-testid="invitation-submit"
       />
-    </UForm>
+    </AppForm>
   </div>
 </template>

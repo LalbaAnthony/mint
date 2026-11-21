@@ -287,6 +287,14 @@ export function findInBody(selector: string): HTMLElement | null {
   return document.body.querySelector<HTMLElement>(selector)
 }
 
+export function focusedTestId(): string | null {
+  const active = document.activeElement
+  if (active === null || active === document.body) {
+    return null
+  }
+  return active.closest('[data-testid]')?.getAttribute('data-testid') ?? null
+}
+
 export async function fillInput(
   selector: string,
   value: string,

@@ -6,9 +6,18 @@ import type {
   ImportBatchView,
   ImportRow,
 } from '@mint/shared/types/imports'
+import ImportMappingForm from '~/components/ImportMappingForm.vue'
 import ImportPage from '~/pages/import/index.vue'
 import { installFakeApi } from '../fake-api'
-import { ids, overview, account, card, categories } from '../planning-fixtures'
+import {
+  ids,
+  overview,
+  account,
+  card,
+  categories,
+  focusedTestId,
+  livret,
+} from '../planning-fixtures'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -208,5 +217,53 @@ describe('import view (IMP-01 to IMP-08)', () => {
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="import-select"]').exists()).toBe(true)
     })
+  })
+})
+
+describe('import autofocus (CHG-69)', () => {
+  async function mountPage() {
+    const wrapper = await mountSuspended(ImportPage, {
+      route: '/import',
+      attachTo: document.body,
+    })
+    mounted.push(wrapper)
+  }
+
+  it('focuses the account when several accounts can receive the file', async () => {
+    installFakeApi(fetchMock, {
+      ...handlers(),
+      'GET /accounts/overview': () => overview([account(), livret]),
+    })
+    await mountPage()
+
+    await vi.waitFor(() => {
+      expect(focusedTestId()).toBe('import-account')
+    })
+  })
+
+  it('focuses the file once the only account is preselected', async () => {
+    installFakeApi(fetchMock, handlers())
+    await mountPage()
+
+    await vi.waitFor(() => {
+      expect(focusedTestId()).toBe('import-file')
+    })
+  })
+
+  it('counts the default debit and credit columns as values', async () => {
+    const wrapper = await mountSuspended(ImportMappingForm, {
+      props: {
+        view: view({
+          mapping: { ...mapping, colDebit: null, colCredit: null },
+        }),
+        busy: false,
+      },
+      attachTo: document.body,
+    })
+    mounted.push(wrapper)
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await nextTick()
+
+    expect(focusedTestId()).toBeNull()
   })
 })

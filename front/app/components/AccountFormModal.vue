@@ -250,7 +250,7 @@ async function submit(): Promise<void> {
     :fullscreen="!isDesktop"
   >
     <template #body>
-      <UForm
+      <AppForm
         :state="state"
         :validate="validator(schema)"
         :validate-on="['blur']"
@@ -410,7 +410,7 @@ async function submit(): Promise<void> {
             data-testid="account-submit"
           />
         </OfflineGuard>
-      </UForm>
+      </AppForm>
     </template>
   </UModal>
 </template>

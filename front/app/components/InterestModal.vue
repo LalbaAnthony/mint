@@ -171,7 +171,7 @@ function remove(rate: InterestRate): Promise<void> {
             </dd>
           </div>
         </dl>
-        <UForm
+        <AppForm
           v-if="!archived"
           :state="state"
           :validate="validator(schema)"
@@ -200,7 +200,7 @@ function remove(rate: InterestRate): Promise<void> {
               data-testid="interest-rate-submit"
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
         <p v-if="rates.length === 0" class="text-sm text-muted">
           {{ t('interest.empty') }}
         </p>

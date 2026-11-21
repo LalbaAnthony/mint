@@ -85,3 +85,20 @@ export type InterestRateFormState = {
 export type RegulatedCapFormState = {
   cap: string
 }
+
+export type AutofocusField = {
+  name: () => string
+  element: () => HTMLElement | null
+}
+
+export type FieldAutofocusScope = {
+  register: (field: AutofocusField) => () => void
+}
+
+export type FieldAutofocusOptions = {
+  values: () => object
+  pending?: () => boolean
+}
+
+export type FieldValueLookup =
+  { tracked: false } | { tracked: true; value: unknown }

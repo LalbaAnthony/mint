@@ -57,7 +57,7 @@ async function submit(): Promise<void> {
       variant="soft"
       data-testid="reset-error"
     />
-    <UForm
+    <AppForm
       v-if="token !== null"
       :state="state"
       :validate="validator(newPasswordFormSchema)"
@@ -93,7 +93,7 @@ async function submit(): Promise<void> {
         variant="solid"
         block
       />
-    </UForm>
+    </AppForm>
     <NuxtLink to="/forgot-password" class="text-sm text-primary underline">
       {{ t('auth.requestNewLink') }}
     </NuxtLink>

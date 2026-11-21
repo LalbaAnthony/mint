@@ -19,6 +19,10 @@ const usage = ref<UsageCounts | null>(null)
 const replacementId = ref<string | undefined>(undefined)
 const pending = ref(false)
 
+provideFieldAutofocus({
+  values: () => ({ replacementId: replacementId.value }),
+})
+
 watch(
   [open, () => props.category?.id],
   async ([isOpen]) => {

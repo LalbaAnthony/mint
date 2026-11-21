@@ -170,7 +170,7 @@ async function submit(): Promise<void> {
 <template>
   <UModal v-model:open="open" :title="title">
     <template #body>
-      <UForm
+      <AppForm
         :state="state"
         :validate="validate"
         :validate-on="['blur']"
@@ -233,7 +233,7 @@ async function submit(): Promise<void> {
             data-testid="category-submit"
           />
         </OfflineGuard>
-      </UForm>
+      </AppForm>
     </template>
   </UModal>
 </template>

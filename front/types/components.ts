@@ -1,3 +1,4 @@
+import type { FormError, FormInputEvents } from '@nuxt/ui'
 import type { Account, AccountUsageGroup } from '@mint/shared/types/accounts'
 import type { Category } from '@mint/shared/types/categories'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
@@ -25,6 +26,17 @@ export interface AppFormFieldProps {
   name: string
   hint?: string
   error?: string
+}
+
+export interface AppFormProps<State extends object> {
+  state: State
+  validate?: (state: State) => FormError[]
+  validateOn?: FormInputEvents[]
+  pending?: boolean
+}
+
+export interface AppFormEmits {
+  submit: []
 }
 
 export interface AmountInputProps {

@@ -51,7 +51,7 @@ async function submit(): Promise<void> {
         color="error"
         variant="soft"
       />
-      <UForm
+      <AppForm
         :state="state"
         :validate="validator(passwordResetRequestSchema)"
         :validate-on="['blur']"
@@ -74,7 +74,7 @@ async function submit(): Promise<void> {
           variant="solid"
           block
         />
-      </UForm>
+      </AppForm>
     </template>
     <NuxtLink to="/login" class="text-sm text-primary underline">
       {{ t('auth.backToLogin') }}

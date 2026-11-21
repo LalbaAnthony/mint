@@ -62,7 +62,7 @@ async function submit(): Promise<void> {
       variant="soft"
       data-testid="login-error"
     />
-    <UForm
+    <AppForm
       :state="state"
       :validate="validator(loginRequestSchema)"
       :validate-on="['blur']"
@@ -96,7 +96,7 @@ async function submit(): Promise<void> {
         block
         data-testid="login-submit"
       />
-    </UForm>
+    </AppForm>
     <template v-if="passkeyAvailable">
       <USeparator :label="t('auth.or')" />
       <UButton

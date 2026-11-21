@@ -72,7 +72,14 @@ async function openBatch(batchId: string): Promise<void> {
   }
 }
 
-onMounted(async () => {
+const preparing = ref(true)
+
+provideFieldAutofocus({
+  values: () => ({ accountId: accountId.value, file: file.value }),
+  pending: () => preparing.value,
+})
+
+async function prepare(): Promise<void> {
   try {
     await referentials.load()
   } catch (error) {
@@ -84,6 +91,14 @@ onMounted(async () => {
     await router.replace({ query: {} })
   } else if (referentials.activeAccounts.length === 1) {
     accountId.value = referentials.activeAccounts[0]?.id
+  }
+}
+
+onMounted(async () => {
+  try {
+    await prepare()
+  } finally {
+    preparing.value = false
   }
 })
 

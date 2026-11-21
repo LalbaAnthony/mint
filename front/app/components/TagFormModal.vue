@@ -48,7 +48,7 @@ async function submit(): Promise<void> {
     :title="tag === null ? t('tags.createTitle') : t('tags.editTitle')"
   >
     <template #body>
-      <UForm
+      <AppForm
         :state="state"
         :validate="validator(tagRequestSchema)"
         :validate-on="['blur']"
@@ -71,7 +71,7 @@ async function submit(): Promise<void> {
             data-testid="tag-submit"
           />
         </OfflineGuard>
-      </UForm>
+      </AppForm>
     </template>
   </UModal>
 </template>

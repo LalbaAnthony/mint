@@ -99,7 +99,7 @@ async function submit(): Promise<void> {
     "
   >
     <template #body>
-      <UForm
+      <AppForm
         :state="state"
         :validate="validator(createPaymentMethodRequestSchema)"
         :validate-on="['blur']"
@@ -145,7 +145,7 @@ async function submit(): Promise<void> {
             data-testid="payment-method-submit"
           />
         </OfflineGuard>
-      </UForm>
+      </AppForm>
     </template>
   </UModal>
 </template>

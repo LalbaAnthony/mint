@@ -173,7 +173,7 @@ onMounted(loadSessions)
             {{ t('profile.preferences') }}
           </h2>
         </template>
-        <UForm
+        <AppForm
           :state="preferences"
           :validate="validator(updateProfileRequestSchema)"
           class="flex flex-col gap-4"
@@ -243,7 +243,7 @@ onMounted(loadSessions)
               />
             </OfflineGuard>
           </div>
-        </UForm>
+        </AppForm>
       </UCard>
 
       <NotificationSettings />
@@ -351,7 +351,7 @@ onMounted(loadSessions)
 
     <UModal v-model:open="emailOpen" :title="t('profile.changeEmail')">
       <template #body>
-        <UForm
+        <AppForm
           :state="emailState"
           :validate="validator(emailChangeRequestSchema)"
           :validate-on="['blur']"
@@ -385,13 +385,13 @@ onMounted(loadSessions)
               block
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
       </template>
     </UModal>
 
     <UModal v-model:open="passwordOpen" :title="t('profile.changePassword')">
       <template #body>
-        <UForm
+        <AppForm
           :state="passwordState"
           :validate="validator(changePasswordFormSchema)"
           :validate-on="['blur']"
@@ -446,7 +446,7 @@ onMounted(loadSessions)
               block
             />
           </OfflineGuard>
-        </UForm>
+        </AppForm>
       </template>
     </UModal>
 

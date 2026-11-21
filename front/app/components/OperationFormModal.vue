@@ -24,6 +24,7 @@ const { formatDate, formatMoney } = useFormatters()
 const isDesktop = useMediaQuery('(min-width: 1024px)')
 
 const saving = ref(false)
+const preparing = ref(false)
 
 function emptyState(kind: QuickAddKind): OperationFormState {
   return {
@@ -83,6 +84,7 @@ watch(
     if (request === null) {
       return
     }
+    preparing.value = true
     Object.assign(
       state,
       request.mode === 'create'
@@ -100,6 +102,9 @@ watch(
     }
     if (request.mode === 'create') {
       applyDefaults()
+    }
+    if (editor.request === request) {
+      preparing.value = false
     }
   },
   { immediate: true },
@@ -294,10 +299,11 @@ async function submit(): Promise<void> {
 <template>
   <UModal v-model:open="editor.isOpen" :title="title" :fullscreen="!isDesktop">
     <template #body>
-      <UForm
+      <AppForm
         :state="state"
         :validate="validator(schema)"
         :validate-on="['blur']"
+        :pending="preparing"
         class="flex flex-col gap-4"
         data-testid="operation-form"
         @submit="submit"
@@ -417,7 +423,7 @@ async function submit(): Promise<void> {
             data-testid="operation-submit"
           />
         </OfflineGuard>
-      </UForm>
+      </AppForm>
     </template>
   </UModal>
 </template>
