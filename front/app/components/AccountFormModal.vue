@@ -163,7 +163,7 @@ watch(
   },
 )
 
-const schema = computed(() => accountFormSchema(today.value))
+const schema = computed(() => accountFormSchema(today.value, locale.value))
 
 const regulatedProductModel = computed({
   get: () => state.regulatedProduct ?? undefined,
@@ -308,17 +308,10 @@ async function submit(): Promise<void> {
             :label="t('accounts.fields.initialBalance')"
             name="initialBalance"
           >
-            <UInput
+            <AmountInput
               v-model="state.initialBalance"
-              inputmode="decimal"
-              class="w-full"
-              :ui="{ base: 'text-right tabular-nums' }"
               data-testid="account-initial-balance"
-            >
-              <template #trailing>
-                <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-              </template>
-            </UInput>
+            />
           </AppFormField>
           <AppFormField
             :label="t('accounts.fields.initialBalanceDate')"
@@ -339,17 +332,10 @@ async function submit(): Promise<void> {
           :hint="t('common.optional')"
           name="lowBalanceThreshold"
         >
-          <UInput
+          <AmountInput
             v-model="state.lowBalanceThreshold"
-            inputmode="decimal"
-            class="w-full"
-            :ui="{ base: 'text-right tabular-nums' }"
             data-testid="account-threshold"
-          >
-            <template #trailing>
-              <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-            </template>
-          </UInput>
+          />
         </AppFormField>
         <template v-if="isSavings">
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -358,38 +344,20 @@ async function submit(): Promise<void> {
               :hint="t('accounts.fields.depositCapHint')"
               name="depositCap"
             >
-              <UInput
+              <AmountInput
                 v-model="state.depositCap"
-                inputmode="decimal"
-                class="w-full"
-                :ui="{ base: 'text-right tabular-nums' }"
                 data-testid="account-deposit-cap"
-              >
-                <template #trailing>
-                  <span class="text-sm text-muted">{{
-                    t('money.symbol')
-                  }}</span>
-                </template>
-              </UInput>
+              />
             </AppFormField>
             <AppFormField
               :label="t('accounts.fields.capitalizedInterest')"
               :hint="t('accounts.fields.capitalizedInterestHint')"
               name="capitalizedInterest"
             >
-              <UInput
+              <AmountInput
                 v-model="state.capitalizedInterest"
-                inputmode="decimal"
-                class="w-full"
-                :ui="{ base: 'text-right tabular-nums' }"
                 data-testid="account-capitalized-interest"
-              >
-                <template #trailing>
-                  <span class="text-sm text-muted">{{
-                    t('money.symbol')
-                  }}</span>
-                </template>
-              </UInput>
+              />
             </AppFormField>
           </div>
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

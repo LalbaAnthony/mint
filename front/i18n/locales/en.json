@@ -49,6 +49,9 @@
     "belowThreshold": "below the alert threshold",
     "masked": "hidden amount"
   },
+  "percent": {
+    "symbol": "%"
+  },
   "amountMask": {
     "toggle": "Hide amounts",
     "saveFailed": "Hidden mode could not be saved on this device: it will only last until the next reload.",

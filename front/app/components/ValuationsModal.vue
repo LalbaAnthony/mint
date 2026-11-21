@@ -94,13 +94,15 @@ function startEdit(valuation: Valuation): void {
   state.value = formatAmountInput(valuation.valueCents, locale.value)
 }
 
+const schema = computed(() => valuationFormSchema(locale.value))
+
 function record(): Promise<void> {
   const account = props.account
-  const value = parseAmountInput(state.value)
+  const value = parseAmountInput(state.value, locale.value)
   if (
     account === null ||
     value === null ||
-    !valuationFormSchema.safeParse(state).success
+    !schema.value.safeParse(state).success
   ) {
     return Promise.resolve()
   }
@@ -182,7 +184,7 @@ function remove(valuation: Valuation): Promise<void> {
         <UForm
           v-if="!archived"
           :state="state"
-          :validate="validator(valuationFormSchema)"
+          :validate="validator(schema)"
           :validate-on="['blur']"
           class="flex flex-wrap items-end gap-2"
           data-testid="valuation-form"
@@ -192,12 +194,7 @@ function remove(valuation: Valuation): Promise<void> {
             <UInput v-model="state.date" type="date" />
           </AppFormField>
           <AppFormField :label="t('valuations.value')" name="value">
-            <UInput
-              v-model="state.value"
-              inputmode="decimal"
-              class="text-right tabular-nums"
-              data-testid="valuation-value"
-            />
+            <AmountInput v-model="state.value" data-testid="valuation-value" />
           </AppFormField>
           <OfflineGuard v-slot="{ offline }">
             <UButton

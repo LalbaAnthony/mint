@@ -117,7 +117,11 @@ describe('savings caps and interest (LIV-01 to LIV-04)', () => {
       const input =
         findInBody('[data-testid="account-deposit-cap"] input') ??
         findInBody('[data-testid="account-deposit-cap"]')
-      expect(input instanceof HTMLInputElement && input.value).toBe('10000,00')
+      expect(input instanceof HTMLInputElement && input.value).toBe(
+        new Intl.NumberFormat('fr', { minimumFractionDigits: 2 }).format(
+          10_000,
+        ),
+      )
     })
     await fillInput('[data-testid="account-initial-balance"]', '9 950')
     submit('[data-testid="account-form"]')

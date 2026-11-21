@@ -25,8 +25,12 @@ async function load(): Promise<void> {
   }
 }
 
+function updateDraft(product: RegulatedCap['product'], text: string): void {
+  drafts[product] = text
+}
+
 async function save(cap: RegulatedCap): Promise<void> {
-  const parsed = regulatedCapFormSchema.safeParse({
+  const parsed = regulatedCapFormSchema(locale.value).safeParse({
     cap: drafts[cap.product] ?? '',
   })
   if (!parsed.success || parsed.data.cap === null) {
@@ -83,16 +87,10 @@ onMounted(load)
           :name="cap.product"
           class="min-w-48 flex-1"
         >
-          <UInput
-            v-model="drafts[cap.product]"
-            inputmode="decimal"
-            class="w-full"
-            :ui="{ base: 'text-right tabular-nums' }"
-          >
-            <template #trailing>
-              <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-            </template>
-          </UInput>
+          <AmountInput
+            :model-value="drafts[cap.product] ?? ''"
+            @update:model-value="(text) => updateDraft(cap.product, text)"
+          />
         </AppFormField>
         <OfflineGuard v-slot="{ offline }">
           <UButton

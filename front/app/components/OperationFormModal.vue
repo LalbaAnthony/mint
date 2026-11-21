@@ -167,7 +167,9 @@ const categoryModel = computed({
 })
 
 const schema = computed(() =>
-  isTransfer.value ? transferFormSchema : operationFormSchema,
+  isTransfer.value
+    ? transferFormSchema(locale.value)
+    : operationFormSchema(locale.value),
 )
 
 const title = computed(() =>
@@ -191,7 +193,7 @@ function warnAboutCaps(warnings: readonly CapWarning[]): void {
 }
 
 async function saveTransfer(): Promise<CapWarning[]> {
-  const parsed = transferFormSchema.safeParse(state)
+  const parsed = transferFormSchema(locale.value).safeParse(state)
   if (!parsed.success) {
     return []
   }
@@ -232,7 +234,7 @@ async function proposeReconciliation(created: Operation): Promise<void> {
 }
 
 async function saveOperation(): Promise<CapWarning[]> {
-  const parsed = operationFormSchema.safeParse(state)
+  const parsed = operationFormSchema(locale.value).safeParse(state)
   if (!parsed.success || state.source === undefined) {
     return []
   }
@@ -350,17 +352,10 @@ async function submit(): Promise<void> {
         </AppFormField>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AppFormField :label="t('operations.fields.amount')" name="amount">
-            <UInput
+            <AmountInput
               v-model="state.amount"
-              inputmode="decimal"
-              class="w-full"
-              :ui="{ base: 'text-right tabular-nums' }"
               data-testid="operation-amount"
-            >
-              <template #trailing>
-                <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-              </template>
-            </UInput>
+            />
           </AppFormField>
           <AppFormField :label="t('operations.fields.date')" name="date">
             <UInput

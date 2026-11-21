@@ -24,6 +24,11 @@ export interface AppFormFieldProps {
   label: string
   name: string
   hint?: string
+  error?: string
+}
+
+export interface AmountInputProps {
+  placeholder?: string
 }
 
 export interface EmptyStateProps {

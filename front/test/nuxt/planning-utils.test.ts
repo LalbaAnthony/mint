@@ -101,7 +101,7 @@ describe('operation query (OPE-05)', () => {
     }
 
     expect(
-      operationQuery(filters, { sort: 'amount', order: 'asc' }, 2, 25),
+      operationQuery(filters, { sort: 'amount', order: 'asc' }, 2, 25, 'fr'),
     ).toBe(
       `page=2&pageSize=25&sort=amount&order=asc&q=loyer&from=2026-11-01&accountIds=${ids.current}&accountIds=${ids.livret}&groups=save&minCents=1250&maxCents=10000&direction=debit&origins=schedule&status=to_categorize`,
     )

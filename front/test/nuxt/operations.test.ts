@@ -448,6 +448,7 @@ describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () =
         { sort: 'date', order: 'desc' },
         1,
         50,
+        'fr',
       ),
     ).toBe(
       'page=1&pageSize=50&sort=date&order=desc&reconciled=false&unconfirmed=true',

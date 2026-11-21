@@ -43,8 +43,10 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
+const schema = computed(() => envelopeMonthAmountFormSchema(locale.value))
+
 async function submit(): Promise<void> {
-  const parsed = envelopeMonthAmountFormSchema.safeParse(state)
+  const parsed = schema.value.safeParse(state)
   const line = props.line
   if (!parsed.success || line === null) {
     return
@@ -97,24 +99,17 @@ async function restore(): Promise<void> {
     <template #body>
       <UForm
         :state="state"
-        :validate="validator(envelopeMonthAmountFormSchema)"
+        :validate="validator(schema)"
         :validate-on="['blur']"
         class="flex flex-col gap-4"
         data-testid="envelope-month-form"
         @submit="submit"
       >
         <AppFormField :label="t('envelopes.fields.monthAmount')" name="amount">
-          <UInput
+          <AmountInput
             v-model="state.amount"
-            inputmode="decimal"
-            class="w-full"
-            :ui="{ base: 'text-right tabular-nums' }"
             data-testid="envelope-month-amount"
-          >
-            <template #trailing>
-              <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-            </template>
-          </UInput>
+          />
         </AppFormField>
         <div class="flex flex-col gap-2 sm:flex-row-reverse">
           <OfflineGuard v-slot="{ offline }">

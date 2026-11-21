@@ -39,9 +39,11 @@ const amountPlaceholder = computed(() =>
 
 const tomorrow = computed(() => addDays(parisDate(new Date()), 1))
 
+const schema = computed(() => occurrenceFormSchema(locale.value))
+
 async function submit(): Promise<void> {
   const occurrence = props.occurrence
-  if (occurrence === null || !occurrenceFormSchema.safeParse(state).success) {
+  if (occurrence === null || !schema.value.safeParse(state).success) {
     return
   }
   saving.value = true
@@ -52,7 +54,9 @@ async function submit(): Promise<void> {
       scheduleOccurrenceSchema,
       {
         amountCents:
-          state.amount.trim() === '' ? null : parseAmountInput(state.amount),
+          state.amount.trim() === ''
+            ? null
+            : parseAmountInput(state.amount, locale.value),
         effectiveDate: state.effectiveDate === '' ? null : state.effectiveDate,
       },
     )
@@ -81,25 +85,18 @@ async function submit(): Promise<void> {
     <template #body>
       <UForm
         :state="state"
-        :validate="validator(occurrenceFormSchema)"
+        :validate="validator(schema)"
         :validate-on="['blur']"
         class="flex flex-col gap-4"
         data-testid="occurrence-form"
         @submit="submit"
       >
         <AppFormField :label="t('schedules.occurrences.amount')" name="amount">
-          <UInput
+          <AmountInput
             v-model="state.amount"
-            inputmode="decimal"
             :placeholder="amountPlaceholder"
-            class="w-full"
-            :ui="{ base: 'text-right tabular-nums' }"
             data-testid="occurrence-amount"
-          >
-            <template #trailing>
-              <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-            </template>
-          </UInput>
+          />
         </AppFormField>
         <AppFormField
           :label="t('schedules.occurrences.date')"

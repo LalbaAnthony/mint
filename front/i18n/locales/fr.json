@@ -49,6 +49,9 @@
     "belowThreshold": "sous le seuil d'alerte",
     "masked": "montant masqué"
   },
+  "percent": {
+    "symbol": "%"
+  },
   "amountMask": {
     "toggle": "Masquer les montants",
     "saveFailed": "Le mode masqué n'a pas pu être mémorisé sur cet appareil : il ne durera que jusqu'au prochain rechargement.",

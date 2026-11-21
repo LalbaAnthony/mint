@@ -15,7 +15,7 @@ const props = defineProps<StatementsModalProps>()
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<StatementsModalEmits>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const toast = useToast()
 const { validator, errorMessage } = useFormValidation()
 const { formatDate, formatMoney } = useFormatters()
@@ -74,13 +74,15 @@ async function run(action: () => Promise<unknown>): Promise<void> {
   }
 }
 
+const schema = computed(() => statementFormSchema(locale.value))
+
 function record(): Promise<void> {
   const account = props.account
-  const balance = parseAmountInput(state.balance)
+  const balance = parseAmountInput(state.balance, locale.value)
   if (
     account === null ||
     balance === null ||
-    !statementFormSchema.safeParse(state).success
+    !schema.value.safeParse(state).success
   ) {
     return Promise.resolve()
   }
@@ -113,7 +115,7 @@ function remove(statement: Statement): Promise<void> {
       <div class="flex flex-col gap-4" data-testid="statements">
         <UForm
           :state="state"
-          :validate="validator(statementFormSchema)"
+          :validate="validator(schema)"
           :validate-on="['blur']"
           class="flex flex-wrap items-end gap-2"
           data-testid="statement-form"
@@ -123,10 +125,8 @@ function remove(statement: Statement): Promise<void> {
             <UInput v-model="state.date" type="date" />
           </AppFormField>
           <AppFormField :label="t('statements.balance')" name="balance">
-            <UInput
+            <AmountInput
               v-model="state.balance"
-              inputmode="decimal"
-              class="text-right tabular-nums"
               data-testid="statement-balance"
             />
           </AppFormField>

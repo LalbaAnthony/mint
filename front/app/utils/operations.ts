@@ -20,8 +20,8 @@ export function emptyOperationFilters(): OperationFilterState {
   }
 }
 
-function absoluteCents(text: string): number | null {
-  const cents = parseAmountInput(text)
+function absoluteCents(text: string, locale: string): number | null {
+  const cents = parseAmountInput(text, locale)
   return cents === null ? null : Math.abs(cents)
 }
 
@@ -30,6 +30,7 @@ export function operationQuery(
   sorting: OperationSorting,
   page: number,
   pageSize: number,
+  locale: string,
 ): string {
   const params = new URLSearchParams()
   params.set('page', String(page))
@@ -58,11 +59,11 @@ export function operationQuery(
   for (const id of filters.tagIds) {
     params.append('tagIds', id)
   }
-  const min = absoluteCents(filters.minAmount)
+  const min = absoluteCents(filters.minAmount, locale)
   if (min !== null) {
     params.set('minCents', String(min))
   }
-  const max = absoluteCents(filters.maxAmount)
+  const max = absoluteCents(filters.maxAmount, locale)
   if (max !== null) {
     params.set('maxCents', String(max))
   }

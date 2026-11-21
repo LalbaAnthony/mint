@@ -210,7 +210,7 @@ watch(
 )
 
 function draftFields(): ScheduleFields | null {
-  const amount = parseAmountInput(state.amount)
+  const amount = parseAmountInput(state.amount, locale.value)
   if (amount === null) {
     return null
   }
@@ -260,7 +260,7 @@ function sourcePath(field: string): string {
 }
 
 function validate(current: ScheduleFormState): FormError[] {
-  const errors = validator(scheduleFormSchema)(current)
+  const errors = validator(scheduleFormSchema(locale.value))(current)
   const required = (name: string, missing: boolean) =>
     missing ? toFormErrors([{ path: [name], message: 'required' }]) : []
   const fields = draftFields()
@@ -372,17 +372,7 @@ async function submit(): Promise<void> {
           />
         </AppFormField>
         <AppFormField :label="t('schedules.fields.amount')" name="amount">
-          <UInput
-            v-model="state.amount"
-            inputmode="decimal"
-            class="w-full"
-            :ui="{ base: 'text-right tabular-nums' }"
-            data-testid="schedule-amount"
-          >
-            <template #trailing>
-              <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-            </template>
-          </UInput>
+          <AmountInput v-model="state.amount" data-testid="schedule-amount" />
         </AppFormField>
         <div v-if="isTransfer" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <AppFormField

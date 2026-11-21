@@ -88,8 +88,10 @@ const categoryItems = computed<SelectItem<string>[]>(() => {
     )
 })
 
+const schema = computed(() => envelopeFormSchema(locale.value))
+
 async function submit(): Promise<void> {
-  const parsed = envelopeFormSchema.safeParse(state)
+  const parsed = schema.value.safeParse(state)
   if (!parsed.success || state.source === undefined) {
     return
   }
@@ -133,7 +135,7 @@ async function submit(): Promise<void> {
     <template #body>
       <UForm
         :state="state"
-        :validate="validator(envelopeFormSchema)"
+        :validate="validator(schema)"
         :validate-on="['blur']"
         class="flex flex-col gap-4"
         data-testid="envelope-form"
@@ -147,17 +149,7 @@ async function submit(): Promise<void> {
           />
         </AppFormField>
         <AppFormField :label="t('envelopes.fields.amount')" name="amount">
-          <UInput
-            v-model="state.amount"
-            inputmode="decimal"
-            class="w-full"
-            :ui="{ base: 'text-right tabular-nums' }"
-            data-testid="envelope-amount"
-          >
-            <template #trailing>
-              <span class="text-sm text-muted">{{ t('money.symbol') }}</span>
-            </template>
-          </UInput>
+          <AmountInput v-model="state.amount" data-testid="envelope-amount" />
         </AppFormField>
         <AppFormField :label="t('envelopes.fields.source')" name="source">
           <USelect

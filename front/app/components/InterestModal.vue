@@ -87,9 +87,11 @@ async function run(action: () => Promise<unknown>): Promise<void> {
   }
 }
 
+const schema = computed(() => interestRateFormSchema(locale.value))
+
 function record(): Promise<void> {
   const account = props.account
-  const parsed = interestRateFormSchema.safeParse(state)
+  const parsed = schema.value.safeParse(state)
   if (account === null || !parsed.success) {
     return Promise.resolve()
   }
@@ -172,7 +174,7 @@ function remove(rate: InterestRate): Promise<void> {
         <UForm
           v-if="!archived"
           :state="state"
-          :validate="validator(interestRateFormSchema)"
+          :validate="validator(schema)"
           :validate-on="['blur']"
           class="flex flex-wrap items-end gap-2"
           data-testid="interest-rate-form"
@@ -185,12 +187,7 @@ function remove(rate: InterestRate): Promise<void> {
             <UInput v-model="state.effectiveDate" type="date" />
           </AppFormField>
           <AppFormField :label="t('interest.rate')" name="rate">
-            <UInput
-              v-model="state.rate"
-              inputmode="decimal"
-              class="text-right tabular-nums"
-              data-testid="interest-rate"
-            />
+            <RateInput v-model="state.rate" data-testid="interest-rate" />
           </AppFormField>
           <OfflineGuard v-slot="{ offline }">
             <UButton

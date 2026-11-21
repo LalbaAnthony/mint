@@ -26,7 +26,7 @@ import {
   localeSchema,
   newPasswordSchema,
 } from '@mint/shared/schemas/user'
-import { parseAmountInput } from '../app/utils/money'
+import { parseAmountInput, parseRateInput } from '../app/utils/money'
 
 function confirms(state: { password: string; confirmation: string }): boolean {
   return state.password === state.confirmation
@@ -57,35 +57,39 @@ export const changePasswordFormSchema = z
   })
   .refine(confirms, confirmationIssue)
 
-const amountInputSchema = z
-  .string({ error: 'required' })
-  .trim()
-  .min(1, { error: 'required' })
-  .transform((text, context) => {
-    const cents = parseAmountInput(text)
-    if (cents === null) {
-      context.addIssue({ code: 'custom', message: 'invalid_amount' })
-      return z.NEVER
-    }
-    return cents
-  })
-  .pipe(amountCentsSchema)
+function amountInputSchema(locale: string) {
+  return z
+    .string({ error: 'required' })
+    .trim()
+    .min(1, { error: 'required' })
+    .transform((text, context) => {
+      const cents = parseAmountInput(text, locale)
+      if (cents === null) {
+        context.addIssue({ code: 'custom', message: 'invalid_amount' })
+        return z.NEVER
+      }
+      return cents
+    })
+    .pipe(amountCentsSchema)
+}
 
-const optionalAmountInputSchema = z
-  .string({ error: 'invalid_amount' })
-  .trim()
-  .transform((text, context) => {
-    if (text === '') {
-      return null
-    }
-    const cents = parseAmountInput(text)
-    if (cents === null) {
-      context.addIssue({ code: 'custom', message: 'invalid_amount' })
-      return z.NEVER
-    }
-    return cents
-  })
-  .pipe(amountCentsSchema.nullable())
+function optionalAmountInputSchema(locale: string) {
+  return z
+    .string({ error: 'invalid_amount' })
+    .trim()
+    .transform((text, context) => {
+      if (text === '') {
+        return null
+      }
+      const cents = parseAmountInput(text, locale)
+      if (cents === null) {
+        context.addIssue({ code: 'custom', message: 'invalid_amount' })
+        return z.NEVER
+      }
+      return cents
+    })
+    .pipe(amountCentsSchema.nullable())
+}
 
 const optionalLabelInputSchema = z
   .string({ error: 'invalid' })
@@ -93,10 +97,12 @@ const optionalLabelInputSchema = z
   .transform((text) => (text === '' ? null : text))
   .pipe(labelSchema.nullable())
 
-const optionalPositiveAmountInputSchema = optionalAmountInputSchema.refine(
-  (cents) => cents === null || cents > 0,
-  { error: 'amount_not_positive' },
-)
+function optionalPositiveAmountInputSchema(locale: string) {
+  return optionalAmountInputSchema(locale).refine(
+    (cents) => cents === null || cents > 0,
+    { error: 'amount_not_positive' },
+  )
+}
 
 const optionalDateInputSchema = z
   .string({ error: 'invalid_date' })
@@ -104,7 +110,7 @@ const optionalDateInputSchema = z
   .transform((text) => (text === '' ? null : text))
   .pipe(isoDateSchema.nullable())
 
-export function accountFormSchema(today: string) {
+export function accountFormSchema(today: string, locale: string) {
   return z
     .object({
       name: labelSchema,
@@ -112,13 +118,13 @@ export function accountFormSchema(today: string) {
       regulatedProduct: regulatedProductSchema.nullable(),
       usage: accountUsageSchema,
       institution: optionalLabelInputSchema,
-      initialBalance: amountInputSchema,
+      initialBalance: amountInputSchema(locale),
       initialBalanceDate: isoDateSchema.refine((date) => date <= today, {
         error: 'date_in_future',
       }),
-      lowBalanceThreshold: optionalAmountInputSchema,
-      depositCap: optionalPositiveAmountInputSchema,
-      capitalizedInterest: optionalAmountInputSchema.refine(
+      lowBalanceThreshold: optionalAmountInputSchema(locale),
+      depositCap: optionalPositiveAmountInputSchema(locale),
+      capitalizedInterest: optionalAmountInputSchema(locale).refine(
         (cents) => cents === null || cents >= 0,
         { error: 'amount_out_of_range' },
       ),
@@ -149,33 +155,39 @@ export function accountFormSchema(today: string) {
     })
 }
 
-export const interestRateFormSchema = z.object({
-  effectiveDate: isoDateSchema,
-  rate: z
-    .string({ error: 'required' })
-    .trim()
-    .min(1, { error: 'required' })
-    .transform((text, context) => {
-      const rate = Number(text.replace(/\s/g, '').replace(',', '.'))
-      if (!Number.isFinite(rate)) {
-        context.addIssue({ code: 'custom', message: 'invalid_rate' })
-        return z.NEVER
-      }
-      return rate
-    })
-    .pipe(annualRatePctSchema),
-})
+export function interestRateFormSchema(locale: string) {
+  return z.object({
+    effectiveDate: isoDateSchema,
+    rate: z
+      .string({ error: 'required' })
+      .trim()
+      .min(1, { error: 'required' })
+      .transform((text, context) => {
+        const rate = parseRateInput(text, locale)
+        if (rate === null) {
+          context.addIssue({ code: 'custom', message: 'invalid_rate' })
+          return z.NEVER
+        }
+        return rate
+      })
+      .pipe(annualRatePctSchema),
+  })
+}
 
-export const regulatedCapFormSchema = z.object({
-  cap: optionalPositiveAmountInputSchema.refine((cents) => cents !== null, {
-    error: 'required',
-  }),
-})
+export function regulatedCapFormSchema(locale: string) {
+  return z.object({
+    cap: optionalPositiveAmountInputSchema(locale).refine(
+      (cents) => cents !== null,
+      { error: 'required' },
+    ),
+  })
+}
 
-const positiveAmountInputSchema = amountInputSchema.refine(
-  (cents) => cents > 0,
-  { error: 'amount_not_positive' },
-)
+function positiveAmountInputSchema(locale: string) {
+  return amountInputSchema(locale).refine((cents) => cents > 0, {
+    error: 'amount_not_positive',
+  })
+}
 
 const noteInputSchema = z
   .string({ error: 'invalid' })
@@ -186,114 +198,132 @@ const requiredChoiceSchema = z
   .string({ error: 'required' })
   .min(1, { error: 'required' })
 
-export const operationFormSchema = z.object({
-  source: requiredChoiceSchema,
-  date: isoDateSchema,
-  amount: positiveAmountInputSchema,
-  label: labelSchema,
-  note: noteInputSchema,
-})
-
-export const transferFormSchema = z
-  .object({
-    sourceAccountId: requiredChoiceSchema,
-    targetAccountId: requiredChoiceSchema,
+export function operationFormSchema(locale: string) {
+  return z.object({
+    source: requiredChoiceSchema,
     date: isoDateSchema,
-    amount: positiveAmountInputSchema,
+    amount: positiveAmountInputSchema(locale),
     label: labelSchema,
     note: noteInputSchema,
   })
-  .refine((transfer) => transfer.sourceAccountId !== transfer.targetAccountId, {
-    error: 'same_account',
-    path: ['targetAccountId'],
-  })
+}
 
-export const occurrenceFormSchema = z
-  .object({
-    amount: z.string({ error: 'invalid_amount' }).trim(),
-    effectiveDate: z.string({ error: 'invalid_date' }).trim(),
-  })
-  .superRefine((occurrence, context) => {
-    if (occurrence.amount === '' && occurrence.effectiveDate === '') {
-      context.addIssue({
-        code: 'custom',
-        message: 'override_empty',
-        path: ['amount'],
-      })
-    }
-    if (occurrence.amount !== '') {
-      const cents = parseAmountInput(occurrence.amount)
-      if (cents === null || cents <= 0) {
+export function transferFormSchema(locale: string) {
+  return z
+    .object({
+      sourceAccountId: requiredChoiceSchema,
+      targetAccountId: requiredChoiceSchema,
+      date: isoDateSchema,
+      amount: positiveAmountInputSchema(locale),
+      label: labelSchema,
+      note: noteInputSchema,
+    })
+    .refine(
+      (transfer) => transfer.sourceAccountId !== transfer.targetAccountId,
+      { error: 'same_account', path: ['targetAccountId'] },
+    )
+}
+
+export function occurrenceFormSchema(locale: string) {
+  return z
+    .object({
+      amount: z.string({ error: 'invalid_amount' }).trim(),
+      effectiveDate: z.string({ error: 'invalid_date' }).trim(),
+    })
+    .superRefine((occurrence, context) => {
+      if (occurrence.amount === '' && occurrence.effectiveDate === '') {
         context.addIssue({
           code: 'custom',
-          message: 'amount_not_positive',
+          message: 'override_empty',
           path: ['amount'],
         })
       }
-    }
+      if (occurrence.amount !== '') {
+        const cents = parseAmountInput(occurrence.amount, locale)
+        if (cents === null || cents <= 0) {
+          context.addIssue({
+            code: 'custom',
+            message: 'amount_not_positive',
+            path: ['amount'],
+          })
+        }
+      }
+    })
+}
+
+export function envelopeFormSchema(locale: string) {
+  return z.object({
+    label: labelSchema,
+    amount: positiveAmountInputSchema(locale),
+    source: requiredChoiceSchema,
+    categoryIds: z
+      .array(z.string(), { error: 'required' })
+      .min(1, { error: 'required' }),
   })
+}
 
-export const envelopeFormSchema = z.object({
-  label: labelSchema,
-  amount: positiveAmountInputSchema,
-  source: requiredChoiceSchema,
-  categoryIds: z
-    .array(z.string(), { error: 'required' })
-    .min(1, { error: 'required' }),
-})
-
-export const envelopeMonthAmountFormSchema = z.object({
-  amount: amountInputSchema.refine((cents) => cents >= 0, {
-    error: 'amount_out_of_range',
-  }),
-})
-
-export const scheduleFormSchema = z.object({
-  label: labelSchema,
-  amount: positiveAmountInputSchema,
-  interval: z
-    .number({ error: 'invalid' })
-    .int({ error: 'invalid' })
-    .min(1, { error: 'interval_out_of_range' })
-    .max(maxScheduleInterval, { error: 'interval_out_of_range' }),
-  startDate: isoDateSchema,
-  note: noteInputSchema,
-})
-
-export const ruleFormSchema = z
-  .object({
-    pattern: z
-      .string({ error: 'required' })
-      .trim()
-      .min(1, { error: 'required' })
-      .max(rulePatternMaxLength, { error: 'too_long' }),
-    amountMin: optionalAmountInputSchema,
-    amountMax: optionalAmountInputSchema,
-    action: z.enum(['category', 'transfer']),
-    categoryId: z.string().optional(),
-    transferAccountId: z.string().optional(),
+export function envelopeMonthAmountFormSchema(locale: string) {
+  return z.object({
+    amount: amountInputSchema(locale).refine((cents) => cents >= 0, {
+      error: 'amount_out_of_range',
+    }),
   })
-  .refine(
-    (rule) =>
-      rule.action === 'category'
-        ? rule.categoryId !== undefined
-        : rule.transferAccountId !== undefined,
-    { error: 'required', path: ['categoryId'] },
-  )
+}
+
+export function scheduleFormSchema(locale: string) {
+  return z.object({
+    label: labelSchema,
+    amount: positiveAmountInputSchema(locale),
+    interval: z
+      .number({ error: 'invalid' })
+      .int({ error: 'invalid' })
+      .min(1, { error: 'interval_out_of_range' })
+      .max(maxScheduleInterval, { error: 'interval_out_of_range' }),
+    startDate: isoDateSchema,
+    note: noteInputSchema,
+  })
+}
+
+export function ruleFormSchema(locale: string) {
+  return z
+    .object({
+      pattern: z
+        .string({ error: 'required' })
+        .trim()
+        .min(1, { error: 'required' })
+        .max(rulePatternMaxLength, { error: 'too_long' }),
+      amountMin: optionalAmountInputSchema(locale),
+      amountMax: optionalAmountInputSchema(locale),
+      action: z.enum(['category', 'transfer']),
+      categoryId: z.string().optional(),
+      transferAccountId: z.string().optional(),
+    })
+    .refine(
+      (rule) =>
+        rule.action === 'category'
+          ? rule.categoryId !== undefined
+          : rule.transferAccountId !== undefined,
+      { error: 'required', path: ['categoryId'] },
+    )
+}
 
 export const importFileFormSchema = z.object({
   accountId: z.string({ error: 'required' }).min(1, { error: 'required' }),
 })
 
-export const statementFormSchema = z.object({
-  date: isoDateSchema,
-  balance: amountInputSchema,
-})
+export function statementFormSchema(locale: string) {
+  return z.object({
+    date: isoDateSchema,
+    balance: amountInputSchema(locale),
+  })
+}
 
-export const valuationFormSchema = z.object({
-  date: isoDateSchema,
-  value: amountInputSchema,
-})
+export function valuationFormSchema(locale: string) {
+  return z.object({
+    date: isoDateSchema,
+    value: amountInputSchema(locale),
+  })
+}
 
 export const passkeyFormSchema = z.object({
   name: passkeyNameSchema,

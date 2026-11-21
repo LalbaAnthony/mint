@@ -122,12 +122,14 @@ const transferItems = computed<SelectItem<string>[]>(() =>
 )
 
 function centsOf(text: string): number | null {
-  const cents = parseAmountInput(text)
+  const cents = parseAmountInput(text, locale.value)
   return cents === null ? null : Math.abs(cents)
 }
 
+const schema = computed(() => ruleFormSchema(locale.value))
+
 async function submit(): Promise<void> {
-  if (!ruleFormSchema.safeParse(state).success) {
+  if (!schema.value.safeParse(state).success) {
     return
   }
   const body: CreateRuleRequest = {
@@ -169,7 +171,7 @@ async function submit(): Promise<void> {
     <template #body>
       <UForm
         :state="state"
-        :validate="validator(ruleFormSchema)"
+        :validate="validator(schema)"
         :validate-on="['blur']"
         class="flex flex-col gap-4"
         data-testid="rule-form"
@@ -212,22 +214,14 @@ async function submit(): Promise<void> {
             :hint="t('common.optional')"
             name="amountMin"
           >
-            <UInput
-              v-model="state.amountMin"
-              inputmode="decimal"
-              class="w-full text-right tabular-nums"
-            />
+            <AmountInput v-model="state.amountMin" />
           </AppFormField>
           <AppFormField
             :label="t('rules.fields.amountMax')"
             :hint="t('common.optional')"
             name="amountMax"
           >
-            <UInput
-              v-model="state.amountMax"
-              inputmode="decimal"
-              class="w-full text-right tabular-nums"
-            />
+            <AmountInput v-model="state.amountMax" />
           </AppFormField>
         </div>
         <URadioGroup

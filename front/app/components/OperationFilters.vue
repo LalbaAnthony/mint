@@ -21,9 +21,20 @@ import type {
 const props = defineProps<OperationFiltersProps>()
 const filters = defineModel<OperationFilterState>({ required: true })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const anyValue = 'any'
+
+const blurredAmounts = reactive({ minAmount: false, maxAmount: false })
+
+function amountError(field: 'minAmount' | 'maxAmount'): string | undefined {
+  const text = filters.value[field]
+  const unreadable =
+    blurredAmounts[field] &&
+    text.trim() !== '' &&
+    parseAmountInput(text, locale.value) === null
+  return unreadable ? t('validation.invalid_amount') : undefined
+}
 
 const accountItems = computed<SelectItem<string>[]>(() =>
   props.accounts.map((account) => ({ label: account.name, value: account.id })),
@@ -123,20 +134,26 @@ function reset(): void {
       <AppFormField :label="t('operations.filters.to')" name="to">
         <UInput v-model="filters.to" type="date" class="w-full" />
       </AppFormField>
-      <AppFormField :label="t('operations.filters.minAmount')" name="minAmount">
-        <UInput
+      <AppFormField
+        :label="t('operations.filters.minAmount')"
+        name="minAmount"
+        :error="amountError('minAmount')"
+      >
+        <AmountInput
           v-model="filters.minAmount"
-          inputmode="decimal"
-          class="w-full"
-          :ui="{ base: 'text-right tabular-nums' }"
+          data-testid="operation-filter-min-amount"
+          @blur="blurredAmounts.minAmount = true"
         />
       </AppFormField>
-      <AppFormField :label="t('operations.filters.maxAmount')" name="maxAmount">
-        <UInput
+      <AppFormField
+        :label="t('operations.filters.maxAmount')"
+        name="maxAmount"
+        :error="amountError('maxAmount')"
+      >
+        <AmountInput
           v-model="filters.maxAmount"
-          inputmode="decimal"
-          class="w-full"
-          :ui="{ base: 'text-right tabular-nums' }"
+          data-testid="operation-filter-max-amount"
+          @blur="blurredAmounts.maxAmount = true"
         />
       </AppFormField>
       <AppFormField :label="t('operations.filters.accounts')" name="accountIds">

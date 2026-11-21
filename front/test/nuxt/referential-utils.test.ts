@@ -29,20 +29,26 @@ describe('parseAmountInput (OPE-08)', () => {
     ['+0,07', 7],
     ['0', 0],
   ])('reads %s as %i cents', (text, cents) => {
-    expect(parseAmountInput(text)).toBe(cents)
+    expect(parseAmountInput(text, 'fr')).toBe(cents)
   })
 
   it.each(['', 'abc', '12,345', '1,234.56', '12.', '--3'])(
     'refuses %j',
     (text) => {
-      expect(parseAmountInput(text)).toBeNull()
+      expect(parseAmountInput(text, 'fr')).toBeNull()
     },
   )
 
   it('round-trips the input format of each locale', () => {
-    expect(parseAmountInput(formatAmountInput(-123_456, 'fr'))).toBe(-123_456)
-    expect(parseAmountInput(formatAmountInput(123_456, 'en'))).toBe(123_456)
-    expect(formatAmountInput(200_000, 'fr')).toBe('2000,00')
+    expect(parseAmountInput(formatAmountInput(-123_456, 'fr'), 'fr')).toBe(
+      -123_456,
+    )
+    expect(parseAmountInput(formatAmountInput(123_456, 'en'), 'en')).toBe(
+      123_456,
+    )
+    expect(formatAmountInput(200_000, 'fr')).toBe(
+      new Intl.NumberFormat('fr', { minimumFractionDigits: 2 }).format(2000),
+    )
   })
 })
 

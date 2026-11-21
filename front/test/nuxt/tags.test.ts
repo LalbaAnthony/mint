@@ -163,6 +163,7 @@ describe('tags (CAT-09)', () => {
         { sort: 'date', order: 'desc' },
         1,
         50,
+        'fr',
       ),
     ).toBe(
       `page=1&pageSize=50&sort=date&order=desc&tagIds=${ids.holidays}&tagIds=${worksTag.id}`,

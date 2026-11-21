@@ -10,7 +10,7 @@ import type { OperationFilterState, OperationSorting } from '~~/types/planning'
 
 const pageSize = 50
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const toast = useToast()
 const { errorMessage } = useFormValidation()
 const { formatDate } = useFormatters()
@@ -54,7 +54,7 @@ async function load(): Promise<void> {
   }
   try {
     result.value = await apiGet(
-      `/operations?${operationQuery(filters.value, sorting.value, page.value, pageSize)}`,
+      `/operations?${operationQuery(filters.value, sorting.value, page.value, pageSize, locale.value)}`,
       operationListResponseSchema,
     )
     const shown = new Set(result.value.items.map((item) => item.id))
