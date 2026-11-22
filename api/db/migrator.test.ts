@@ -85,9 +85,10 @@ describe('createMigrator', () => {
     await database.drop()
   })
 
-  async function isCitextInstalled(): Promise<boolean> {
+  async function isExtensionInstalled(extension: string): Promise<boolean> {
     const [rows] = await database.sequelize.query(
-      "SELECT 1 FROM pg_extension WHERE extname = 'citext'",
+      'SELECT 1 FROM pg_extension WHERE extname = :extension',
+      { replacements: { extension } },
     )
     return rows.length === 1
   }
@@ -115,7 +116,8 @@ describe('createMigrator', () => {
     expect((await migrator.executed()).map(({ name }) => name)).toEqual(
       migrations.map(({ name }) => name),
     )
-    expect(await isCitextInstalled()).toBe(true)
+    expect(await isExtensionInstalled('citext')).toBe(true)
+    expect(await isExtensionInstalled('unaccent')).toBe(true)
     expect(await listTables()).toEqual([
       'account_statements',
       'accounts',
@@ -152,7 +154,8 @@ describe('createMigrator', () => {
     await migrator.down({ to: 0 })
 
     expect(await migrator.executed()).toEqual([])
-    expect(await isCitextInstalled()).toBe(false)
+    expect(await isExtensionInstalled('citext')).toBe(false)
+    expect(await isExtensionInstalled('unaccent')).toBe(false)
     expect(await listTables()).toEqual([])
   })
 })

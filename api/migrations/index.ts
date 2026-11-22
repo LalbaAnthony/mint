@@ -27,6 +27,7 @@ import * as addCreatedOn from './0025-add-created-on.js'
 import * as createEnvelopeMonthOverrides from './0026-create-envelope-month-overrides.js'
 import * as addUserTheme from './0027-add-user-theme.js'
 import * as addUserDefaultAccount from './0028-add-user-default-account.js'
+import * as enableUnaccent from './0029-enable-unaccent.js'
 
 export const migrations: Migration[] = [
   { name: '0001-enable-citext', ...enableCitext },
@@ -60,4 +61,5 @@ export const migrations: Migration[] = [
   },
   { name: '0027-add-user-theme', ...addUserTheme },
   { name: '0028-add-user-default-account', ...addUserDefaultAccount },
+  { name: '0029-enable-unaccent', ...enableUnaccent },
 ]

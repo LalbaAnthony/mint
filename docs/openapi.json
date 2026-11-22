@@ -3043,6 +3043,49 @@
           "balanceCents": { "type": "integer" }
         },
         "required": ["month", "real", "planned", "balanceCents"]
+      },
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Account" }
+          },
+          "operations": { "$ref": "#/components/schemas/SearchOperations" },
+          "schedules": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Schedule" }
+          },
+          "envelopes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SearchEnvelope" }
+          }
+        },
+        "required": ["accounts", "operations", "schedules", "envelopes"]
+      },
+      "SearchOperations": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Operation" }
+          },
+          "total": { "type": "integer" }
+        },
+        "required": ["items", "total"]
+      },
+      "SearchEnvelope": {
+        "type": "object",
+        "properties": {
+          "envelope": { "$ref": "#/components/schemas/Envelope" },
+          "status": {
+            "allOf": [
+              { "$ref": "#/components/schemas/EnvelopeMonthStatus" },
+              { "type": ["object", "null"] }
+            ]
+          }
+        },
+        "required": ["envelope", "status"]
       }
     },
     "parameters": {}
@@ -10140,6 +10183,78 @@
           },
           "400": {
             "description": "Invalid horizon",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          },
+          "401": {
+            "description": "No valid session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "summary": "Search the accounts, operations, schedules and envelopes by text, case and accent insensitive, or by exact amount, with the values of their views; operations come in batches (RCH-01 to RCH-07)",
+        "tags": ["search"],
+        "security": [{ "session": [] }],
+        "parameters": [
+          {
+            "schema": { "type": "string", "minLength": 2, "maxLength": 100 },
+            "required": true,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "maximum": 99999999999
+            },
+            "required": false,
+            "name": "amountCents",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "operationsOffset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "operationsLimit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching accounts, one batch of matching operations with their total, matching schedules and envelopes",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SearchResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

@@ -166,6 +166,7 @@ import {
   skipOccurrenceRoute,
   updateScheduleRoute,
 } from './schedules.js'
+import { searchRoute } from './search.js'
 
 export const apiRoutes: ApiRoute[] = [
   healthRoute,
@@ -296,4 +297,5 @@ export const apiRoutes: ApiRoute[] = [
   dashboardSummaryRoute,
   breakdownRoute,
   monthlyReportRoute,
+  searchRoute,
 ]

@@ -9,7 +9,7 @@ import type { CategoryModel, TransactionAttributes } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
 import { toOperations } from './operations.js'
 
-function escapeLike(text: string): string {
+export function escapeLike(text: string): string {
   return text.replace(/[\\%_]/g, (character) => `\\${character}`)
 }
 

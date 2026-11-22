@@ -575,6 +575,19 @@ const scenarios: Record<string, Scenario> = {
     )
     expect(tagged.body.items).toEqual([])
   },
+  'get /search': async (actors) => {
+    const bob = await actors.aliceClient.get('/search?q=Bob')
+    expect(bob.status).toBe(200)
+    expect(bob.body).toEqual({
+      accounts: [],
+      operations: { items: [], total: 0 },
+      schedules: [],
+      envelopes: [],
+    })
+    await ownListOnly('/search?q=Bob%20tag&amountCents=1000')(actors)
+    await ownListOnly('/search?q=Logement&amountCents=5000')(actors)
+    await ownListOnly('/search?q=Courses')(actors)
+  },
   'post /operations': async (actors) => {
     const aliceAccount = await createAliceAccount(actors)
     const { accountId, paymentMethodId, categoryId } = actors.bobResources
