@@ -4,6 +4,7 @@ import type { SkeletonTextProps } from '~~/types/skeleton'
 const props = withDefaults(defineProps<SkeletonTextProps>(), {
   width: 'md',
   lines: 1,
+  align: 'start',
 })
 
 const lineIndexes = computed(() => skeletonIndexes(props.lines))
@@ -21,6 +22,7 @@ function widthOf(line: number): string {
       v-for="line in lineIndexes"
       :key="line"
       class="flex h-[1lh] items-center"
+      :class="align === 'end' ? 'justify-end' : ''"
     >
       <SkeletonBlock
         shape="text"

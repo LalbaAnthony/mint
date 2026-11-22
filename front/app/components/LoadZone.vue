@@ -11,7 +11,11 @@ function retry(): void {
 </script>
 
 <template>
-  <SkeletonZone v-if="state.phase === 'skeleton'" v-bind="$attrs">
+  <SkeletonZone
+    v-if="state.phase === 'pending' || state.phase === 'skeleton'"
+    v-bind="$attrs"
+    :class="state.phase === 'pending' ? 'invisible' : ''"
+  >
     <slot name="skeleton" />
   </SkeletonZone>
   <slot v-else-if="state.phase === 'error'" name="error" :retry="retry">

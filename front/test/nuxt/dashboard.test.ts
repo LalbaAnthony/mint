@@ -19,7 +19,7 @@ import { monthlyOption } from '~/charts/monthly'
 import { toSrgbHex } from '~/charts/theme'
 import DashboardPage from '~/pages/index.vue'
 import type { ChartTheme } from '~~/types/forecast'
-import { installFakeApi } from '../fake-api'
+import { apiFailure, installFakeApi } from '../fake-api'
 import { euros, ids, percents, referentialHandlers } from '../planning-fixtures'
 import { setDefaultAccount } from '../session'
 import { mountInApp } from '../app'
@@ -634,5 +634,209 @@ describe('masked dashboard (DSH-05, CHG-45)', () => {
         },
       })
     }
+  })
+})
+
+function pending<T>() {
+  let resolve: (value: T) => void = () => undefined
+  const promise = new Promise<T>((onResolve) => {
+    resolve = onResolve
+  })
+  return { promise, resolve }
+}
+
+describe('dashboard loading skeletons (CHG-47 to CHG-49, ADR 0036)', () => {
+  async function mountDashboard() {
+    const wrapper = await mountInApp(DashboardPage, {
+      route: '/',
+      global: { stubs: { Echarts: true } },
+    })
+    mounted.push(wrapper)
+    return wrapper
+  }
+
+  it('shows each section skeleton until its own answer arrives', async () => {
+    const summary = pending<unknown>()
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /forecast/curve?horizonMonths=3': () => curve(),
+      ...dashboardHandlers(),
+      'GET /dashboard/summary': () => summary.promise,
+    })
+
+    const wrapper = await mountDashboard()
+
+    await vi.waitFor(() => {
+      expect(
+        wrapper.find('[data-testid="dashboard-banner-skeleton"]').exists(),
+      ).toBe(true)
+      expect(wrapper.find('[data-testid="balance-curve-chart"]').exists()).toBe(
+        true,
+      )
+    })
+    const zone = wrapper
+      .get('[data-testid="dashboard-banner-skeleton"]')
+      .element.closest('[role="status"]')
+    expect(zone?.getAttribute('aria-busy')).toBe('true')
+    expect(zone?.textContent).toContain('Chargement...')
+    expect(
+      wrapper.get('[data-testid="dashboard-banner-skeleton"]').text(),
+    ).toContain('Patrimoine total')
+
+    summary.resolve(dashboardHandlers()['GET /dashboard/summary']())
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="dashboard-wealth"]').exists()).toBe(
+        true,
+      )
+    })
+    expect(
+      wrapper.find('[data-testid="dashboard-banner-skeleton"]').exists(),
+    ).toBe(false)
+  })
+
+  it('shows the scope and curve skeletons on the first load of the accounts', async () => {
+    useReferentialsStore().accounts = []
+    const overview = pending<unknown>()
+    const handlers = referentialHandlers()
+    const overviewHandler = handlers['GET /accounts/overview']
+    installFakeApi(fetchMock, {
+      ...handlers,
+      'GET /accounts/overview': () => overview.promise,
+      'GET /forecast/curve?horizonMonths=3': () => curve(),
+      ...dashboardHandlers(),
+    })
+
+    const wrapper = await mountDashboard()
+
+    await vi.waitFor(() => {
+      expect(
+        wrapper.find('[data-testid="forecast-scope-skeleton"]').exists(),
+      ).toBe(true)
+      expect(
+        wrapper.find('[data-testid="balance-curve-skeleton"]').exists(),
+      ).toBe(true)
+    })
+
+    overview.resolve(
+      overviewHandler?.({
+        method: 'GET',
+        path: '',
+        body: undefined,
+        headers: {},
+      }),
+    )
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="balance-curve-chart"]').exists()).toBe(
+        true,
+      )
+    })
+    expect(wrapper.find('[data-testid="forecast-account"]').exists()).toBe(true)
+    expect(
+      wrapper.find('[data-testid="forecast-scope-skeleton"]').exists(),
+    ).toBe(false)
+  })
+
+  it('replaces a failed section with a retry state', async () => {
+    let attempts = 0
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /forecast/curve?horizonMonths=3': () => curve(),
+      ...dashboardHandlers(),
+      'GET /dashboard/summary': () => {
+        attempts += 1
+        return attempts === 1
+          ? apiFailure(500, { error: 'internal' })
+          : dashboardHandlers()['GET /dashboard/summary']()
+      },
+    })
+
+    const wrapper = await mountDashboard()
+
+    await vi.waitFor(() => {
+      expect(
+        wrapper.find('[data-testid="dashboard-banner-error"]').exists(),
+      ).toBe(true)
+    })
+    expect(
+      wrapper.get('[data-testid="dashboard-banner-error"]').text(),
+    ).toContain('Chargement impossible')
+    expect(wrapper.find('[data-testid="balance-curve-chart"]').exists()).toBe(
+      true,
+    )
+
+    await wrapper.get('[data-testid="load-error-retry"]').trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="dashboard-wealth"]').exists()).toBe(
+        true,
+      )
+    })
+    expect(attempts).toBe(2)
+  })
+
+  it('keeps the sections in place during a background refresh', async () => {
+    const refreshed = pending<unknown>()
+    let curveCalls = 0
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /forecast/curve?horizonMonths=3': () => {
+        curveCalls += 1
+        return curveCalls === 1 ? curve() : refreshed.promise
+      },
+      ...dashboardHandlers(),
+    })
+    const wrapper = await mountDashboard()
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="balance-curve-chart"]').exists()).toBe(
+        true,
+      )
+    })
+
+    useOperationEditorStore().savedVersion += 1
+    await vi.waitFor(() => {
+      expect(curveCalls).toBe(2)
+    })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+
+    expect(wrapper.find('[data-testid="balance-curve-chart"]').exists()).toBe(
+      true,
+    )
+    expect(wrapper.find('[data-testid="skeleton-zone"]').exists()).toBe(false)
+    refreshed.resolve(curve())
+  })
+
+  it('shows the skeleton of the sections whose context changes', async () => {
+    const curveSix = pending<unknown>()
+    const monthlySix = pending<unknown>()
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /forecast/curve?horizonMonths=3': () => curve(),
+      'GET /forecast/curve?horizonMonths=6': () => curveSix.promise,
+      ...dashboardHandlers(),
+      'GET /dashboard/monthly?horizonMonths=6': () => monthlySix.promise,
+    })
+    const wrapper = await mountDashboard()
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="monthly-chart"]').exists()).toBe(true)
+    })
+
+    useForecastViewStore().horizonMonths = 6
+    await vi.waitFor(() => {
+      expect(
+        wrapper.find('[data-testid="balance-curve-skeleton"]').exists(),
+      ).toBe(true)
+      expect(wrapper.find('[data-testid="monthly-skeleton"]').exists()).toBe(
+        true,
+      )
+    })
+    expect(wrapper.find('[data-testid="forecast-account"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="breakdown-chart"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="dashboard-wealth"]').exists()).toBe(true)
+
+    curveSix.resolve(curve())
+    monthlySix.resolve(monthlyFixture())
+    await vi.waitFor(() => {
+      expect(wrapper.find('[data-testid="monthly-chart"]').exists()).toBe(true)
+    })
+    useForecastViewStore().horizonMonths = 3
   })
 })

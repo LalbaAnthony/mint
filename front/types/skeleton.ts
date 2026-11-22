@@ -8,9 +8,12 @@ export interface SkeletonBlockProps {
 
 export type SkeletonWidth = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
 
+export type SkeletonTextAlign = 'start' | 'end'
+
 export interface SkeletonTextProps {
   width?: SkeletonWidth
   lines?: number
+  align?: SkeletonTextAlign
 }
 
 export interface SkeletonAmountProps {
@@ -120,7 +123,7 @@ export type LoadErrorEmits = {
   retry: []
 }
 
-export interface LazyComponent {
-  component: Component
-  load: AsyncComponentLoader
+export interface LazyComponent<T extends Component = Component> {
+  component: T
+  load: AsyncComponentLoader<T>
 }

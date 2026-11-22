@@ -2,13 +2,13 @@ import { defineAsyncComponent } from 'vue'
 import type { AsyncComponentLoader, Component } from 'vue'
 import type { LazyComponent } from '~~/types/skeleton'
 
-export function lazyComponent(
-  loader: AsyncComponentLoader,
+export function lazyComponent<T extends Component>(
+  loader: AsyncComponentLoader<T>,
   loadingComponent: Component,
-): LazyComponent {
-  let request: ReturnType<AsyncComponentLoader> | null = null
+): LazyComponent<T> {
+  let request: ReturnType<AsyncComponentLoader<T>> | null = null
 
-  function load(): ReturnType<AsyncComponentLoader> {
+  function load(): ReturnType<AsyncComponentLoader<T>> {
     if (request === null) {
       const pending = loader()
       request = pending
@@ -22,7 +22,7 @@ export function lazyComponent(
   }
 
   return {
-    component: defineAsyncComponent({
+    component: defineAsyncComponent<T>({
       loader: load,
       loadingComponent,
       delay: 0,

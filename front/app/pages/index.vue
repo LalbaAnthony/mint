@@ -16,7 +16,13 @@ import type {
   MonthlyReportResponse,
 } from '@mint/shared/types/dashboard'
 import type { BalanceCurveResponse } from '@mint/shared/types/forecast'
+import { balanceCurveChart, breakdownChart, monthlyChart } from '~/charts/lazy'
 import type { BreakdownPeriodMode } from '~~/types/dashboard'
+import type { LoadMode } from '~~/types/skeleton'
+
+const CurveChart = balanceCurveChart.component
+const GroupBreakdownChart = breakdownChart.component
+const MonthlyReportChart = monthlyChart.component
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -27,11 +33,15 @@ const view = useForecastViewStore()
 const editor = useOperationEditorStore()
 
 const curve = ref<BalanceCurveResponse | null>(null)
-const ready = ref(false)
 
 function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
+
+const summaryState = useLoadState({ onError: notifyFailure })
+const curveState = useLoadState({ onError: notifyFailure })
+const breakdownState = useLoadState({ onError: notifyFailure })
+const monthlyState = useLoadState({ onError: notifyFailure })
 
 async function loadCurve(): Promise<void> {
   if (referentials.activeAccounts.length === 0) {
@@ -39,10 +49,14 @@ async function loadCurve(): Promise<void> {
     return
   }
   try {
-    curve.value = await apiGet(
-      `/forecast/curve?${view.scopeQuery(view.dashboardAccountId)}`,
-      balanceCurveResponseSchema,
-    )
+    const [response] = await Promise.all([
+      apiGet(
+        `/forecast/curve?${view.scopeQuery(view.dashboardAccountId)}`,
+        balanceCurveResponseSchema,
+      ),
+      balanceCurveChart.load(),
+    ])
+    curve.value = response
   } catch (error) {
     if (
       error instanceof ApiError &&
@@ -52,8 +66,13 @@ async function loadCurve(): Promise<void> {
       view.dashboardAccountId = null
       return
     }
-    notifyFailure(error)
+    throw error
   }
+}
+
+async function loadCurveSection(): Promise<void> {
+  await referentials.load()
+  await loadCurve()
 }
 
 const summary = ref<DashboardSummary | null>(null)
@@ -74,55 +93,52 @@ async function loadBreakdown(): Promise<void> {
   if (periodMode.value === 'custom' && customFrom.value > customTo.value) {
     return
   }
-  try {
-    breakdown.value = await apiGet(
+  const [response] = await Promise.all([
+    apiGet(
       `/dashboard/breakdown?${periodQuery.value}`,
       breakdownResponseSchema,
-    )
-  } catch (error) {
-    notifyFailure(error)
-  }
+    ),
+    breakdownChart.load(),
+  ])
+  breakdown.value = response
 }
 
 async function loadMonthly(): Promise<void> {
-  try {
-    monthly.value = await apiGet(
+  const [response] = await Promise.all([
+    apiGet(
       `/dashboard/monthly?horizonMonths=${view.horizonMonths}`,
       monthlyReportResponseSchema,
-    )
-  } catch (error) {
-    notifyFailure(error)
-  }
+    ),
+    monthlyChart.load(),
+  ])
+  monthly.value = response
 }
 
 async function loadSummary(): Promise<void> {
-  try {
-    summary.value = await apiGet('/dashboard/summary', dashboardSummarySchema)
-  } catch (error) {
-    notifyFailure(error)
-  }
+  summary.value = await apiGet('/dashboard/summary', dashboardSummarySchema)
 }
 
-async function load(): Promise<void> {
-  try {
-    await referentials.load()
-  } catch (error) {
-    notifyFailure(error)
-  }
-  await Promise.all([
-    loadCurve(),
-    loadSummary(),
-    loadBreakdown(),
-    loadMonthly(),
-  ])
-  ready.value = true
+function loadSections(mode: LoadMode): void {
+  void summaryState.run(loadSummary, mode)
+  void curveState.run(loadCurveSection, mode)
+  void breakdownState.run(loadBreakdown, mode)
+  void monthlyState.run(loadMonthly, mode)
 }
 
-onMounted(load)
-watch(() => editor.savedVersion, load)
-watch(() => [view.dashboardAccountId, view.horizonMonths], loadCurve)
-watch(() => view.horizonMonths, loadMonthly)
-watch(periodQuery, loadBreakdown)
+onMounted(() => loadSections('context'))
+watch(
+  () => editor.savedVersion,
+  () => loadSections('background'),
+)
+watch(
+  () => [view.dashboardAccountId, view.horizonMonths],
+  () => curveState.run(loadCurve),
+)
+watch(
+  () => view.horizonMonths,
+  () => monthlyState.run(loadMonthly),
+)
+watch(periodQuery, () => breakdownState.run(loadBreakdown))
 
 const monthTitle = computed(() =>
   new Intl.DateTimeFormat(locale.value, {
@@ -146,8 +162,18 @@ const indicators = computed(() => curve.value?.indicators ?? null)
 
 <template>
   <ViewPanel :title="t('navigation.home')">
-    <div v-if="ready" class="flex flex-col gap-4">
-      <DashboardBanner v-if="summary !== null" :summary="summary" />
+    <div class="flex flex-col gap-4">
+      <LoadZone :state="summaryState">
+        <template #skeleton>
+          <DashboardBannerSkeleton />
+        </template>
+        <template #error="{ retry }">
+          <UCard data-testid="dashboard-banner-error">
+            <LoadError @retry="retry" />
+          </UCard>
+        </template>
+        <DashboardBanner v-if="summary !== null" :summary="summary" />
+      </LoadZone>
       <UCard data-testid="dashboard-balance">
         <template #header>
           <div class="flex flex-col gap-3">
@@ -158,72 +184,84 @@ const indicators = computed(() => curve.value?.indicators ?? null)
               v-if="referentials.activeAccounts.length > 0"
               v-model:account-id="view.dashboardAccountId"
             />
+            <ForecastScopeControlsSkeleton
+              v-else-if="!curveState.settled"
+              :class="curveState.phase === 'pending' ? 'invisible' : ''"
+            />
           </div>
         </template>
-        <EmptyState
-          v-if="referentials.activeAccounts.length === 0"
-          :icon="icons.accounts"
-          :title="t('forecast.noAccountTitle')"
-          :description="t('forecast.noAccountText')"
-        >
-          <UButton
-            :label="t('forecast.goToAccounts')"
+        <LoadZone :state="curveState">
+          <template #skeleton>
+            <div class="flex flex-col gap-3">
+              <SkeletonText width="xl" class="text-sm" />
+              <BalanceCurveChartSkeleton />
+            </div>
+          </template>
+          <EmptyState
+            v-if="referentials.activeAccounts.length === 0"
             :icon="icons.accounts"
-            to="/accounts"
-            color="primary"
-            variant="soft"
-          />
-        </EmptyState>
-        <div v-else-if="curve !== null" class="flex flex-col gap-3">
-          <ul
-            v-if="indicators !== null"
-            class="flex flex-col gap-1 text-sm text-muted"
-            data-testid="dashboard-indicators"
+            :title="t('forecast.noAccountTitle')"
+            :description="t('forecast.noAccountText')"
           >
-            <li
-              class="flex flex-wrap items-center gap-1"
-              data-testid="dashboard-minimum"
+            <UButton
+              :label="t('forecast.goToAccounts')"
+              :icon="icons.accounts"
+              to="/accounts"
+              color="primary"
+              variant="soft"
+            />
+          </EmptyState>
+          <div v-else-if="curve !== null" class="flex flex-col gap-3">
+            <ul
+              v-if="indicators !== null"
+              class="flex flex-col gap-1 text-sm text-muted"
+              data-testid="dashboard-indicators"
             >
-              {{
-                t('forecast.minimumOn', {
-                  date: formatDate(indicators.minBalanceDate),
-                })
-              }}
-              <MoneyAmount
-                :cents="indicators.minBalanceCents"
-                :threshold="curve.thresholdCents"
-                concealable
-              />
-            </li>
-            <li
-              v-if="indicators.firstBelowThresholdDate !== null"
-              class="flex items-center gap-1 text-warning"
-              data-testid="dashboard-below-threshold"
-            >
-              <UIcon :name="icons.belowThreshold" class="size-4 shrink-0" />
-              {{
-                t('forecast.belowThresholdFrom', {
-                  date: formatDate(indicators.firstBelowThresholdDate),
-                })
-              }}
-            </li>
-            <li
-              v-if="indicators.firstNegativeDate !== null"
-              class="flex items-center gap-1 text-error"
-              data-testid="dashboard-negative"
-            >
-              <UIcon :name="icons.negative" class="size-4 shrink-0" />
-              {{
-                t('forecast.negativeFrom', {
-                  date: formatDate(indicators.firstNegativeDate),
-                })
-              }}
-            </li>
-          </ul>
-          <LazyBalanceCurveChart :curve="curve" />
-        </div>
+              <li
+                class="flex flex-wrap items-center gap-1"
+                data-testid="dashboard-minimum"
+              >
+                {{
+                  t('forecast.minimumOn', {
+                    date: formatDate(indicators.minBalanceDate),
+                  })
+                }}
+                <MoneyAmount
+                  :cents="indicators.minBalanceCents"
+                  :threshold="curve.thresholdCents"
+                  concealable
+                />
+              </li>
+              <li
+                v-if="indicators.firstBelowThresholdDate !== null"
+                class="flex items-center gap-1 text-warning"
+                data-testid="dashboard-below-threshold"
+              >
+                <UIcon :name="icons.belowThreshold" class="size-4 shrink-0" />
+                {{
+                  t('forecast.belowThresholdFrom', {
+                    date: formatDate(indicators.firstBelowThresholdDate),
+                  })
+                }}
+              </li>
+              <li
+                v-if="indicators.firstNegativeDate !== null"
+                class="flex items-center gap-1 text-error"
+                data-testid="dashboard-negative"
+              >
+                <UIcon :name="icons.negative" class="size-4 shrink-0" />
+                {{
+                  t('forecast.negativeFrom', {
+                    date: formatDate(indicators.firstNegativeDate),
+                  })
+                }}
+              </li>
+            </ul>
+            <CurveChart :curve="curve" />
+          </div>
+        </LoadZone>
       </UCard>
-      <UCard v-if="breakdown !== null" data-testid="dashboard-breakdown">
+      <UCard data-testid="dashboard-breakdown">
         <template #header>
           <div class="flex flex-wrap items-end justify-between gap-3">
             <h2 class="text-base font-semibold text-highlighted">
@@ -271,15 +309,28 @@ const indicators = computed(() => curve.value?.indicators ?? null)
             </div>
           </div>
         </template>
-        <LazyBreakdownChart :breakdown="breakdown" />
+        <LoadZone :state="breakdownState">
+          <template #skeleton>
+            <BreakdownChartSkeleton />
+          </template>
+          <GroupBreakdownChart
+            v-if="breakdown !== null"
+            :breakdown="breakdown"
+          />
+        </LoadZone>
       </UCard>
-      <UCard v-if="monthly !== null" data-testid="dashboard-monthly">
+      <UCard data-testid="dashboard-monthly">
         <template #header>
           <h2 class="text-base font-semibold text-highlighted">
             {{ t('dashboard.monthlyTitle') }}
           </h2>
         </template>
-        <LazyMonthlyChart :report="monthly" />
+        <LoadZone :state="monthlyState">
+          <template #skeleton>
+            <MonthlyChartSkeleton />
+          </template>
+          <MonthlyReportChart v-if="monthly !== null" :report="monthly" />
+        </LoadZone>
       </UCard>
     </div>
   </ViewPanel>

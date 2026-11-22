@@ -227,10 +227,12 @@ describe('LoadZone (CHG-47, CHG-49)', () => {
     )
   }
 
-  it('renders nothing while pending', async () => {
+  it('reserves the skeleton space without showing it while pending', async () => {
     const wrapper = await mountZone(createState())
 
-    expect(wrapper.find('[data-testid="skeleton-zone"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="skeleton-zone"]').classes()).toContain(
+      'invisible',
+    )
     expect(wrapper.find('[data-testid="zone-content"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="load-error"]').exists()).toBe(false)
   })
@@ -245,6 +247,7 @@ describe('LoadZone (CHG-47, CHG-49)', () => {
 
     expect(zone.attributes('role')).toBe('status')
     expect(zone.attributes('aria-busy')).toBe('true')
+    expect(zone.classes()).not.toContain('invisible')
     expect(zone.classes()).toEqual(expect.arrayContaining(['flex', 'gap-4']))
     expect(zone.get('.sr-only').text()).toBe('Chargement...')
     expect(
