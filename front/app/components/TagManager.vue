@@ -17,12 +17,14 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
-  try {
-    await referentials.loadTags()
-  } catch (error) {
-    notifyFailure(error)
-  }
+const loadState = useLoadState({ onError: notifyFailure })
+
+function fetchTags(): Promise<void> {
+  return referentials.loadTags()
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchTags, 'background')
 }
 
 function usage(tag: Tag): string {
@@ -111,7 +113,7 @@ function actionsFor(tag: Tag): DropdownMenuItem[][] {
   ]
 }
 
-onMounted(load)
+onMounted(() => loadState.run(fetchTags))
 </script>
 
 <template>
@@ -134,35 +136,43 @@ onMounted(load)
         </OfflineGuard>
       </div>
     </template>
-    <p
-      v-if="referentials.tags.length === 0"
-      class="text-sm text-muted"
-      data-testid="tags-empty"
-    >
-      {{ t('tags.empty') }}
-    </p>
-    <ul v-else class="flex flex-col divide-y divide-default">
-      <ListRow
-        v-for="tag in referentials.tags"
-        :key="tag.id"
-        spread
-        :data-testid="`tag-row-${tag.id}`"
+    <LoadZone :state="loadState">
+      <template #skeleton>
+        <SkeletonDetailList
+          :row="{ spread: true }"
+          class="flex flex-col divide-y divide-default"
+        />
+      </template>
+      <p
+        v-if="referentials.tags.length === 0"
+        class="text-sm text-muted"
+        data-testid="tags-empty"
       >
-        <div class="min-w-0">
-          <p class="truncate text-sm text-default">{{ tag.name }}</p>
-          <p class="text-xs text-muted">{{ usage(tag) }}</p>
-        </div>
-        <UDropdownMenu :items="actionsFor(tag)">
-          <UButton
-            :icon="icons.rowActions"
-            :aria-label="t('common.actionsFor', { name: tag.name })"
-            color="neutral"
-            variant="ghost"
-            :data-testid="`tag-actions-${tag.id}`"
-          />
-        </UDropdownMenu>
-      </ListRow>
-    </ul>
+        {{ t('tags.empty') }}
+      </p>
+      <ul v-else class="flex flex-col divide-y divide-default">
+        <ListRow
+          v-for="tag in referentials.tags"
+          :key="tag.id"
+          spread
+          :data-testid="`tag-row-${tag.id}`"
+        >
+          <div class="min-w-0">
+            <p class="truncate text-sm text-default">{{ tag.name }}</p>
+            <p class="text-xs text-muted">{{ usage(tag) }}</p>
+          </div>
+          <UDropdownMenu :items="actionsFor(tag)">
+            <UButton
+              :icon="icons.rowActions"
+              :aria-label="t('common.actionsFor', { name: tag.name })"
+              color="neutral"
+              variant="ghost"
+              :data-testid="`tag-actions-${tag.id}`"
+            />
+          </UDropdownMenu>
+        </ListRow>
+      </ul>
+    </LoadZone>
 
     <TagFormModal v-model:open="formOpen" :tag="editedTag" @saved="saved" />
 

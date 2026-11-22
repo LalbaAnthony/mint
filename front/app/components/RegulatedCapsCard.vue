@@ -14,15 +14,24 @@ const caps = ref<RegulatedCap[]>([])
 const drafts = reactive<Record<string, string>>({})
 const saving = ref<string | null>(null)
 
-async function load(): Promise<void> {
-  try {
-    caps.value = await apiGet('/regulated-caps', regulatedCapListResponseSchema)
-    for (const cap of caps.value) {
-      drafts[cap.product] = formatAmountInput(cap.capCents, locale.value)
-    }
-  } catch (error) {
-    toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
+const loadState = useLoadState({
+  onError: (error) =>
+    toast.add({
+      title: errorMessage(error),
+      icon: icons.error,
+      color: 'error',
+    }),
+})
+
+async function fetchCaps(): Promise<void> {
+  caps.value = await apiGet('/regulated-caps', regulatedCapListResponseSchema)
+  for (const cap of caps.value) {
+    drafts[cap.product] = formatAmountInput(cap.capCents, locale.value)
   }
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchCaps, 'background')
 }
 
 function updateDraft(product: RegulatedCap['product'], text: string): void {
@@ -64,7 +73,7 @@ async function save(cap: RegulatedCap): Promise<void> {
   }
 }
 
-onMounted(load)
+onMounted(() => loadState.run(fetchCaps))
 </script>
 
 <template>
@@ -75,36 +84,47 @@ onMounted(load)
       </h2>
       <p class="text-sm text-muted">{{ t('admin.caps.help') }}</p>
     </template>
-    <ul class="flex flex-col divide-y divide-default">
-      <ListRow
-        v-for="cap in caps"
-        :key="cap.product"
-        wrap
-        align="end"
-        :data-testid="`regulated-cap-${cap.product}`"
-      >
-        <AppFormField
-          :label="t(`accounts.products.${cap.product}`)"
-          :name="cap.product"
-          class="min-w-48 flex-1"
+    <LoadZone :state="loadState">
+      <template #skeleton>
+        <SkeletonList
+          :row="{ wrap: true, align: 'end' }"
+          class="flex flex-col divide-y divide-default"
         >
-          <AmountInput
-            :model-value="drafts[cap.product] ?? ''"
-            @update:model-value="(text) => updateDraft(cap.product, text)"
-          />
-        </AppFormField>
-        <OfflineGuard v-slot="{ offline }">
-          <UButton
-            :disabled="offline"
-            :label="t('common.save')"
-            color="primary"
-            variant="soft"
-            :loading="saving === cap.product"
-            :data-testid="`regulated-cap-save-${cap.product}`"
-            @click="save(cap)"
-          />
-        </OfflineGuard>
-      </ListRow>
-    </ul>
+          <SkeletonFormField class="min-w-48 flex-1" />
+          <SkeletonControl kind="button" class="w-28" />
+        </SkeletonList>
+      </template>
+      <ul class="flex flex-col divide-y divide-default">
+        <ListRow
+          v-for="cap in caps"
+          :key="cap.product"
+          wrap
+          align="end"
+          :data-testid="`regulated-cap-${cap.product}`"
+        >
+          <AppFormField
+            :label="t(`accounts.products.${cap.product}`)"
+            :name="cap.product"
+            class="min-w-48 flex-1"
+          >
+            <AmountInput
+              :model-value="drafts[cap.product] ?? ''"
+              @update:model-value="(text) => updateDraft(cap.product, text)"
+            />
+          </AppFormField>
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('common.save')"
+              color="primary"
+              variant="soft"
+              :loading="saving === cap.product"
+              :data-testid="`regulated-cap-save-${cap.product}`"
+              @click="save(cap)"
+            />
+          </OfflineGuard>
+        </ListRow>
+      </ul>
+    </LoadZone>
   </UCard>
 </template>

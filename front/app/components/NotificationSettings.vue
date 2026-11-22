@@ -47,22 +47,20 @@ async function loadDevices(): Promise<void> {
   )
 }
 
-async function load(): Promise<void> {
-  try {
-    const [savedPreferences, key] = await Promise.all([
-      apiGet('/notifications/preferences', notificationPreferencesSchema),
-      apiGet('/push/key', pushKeyResponseSchema),
-      loadDevices(),
-    ])
-    Object.assign(preferences, savedPreferences)
-    publicKey.value = key.publicKey
-    if (support.value === 'available') {
-      thisEndpoint.value = await currentPushEndpoint()
-    }
-    loaded.value = true
-  } catch (error) {
-    notifyFailure(error)
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchSettings(): Promise<void> {
+  const [savedPreferences, key] = await Promise.all([
+    apiGet('/notifications/preferences', notificationPreferencesSchema),
+    apiGet('/push/key', pushKeyResponseSchema),
+    loadDevices(),
+  ])
+  Object.assign(preferences, savedPreferences)
+  publicKey.value = key.publicKey
+  if (support.value === 'available') {
+    thisEndpoint.value = await currentPushEndpoint()
   }
+  loaded.value = true
 }
 
 async function savePreference(
@@ -162,7 +160,7 @@ function deviceDetails(device: PushDevice): string {
 onMounted(() => {
   support.value = pushSupport()
   permission.value = notificationPermission()
-  void load()
+  void loadState.run(fetchSettings)
 })
 </script>
 
@@ -257,58 +255,67 @@ onMounted(() => {
         <h3 class="text-sm font-semibold text-highlighted">
           {{ t('notifications.settings.devices') }}
         </h3>
-        <p
-          v-if="devices.length === 0"
-          class="text-sm text-muted"
-          data-testid="push-devices-empty"
-        >
-          {{ t('notifications.settings.noDevice') }}
-        </p>
-        <ul
-          v-else
-          class="flex flex-col divide-y divide-default"
-          data-testid="push-devices"
-        >
-          <ListRow
-            v-for="device in devices"
-            :key="device.id"
-            spread
-            :data-testid="`push-device-${device.id}`"
+        <LoadZone :state="loadState">
+          <template #skeleton>
+            <SkeletonDetailList
+              actions="touch"
+              :row="{ spread: true }"
+              class="flex flex-col divide-y divide-default"
+            />
+          </template>
+          <p
+            v-if="devices.length === 0"
+            class="text-sm text-muted"
+            data-testid="push-devices-empty"
           >
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="truncate text-sm text-default">
-                  {{ device.userAgent ?? t('profile.unknownDevice') }}
-                </span>
-                <UBadge
-                  v-if="device.endpoint === thisEndpoint"
-                  :label="t('notifications.settings.thisDeviceBadge')"
-                  color="primary"
-                  variant="soft"
-                />
+            {{ t('notifications.settings.noDevice') }}
+          </p>
+          <ul
+            v-else
+            class="flex flex-col divide-y divide-default"
+            data-testid="push-devices"
+          >
+            <ListRow
+              v-for="device in devices"
+              :key="device.id"
+              spread
+              :data-testid="`push-device-${device.id}`"
+            >
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <span class="truncate text-sm text-default">
+                    {{ device.userAgent ?? t('profile.unknownDevice') }}
+                  </span>
+                  <UBadge
+                    v-if="device.endpoint === thisEndpoint"
+                    :label="t('notifications.settings.thisDeviceBadge')"
+                    color="primary"
+                    variant="soft"
+                  />
+                </div>
+                <p class="text-xs text-muted tabular-nums">
+                  {{ deviceDetails(device) }}
+                </p>
               </div>
-              <p class="text-xs text-muted tabular-nums">
-                {{ deviceDetails(device) }}
-              </p>
-            </div>
-            <OfflineGuard v-slot="{ offline }">
-              <UButton
-                :icon="icons.delete"
-                :aria-label="
-                  t('notifications.settings.removeDevice', {
-                    name: device.userAgent ?? t('profile.unknownDevice'),
-                  })
-                "
-                :disabled="offline || busy"
-                :class="touchIconButtonClass"
-                color="neutral"
-                variant="ghost"
-                :data-testid="`push-device-remove-${device.id}`"
-                @click="removeDevice(device)"
-              />
-            </OfflineGuard>
-          </ListRow>
-        </ul>
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :icon="icons.delete"
+                  :aria-label="
+                    t('notifications.settings.removeDevice', {
+                      name: device.userAgent ?? t('profile.unknownDevice'),
+                    })
+                  "
+                  :disabled="offline || busy"
+                  :class="touchIconButtonClass"
+                  color="neutral"
+                  variant="ghost"
+                  :data-testid="`push-device-remove-${device.id}`"
+                  @click="removeDevice(device)"
+                />
+              </OfflineGuard>
+            </ListRow>
+          </ul>
+        </LoadZone>
       </section>
     </div>
   </UCard>

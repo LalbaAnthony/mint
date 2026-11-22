@@ -35,15 +35,14 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
-  try {
-    passkeys.value = await apiGet(
-      '/profile/passkeys',
-      passkeyListResponseSchema,
-    )
-  } catch (error) {
-    notifyFailure(error)
-  }
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchPasskeys(): Promise<void> {
+  passkeys.value = await apiGet('/profile/passkeys', passkeyListResponseSchema)
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchPasskeys, 'background')
 }
 
 function details(passkey: Passkey): string {
@@ -184,7 +183,7 @@ function actionsFor(passkey: Passkey): DropdownMenuItem[][] {
 
 onMounted(() => {
   supported.value = passkeysSupported()
-  void load()
+  void loadState.run(fetchPasskeys)
 })
 </script>
 
@@ -220,45 +219,55 @@ onMounted(() => {
       <p v-if="limitReached" class="text-sm text-muted">
         {{ t('passkeys.limit', { n: maxPasskeysPerUser }) }}
       </p>
-      <p
-        v-if="passkeys.length === 0"
-        class="text-sm text-muted"
-        data-testid="passkeys-empty"
-      >
-        {{ t('passkeys.empty') }}
-      </p>
-      <ul v-else class="flex flex-col divide-y divide-default">
-        <ListRow
-          v-for="passkey in passkeys"
-          :key="passkey.id"
-          spread
-          :data-testid="`passkey-row-${passkey.id}`"
+      <LoadZone :state="loadState">
+        <template #skeleton>
+          <SkeletonDetailList
+            leading
+            actions="touch"
+            :row="{ spread: true }"
+            class="flex flex-col divide-y divide-default"
+          />
+        </template>
+        <p
+          v-if="passkeys.length === 0"
+          class="text-sm text-muted"
+          data-testid="passkeys-empty"
         >
-          <div class="flex min-w-0 items-center gap-2">
-            <UIcon
-              :name="icons.passkey"
-              class="size-4 shrink-0 text-muted"
-              aria-hidden="true"
-            />
-            <div class="min-w-0">
-              <p class="truncate text-sm text-default">{{ passkey.name }}</p>
-              <p class="text-xs text-muted tabular-nums">
-                {{ details(passkey) }}
-              </p>
+          {{ t('passkeys.empty') }}
+        </p>
+        <ul v-else class="flex flex-col divide-y divide-default">
+          <ListRow
+            v-for="passkey in passkeys"
+            :key="passkey.id"
+            spread
+            :data-testid="`passkey-row-${passkey.id}`"
+          >
+            <div class="flex min-w-0 items-center gap-2">
+              <UIcon
+                :name="icons.passkey"
+                class="size-4 shrink-0 text-muted"
+                aria-hidden="true"
+              />
+              <div class="min-w-0">
+                <p class="truncate text-sm text-default">{{ passkey.name }}</p>
+                <p class="text-xs text-muted tabular-nums">
+                  {{ details(passkey) }}
+                </p>
+              </div>
             </div>
-          </div>
-          <UDropdownMenu :items="actionsFor(passkey)">
-            <UButton
-              :icon="icons.rowActions"
-              :aria-label="t('common.actionsFor', { name: passkey.name })"
-              :class="touchIconButtonClass"
-              color="neutral"
-              variant="ghost"
-              :data-testid="`passkey-actions-${passkey.id}`"
-            />
-          </UDropdownMenu>
-        </ListRow>
-      </ul>
+            <UDropdownMenu :items="actionsFor(passkey)">
+              <UButton
+                :icon="icons.rowActions"
+                :aria-label="t('common.actionsFor', { name: passkey.name })"
+                :class="touchIconButtonClass"
+                color="neutral"
+                variant="ghost"
+                :data-testid="`passkey-actions-${passkey.id}`"
+              />
+            </UDropdownMenu>
+          </ListRow>
+        </ul>
+      </LoadZone>
     </div>
 
     <UModal

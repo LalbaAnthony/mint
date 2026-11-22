@@ -1,6 +1,8 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import TagManager from '~/components/TagManager.vue'
 import AccountsPage from '~/pages/accounts/index.vue'
+import AdminPage from '~/pages/admin/index.vue'
 import CalendarPage from '~/pages/calendar/index.vue'
 import EnvelopesPage from '~/pages/envelopes/index.vue'
 import OperationsPage from '~/pages/operations/index.vue'
@@ -248,5 +250,40 @@ describe('calendar skeleton (CHG-48)', () => {
     expect(wrapper.find('[data-testid="calendar-day-skeleton"]').exists()).toBe(
       true,
     )
+  })
+})
+
+describe('self-loading cards (CHG-48)', () => {
+  it('shows invitation and user skeletons instead of an empty state', async () => {
+    installFakeApi(fetchMock, {
+      'GET /admin/invitations': never,
+      'GET /admin/users': never,
+      'GET /regulated-caps': never,
+    })
+
+    const wrapper = await mountView(AdminPage, '/admin')
+
+    await vi.waitFor(() => {
+      expect(visibleZone(wrapper)).toBeDefined()
+    })
+    expect(wrapper.text()).not.toContain('Aucune invitation')
+    expect(wrapper.find('[data-testid="invitation-list"]').exists()).toBe(false)
+    expect(
+      wrapper
+        .findAll('[data-testid="skeleton-zone"]')
+        .filter((zone) => !zone.classes().includes('invisible')),
+    ).toHaveLength(3)
+  })
+
+  it('shows tag skeletons instead of the empty tag message', async () => {
+    useReferentialsStore().tags = []
+    installFakeApi(fetchMock, { 'GET /tags': never })
+
+    const wrapper = await mountView(TagManager, '/profile')
+
+    await vi.waitFor(() => {
+      expect(visibleZone(wrapper)).toBeDefined()
+    })
+    expect(wrapper.find('[data-testid="tags-empty"]').exists()).toBe(false)
   })
 })

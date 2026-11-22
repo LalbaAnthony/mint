@@ -58,12 +58,14 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
-  try {
-    categories.value = await apiGet('/categories', categoryListResponseSchema)
-  } catch (error) {
-    notifyFailure(error)
-  }
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchCategories(): Promise<void> {
+  categories.value = await apiGet('/categories', categoryListResponseSchema)
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchCategories, 'background')
 }
 
 async function run(action: () => Promise<void>): Promise<void> {
@@ -161,7 +163,7 @@ function reorder(categoryIds: string[]): Promise<void> {
   })
 }
 
-onMounted(load)
+onMounted(() => loadState.run(fetchCategories))
 </script>
 
 <template>
@@ -200,28 +202,56 @@ onMounted(load)
         </div>
       </div>
     </template>
-    <div class="flex flex-col gap-6">
-      <section
-        v-for="section in sections"
-        :key="section.id"
-        :data-testid="`category-section-${section.id}`"
-        class="flex flex-col gap-1"
-      >
-        <h3 class="flex items-center gap-2 text-sm font-medium text-default">
-          <DataDot v-if="section.tone !== null" :tone="section.tone" />
-          {{ sectionTitle(section.id) }}
-        </h3>
-        <p v-if="section.id === 'system'" class="text-xs text-muted">
-          {{ t('categories.system.help') }}
-        </p>
-        <CategoryList
-          :nodes="section.nodes"
-          :reordering="reordering"
-          @reorder="reorder"
-          @action="onAction"
-        />
-      </section>
-    </div>
+    <LoadZone :state="loadState" class="flex flex-col gap-6">
+      <template #skeleton>
+        <section
+          v-for="section in sections"
+          :key="section.id"
+          class="flex flex-col gap-1"
+        >
+          <h3 class="flex items-center gap-2 text-sm font-medium text-default">
+            <DataDot v-if="section.tone !== null" :tone="section.tone" />
+            {{ sectionTitle(section.id) }}
+          </h3>
+          <p v-if="section.id === 'system'" class="text-xs text-muted">
+            {{ t('categories.system.help') }}
+          </p>
+          <SkeletonList :row="{ padding: 1.5 }" class="divide-y divide-default">
+            <template #default="{ index }">
+              <div class="min-w-0 flex-1">
+                <SkeletonText
+                  :width="skeletonRowWidth(index)"
+                  class="text-sm"
+                />
+              </div>
+              <SkeletonControl kind="touch-icon-button" />
+            </template>
+          </SkeletonList>
+        </section>
+      </template>
+      <div class="flex flex-col gap-6">
+        <section
+          v-for="section in sections"
+          :key="section.id"
+          :data-testid="`category-section-${section.id}`"
+          class="flex flex-col gap-1"
+        >
+          <h3 class="flex items-center gap-2 text-sm font-medium text-default">
+            <DataDot v-if="section.tone !== null" :tone="section.tone" />
+            {{ sectionTitle(section.id) }}
+          </h3>
+          <p v-if="section.id === 'system'" class="text-xs text-muted">
+            {{ t('categories.system.help') }}
+          </p>
+          <CategoryList
+            :nodes="section.nodes"
+            :reordering="reordering"
+            @reorder="reorder"
+            @action="onAction"
+          />
+        </section>
+      </div>
+    </LoadZone>
 
     <CategoryFormModal
       v-model:open="formOpen"

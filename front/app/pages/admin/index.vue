@@ -39,17 +39,15 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
-  try {
-    const [invitationList, userList] = await Promise.all([
-      apiGet('/admin/invitations', adminInvitationListResponseSchema),
-      apiGet('/admin/users', adminUserListResponseSchema),
-    ])
-    invitations.value = invitationList
-    users.value = userList
-  } catch (error) {
-    notifyFailure(error)
-  }
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchAdministration(): Promise<void> {
+  const [invitationList, userList] = await Promise.all([
+    apiGet('/admin/invitations', adminInvitationListResponseSchema),
+    apiGet('/admin/users', adminUserListResponseSchema),
+  ])
+  invitations.value = invitationList
+  users.value = userList
 }
 
 function replaceInvitation(updated: AdminInvitation): void {
@@ -193,7 +191,7 @@ function isReusable(invitation: AdminInvitation): boolean {
   return invitation.status === 'pending' || invitation.status === 'expired'
 }
 
-onMounted(load)
+onMounted(() => loadState.run(fetchAdministration))
 
 const connectivity = useConnectivityStore()
 const createHint = useShortcut(
@@ -230,82 +228,87 @@ const createHint = useShortcut(
             {{ t('admin.invitations') }}
           </h2>
         </template>
-        <EmptyState
-          v-if="invitations.length === 0"
-          :icon="icons.invite"
-          :title="t('admin.noInvitationTitle')"
-          :description="t('admin.noInvitationText')"
-        >
-          <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              :label="t('admin.invite')"
-              :icon="icons.invite"
-              color="primary"
-              variant="soft"
-              @click="inviteOpen = true"
-            />
-          </OfflineGuard>
-        </EmptyState>
-        <ul
-          v-else
-          class="divide-y divide-default"
-          data-testid="invitation-list"
-        >
-          <ListRow
-            v-for="invitation in invitations"
-            :key="invitation.id"
-            :gap="3"
-            :padding="3"
-            flush
-            wrap
-            spread
+        <LoadZone :state="loadState">
+          <template #skeleton>
+            <AdminListSkeleton />
+          </template>
+          <EmptyState
+            v-if="invitations.length === 0"
+            :icon="icons.invite"
+            :title="t('admin.noInvitationTitle')"
+            :description="t('admin.noInvitationText')"
           >
-            <div class="flex min-w-0 flex-col gap-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="truncate text-sm text-highlighted">
-                  {{ invitation.email }}
-                </span>
-                <UBadge
-                  :label="t(`admin.invitationStatus.${invitation.status}`)"
-                  :color="invitationColors[invitation.status]"
-                  variant="soft"
-                />
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :label="t('admin.invite')"
+                :icon="icons.invite"
+                color="primary"
+                variant="soft"
+                @click="inviteOpen = true"
+              />
+            </OfflineGuard>
+          </EmptyState>
+          <ul
+            v-else
+            class="divide-y divide-default"
+            data-testid="invitation-list"
+          >
+            <ListRow
+              v-for="invitation in invitations"
+              :key="invitation.id"
+              :gap="3"
+              :padding="3"
+              flush
+              wrap
+              spread
+            >
+              <div class="flex min-w-0 flex-col gap-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="truncate text-sm text-highlighted">
+                    {{ invitation.email }}
+                  </span>
+                  <UBadge
+                    :label="t(`admin.invitationStatus.${invitation.status}`)"
+                    :color="invitationColors[invitation.status]"
+                    variant="soft"
+                  />
+                </div>
+                <p class="text-xs text-muted tabular-nums">
+                  {{
+                    t('admin.sentOn', {
+                      date: formatDateTime(invitation.createdAt),
+                    })
+                  }}
+                  · {{ invitationDate(invitation) }}
+                </p>
               </div>
-              <p class="text-xs text-muted tabular-nums">
-                {{
-                  t('admin.sentOn', {
-                    date: formatDateTime(invitation.createdAt),
-                  })
-                }}
-                · {{ invitationDate(invitation) }}
-              </p>
-            </div>
-            <div v-if="isReusable(invitation)" class="flex flex-wrap gap-1">
-              <OfflineGuard v-slot="{ offline }">
-                <UButton
-                  :disabled="offline"
-                  :label="t('admin.resend')"
-                  :icon="icons.resend"
-                  :loading="busyId === invitation.id"
-                  color="neutral"
-                  variant="ghost"
-                  @click="resend(invitation)"
-                />
-              </OfflineGuard>
-              <OfflineGuard v-slot="{ offline }">
-                <UButton
-                  :disabled="offline"
-                  :label="t('admin.revoke')"
-                  :icon="icons.revoke"
-                  color="error"
-                  variant="ghost"
-                  @click="invitationToRevoke = invitation"
-                />
-              </OfflineGuard>
-            </div>
-          </ListRow>
-        </ul>
+              <div v-if="isReusable(invitation)" class="flex flex-wrap gap-1">
+                <OfflineGuard v-slot="{ offline }">
+                  <UButton
+                    :disabled="offline"
+                    :label="t('admin.resend')"
+                    :icon="icons.resend"
+                    :loading="busyId === invitation.id"
+                    color="neutral"
+                    variant="ghost"
+                    @click="resend(invitation)"
+                  />
+                </OfflineGuard>
+                <OfflineGuard v-slot="{ offline }">
+                  <UButton
+                    :disabled="offline"
+                    :label="t('admin.revoke')"
+                    :icon="icons.revoke"
+                    color="error"
+                    variant="ghost"
+                    @click="invitationToRevoke = invitation"
+                  />
+                </OfflineGuard>
+              </div>
+            </ListRow>
+          </ul>
+        </LoadZone>
       </UCard>
 
       <UCard>
@@ -314,92 +317,99 @@ const createHint = useShortcut(
             {{ t('admin.users') }}
           </h2>
         </template>
-        <ul class="divide-y divide-default" data-testid="user-list">
-          <ListRow
-            v-for="user in users"
-            :key="user.id"
-            :gap="3"
-            :padding="3"
-            flush
-            wrap
-            spread
-          >
-            <div class="flex min-w-0 flex-col gap-1">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="truncate text-sm text-highlighted">
-                  {{ user.email }}
-                </span>
-                <UBadge
-                  :label="t(`admin.roles.${user.role}`)"
-                  color="neutral"
-                  variant="outline"
-                />
-                <UBadge
-                  :label="t(`admin.userStatus.${user.status}`)"
-                  :color="user.status === 'active' ? 'success' : 'neutral'"
-                  variant="soft"
-                />
+        <LoadZone :state="loadState" :error-state="false">
+          <template #skeleton>
+            <AdminListSkeleton />
+          </template>
+          <ul class="divide-y divide-default" data-testid="user-list">
+            <ListRow
+              v-for="user in users"
+              :key="user.id"
+              :gap="3"
+              :padding="3"
+              flush
+              wrap
+              spread
+            >
+              <div class="flex min-w-0 flex-col gap-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="truncate text-sm text-highlighted">
+                    {{ user.email }}
+                  </span>
+                  <UBadge
+                    :label="t(`admin.roles.${user.role}`)"
+                    color="neutral"
+                    variant="outline"
+                  />
+                  <UBadge
+                    :label="t(`admin.userStatus.${user.status}`)"
+                    :color="user.status === 'active' ? 'success' : 'neutral'"
+                    variant="soft"
+                  />
+                </div>
+                <p class="text-xs text-muted tabular-nums">
+                  {{ t(`locales.${user.locale}`) }} ·
+                  {{
+                    t('admin.createdOn', {
+                      date: formatDateTime(user.createdAt),
+                    })
+                  }}
+                  ·
+                  {{
+                    user.lastLoginAt === null
+                      ? t('admin.neverLoggedIn')
+                      : t('admin.lastLogin', {
+                          date: formatDateTime(user.lastLoginAt),
+                        })
+                  }}
+                </p>
               </div>
-              <p class="text-xs text-muted tabular-nums">
-                {{ t(`locales.${user.locale}`) }} ·
-                {{
-                  t('admin.createdOn', { date: formatDateTime(user.createdAt) })
-                }}
-                ·
-                {{
-                  user.lastLoginAt === null
-                    ? t('admin.neverLoggedIn')
-                    : t('admin.lastLogin', {
-                        date: formatDateTime(user.lastLoginAt),
-                      })
-                }}
-              </p>
-            </div>
-            <div class="flex flex-wrap gap-1">
-              <OfflineGuard
-                v-if="user.status === 'active'"
-                v-slot="{ offline }"
-              >
-                <UButton
-                  :disabled="offline"
-                  :label="t('admin.sendResetLink')"
-                  :icon="icons.passwordReset"
-                  :loading="busyId === user.id"
-                  color="neutral"
-                  variant="ghost"
-                  @click="sendPasswordReset(user)"
-                />
-              </OfflineGuard>
-              <OfflineGuard
-                v-if="user.status === 'disabled'"
-                v-slot="{ offline }"
-              >
-                <UButton
-                  :disabled="offline"
-                  :label="t('admin.enable')"
-                  :icon="icons.enableUser"
-                  :loading="busyId === user.id"
-                  color="neutral"
-                  variant="ghost"
-                  @click="enable(user)"
-                />
-              </OfflineGuard>
-              <OfflineGuard
-                v-else-if="user.id !== session.user?.id"
-                v-slot="{ offline }"
-              >
-                <UButton
-                  :disabled="offline"
-                  :label="t('admin.disable')"
-                  :icon="icons.disableUser"
-                  color="error"
-                  variant="ghost"
-                  @click="userToDisable = user"
-                />
-              </OfflineGuard>
-            </div>
-          </ListRow>
-        </ul>
+              <div class="flex flex-wrap gap-1">
+                <OfflineGuard
+                  v-if="user.status === 'active'"
+                  v-slot="{ offline }"
+                >
+                  <UButton
+                    :disabled="offline"
+                    :label="t('admin.sendResetLink')"
+                    :icon="icons.passwordReset"
+                    :loading="busyId === user.id"
+                    color="neutral"
+                    variant="ghost"
+                    @click="sendPasswordReset(user)"
+                  />
+                </OfflineGuard>
+                <OfflineGuard
+                  v-if="user.status === 'disabled'"
+                  v-slot="{ offline }"
+                >
+                  <UButton
+                    :disabled="offline"
+                    :label="t('admin.enable')"
+                    :icon="icons.enableUser"
+                    :loading="busyId === user.id"
+                    color="neutral"
+                    variant="ghost"
+                    @click="enable(user)"
+                  />
+                </OfflineGuard>
+                <OfflineGuard
+                  v-else-if="user.id !== session.user?.id"
+                  v-slot="{ offline }"
+                >
+                  <UButton
+                    :disabled="offline"
+                    :label="t('admin.disable')"
+                    :icon="icons.disableUser"
+                    color="error"
+                    variant="ghost"
+                    @click="userToDisable = user"
+                  />
+                </OfflineGuard>
+              </div>
+            </ListRow>
+          </ul>
+        </LoadZone>
       </UCard>
 
       <RegulatedCapsCard />

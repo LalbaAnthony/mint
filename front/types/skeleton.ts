@@ -163,3 +163,12 @@ export interface CalendarGridSkeletonProps {
   month: string
   compact: boolean
 }
+
+export type SkeletonDetailListActions = 'none' | 'button' | 'touch'
+
+export interface SkeletonDetailListProps {
+  leading?: boolean
+  actions?: SkeletonDetailListActions
+  row?: ListRowLayout
+  count?: number
+}

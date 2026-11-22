@@ -150,15 +150,10 @@ const sessions = ref<SessionSummary[]>([])
 const revokeOpen = ref(false)
 const revoking = ref(false)
 
-async function loadSessions(): Promise<void> {
-  try {
-    sessions.value = await apiGet(
-      '/profile/sessions',
-      sessionListResponseSchema,
-    )
-  } catch (error) {
-    notifyFailure(error)
-  }
+const sessionsState = useLoadState({ onError: notifyFailure })
+
+async function fetchSessions(): Promise<void> {
+  sessions.value = await apiGet('/profile/sessions', sessionListResponseSchema)
 }
 
 async function revokeAllSessions(): Promise<void> {
@@ -186,7 +181,7 @@ async function loadAccounts(): Promise<void> {
 }
 
 onMounted(async () => {
-  await Promise.all([loadSessions(), loadAccounts()])
+  await Promise.all([sessionsState.run(fetchSessions), loadAccounts()])
 })
 </script>
 
@@ -357,36 +352,50 @@ onMounted(async () => {
             </OfflineGuard>
           </div>
         </template>
-        <ul class="divide-y divide-default" data-testid="session-list">
-          <ListRow
-            v-for="item in sessions"
-            :key="item.id"
-            direction="column"
-            :gap="1"
-            :padding="3"
-            flush
-          >
-            <div class="flex items-center gap-2">
-              <span class="truncate text-sm text-highlighted">
-                {{ item.userAgent ?? t('profile.unknownDevice') }}
-              </span>
-              <UBadge
-                v-if="item.current"
-                :label="t('profile.currentSession')"
-                color="primary"
-                variant="soft"
-              />
-            </div>
-            <p class="text-xs text-muted tabular-nums">
-              {{
-                t('profile.sessionDetails', {
-                  ip: item.ip ?? '-',
-                  lastSeen: formatDateTime(item.lastSeenAt),
-                })
-              }}
-            </p>
-          </ListRow>
-        </ul>
+        <LoadZone :state="sessionsState">
+          <template #skeleton>
+            <SkeletonDetailList
+              actions="none"
+              :row="{
+                direction: 'column',
+                gap: 1,
+                padding: 3,
+                flush: true,
+              }"
+              class="divide-y divide-default"
+            />
+          </template>
+          <ul class="divide-y divide-default" data-testid="session-list">
+            <ListRow
+              v-for="item in sessions"
+              :key="item.id"
+              direction="column"
+              :gap="1"
+              :padding="3"
+              flush
+            >
+              <div class="flex items-center gap-2">
+                <span class="truncate text-sm text-highlighted">
+                  {{ item.userAgent ?? t('profile.unknownDevice') }}
+                </span>
+                <UBadge
+                  v-if="item.current"
+                  :label="t('profile.currentSession')"
+                  color="primary"
+                  variant="soft"
+                />
+              </div>
+              <p class="text-xs text-muted tabular-nums">
+                {{
+                  t('profile.sessionDetails', {
+                    ip: item.ip ?? '-',
+                    lastSeen: formatDateTime(item.lastSeenAt),
+                  })
+                }}
+              </p>
+            </ListRow>
+          </ul>
+        </LoadZone>
       </UCard>
 
       <PersonalDataCard />
