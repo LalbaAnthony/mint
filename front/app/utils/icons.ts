@@ -29,6 +29,7 @@ export const icons = {
   adjustment: 'lucide:scale',
   offline: 'lucide:wifi-off',
   reload: 'lucide:refresh-cw',
+  loadError: 'lucide:circle-alert',
   showData: 'lucide:table',
   amountsShown: 'lucide:eye',
   amountsMasked: 'lucide:eye-off',

@@ -84,6 +84,12 @@
     "actions": "Actions",
     "actionsFor": "Actions pour {name}"
   },
+  "loading": {
+    "label": "Chargement...",
+    "errorTitle": "Chargement impossible",
+    "errorText": "Les données n'ont pas pu être chargées.",
+    "retry": "Réessayer"
+  },
   "money": {
     "symbol": "€",
     "belowThreshold": "sous le seuil d'alerte",

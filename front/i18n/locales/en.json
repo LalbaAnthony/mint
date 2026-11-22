@@ -84,6 +84,12 @@
     "actions": "Actions",
     "actionsFor": "Actions for {name}"
   },
+  "loading": {
+    "label": "Loading...",
+    "errorTitle": "Unable to load",
+    "errorText": "The data could not be loaded.",
+    "retry": "Try again"
+  },
   "money": {
     "symbol": "€",
     "belowThreshold": "below the alert threshold",
