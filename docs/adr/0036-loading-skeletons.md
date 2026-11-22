@@ -29,7 +29,7 @@ Comportement (CHG-48) :
 - Chaque section qui a son propre appel est remplacée dès sa réponse : sur l'accueil, le bandeau, la courbe, la répartition et le bilan mensuel n'attendent plus l'appel le plus lent.
 - Le skeleton apparaît si le chargement dure plus de 150 ms et reste alors affiché au moins 300 ms. Avant 150 ms, au premier chargement, il est déjà en place mais invisible (`visibility: hidden`, ignoré des lecteurs d'écran) : il réserve la place du contenu et son apparition ne déplace rien ; ensuite, la zone garde son contenu précédent. Une réponse rapide ou une lecture du cache hors ligne (ADR 0023) ne fait rien clignoter.
 - Il couvre le premier chargement et chaque changement de contexte : mois, compte ou périmètre, horizon, période, page, filtres, tri, texte recherché (après l'attente de frappe), passage en ligne ou hors ligne. Une actualisation en arrière-plan, après un enregistrement (`savedVersion`) ou dans le centre de notifications, garde le contenu affiché.
-- Nombre de lignes fixe : 3 dans toutes les listes, 2 groupes de 3 comptes dans la vue Comptes.
+- Nombre de lignes : celui du dernier affichage de la même liste (de chaque groupe de comptes, de chaque section de catégories), mémorisé pour l'onglet dans `sessionStorage` et effacé à la déconnexion (NF-PWA-03), borné entre 1 et 20. Au premier affichage d'une liste dans l'onglet : 3 lignes, et 2 groupes de 3 comptes dans la vue Comptes.
 - Un bouton d'en-tête qui dépend des données (« Réorganiser » des comptes et des règles) est affiché désactivé pendant le premier chargement, puis activé ou retiré.
 - Périmètre : toutes les vues connectées, les cartes qui chargent leurs propres données (profil, administration), les modales et panneaux qui chargent des données. Les vues sans données (connexion, mot de passe oublié, réinitialisation) n'en ont pas.
 
@@ -44,6 +44,7 @@ Comportement (CHG-48) :
 - Composants de mise en page communs, utilisés à la fois par le contenu réel et par son skeleton, pour que leurs marges, grilles et alignements ne puissent pas diverger : `StatGrid` (grilles d'indicateurs de CHG-57 en 2, 3 et 4 colonnes), `StatTile` (carte d'indicateur : libellé, valeur principale ou secondaire de CHG-30, tuile d'icône facultative), `ListRow` (ligne de liste : zone de tête, contenu, zone de fin, avec les espacements existants de chaque liste).
 - Skeletons des composants complexes en composants séparés, rangés à côté de leur composant (`DashboardBannerSkeleton`, `BalanceCurveChartSkeleton`...), construits sur les mêmes composants communs.
 - Composable `useLoadState` : phase affichée (`pending`, `skeleton`, `ready`, `error`), chargement en cours, `run(loader, mode)` avec `mode` `context` ou `background`, `retry()`. Il applique les délais de 150 et 300 ms, ignore une réponse dépassée par un appel plus récent et appelle le toast d'erreur de la vue. Il remplace les drapeaux `ready`, les `v-if` sur la réponse et les listes initialisées vides : « pas encore chargé » et « chargé et vide » sont distincts.
+- Store Pinia `skeleton-counts` (clé `mint:skeleton-counts` du stockage de session) et composables `useRememberedRows` et `useRememberedCount` : chaque fois qu'un état de chargement passe en `ready`, la longueur de la liste est mémorisée sous une clé propre à cette liste ; son skeleton la relit. `useSessionStore().clear()` les efface à la déconnexion.
 - Composant `LoadZone` : à partir de l'état d'un `useLoadState`, rend le skeleton dans une `SkeletonZone` (invisible pendant le délai d'apparition), l'état d'erreur (`LoadError`) ou le contenu. Une zone peut remplacer l'état d'erreur par le sien, ou n'en afficher aucun quand une autre zone de la même section le porte.
 - Graphiques (amende l'ADR 0015) : chaque composant de graphique est déclaré par `lazyComponent` (`front/app/utils/lazy-component.ts`), autour de `defineAsyncComponent` avec son skeleton comme `loadingComponent`, sans délai. Le chargement de la section attend à la fois les données et le code du graphique, lancés en parallèle : le skeleton reste en place jusqu'à ce que les deux soient prêts, et un échec de l'un ou l'autre mène à l'état d'erreur. Un chargement du code qui échoue est oublié pour que « Réessayer » le relance.
 
@@ -55,7 +56,7 @@ Comportement (CHG-48) :
 - Skeleton au seul premier chargement : l'en-tête et les données restent en désaccord après un changement de mois. Skeleton à chaque rechargement : la vue clignote après chaque enregistrement.
 - Apparition immédiate : flash de quelques millisecondes sur les réponses rapides. Délais de 100 et 250 ms ou de 200 et 400 ms.
 - Zone vide pendant le délai d'apparition : le skeleton qui apparaît ensuite pousse les cartes suivantes. Sur l'accueil, le CLS mesuré atteignait 0,48 à 1280 px et 0,83 à 360 px avec la zone vide, contre 0,006 à 0,015 avec la place réservée.
-- Nombre de lignes propre à chaque liste, ou dernier nombre connu mémorisé par vue.
+- Nombre de lignes fixe, 3 dans toutes les listes : retenu d'abord, il donnait un CLS de 0,25 à 768 px et de 0,16 à 1024 px sur l'administration avec les données de la suite de bout en bout (4 invitations, 5 utilisateurs, 5 plafonds), où trois listes de longueur variable sont empilées. Nombre propre à chaque liste.
 - Prop `loading` sur les composants réels : aucun écart possible, mais chaque composant porte aussi son chargement. Carte de section commune : sans gain une fois les en-têtes affichés dès l'ouverture.
 - Hauteur du graphique réservée à vide pendant le chargement de son code : pas de saut, mais une zone blanche entre le skeleton et le graphique.
 - Skeleton de toute l'interface pendant le chargement de la session.
@@ -65,7 +66,7 @@ Comportement (CHG-48) :
 ## Conséquences
 
 - Un scénario Playwright retarde les réponses de l'API et mesure le CLS (`layout-shift`) pendant le chargement de chaque vue, à 360, 768, 1024 et 1280 px de large : il doit rester sous 0,1, seuil « bon » des Web Vitals. Un écart de nombre de lignes entre le skeleton et les données reste toléré à ce seuil.
-- Une liste plus longue ou plus courte que 3 lignes change de hauteur à l'arrivée des données ; le décalage reste sous le contenu déjà affiché.
+- Au premier affichage d'une liste dans l'onglet, ou quand sa longueur a changé depuis, l'écart de lignes décale le contenu qui la suit. Le scénario CLS visite donc chaque vue une première fois, puis mesure un deuxième affichage.
 - Une réponse arrivée juste après 150 ms retarde le contenu jusqu'à 300 ms.
 - Les tests de composants simulent les minuteries pour vérifier l'apparition du skeleton ; les tests existants, dont les réponses simulées arrivent avant 150 ms, ne le voient pas.
 - Tout nouveau composant qui charge des données passe par `useLoadState` et `LoadZone`, avec un skeleton construit sur les primitives et les composants de mise en page communs.
