@@ -18,7 +18,7 @@ const { t } = useI18n()
         <UIcon :name="icons.belowThreshold" class="size-5 text-warning" />
         <SkeletonText width="md" />
       </div>
-      <SkeletonText width="lg" class="mt-2 text-sm" />
+      <SkeletonText width="full" :lines="2" class="mt-2 text-sm" />
     </UCard>
     <UCard>
       <div class="flex items-center justify-between gap-2">

@@ -54,7 +54,7 @@ describe('Skeleton primitives (CHG-47)', () => {
     const wrapper = await mountInApp(SkeletonAmount, {
       props: { concealable: true },
     })
-    expect(wrapper.get('[data-skeleton]').classes()).toContain('w-[10ch]')
+    expect(wrapper.get('[data-skeleton]').classes()).toContain('w-[8ch]')
 
     useAmountMaskStore().toggle()
     await flushPromises()
@@ -65,7 +65,7 @@ describe('Skeleton primitives (CHG-47)', () => {
     useAmountMaskStore().toggle()
     const wrapper = await mountInApp(SkeletonAmount)
 
-    expect(wrapper.get('[data-skeleton]').classes()).toContain('w-[10ch]')
+    expect(wrapper.get('[data-skeleton]').classes()).toContain('w-[8ch]')
   })
 
   it('draws round shapes at the business sizes', async () => {

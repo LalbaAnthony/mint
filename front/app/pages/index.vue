@@ -193,7 +193,8 @@ const indicators = computed(() => curve.value?.indicators ?? null)
         <LoadZone :state="curveState">
           <template #skeleton>
             <div class="flex flex-col gap-3">
-              <SkeletonText width="xl" class="text-sm" />
+              <SkeletonText width="full" :lines="2" class="text-sm sm:hidden" />
+              <SkeletonText width="xl" class="hidden text-sm sm:block" />
               <BalanceCurveChartSkeleton />
             </div>
           </template>

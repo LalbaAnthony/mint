@@ -16,11 +16,15 @@ const widthClass = computed(() =>
 
 <template>
   <span
-    class="inline-flex items-center whitespace-nowrap"
+    class="inline-flex max-w-full items-center whitespace-nowrap"
     aria-hidden="true"
     data-testid="skeleton-amount"
   >
     <span class="w-0 overflow-hidden">&nbsp;</span>
-    <SkeletonBlock shape="text" class="h-[0.75em]" :class="widthClass" />
+    <SkeletonBlock
+      shape="text"
+      class="h-[0.75em] min-w-0"
+      :class="widthClass"
+    />
   </span>
 </template>

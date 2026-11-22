@@ -46,7 +46,7 @@ export function skeletonIndexes(count: number = skeletonRowCount): number[] {
 }
 
 export const skeletonAmountWidthClasses = {
-  shown: 'w-[10ch]',
+  shown: 'w-[8ch]',
   masked: 'w-[5ch]',
 } as const
 
