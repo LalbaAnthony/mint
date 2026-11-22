@@ -194,21 +194,32 @@ function isReusable(invitation: AdminInvitation): boolean {
 }
 
 onMounted(load)
+
+const connectivity = useConnectivityStore()
+const createHint = useShortcut(
+  'create',
+  () => {
+    inviteOpen.value = true
+  },
+  { enabled: () => !connectivity.offline },
+)
 </script>
 
 <template>
   <ViewPanel :title="t('navigation.administration')">
     <template #actions>
       <OfflineGuard v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :label="t('admin.invite')"
-          :icon="icons.invite"
-          color="primary"
-          variant="soft"
-          data-testid="admin-invite"
-          @click="inviteOpen = true"
-        />
+        <ShortcutTooltip :hint="createHint" :text="t('admin.invite')">
+          <UButton
+            :disabled="offline"
+            :label="t('admin.invite')"
+            :icon="icons.invite"
+            color="primary"
+            variant="soft"
+            data-testid="admin-invite"
+            @click="inviteOpen = true"
+          />
+        </ShortcutTooltip>
       </OfflineGuard>
     </template>
 
@@ -406,16 +417,18 @@ onMounted(load)
             />
           </AppFormField>
           <OfflineGuard block v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('admin.sendInvitation')"
-              :loading="inviting"
-              color="primary"
-              variant="solid"
-              block
-              data-testid="invite-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('admin.sendInvitation')"
+                :loading="inviting"
+                color="primary"
+                variant="solid"
+                block
+                data-testid="invite-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
       </template>

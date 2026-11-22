@@ -46,6 +46,28 @@
     "offline": "Search unavailable offline",
     "offlineText": "Search will resume when the network is back."
   },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "description": "Except Submit and Close, they work when no window or menu is open.",
+    "groups": {
+      "general": "General",
+      "views": "Views",
+      "forms": "Forms"
+    },
+    "actions": {
+      "search": "Search",
+      "create": "New: account, schedule, envelope, rule or invitation depending on the view; elsewhere, expense, income or transfer",
+      "profile": "Profile and preferences",
+      "amountMask": "Hide or show amounts",
+      "sidebar": "Collapse or expand the sidebar",
+      "notifications": "Notifications",
+      "help": "Keyboard shortcuts",
+      "importFile": "Import: choose a file",
+      "reorder": "Accounts and rules: reorder",
+      "submit": "Submit the form or confirm",
+      "close": "Close the window or menu"
+    }
+  },
   "common": {
     "cancel": "Cancel",
     "save": "Save",

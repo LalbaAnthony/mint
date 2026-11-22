@@ -292,17 +292,19 @@ onMounted(() => {
             />
           </AppFormField>
           <OfflineGuard block v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('passkeys.create')"
-              :icon="icons.passkey"
-              :loading="adding"
-              color="primary"
-              variant="solid"
-              block
-              data-testid="passkey-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('passkeys.create')"
+                :icon="icons.passkey"
+                :loading="adding"
+                color="primary"
+                variant="solid"
+                block
+                data-testid="passkey-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
       </template>
@@ -326,16 +328,18 @@ onMounted(() => {
             />
           </AppFormField>
           <OfflineGuard block v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('common.save')"
-              :loading="renaming"
-              color="primary"
-              variant="solid"
-              block
-              data-testid="passkey-rename-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('common.save')"
+                :loading="renaming"
+                color="primary"
+                variant="solid"
+                block
+                data-testid="passkey-rename-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
       </template>

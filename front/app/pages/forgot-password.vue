@@ -66,14 +66,16 @@ async function submit(): Promise<void> {
             class="w-full"
           />
         </AppFormField>
-        <UButton
-          type="submit"
-          :label="t('auth.sendResetLink')"
-          :loading="pending"
-          color="primary"
-          variant="solid"
-          block
-        />
+        <ShortcutTooltip shortcut="submit">
+          <UButton
+            type="submit"
+            :label="t('auth.sendResetLink')"
+            :loading="pending"
+            color="primary"
+            variant="solid"
+            block
+          />
+        </ShortcutTooltip>
       </AppForm>
     </template>
     <NuxtLink to="/login" class="text-sm text-primary underline">

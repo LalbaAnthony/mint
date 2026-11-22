@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMediaQuery } from '@vueuse/core'
 import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
 import type { NavigationEntry, QuickAddEntry } from '~~/types/navigation'
 
@@ -14,6 +15,21 @@ const {
 const logout = useLogout()
 const editor = useOperationEditorStore()
 const connectivity = useConnectivityStore()
+const quickAdd = useQuickAddStore()
+const shortcuts = useShortcutsStore()
+const isDesktopLayout = useMediaQuery('(min-width: 1024px)')
+
+const collapsed = ref(false)
+const sidebarHint = useShortcut(
+  'sidebar',
+  () => {
+    collapsed.value = !collapsed.value
+  },
+  { enabled: isDesktopLayout },
+)
+const quickAddHint = useShortcutHint('create', { fallbackOnly: true })
+const profileHint = useShortcutHint('profile')
+const helpHint = useShortcutHint('help')
 
 function toNavigationItems(entries: NavigationEntry[]): NavigationMenuItem[] {
   return entries.map(({ label, icon, to }) => ({ label, icon, to }))
@@ -45,7 +61,20 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
     label: profileEntry.value.label,
     icon: profileEntry.value.icon,
     to: profileEntry.value.to,
+    kbds: profileHint.value?.kbds,
   },
+  ...(helpHint.value === undefined
+    ? []
+    : [
+        {
+          label: t('shortcuts.title'),
+          icon: icons.keyboard,
+          kbds: helpHint.value.kbds,
+          onSelect: () => {
+            shortcuts.helpOpen = true
+          },
+        },
+      ]),
   {
     label: t('navigation.logout'),
     icon: icons.logout,
@@ -57,6 +86,7 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
 
 <template>
   <UDashboardSidebar
+    v-model:collapsed="collapsed"
     collapsible
     :default-size="256"
     :min-size="256"
@@ -73,16 +103,22 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
     <template #default="{ collapsed }">
       <AppSearchTrigger :collapsed="collapsed" />
 
-      <UDropdownMenu :items="quickAddItems" :content="{ align: 'start' }">
-        <UButton
-          :label="collapsed ? undefined : t('quickAdd.add')"
-          :aria-label="collapsed ? t('quickAdd.add') : undefined"
-          :icon="icons.add"
-          color="primary"
-          variant="solid"
-          block
-          data-testid="sidebar-quick-add"
-        />
+      <UDropdownMenu
+        v-model:open="quickAdd.menuOpen"
+        :items="quickAddItems"
+        :content="{ align: 'start' }"
+      >
+        <ShortcutTooltip :hint="quickAddHint" :text="t('quickAdd.add')">
+          <UButton
+            :label="collapsed ? undefined : t('quickAdd.add')"
+            :aria-label="collapsed ? t('quickAdd.add') : undefined"
+            :icon="icons.add"
+            color="primary"
+            variant="solid"
+            block
+            data-testid="sidebar-quick-add"
+          />
+        </ShortcutTooltip>
       </UDropdownMenu>
 
       <UNavigationMenu
@@ -122,7 +158,12 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
         data-testid="sidebar-administration"
       />
 
-      <UDashboardSidebarCollapse />
+      <ShortcutTooltip
+        :hint="sidebarHint"
+        :text="t('shortcuts.actions.sidebar')"
+      >
+        <UDashboardSidebarCollapse data-testid="sidebar-collapse" />
+      </ShortcutTooltip>
     </template>
   </UDashboardSidebar>
 </template>

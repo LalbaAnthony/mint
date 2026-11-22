@@ -1,8 +1,9 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Category } from '@mint/shared/types/categories'
 import CategoryManager from '~/components/CategoryManager.vue'
 import { installFakeApi } from '../fake-api'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -77,7 +78,7 @@ async function mountManager() {
     'GET /categories': () => categories,
     'POST /categories/reorder': () => undefined,
   })
-  const wrapper = await mountSuspended(CategoryManager)
+  const wrapper = await mountInApp(CategoryManager)
   await vi.waitFor(() => {
     expect(
       wrapper.find(`[data-testid="category-${housing.id}"]`).exists(),
@@ -162,7 +163,7 @@ describe('category form', () => {
       'GET /categories': () => categories,
       'POST /categories': () => category('09', 'Animaux'),
     })
-    const wrapper = await mountSuspended(CategoryManager)
+    const wrapper = await mountInApp(CategoryManager)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="categories-add"]').exists()).toBe(true)
     })

@@ -65,6 +65,7 @@ export const icons = {
   systemCategory: 'lucide:lock',
   filter: 'lucide:filter',
   search: 'lucide:search',
+  keyboard: 'lucide:keyboard',
   previous: 'lucide:chevron-left',
   next: 'lucide:chevron-right',
   skip: 'lucide:skip-forward',

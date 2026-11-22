@@ -125,6 +125,17 @@ async function confirm(): Promise<void> {
     pending.value = false
   }
 }
+
+const connectivity = useConnectivityStore()
+const actions = useTemplateRef<HTMLElement>('actions')
+
+useDialogSubmitShortcut(
+  actions,
+  () => {
+    void confirm()
+  },
+  () => open.value && !connectivity.offline && !blocked.value && !pending.value,
+)
 </script>
 
 <template>
@@ -144,7 +155,7 @@ async function confirm(): Promise<void> {
       </AppFormField>
     </template>
     <template #footer="{ close }">
-      <div class="flex w-full justify-end gap-2">
+      <div ref="actions" class="flex w-full justify-end gap-2">
         <UButton
           :label="t('common.cancel')"
           color="neutral"
@@ -152,15 +163,17 @@ async function confirm(): Promise<void> {
           @click="close"
         />
         <OfflineGuard v-slot="{ offline }">
-          <UButton
-            :label="t('common.delete')"
-            :loading="pending"
-            :disabled="offline || blocked"
-            color="error"
-            variant="solid"
-            data-testid="confirm-modal-confirm"
-            @click="confirm"
-          />
+          <ShortcutTooltip shortcut="submit">
+            <UButton
+              :label="t('common.delete')"
+              :loading="pending"
+              :disabled="offline || blocked"
+              color="error"
+              variant="solid"
+              data-testid="confirm-modal-confirm"
+              @click="confirm"
+            />
+          </ShortcutTooltip>
         </OfflineGuard>
       </div>
     </template>

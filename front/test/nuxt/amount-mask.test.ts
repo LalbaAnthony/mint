@@ -1,4 +1,3 @@
-import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import CapExcessBadge from '~/components/CapExcessBadge.vue'
@@ -6,6 +5,7 @@ import MoneyAmount from '~/components/MoneyAmount.vue'
 import ViewPanel from '~/components/ViewPanel.vue'
 import { amountMaskStorageKey } from '~/stores/amount-mask'
 import { signIn, signOut } from '../session'
+import { mountInApp } from '../app'
 
 function euros(cents: number, signDisplay: 'auto' | 'exceptZero' = 'auto') {
   return new Intl.NumberFormat('fr', {
@@ -46,7 +46,7 @@ async function renderAmount(props: {
   threshold?: number | null
   concealable?: boolean
 }) {
-  const wrapper = await mountSuspended(MoneyAmount, { props })
+  const wrapper = await mountInApp(MoneyAmount, { props })
   mounted.push(wrapper)
   return wrapper.get('[data-testid="money-amount"]')
 }
@@ -196,10 +196,10 @@ describe('masked amount (DSH-05, CHG-45, CHG-60)', () => {
   it('masks the cap excess badge of a summary only', async () => {
     useAmountMaskStore().toggle()
 
-    const summary = await mountSuspended(CapExcessBadge, {
+    const summary = await mountInApp(CapExcessBadge, {
       props: { excessCents: 5_000, concealable: true },
     })
-    const detail = await mountSuspended(CapExcessBadge, {
+    const detail = await mountInApp(CapExcessBadge, {
       props: { excessCents: 5_000 },
     })
     mounted.push(summary, detail)
@@ -213,14 +213,15 @@ describe('masked amount (DSH-05, CHG-45, CHG-60)', () => {
 
 describe('eye button of the header (DSH-05, CHG-45)', () => {
   it('toggles the masked mode from the header of every view', async () => {
-    const wrapper = await mountSuspended(ViewPanel, {
+    const wrapper = await mountInApp(ViewPanel, {
       props: { title: 'Accueil' },
     })
     mounted.push(wrapper)
     const button = wrapper.get('[data-testid="amount-mask-toggle"]')
 
     expect(button.attributes('aria-label')).toBe('Masquer les montants')
-    expect(button.attributes('title')).toBe('Masquer les montants')
+    expect(button.attributes('title')).toBeUndefined()
+    expect(button.attributes('aria-keyshortcuts')).toBe('Control+Shift+M')
     expect(button.attributes('aria-pressed')).toBe('false')
     expect(
       button.element.compareDocumentPosition(

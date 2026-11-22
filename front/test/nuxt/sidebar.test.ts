@@ -1,7 +1,7 @@
-import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it } from 'vitest'
 import { signIn } from '../session'
 import AppSidebar from '~/components/AppSidebar.vue'
+import { mountInApp } from '../app'
 
 afterEach(() => {
   signIn('user')
@@ -9,7 +9,7 @@ afterEach(() => {
 
 describe('AppSidebar (CHG-55)', () => {
   it('starts with the 28 px picto, the wordmark and the home link name', async () => {
-    const wrapper = await mountSuspended(AppSidebar, { route: '/' })
+    const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
     const homeLink = wrapper.get('a[aria-label="Mint, accueil"]')
     expect(homeLink.get('img').attributes()).toMatchObject({
@@ -21,7 +21,7 @@ describe('AppSidebar (CHG-55)', () => {
   })
 
   it('shows a full-width solid primary Add button', async () => {
-    const wrapper = await mountSuspended(AppSidebar, { route: '/' })
+    const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
     const add = wrapper.get('[data-testid="sidebar-quick-add"]')
     expect(add.text()).toBe('Ajouter')
@@ -31,7 +31,7 @@ describe('AppSidebar (CHG-55)', () => {
   })
 
   it('puts the search trigger right above the Add button (RCH-01)', async () => {
-    const wrapper = await mountSuspended(AppSidebar, { route: '/' })
+    const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
     const search = wrapper.get('[data-testid="sidebar-search"]').element
     const add = wrapper.get('[data-testid="sidebar-quick-add"]').element
@@ -42,7 +42,7 @@ describe('AppSidebar (CHG-55)', () => {
   })
 
   it('groups the navigation in three separated lists', async () => {
-    const wrapper = await mountSuspended(AppSidebar, { route: '/' })
+    const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
     const navigation = wrapper.get('[data-testid="sidebar-navigation"]')
     const labels = navigation
@@ -63,13 +63,13 @@ describe('AppSidebar (CHG-55)', () => {
   })
 
   it('puts Profile in the footer', async () => {
-    const wrapper = await mountSuspended(AppSidebar, { route: '/' })
+    const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
     expect(wrapper.get('[data-testid="sidebar-profile"]').text()).toBe('Profil')
   })
 
   it('shows Administration to an administrator only', async () => {
-    const wrapper = await mountSuspended(AppSidebar, { route: '/' })
+    const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
     expect(
       wrapper.find('[data-testid="sidebar-administration"]').exists(),

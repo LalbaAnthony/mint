@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import OperationFormModal from '~/components/OperationFormModal.vue'
 import TagManager from '~/components/TagManager.vue'
@@ -14,6 +14,7 @@ import {
   referentialHandlers,
   submit,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -55,7 +56,7 @@ describe('tags (CAT-09)', () => {
         ruleCount: 0,
       }),
     })
-    const wrapper = await mountSuspended(TagManager)
+    const wrapper = await mountInApp(TagManager)
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -87,7 +88,7 @@ describe('tags (CAT-09)', () => {
       'GET /tags': () => [worksTag],
       [`DELETE /tags/${worksTag.id}`]: () => undefined,
     })
-    const wrapper = await mountSuspended(TagManager)
+    const wrapper = await mountInApp(TagManager)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('Travaux')
@@ -117,7 +118,7 @@ describe('tags (CAT-09)', () => {
       'POST /tags': () => worksTag,
     })
     const selected = ref<string[]>([ids.holidays])
-    const wrapper = await mountSuspended(TagSelect, {
+    const wrapper = await mountInApp(TagSelect, {
       props: {
         modelValue: selected.value,
         'onUpdate:modelValue': (value: string[]) => {
@@ -149,7 +150,7 @@ describe('tags (CAT-09)', () => {
         pageSize: 50,
       }),
     })
-    const wrapper = await mountSuspended(OperationsPage, {
+    const wrapper = await mountInApp(OperationsPage, {
       route: '/operations',
     })
     mounted.push(wrapper)
@@ -179,7 +180,7 @@ describe('tags (CAT-09)', () => {
         capWarnings: [],
       }),
     })
-    const wrapper = await mountSuspended(OperationFormModal)
+    const wrapper = await mountInApp(OperationFormModal)
     mounted.push(wrapper)
     useOperationEditorStore().edit(tagged)
     await vi.waitFor(() => {

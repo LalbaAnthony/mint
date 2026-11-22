@@ -411,16 +411,18 @@ async function submit(): Promise<void> {
           :operation="edited"
         />
         <OfflineGuard block v-slot="{ offline }">
-          <UButton
-            :disabled="offline"
-            type="submit"
-            :label="t('common.save')"
-            :loading="saving"
-            color="primary"
-            variant="solid"
-            block
-            data-testid="operation-submit"
-          />
+          <ShortcutTooltip shortcut="submit">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('common.save')"
+              :loading="saving"
+              color="primary"
+              variant="solid"
+              block
+              data-testid="operation-submit"
+            />
+          </ShortcutTooltip>
         </OfflineGuard>
       </AppForm>
     </template>

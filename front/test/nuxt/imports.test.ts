@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 import type {
@@ -18,6 +18,7 @@ import {
   focusedTestId,
   livret,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -158,7 +159,7 @@ function handlers() {
 describe('import view (IMP-01 to IMP-08)', () => {
   it('uploads the file, applies the remembered settings and validates the reviewed lines', async () => {
     const api = installFakeApi(fetchMock, handlers())
-    const wrapper = await mountSuspended(ImportPage, { route: '/import' })
+    const wrapper = await mountInApp(ImportPage, { route: '/import' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -222,7 +223,7 @@ describe('import view (IMP-01 to IMP-08)', () => {
 
 describe('import autofocus (CHG-69)', () => {
   async function mountPage() {
-    const wrapper = await mountSuspended(ImportPage, {
+    const wrapper = await mountInApp(ImportPage, {
       route: '/import',
       attachTo: document.body,
     })
@@ -251,7 +252,7 @@ describe('import autofocus (CHG-69)', () => {
   })
 
   it('counts the default debit and credit columns as values', async () => {
-    const wrapper = await mountSuspended(ImportMappingForm, {
+    const wrapper = await mountInApp(ImportMappingForm, {
       props: {
         view: view({
           mapping: { ...mapping, colDebit: null, colCredit: null },

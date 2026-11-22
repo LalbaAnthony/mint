@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Account, AccountOverview } from '@mint/shared/types/accounts'
 import type { PaymentMethod } from '@mint/shared/types/payment-methods'
@@ -6,6 +6,7 @@ import AccountGroupCard from '~/components/AccountGroupCard.vue'
 import AccountsPage from '~/pages/accounts/index.vue'
 import { installFakeApi } from '../fake-api'
 import { signIn, testProfile } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -120,7 +121,7 @@ describe('US-04 where my money is (CPT-08)', () => {
       'GET /payment-methods': () => [card],
     })
 
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
 
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="accounts-total"]').exists()).toBe(true)
@@ -155,7 +156,7 @@ describe('US-04 where my money is (CPT-08)', () => {
     })
     useAmountMaskStore().toggle()
 
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
 
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="accounts-total"]').exists()).toBe(true)
@@ -195,7 +196,7 @@ describe('US-04 where my money is (CPT-08)', () => {
       'GET /payment-methods': () => [],
     })
 
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
 
     await vi.waitFor(() => {
       expect(
@@ -214,7 +215,7 @@ describe('US-04 where my money is (CPT-08)', () => {
       'GET /payment-methods': () => [],
     })
 
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
 
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('Aucun compte')
@@ -237,7 +238,7 @@ describe('US-04 where my money is (CPT-08)', () => {
       'GET /payment-methods': () => [],
     })
 
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
 
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="archived-accounts"]').exists()).toBe(
@@ -265,7 +266,7 @@ describe('payment methods under their account (PAY-01, PAY-05)', () => {
       'GET /accounts/overview': () => usOverview,
       'GET /payment-methods': () => [card, expiredCard],
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
       expect(
         wrapper.find(`[data-testid="account-${current.id}"]`).exists(),
@@ -292,7 +293,7 @@ describe('payment methods under their account (PAY-01, PAY-05)', () => {
       'GET /payment-methods': () => [],
       'POST /payment-methods': () => ({ ...card, label: 'Virement CA' }),
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="account-toggle"]').exists()).toBe(true)
     })
@@ -330,7 +331,7 @@ describe('account form (CPT-01)', () => {
         defaultAccountId: current.id,
       }),
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('Aucun compte')
     })
@@ -376,7 +377,7 @@ describe('account form (CPT-01)', () => {
       }),
       'GET /auth/session': () => testProfile,
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
       expect(wrapper.findComponent(AccountGroupCard).exists()).toBe(true)
     })
@@ -402,7 +403,7 @@ describe('account form (CPT-01)', () => {
       }),
       'GET /payment-methods': () => [],
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('Aucun compte')
     })
@@ -450,7 +451,7 @@ describe('reorder mode (CPT-01)', () => {
       'GET /payment-methods': () => [],
       'POST /accounts/reorder': () => undefined,
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="accounts-reorder"]').exists()).toBe(
         true,

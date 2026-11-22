@@ -85,14 +85,16 @@ async function submit(): Promise<void> {
           class="w-full"
         />
       </AppFormField>
-      <UButton
-        type="submit"
-        :label="t('auth.savePassword')"
-        :loading="pending"
-        color="primary"
-        variant="solid"
-        block
-      />
+      <ShortcutTooltip shortcut="submit">
+        <UButton
+          type="submit"
+          :label="t('auth.savePassword')"
+          :loading="pending"
+          color="primary"
+          variant="solid"
+          block
+        />
+      </ShortcutTooltip>
     </AppForm>
     <NuxtLink to="/forgot-password" class="text-sm text-primary underline">
       {{ t('auth.requestNewLink') }}

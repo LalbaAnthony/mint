@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SearchResponse } from '@mint/shared/types/search'
 import AccountsPage from '~/pages/accounts/index.vue'
@@ -22,6 +22,7 @@ import {
   schedule,
   setViewportWidth,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -134,7 +135,7 @@ describe('search modal (RCH-01, RCH-05)', () => {
           },
         }),
     })
-    const wrapper = await mountSuspended(GlobalSearchModal)
+    const wrapper = await mountInApp(GlobalSearchModal)
     mounted.push(wrapper)
 
     useSearchStore().openModal()
@@ -171,7 +172,7 @@ describe('search modal (RCH-01, RCH-05)', () => {
         }),
     })
     useAmountMaskStore().toggle()
-    const wrapper = await mountSuspended(GlobalSearchModal)
+    const wrapper = await mountInApp(GlobalSearchModal)
     mounted.push(wrapper)
 
     useSearchStore().openModal()
@@ -195,7 +196,7 @@ describe('search modal (RCH-01, RCH-05)', () => {
       ...referentialHandlers(),
       [searchRoute('loyer', 0, 5)]: () => searchResponse(),
     })
-    const wrapper = await mountSuspended(GlobalSearchModal)
+    const wrapper = await mountInApp(GlobalSearchModal)
     mounted.push(wrapper)
 
     useSearchStore().openModal()
@@ -256,7 +257,7 @@ describe('search results page (RCH-04 to RCH-07)', () => {
         }),
     })
 
-    const wrapper = await mountSuspended(SearchPage, { route: '/search?q=co' })
+    const wrapper = await mountInApp(SearchPage, { route: '/search?q=co' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -325,7 +326,7 @@ describe('search results page (RCH-04 to RCH-07)', () => {
         searchResponse({ operations: { items: [last], total: 51 } }),
     })
 
-    const wrapper = await mountSuspended(SearchPage, { route: '/search?q=co' })
+    const wrapper = await mountInApp(SearchPage, { route: '/search?q=co' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -353,7 +354,7 @@ describe('search results page (RCH-04 to RCH-07)', () => {
           operations: { items: [operation()], total: 1 },
         }),
     })
-    const wrapper = await mountSuspended(SearchPage, { route: '/search?q=co' })
+    const wrapper = await mountInApp(SearchPage, { route: '/search?q=co' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(
@@ -387,7 +388,7 @@ describe('search results page (RCH-04 to RCH-07)', () => {
       ...referentialHandlers(),
       [searchRoute('zz', 0, 50)]: () => searchResponse(),
     })
-    const wrapper = await mountSuspended(SearchPage, { route: '/search' })
+    const wrapper = await mountInApp(SearchPage, { route: '/search' })
     mounted.push(wrapper)
 
     expect(wrapper.get('[data-testid="search-hint"]').text()).toBe(
@@ -407,7 +408,7 @@ describe('search results page (RCH-04 to RCH-07)', () => {
     installFakeApi(fetchMock, referentialHandlers())
     setOnline(false)
 
-    const wrapper = await mountSuspended(SearchPage, { route: '/search?q=co' })
+    const wrapper = await mountInApp(SearchPage, { route: '/search?q=co' })
     mounted.push(wrapper)
 
     expect(wrapper.text()).toContain('Recherche indisponible hors ligne')
@@ -427,7 +428,7 @@ describe('links from the search (RCH-06)', () => {
       'GET /payment-methods': () => [card],
     })
 
-    const wrapper = await mountSuspended(AccountsPage, {
+    const wrapper = await mountInApp(AccountsPage, {
       route: `/accounts?account=${ids.current}`,
     })
     mounted.push(wrapper)
@@ -462,7 +463,7 @@ describe('links from the search (RCH-06)', () => {
       'GET /payment-methods': () => [],
     })
 
-    const wrapper = await mountSuspended(AccountsPage, {
+    const wrapper = await mountInApp(AccountsPage, {
       route: `/accounts?account=${archivedId}`,
     })
     mounted.push(wrapper)
@@ -491,7 +492,7 @@ describe('links from the search (RCH-06)', () => {
       }),
     })
 
-    const active = await mountSuspended(EnvelopesPage, {
+    const active = await mountInApp(EnvelopesPage, {
       route: `/envelopes?envelope=${ids.envelope}`,
     })
     mounted.push(active)
@@ -503,7 +504,7 @@ describe('links from the search (RCH-06)', () => {
     active.unmount()
     mounted.splice(0)
 
-    const wrapper = await mountSuspended(EnvelopesPage, {
+    const wrapper = await mountInApp(EnvelopesPage, {
       route: `/envelopes?envelope=${inactiveEnvelopeId}`,
     })
     mounted.push(wrapper)

@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ScheduleDetailModal from '~/components/ScheduleDetailModal.vue'
 import ScheduleFormModal from '~/components/ScheduleFormModal.vue'
@@ -18,6 +18,7 @@ import {
   submit,
 } from '../planning-fixtures'
 import { setDefaultAccount } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -53,7 +54,7 @@ describe('schedules view (ECH-09, ECH-10)', () => {
       'GET /schedules': () => ({ schedules: [schedule()], totals }),
     })
 
-    const wrapper = await mountSuspended(SchedulesPage, { route: '/schedules' })
+    const wrapper = await mountInApp(SchedulesPage, { route: '/schedules' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -90,7 +91,7 @@ describe('schedules view (ECH-09, ECH-10)', () => {
     })
     useAmountMaskStore().toggle()
 
-    const wrapper = await mountSuspended(SchedulesPage, { route: '/schedules' })
+    const wrapper = await mountInApp(SchedulesPage, { route: '/schedules' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -128,7 +129,7 @@ describe('schedules view (ECH-09, ECH-10)', () => {
       }),
     })
 
-    const wrapper = await mountSuspended(SchedulesPage, { route: '/schedules' })
+    const wrapper = await mountInApp(SchedulesPage, { route: '/schedules' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -147,7 +148,7 @@ describe('schedule form (ECH-01 to ECH-06)', () => {
       'POST /schedules': () => schedule({ kind: 'transfer' }),
     })
     await useReferentialsStore().load()
-    const wrapper = await mountSuspended(ScheduleFormModal, {
+    const wrapper = await mountInApp(ScheduleFormModal, {
       props: { open: true, schedule: null },
     })
     mounted.push(wrapper)
@@ -256,7 +257,7 @@ describe('schedule detail (ECH-07)', () => {
       }),
     })
     await useReferentialsStore().load()
-    const wrapper = await mountSuspended(ScheduleDetailModal, {
+    const wrapper = await mountInApp(ScheduleDetailModal, {
       props: { open: true, schedule: schedule() },
     })
     mounted.push(wrapper)
@@ -279,6 +280,8 @@ describe('schedule detail (ECH-07)', () => {
         ),
       ).toBe(true)
     })
-    expect(wrapper.emitted('changed')).toHaveLength(1)
+    expect(
+      wrapper.getComponent(ScheduleDetailModal).emitted('changed'),
+    ).toHaveLength(1)
   })
 })

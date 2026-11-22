@@ -579,16 +579,18 @@ async function submit(): Promise<void> {
         </div>
         <USwitch v-model="state.active" :label="t('schedules.fields.active')" />
         <OfflineGuard block v-slot="{ offline }">
-          <UButton
-            :disabled="offline"
-            type="submit"
-            :label="t('common.save')"
-            :loading="saving"
-            color="primary"
-            variant="solid"
-            block
-            data-testid="schedule-submit"
-          />
+          <ShortcutTooltip shortcut="submit">
+            <UButton
+              :disabled="offline"
+              type="submit"
+              :label="t('common.save')"
+              :loading="saving"
+              color="primary"
+              variant="solid"
+              block
+              data-testid="schedule-submit"
+            />
+          </ShortcutTooltip>
         </OfflineGuard>
       </AppForm>
     </template>

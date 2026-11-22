@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 import type {
@@ -25,6 +25,7 @@ import {
   submit,
 } from '../planning-fixtures'
 import { signOut } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -154,7 +155,7 @@ describe('notification bell (NOTIF-04, CHG-51, CHG-56)', () => {
     })
     await useNotificationsStore().refresh()
 
-    const wrapper = await mountSuspended(ViewPanel, {
+    const wrapper = await mountInApp(ViewPanel, {
       props: { title: 'Comptes' },
     })
     mounted.push(wrapper)
@@ -180,13 +181,15 @@ describe('notification bell (NOTIF-04, CHG-51, CHG-56)', () => {
 
   it('hides the counter without unread notification and caps it at 99+', async () => {
     const store = useNotificationsStore()
-    const wrapper = await mountSuspended(NotificationBell)
+    const wrapper = await mountInApp(NotificationBell)
     mounted.push(wrapper)
 
     expect(wrapper.find('[data-testid="notification-counter"]').exists()).toBe(
       false,
     )
-    expect(wrapper.attributes('aria-label')).toBe('Notifications')
+    expect(
+      wrapper.get('[data-testid="notification-bell"]').attributes('aria-label'),
+    ).toBe('Notifications')
 
     store.unreadCount = 150
     await nextTick()
@@ -205,7 +208,7 @@ describe('notification center (NOTIF-04, CHG-67)', () => {
     await store.refresh()
     store.open = true
 
-    const wrapper = await mountSuspended(NotificationCenter)
+    const wrapper = await mountInApp(NotificationCenter)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(findInBody('[data-testid="notification-center"]')).not.toBeNull()
@@ -262,7 +265,7 @@ describe('notification center (NOTIF-04, CHG-67)', () => {
     await store.refresh()
     store.open = true
 
-    const wrapper = await mountSuspended(NotificationCenter)
+    const wrapper = await mountInApp(NotificationCenter)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(findInBody('[data-testid="notification-center"]')).not.toBeNull()
@@ -305,7 +308,7 @@ describe('notification center (NOTIF-04, CHG-67)', () => {
     await store.refresh()
     store.open = true
 
-    const wrapper = await mountSuspended(NotificationCenter)
+    const wrapper = await mountInApp(NotificationCenter)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(
@@ -338,7 +341,7 @@ describe('notification center (NOTIF-04, CHG-67)', () => {
     const store = useNotificationsStore()
     store.open = true
 
-    const wrapper = await mountSuspended(NotificationCenter)
+    const wrapper = await mountInApp(NotificationCenter)
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -354,7 +357,7 @@ describe('notification refresh (NOTIF-04, NOTIF-06)', () => {
       'POST /operations': () => ({}),
       'POST /notifications/read-all': () => undefined,
     })
-    const wrapper = await mountSuspended(RefreshHost)
+    const wrapper = await mountInApp(RefreshHost)
     mounted.push(wrapper)
     const store = useNotificationsStore()
     await vi.waitFor(() => {
@@ -389,7 +392,7 @@ describe('notification refresh (NOTIF-04, NOTIF-06)', () => {
     installFakeApi(fetchMock, {
       'GET /notifications': () => apiFailure(500, { error: 'internal_error' }),
     })
-    const wrapper = await mountSuspended(RefreshHost)
+    const wrapper = await mountInApp(RefreshHost)
     mounted.push(wrapper)
     const toast = useToast()
     await vi.waitFor(() => {
@@ -426,7 +429,7 @@ describe('notification settings (NOTIF-05, NOTIF-08, NOTIF-09)', () => {
         return undefined
       },
     })
-    const wrapper = await mountSuspended(NotificationSettings)
+    const wrapper = await mountInApp(NotificationSettings)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain(
@@ -470,7 +473,7 @@ describe('notification settings (NOTIF-05, NOTIF-08, NOTIF-09)', () => {
       'GET /push/key': () => ({ publicKey: 'AQID' }),
       'GET /push/subscriptions': () => [],
     })
-    const wrapper = await mountSuspended(NotificationSettings)
+    const wrapper = await mountInApp(NotificationSettings)
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -598,7 +601,7 @@ describe('reminder delay (NOTIF-02, ECH-02)', () => {
       }),
     })
     await useReferentialsStore().load()
-    const automatic = await mountSuspended(ScheduleFormModal, {
+    const automatic = await mountInApp(ScheduleFormModal, {
       props: { open: true, schedule: schedule() },
     })
     mounted.push(automatic)
@@ -610,7 +613,7 @@ describe('reminder delay (NOTIF-02, ECH-02)', () => {
     mounted.pop()
     document.body.innerHTML = ''
 
-    const manual = await mountSuspended(ScheduleFormModal, {
+    const manual = await mountInApp(ScheduleFormModal, {
       props: {
         open: true,
         schedule: schedule({ triggerMode: 'manual', reminderDaysBefore: 3 }),
@@ -665,7 +668,7 @@ describe('notification links (NOTIF-04, NOTIF-07)', () => {
         }),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, {
+    const wrapper = await mountInApp(CalendarPage, {
       route: `/calendar?account=${ids.current}&day=2026-12-05`,
     })
     mounted.push(wrapper)
@@ -695,7 +698,7 @@ describe('notification links (NOTIF-04, NOTIF-07)', () => {
       }),
     })
 
-    const wrapper = await mountSuspended(SchedulesPage, {
+    const wrapper = await mountInApp(SchedulesPage, {
       route: `/schedules?schedule=${ids.schedule}`,
     })
     mounted.push(wrapper)

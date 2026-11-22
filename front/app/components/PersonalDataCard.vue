@@ -200,17 +200,19 @@ async function deleteWithPasskey(): Promise<void> {
             />
           </AppFormField>
           <OfflineGuard block v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('personalData.download')"
-              :icon="icons.download"
-              :loading="exporting"
-              color="primary"
-              variant="solid"
-              block
-              data-testid="export-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('personalData.download')"
+                :icon="icons.download"
+                :loading="exporting"
+                color="primary"
+                variant="solid"
+                block
+                data-testid="export-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
       </template>
@@ -253,16 +255,18 @@ async function deleteWithPasskey(): Promise<void> {
             />
           </AppFormField>
           <OfflineGuard block v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('personalData.deleteForever')"
-              :loading="deleting"
-              color="error"
-              variant="solid"
-              block
-              data-testid="delete-account-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('personalData.deleteForever')"
+                :loading="deleting"
+                color="error"
+                variant="solid"
+                block
+                data-testid="delete-account-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
         <template v-if="passkeyConfirmation">

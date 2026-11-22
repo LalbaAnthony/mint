@@ -190,15 +190,17 @@ function remove(rate: InterestRate): Promise<void> {
             <RateInput v-model="state.rate" data-testid="interest-rate" />
           </AppFormField>
           <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('interest.record')"
-              color="primary"
-              variant="solid"
-              :loading="busy"
-              data-testid="interest-rate-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('interest.record')"
+                color="primary"
+                variant="solid"
+                :loading="busy"
+                data-testid="interest-rate-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
         <p v-if="rates.length === 0" class="text-sm text-muted">

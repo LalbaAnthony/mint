@@ -156,6 +156,21 @@ async function apply(): Promise<void> {
     applying.value = false
   }
 }
+
+const connectivity = useConnectivityStore()
+const actions = useTemplateRef<HTMLElement>('actions')
+
+useDialogSubmitShortcut(
+  actions,
+  () => {
+    void apply()
+  },
+  () =>
+    open.value &&
+    !connectivity.offline &&
+    kept.value.size > 0 &&
+    !applying.value,
+)
 </script>
 
 <template>
@@ -253,18 +268,20 @@ async function apply(): Promise<void> {
             </li>
           </ul>
         </section>
-        <div class="flex flex-col gap-2 sm:flex-row-reverse">
+        <div ref="actions" class="flex flex-col gap-2 sm:flex-row-reverse">
           <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline || kept.size === 0"
-              :label="t('rules.reapply.confirm', { n: kept.size }, kept.size)"
-              :loading="applying"
-              color="primary"
-              variant="solid"
-              class="justify-center"
-              data-testid="reapply-confirm"
-              @click="apply"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline || kept.size === 0"
+                :label="t('rules.reapply.confirm', { n: kept.size }, kept.size)"
+                :loading="applying"
+                color="primary"
+                variant="solid"
+                class="justify-center"
+                data-testid="reapply-confirm"
+                @click="apply"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
           <UButton
             :label="t('common.cancel')"

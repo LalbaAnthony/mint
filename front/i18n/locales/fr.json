@@ -46,6 +46,28 @@
     "offline": "Recherche indisponible hors ligne",
     "offlineText": "La recherche reprendra au retour du réseau."
   },
+  "shortcuts": {
+    "title": "Raccourcis clavier",
+    "description": "Hors Valider et Fermer, ils agissent quand aucune fenêtre ni aucun menu n'est ouvert.",
+    "groups": {
+      "general": "Général",
+      "views": "Vues",
+      "forms": "Formulaires"
+    },
+    "actions": {
+      "search": "Rechercher",
+      "create": "Nouveau : compte, échéance, enveloppe, règle ou invitation selon la vue ; ailleurs, dépense, revenu ou transfert",
+      "profile": "Profil et préférences",
+      "amountMask": "Masquer ou afficher les montants",
+      "sidebar": "Replier ou déplier la barre latérale",
+      "notifications": "Notifications",
+      "help": "Raccourcis clavier",
+      "importFile": "Import : choisir un fichier",
+      "reorder": "Comptes et règles : réorganiser",
+      "submit": "Valider le formulaire ou confirmer",
+      "close": "Fermer la fenêtre ou le menu"
+    }
+  },
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",

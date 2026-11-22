@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Passkey } from '@mint/shared/types/passkeys'
 import PasskeyManager from '~/components/PasskeyManager.vue'
@@ -7,6 +7,7 @@ import LoginPage from '~/pages/login.vue'
 import { apiFailure, installFakeApi } from '../fake-api'
 import { fillInput, findInBody, submit } from '../planning-fixtures'
 import { signOut, testProfile } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock, webauthn } = vi.hoisted(() => ({
   fetchMock: vi.fn(),
@@ -111,7 +112,7 @@ describe('passkey login (AUTH-03, US-03, CHG-59)', () => {
       'POST /auth/passkey/options': () => requestOptions,
       'POST /auth/passkey/login': () => testProfile,
     })
-    const wrapper = await mountSuspended(LoginPage, {
+    const wrapper = await mountInApp(LoginPage, {
       route: '/login?redirect=/accounts',
     })
     mounted.push(wrapper)
@@ -142,7 +143,7 @@ describe('passkey login (AUTH-03, US-03, CHG-59)', () => {
     const api = installFakeApi(fetchMock, {
       'POST /auth/passkey/options': () => requestOptions,
     })
-    const wrapper = await mountSuspended(LoginPage, { route: '/login' })
+    const wrapper = await mountInApp(LoginPage, { route: '/login' })
     mounted.push(wrapper)
 
     await wrapper.get('[data-testid="login-passkey"]').trigger('click')
@@ -165,7 +166,7 @@ describe('passkey login (AUTH-03, US-03, CHG-59)', () => {
       'POST /auth/passkey/login': () =>
         apiFailure(401, { error: 'passkey_invalid' }),
     })
-    const wrapper = await mountSuspended(LoginPage, { route: '/login' })
+    const wrapper = await mountInApp(LoginPage, { route: '/login' })
     mounted.push(wrapper)
 
     await wrapper.get('[data-testid="login-passkey"]').trigger('click')
@@ -180,7 +181,7 @@ describe('passkey login (AUTH-03, US-03, CHG-59)', () => {
   it('hides the passkey button when the browser has no WebAuthn', async () => {
     signOut()
     webauthn.supported = false
-    const wrapper = await mountSuspended(LoginPage, { route: '/login' })
+    const wrapper = await mountInApp(LoginPage, { route: '/login' })
     mounted.push(wrapper)
 
     expect(wrapper.find('[data-testid="login-passkey"]').exists()).toBe(false)
@@ -199,7 +200,7 @@ describe('passkey manager (AUTH-03)', () => {
         return passkeys[0]
       },
     })
-    const wrapper = await mountSuspended(PasskeyManager)
+    const wrapper = await mountInApp(PasskeyManager)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="passkeys-empty"]').exists()).toBe(true)
@@ -242,7 +243,7 @@ describe('passkey manager (AUTH-03)', () => {
         return undefined
       },
     })
-    const wrapper = await mountSuspended(PasskeyManager)
+    const wrapper = await mountInApp(PasskeyManager)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('iPhone')
@@ -283,7 +284,7 @@ describe('personal data (AUTH-08, AUTH-09, US-19)', () => {
     const api = installFakeApi(fetchMock, {
       'POST /profile/export': () => archive,
     })
-    const wrapper = await mountSuspended(PersonalDataCard)
+    const wrapper = await mountInApp(PersonalDataCard)
     mounted.push(wrapper)
 
     await wrapper.get('[data-testid="personal-data-export"]').trigger('click')
@@ -313,7 +314,7 @@ describe('personal data (AUTH-08, AUTH-09, US-19)', () => {
       'GET /profile/passkeys': () => [],
       'POST /profile/delete': () => undefined,
     })
-    const wrapper = await mountSuspended(PersonalDataCard)
+    const wrapper = await mountInApp(PersonalDataCard)
     mounted.push(wrapper)
 
     await wrapper.get('[data-testid="personal-data-delete"]').trigger('click')
@@ -351,7 +352,7 @@ describe('personal data (AUTH-08, AUTH-09, US-19)', () => {
       }),
       'POST /profile/delete': () => undefined,
     })
-    const wrapper = await mountSuspended(PersonalDataCard)
+    const wrapper = await mountInApp(PersonalDataCard)
     mounted.push(wrapper)
 
     await wrapper.get('[data-testid="personal-data-delete"]').trigger('click')
@@ -381,7 +382,7 @@ describe('personal data (AUTH-08, AUTH-09, US-19)', () => {
       'POST /profile/delete': () =>
         apiFailure(400, { error: 'email_mismatch' }),
     })
-    const wrapper = await mountSuspended(PersonalDataCard)
+    const wrapper = await mountInApp(PersonalDataCard)
     mounted.push(wrapper)
 
     await wrapper.get('[data-testid="personal-data-delete"]').trigger('click')

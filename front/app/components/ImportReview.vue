@@ -168,10 +168,18 @@ function refuseAllProposals(): void {
 function errorLabel(row: ImportRow): string {
   return row.error === null ? '' : t(`imports.errors.${row.error}`)
 }
+
+const connectivity = useConnectivityStore()
+const root = useTemplateRef<HTMLElement>('root')
+
+useShortcut('submit', () => emit('validate', decisions.value), {
+  enabled: () => !connectivity.offline && !props.busy,
+  container: root,
+})
 </script>
 
 <template>
-  <div class="flex flex-col gap-4" data-testid="import-review">
+  <div ref="root" class="flex flex-col gap-4" data-testid="import-review">
     <div class="flex flex-wrap items-end gap-2">
       <USelect
         v-model="filter"
@@ -293,15 +301,17 @@ function errorLabel(row: ImportRow): string {
         @click="emit('back')"
       />
       <OfflineGuard v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :label="t('imports.validate')"
-          color="primary"
-          variant="solid"
-          :loading="busy"
-          data-testid="import-validate"
-          @click="emit('validate', decisions)"
-        />
+        <ShortcutTooltip shortcut="submit">
+          <UButton
+            :disabled="offline"
+            :label="t('imports.validate')"
+            color="primary"
+            variant="solid"
+            :loading="busy"
+            data-testid="import-validate"
+            @click="emit('validate', decisions)"
+          />
+        </ShortcutTooltip>
       </OfflineGuard>
     </div>
   </div>

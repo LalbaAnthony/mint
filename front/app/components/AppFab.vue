@@ -6,27 +6,33 @@ const route = useRoute()
 const connectivity = useConnectivityStore()
 const { quickAddEntries } = useNavigation()
 const editor = useOperationEditorStore()
-
-const isOpen = ref(false)
+const quickAdd = useQuickAddStore()
+const hint = useShortcutHint('create', { fallbackOnly: true })
 
 function choose(kind: QuickAddKind): void {
-  isOpen.value = false
+  quickAdd.drawerOpen = false
   editor.create(kind)
 }
 const isHidden = computed(() => route.meta.hideFab === true)
 </script>
 
 <template>
-  <UDrawer v-if="!isHidden" v-model:open="isOpen" :title="t('quickAdd.title')">
-    <UButton
-      :icon="icons.add"
-      :aria-label="t('quickAdd.add')"
-      :disabled="connectivity.offline"
-      color="primary"
-      variant="solid"
-      class="fixed right-4 bottom-[calc(64px+16px+env(safe-area-inset-bottom))] z-10 size-14 justify-center rounded-full shadow-lg lg:hidden"
-      data-testid="fab"
-    />
+  <UDrawer
+    v-if="!isHidden"
+    v-model:open="quickAdd.drawerOpen"
+    :title="t('quickAdd.title')"
+  >
+    <ShortcutTooltip :hint="hint" :text="t('quickAdd.add')">
+      <UButton
+        :icon="icons.add"
+        :aria-label="t('quickAdd.add')"
+        :disabled="connectivity.offline"
+        color="primary"
+        variant="solid"
+        class="fixed right-4 bottom-[calc(64px+16px+env(safe-area-inset-bottom))] z-10 size-14 justify-center rounded-full shadow-lg lg:hidden"
+        data-testid="fab"
+      />
+    </ShortcutTooltip>
 
     <template #body>
       <ul class="flex flex-col gap-1" data-testid="fab-actions">

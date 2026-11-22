@@ -1,7 +1,8 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { reactive } from 'vue'
 import AppFab from '~/components/AppFab.vue'
+import { mountInApp } from '../app'
 
 const { routeState } = vi.hoisted(() => ({
   routeState: { path: '/', fullPath: '/', meta: { hideFab: false } },
@@ -24,7 +25,7 @@ afterEach(() => {
 
 describe('AppFab (CHG-54)', () => {
   it('renders a 56 px round solid primary button above the bottom bar', async () => {
-    const wrapper = await mountSuspended(AppFab)
+    const wrapper = await mountInApp(AppFab)
 
     const fab = wrapper.get('[data-testid="fab"]')
     expect(fab.attributes('aria-label')).toBe('Ajouter')
@@ -45,13 +46,13 @@ describe('AppFab (CHG-54)', () => {
   it('is hidden on views flagged with hideFab', async () => {
     routeState.meta.hideFab = true
 
-    const wrapper = await mountSuspended(AppFab)
+    const wrapper = await mountInApp(AppFab)
 
     expect(wrapper.find('[data-testid="fab"]').exists()).toBe(false)
   })
 
   it('is disabled offline', async () => {
-    const wrapper = await mountSuspended(AppFab)
+    const wrapper = await mountInApp(AppFab)
 
     setOnline(false)
     await wrapper.vm.$nextTick()

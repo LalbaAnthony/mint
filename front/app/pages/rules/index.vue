@@ -205,34 +205,54 @@ function actionOf(rule: Rule): string {
         account: referentials.accountName(rule.transferAccountId),
       })
 }
+
+const createHint = useShortcut('create', () => openForm(null, null), {
+  enabled: () => !connectivity.offline,
+})
+const reorderHint = useShortcut(
+  'reorder',
+  () => {
+    reordering.value = !reordering.value
+  },
+  { enabled: () => (rules.value?.length ?? 0) > 1 && !connectivity.offline },
+)
 </script>
 
 <template>
   <ViewPanel :title="t('navigation.rules')">
     <template #actions>
       <OfflineGuard v-if="(rules?.length ?? 0) > 1" v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :icon="icons.reorder"
-          :label="reordering ? t('common.doneReordering') : t('common.reorder')"
-          color="neutral"
-          variant="ghost"
-          data-testid="rules-reorder"
-          @click="reordering = !reordering"
-        />
+        <ShortcutTooltip
+          :hint="reorderHint"
+          :text="reordering ? t('common.doneReordering') : t('common.reorder')"
+        >
+          <UButton
+            :disabled="offline"
+            :icon="icons.reorder"
+            :label="
+              reordering ? t('common.doneReordering') : t('common.reorder')
+            "
+            color="neutral"
+            variant="ghost"
+            data-testid="rules-reorder"
+            @click="reordering = !reordering"
+          />
+        </ShortcutTooltip>
       </OfflineGuard>
       <OfflineGuard v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :icon="icons.add"
-          :aria-label="t('rules.add')"
-          color="primary"
-          variant="soft"
-          data-testid="rules-add"
-          @click="openForm(null, null)"
-        >
-          <span class="max-sm:sr-only">{{ t('rules.add') }}</span>
-        </UButton>
+        <ShortcutTooltip :hint="createHint" :text="t('rules.add')">
+          <UButton
+            :disabled="offline"
+            :icon="icons.add"
+            :aria-label="t('rules.add')"
+            color="primary"
+            variant="soft"
+            data-testid="rules-add"
+            @click="openForm(null, null)"
+          >
+            <span class="max-sm:sr-only">{{ t('rules.add') }}</span>
+          </UButton>
+        </ShortcutTooltip>
       </OfflineGuard>
     </template>
 

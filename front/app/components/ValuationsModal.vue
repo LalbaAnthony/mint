@@ -197,17 +197,19 @@ function remove(valuation: Valuation): Promise<void> {
             <AmountInput v-model="state.value" data-testid="valuation-value" />
           </AppFormField>
           <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="
-                edited === null ? t('valuations.record') : t('common.save')
-              "
-              color="primary"
-              variant="solid"
-              :loading="busy"
-              data-testid="valuation-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="
+                  edited === null ? t('valuations.record') : t('common.save')
+                "
+                color="primary"
+                variant="solid"
+                :loading="busy"
+                data-testid="valuation-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
           <UButton
             v-if="edited !== null"

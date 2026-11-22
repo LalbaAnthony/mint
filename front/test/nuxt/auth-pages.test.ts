@@ -1,10 +1,11 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import type { VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import InvitationPage from '~/pages/invitation.vue'
 import LoginPage from '~/pages/login.vue'
 import { apiFailure, installFakeApi } from '../fake-api'
 import { signOut, testProfile } from '../session'
+import { mountInApp } from '../app'
 
 const token = 'a'.repeat(43)
 
@@ -38,7 +39,7 @@ describe('login page (AUTH-02, CHG-59)', () => {
     const api = installFakeApi(fetchMock, {
       'POST /auth/login': () => testProfile,
     })
-    const wrapper = await mountSuspended(LoginPage, {
+    const wrapper = await mountInApp(LoginPage, {
       route: '/login?redirect=/accounts',
     })
 
@@ -65,7 +66,7 @@ describe('login page (AUTH-02, CHG-59)', () => {
       'POST /auth/login': () =>
         apiFailure(429, { error: 'account_locked', retryAfterSeconds: 840 }),
     })
-    const wrapper = await mountSuspended(LoginPage, { route: '/login' })
+    const wrapper = await mountInApp(LoginPage, { route: '/login' })
 
     await fill(wrapper, 'login-email', 'me@example.org')
     await fill(wrapper, 'login-password', 'wrong password')
@@ -79,7 +80,7 @@ describe('login page (AUTH-02, CHG-59)', () => {
   })
 
   it('links to the password reset', async () => {
-    const wrapper = await mountSuspended(LoginPage, { route: '/login' })
+    const wrapper = await mountInApp(LoginPage, { route: '/login' })
 
     expect(
       wrapper.get('[data-testid="forgot-password-link"]').attributes('href'),
@@ -94,7 +95,7 @@ describe('invitation page (US-01)', () => {
         apiFailure(410, { error: 'invitation_expired' }),
     })
 
-    const wrapper = await mountSuspended(InvitationPage, {
+    const wrapper = await mountInApp(InvitationPage, {
       route: `/invitation#token=${token}`,
     })
 
@@ -114,7 +115,7 @@ describe('invitation page (US-01)', () => {
         email: 'proche@example.org',
       }),
     })
-    const wrapper = await mountSuspended(InvitationPage, {
+    const wrapper = await mountInApp(InvitationPage, {
       route: `/invitation#token=${token}`,
     })
     await vi.waitFor(() => {
@@ -141,7 +142,7 @@ describe('invitation page (US-01)', () => {
     const api = installFakeApi(fetchMock, {
       'POST /auth/invitation/check': () => ({ email: 'proche@example.org' }),
     })
-    const wrapper = await mountSuspended(InvitationPage, {
+    const wrapper = await mountInApp(InvitationPage, {
       route: `/invitation#token=${token}`,
     })
     await vi.waitFor(() => {

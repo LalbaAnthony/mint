@@ -115,6 +115,7 @@ export default defineNuxtConfig({
         'lucide:panel-left-open',
         'lucide:rotate-ccw',
         'lucide:search',
+        'lucide:keyboard',
         'lucide:square',
         'lucide:star',
         'lucide:circle-check',

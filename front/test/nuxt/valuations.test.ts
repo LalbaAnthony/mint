@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Account } from '@mint/shared/types/accounts'
 import AccountGroupCard from '~/components/AccountGroupCard.vue'
@@ -13,6 +13,7 @@ import {
   referentialHandlers,
   submit,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -63,7 +64,7 @@ afterEach(() => {
 describe('investments (CPT-06, US-16)', () => {
   it('shows the latent gain of +330 EUR (+15.0 %) under the reference balance and offers the valuations', async () => {
     installFakeApi(fetchMock, referentialHandlers())
-    const wrapper = await mountSuspended(AccountGroupCard, {
+    const wrapper = await mountInApp(AccountGroupCard, {
       props: {
         group: {
           usage: 'investment',
@@ -96,7 +97,7 @@ describe('investments (CPT-06, US-16)', () => {
 
   it('shows no gain nor valuation entry for a current account', async () => {
     installFakeApi(fetchMock, referentialHandlers())
-    const wrapper = await mountSuspended(AccountGroupCard, {
+    const wrapper = await mountInApp(AccountGroupCard, {
       props: {
         group: { usage: 'current', subtotalCents: 0, accounts: [account()] },
         paymentMethods: [],
@@ -134,7 +135,7 @@ describe('investments (CPT-06, US-16)', () => {
         valueCents: 260_050,
       }),
     })
-    const wrapper = await mountSuspended(ValuationsModal, {
+    const wrapper = await mountInApp(ValuationsModal, {
       props: { open: true, account: pea() },
     })
     mounted.push(wrapper)
@@ -158,7 +159,9 @@ describe('investments (CPT-06, US-16)', () => {
       ).toEqual({ date: parisDate(new Date()), valueCents: 260_050 })
     })
     await vi.waitFor(() => {
-      expect(wrapper.emitted('changed')).toBeDefined()
+      expect(
+        wrapper.getComponent(ValuationsModal).emitted('changed'),
+      ).toBeDefined()
     })
   })
 

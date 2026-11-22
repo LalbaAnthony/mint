@@ -149,23 +149,30 @@ async function saved(
   })
   await load()
 }
+
+const connectivity = useConnectivityStore()
+const createHint = useShortcut('create', () => openForm(null), {
+  enabled: () => !connectivity.offline,
+})
 </script>
 
 <template>
   <ViewPanel :title="t('navigation.schedules')">
     <template #actions>
       <OfflineGuard v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :icon="icons.add"
-          :aria-label="t('schedules.add')"
-          color="primary"
-          variant="soft"
-          data-testid="schedules-add"
-          @click="openForm(null)"
-        >
-          <span class="max-sm:sr-only">{{ t('schedules.add') }}</span>
-        </UButton>
+        <ShortcutTooltip :hint="createHint" :text="t('schedules.add')">
+          <UButton
+            :disabled="offline"
+            :icon="icons.add"
+            :aria-label="t('schedules.add')"
+            color="primary"
+            variant="soft"
+            data-testid="schedules-add"
+            @click="openForm(null)"
+          >
+            <span class="max-sm:sr-only">{{ t('schedules.add') }}</span>
+          </UButton>
+        </ShortcutTooltip>
       </OfflineGuard>
     </template>
 

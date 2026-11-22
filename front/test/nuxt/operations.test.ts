@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import OperationFormModal from '~/components/OperationFormModal.vue'
 import OperationRow from '~/components/OperationRow.vue'
@@ -21,6 +21,7 @@ import {
   typeInto,
 } from '../planning-fixtures'
 import { setDefaultAccount } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -31,13 +32,13 @@ const initialWidth = window.innerWidth
 const mounted: { unmount: () => void }[] = []
 
 async function mountPage() {
-  const wrapper = await mountSuspended(OperationsPage, { route: '/operations' })
+  const wrapper = await mountInApp(OperationsPage, { route: '/operations' })
   mounted.push(wrapper)
   return wrapper
 }
 
 async function mountForm() {
-  const wrapper = await mountSuspended(OperationFormModal)
+  const wrapper = await mountInApp(OperationFormModal)
   mounted.push(wrapper)
   return wrapper
 }
@@ -380,12 +381,12 @@ describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () =
 
   it('shows the to-categorize, unconfirmed and reconciled marks of CHG-61', async () => {
     installFakeApi(fetchMock, referentialHandlers())
-    const unconfirmed = await mountSuspended(OperationRow, {
+    const unconfirmed = await mountInApp(OperationRow, {
       props: {
         operation: operation({ origin: 'schedule', unconfirmed: true }),
       },
     })
-    const reconciled = await mountSuspended(OperationRow, {
+    const reconciled = await mountInApp(OperationRow, {
       props: {
         operation: operation({
           origin: 'import',
@@ -430,7 +431,7 @@ describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () =
       [`POST /operations/${created.id}/reconcile`]: () =>
         operation({ ...created, reconciled: true }),
     })
-    const proposal = await mountSuspended(ReconciliationProposalModal)
+    const proposal = await mountInApp(ReconciliationProposalModal)
     mounted.push(proposal)
     await openEditor(
       () => useOperationEditorStore().create('expense'),
@@ -603,7 +604,7 @@ describe('reapplying the rules to a selection (REG-05)', () => {
       'GET /rules': () => rules(),
       'POST /rules/reapply': () => ({ updated: 1 }),
     })
-    const wrapper = await mountSuspended(ReapplyRulesModal, {
+    const wrapper = await mountInApp(ReapplyRulesModal, {
       props: { open: true, operationIds: [ids.operation, second.id] },
     })
     mounted.push(wrapper)
@@ -628,7 +629,9 @@ describe('reapplying the rules to a selection (REG-05)', () => {
     findInBody('[data-testid="reapply-confirm"]')?.click()
 
     await vi.waitFor(() => {
-      expect(wrapper.emitted('applied')).toEqual([[1]])
+      expect(
+        wrapper.getComponent(ReapplyRulesModal).emitted('applied'),
+      ).toEqual([[1]])
     })
     expect(
       api.requests.find((request) => request.path === '/rules/reapply')?.body,
@@ -641,7 +644,7 @@ describe('reapplying the rules to a selection (REG-05)', () => {
       'POST /rules/reapply/preview': () => previewWithOneChange(),
       'GET /rules': () => rules(),
     })
-    const wrapper = await mountSuspended(ReapplyRulesModal, {
+    const wrapper = await mountInApp(ReapplyRulesModal, {
       props: { open: true, operationIds: [second.id] },
     })
     mounted.push(wrapper)

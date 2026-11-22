@@ -1,7 +1,5 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
-import { UApp } from '#components'
 import EnvelopeConsumption from '~/components/EnvelopeConsumption.vue'
 import EnvelopeFormModal from '~/components/EnvelopeFormModal.vue'
 import EnvelopeMonthAmountModal from '~/components/EnvelopeMonthAmountModal.vue'
@@ -22,6 +20,7 @@ import {
   submit,
 } from '../planning-fixtures'
 import { setDefaultAccount } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -43,14 +42,6 @@ afterEach(() => {
   useAmountMaskStore().forget()
   document.body.innerHTML = ''
 })
-
-function inApp(component: object) {
-  return defineComponent({
-    setup() {
-      return () => h(UApp, null, { default: () => h(component) })
-    },
-  })
-}
 
 function secondLine() {
   const line = envelopeLine(12_500, {
@@ -81,7 +72,7 @@ describe('envelope tones (CHG-64, CA-06)', () => {
 
   it('caps the progress at 100 % and shows the overrun', async () => {
     installFakeApi(fetchMock, referentialHandlers())
-    const wrapper = await mountSuspended(EnvelopeConsumption, {
+    const wrapper = await mountInApp(EnvelopeConsumption, {
       props: { status: envelopeLine(31_000).status },
     })
     mounted.push(wrapper)
@@ -104,7 +95,7 @@ describe('envelopes view (ENV-06, ENV-08)', () => {
         envelopeMonth([envelopeLine(12_000), secondLine()]),
     })
 
-    const wrapper = await mountSuspended(EnvelopesPage, { route: '/envelopes' })
+    const wrapper = await mountInApp(EnvelopesPage, { route: '/envelopes' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -148,7 +139,7 @@ describe('envelopes view (ENV-06, ENV-08)', () => {
     })
     useAmountMaskStore().toggle()
 
-    const wrapper = await mountSuspended(EnvelopesPage, { route: '/envelopes' })
+    const wrapper = await mountInApp(EnvelopesPage, { route: '/envelopes' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -193,7 +184,7 @@ describe('envelopes view (ENV-06, ENV-08)', () => {
         envelopeMonth([envelopeLine(12_000), secondLine()]),
     })
 
-    const wrapper = await mountSuspended(EnvelopesPage, { route: '/envelopes' })
+    const wrapper = await mountInApp(EnvelopesPage, { route: '/envelopes' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -227,7 +218,7 @@ describe('envelopes view (ENV-06, ENV-08)', () => {
         ]),
     })
 
-    const wrapper = await mountSuspended(inApp(EnvelopesPage), {
+    const wrapper = await mountInApp(EnvelopesPage, {
       route: '/envelopes',
     })
     mounted.push(wrapper)
@@ -252,7 +243,7 @@ describe('envelopes view (ENV-06, ENV-08)', () => {
       'GET /envelopes?month=2026-12-01': () =>
         envelopeMonth([envelopeLine(0)], '2026-12-01'),
     })
-    const wrapper = await mountSuspended(EnvelopesPage, { route: '/envelopes' })
+    const wrapper = await mountInApp(EnvelopesPage, { route: '/envelopes' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="envelopes-next"]').exists()).toBe(true)
@@ -286,7 +277,7 @@ describe('amount of one month (ENV-07)', () => {
         amountCents: 0,
       }),
     })
-    const wrapper = await mountSuspended(EnvelopeMonthAmountModal, {
+    const wrapper = await mountInApp(EnvelopeMonthAmountModal, {
       props: { open: true, line: envelopeLine(0), month: '2026-12-01' },
     })
     mounted.push(wrapper)
@@ -300,7 +291,9 @@ describe('amount of one month (ENV-07)', () => {
     submit('[data-testid="envelope-month-form"]')
 
     await vi.waitFor(() => {
-      expect(wrapper.emitted('saved')).toEqual([['Courses']])
+      expect(
+        wrapper.getComponent(EnvelopeMonthAmountModal).emitted('saved'),
+      ).toEqual([['Courses']])
     })
     expect(api.requests.find((request) => request.path === monthPath)).toEqual(
       expect.objectContaining({ method: 'POST', body: { amountCents: 0 } }),
@@ -312,7 +305,7 @@ describe('amount of one month (ENV-07)', () => {
       ...referentialHandlers(),
       [`DELETE ${monthPath}`]: () => null,
     })
-    const wrapper = await mountSuspended(EnvelopeMonthAmountModal, {
+    const wrapper = await mountInApp(EnvelopeMonthAmountModal, {
       props: {
         open: true,
         line: envelopeLine(0, { budgetCents: 0, overridden: true }),
@@ -329,7 +322,9 @@ describe('amount of one month (ENV-07)', () => {
     findInBody('[data-testid="envelope-month-restore"]')?.click()
 
     await vi.waitFor(() => {
-      expect(wrapper.emitted('saved')).toEqual([['Courses']])
+      expect(
+        wrapper.getComponent(EnvelopeMonthAmountModal).emitted('saved'),
+      ).toEqual([['Courses']])
     })
     expect(api.requests.map((request) => request.method)).toContain('DELETE')
   })
@@ -339,7 +334,7 @@ describe('envelope form default account (ENV-01, ADR 0033)', () => {
   async function openCreation(handlers = referentialHandlers()) {
     installFakeApi(fetchMock, handlers)
     await useReferentialsStore().load()
-    const wrapper = await mountSuspended(EnvelopeFormModal, {
+    const wrapper = await mountInApp(EnvelopeFormModal, {
       props: { open: true, envelope: null, takenCategoryIds: [] },
     })
     mounted.push(wrapper)

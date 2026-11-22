@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import SubscriptionsPage from '~/pages/subscriptions/index.vue'
 import { installFakeApi } from '../fake-api'
@@ -8,6 +8,7 @@ import {
   schedule,
   setViewportWidth,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -39,7 +40,7 @@ describe('subscriptions view (ECH-09)', () => {
       }),
     })
 
-    const wrapper = await mountSuspended(SubscriptionsPage, {
+    const wrapper = await mountInApp(SubscriptionsPage, {
       route: '/subscriptions',
     })
     mounted.push(wrapper)
@@ -75,7 +76,7 @@ describe('subscriptions view (ECH-09)', () => {
     })
     useAmountMaskStore().toggle()
 
-    const wrapper = await mountSuspended(SubscriptionsPage, {
+    const wrapper = await mountInApp(SubscriptionsPage, {
       route: '/subscriptions',
     })
     mounted.push(wrapper)
@@ -108,7 +109,7 @@ describe('subscriptions view (ECH-09)', () => {
       }),
     })
 
-    const wrapper = await mountSuspended(SubscriptionsPage, {
+    const wrapper = await mountInApp(SubscriptionsPage, {
       route: '/subscriptions',
     })
     mounted.push(wrapper)

@@ -1,6 +1,6 @@
 # ADR 0034 · Recherche globale
 
-Statut : acceptée · 22 novembre 2026 · Exigences : RCH-01 à RCH-07, OPE-05, CPT-04, CPT-06, ECH-05, ECH-10, ENV-03, ENV-04, DSH-05, NF-PWA-02, NF-SEC-05, NF-I18N-02, CHG-44, CHG-54, CHG-55 · Amende le cahier des charges (nouvelle section 3.18, DSH-05, lot 4) et la charte graphique (CHG-44, CHG-54, CHG-55, registre des décisions)
+Statut : acceptée, amendée par ADR 0035 (raccourci Ctrl+K) · 22 novembre 2026 · Exigences : RCH-01 à RCH-07, OPE-05, CPT-04, CPT-06, ECH-05, ECH-10, ENV-03, ENV-04, DSH-05, NF-PWA-02, NF-SEC-05, NF-I18N-02, CHG-44, CHG-54, CHG-55 · Amende le cahier des charges (nouvelle section 3.18, DSH-05, lot 4) et la charte graphique (CHG-44, CHG-54, CHG-55, registre des décisions)
 
 ## Contexte
 

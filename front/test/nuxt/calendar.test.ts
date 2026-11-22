@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type {
   CalendarDay,
@@ -17,6 +17,7 @@ import {
   setViewportWidth,
 } from '../planning-fixtures'
 import { setDefaultAccount } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -230,7 +231,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       'GET /calendar/2026-11-01?horizonMonths=3': () => novemberUs12(),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -276,7 +277,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       [`GET ${path}`]: () => novemberUs12(),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -305,7 +306,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
     const view = useForecastViewStore()
     view.calendarAccountId = ids.current
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -350,7 +351,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       'GET /calendar/2026-11-01?horizonMonths=3': () => response,
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
@@ -395,7 +396,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
     })
     useAmountMaskStore().toggle()
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
@@ -443,7 +444,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       'GET /calendar/2026-11-01?horizonMonths=3': () => novemberUs12(),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
@@ -470,7 +471,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       'GET /calendar/2026-12-01?horizonMonths=3': () => december(),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
@@ -512,7 +513,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       'GET /calendar/2026-12-01?horizonMonths=3': () => december(),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
@@ -543,7 +544,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       'GET /calendar/2026-11-01?horizonMonths=3': () => novemberUs12(),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)
@@ -578,7 +579,7 @@ describe('calendar view (CAL-01 to CAL-06)', () => {
       }),
     })
 
-    const wrapper = await mountSuspended(CalendarPage, { route: '/calendar' })
+    const wrapper = await mountInApp(CalendarPage, { route: '/calendar' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="calendar-grid"]').exists()).toBe(true)

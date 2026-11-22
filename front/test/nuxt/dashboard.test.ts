@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type {
   BreakdownResponse,
@@ -22,6 +22,7 @@ import type { ChartTheme } from '~~/types/forecast'
 import { installFakeApi } from '../fake-api'
 import { euros, ids, percents, referentialHandlers } from '../planning-fixtures'
 import { setDefaultAccount } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -240,7 +241,7 @@ describe('dashboard view (DSH-01)', () => {
       ...dashboardHandlers(),
     })
 
-    const wrapper = await mountSuspended(DashboardPage, {
+    const wrapper = await mountInApp(DashboardPage, {
       route: '/',
       global: { stubs: { Echarts: true } },
     })
@@ -284,7 +285,7 @@ describe('dashboard view (DSH-01)', () => {
       ...dashboardHandlers(),
     })
 
-    const wrapper = await mountSuspended(DashboardPage, {
+    const wrapper = await mountInApp(DashboardPage, {
       route: '/',
       global: { stubs: { Echarts: true } },
     })
@@ -311,7 +312,7 @@ describe('dashboard view (DSH-01)', () => {
       }),
     })
 
-    const wrapper = await mountSuspended(DashboardPage, {
+    const wrapper = await mountInApp(DashboardPage, {
       route: '/',
       global: { stubs: { Echarts: true } },
     })
@@ -536,7 +537,7 @@ describe('dashboard banner (DSH-04, CHG-65)', () => {
       ...dashboardHandlers(),
     })
 
-    const wrapper = await mountSuspended(DashboardPage, {
+    const wrapper = await mountInApp(DashboardPage, {
       route: '/',
       global: { stubs: { Echarts: true } },
     })
@@ -587,7 +588,7 @@ describe('masked dashboard (DSH-05, CHG-45)', () => {
     })
     useAmountMaskStore().toggle()
 
-    const wrapper = await mountSuspended(DashboardPage, {
+    const wrapper = await mountInApp(DashboardPage, {
       route: '/',
       global: { stubs: { Echarts: true } },
     })

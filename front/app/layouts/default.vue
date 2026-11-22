@@ -1,6 +1,7 @@
 <script setup lang="ts">
 useNotificationRefresh()
 useOfflineSync()
+useGlobalShortcuts()
 </script>
 
 <template>
@@ -16,5 +17,6 @@ useOfflineSync()
     <OperationFormModal />
     <ReconciliationProposalModal />
     <NotificationCenter />
+    <ShortcutHelpModal />
   </UDashboardGroup>
 </template>

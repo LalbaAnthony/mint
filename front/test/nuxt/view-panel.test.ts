@@ -1,11 +1,11 @@
-import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { describe, expect, it } from 'vitest'
 import AppBrand from '~/components/AppBrand.vue'
 import ViewPanel from '~/components/ViewPanel.vue'
+import { mountInApp } from '../app'
 
 describe('ViewPanel (CHG-51, CHG-56)', () => {
   it('renders the view title as the page heading', async () => {
-    const wrapper = await mountSuspended(ViewPanel, {
+    const wrapper = await mountInApp(ViewPanel, {
       props: { title: 'Comptes' },
     })
 
@@ -14,7 +14,7 @@ describe('ViewPanel (CHG-51, CHG-56)', () => {
   })
 
   it('shows a 24 px home picto on mobile only', async () => {
-    const wrapper = await mountSuspended(ViewPanel, {
+    const wrapper = await mountInApp(ViewPanel, {
       props: { title: 'Comptes' },
     })
 
@@ -25,7 +25,7 @@ describe('ViewPanel (CHG-51, CHG-56)', () => {
   })
 
   it('uses a 56 px header on mobile on a default surface', async () => {
-    const wrapper = await mountSuspended(ViewPanel, {
+    const wrapper = await mountInApp(ViewPanel, {
       props: { title: 'Comptes' },
     })
 
@@ -41,7 +41,7 @@ describe('ViewPanel (CHG-51, CHG-56)', () => {
   })
 
   it('renders the actions slot on the right', async () => {
-    const wrapper = await mountSuspended(ViewPanel, {
+    const wrapper = await mountInApp(ViewPanel, {
       props: { title: 'Comptes' },
       slots: { actions: () => 'Action' },
     })
@@ -52,7 +52,7 @@ describe('ViewPanel (CHG-51, CHG-56)', () => {
 
 describe('AppBrand (CHG-04, CHG-05, CHG-59)', () => {
   it('shows a 48 px picto and a text-3xl wordmark on the login screen', async () => {
-    const wrapper = await mountSuspended(AppBrand, {
+    const wrapper = await mountInApp(AppBrand, {
       props: { variant: 'login' },
     })
 
@@ -70,7 +70,7 @@ describe('AppBrand (CHG-04, CHG-05, CHG-59)', () => {
   })
 
   it('keeps only the picto when the sidebar is collapsed', async () => {
-    const wrapper = await mountSuspended(AppBrand, {
+    const wrapper = await mountInApp(AppBrand, {
       props: { variant: 'sidebar', collapsed: true },
     })
 

@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import CategoryDeleteModal from '~/components/CategoryDeleteModal.vue'
 import AccountsPage from '~/pages/accounts/index.vue'
@@ -11,6 +11,7 @@ import {
   ids,
   overview,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -47,7 +48,7 @@ describe('CPT-07 account deletion', () => {
         rules: 0,
       }),
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.findComponent({ name: 'AccountGroupCard' }).exists()).toBe(
@@ -78,7 +79,7 @@ describe('CPT-07 account deletion', () => {
         rules: 0,
       }),
     })
-    const wrapper = await mountSuspended(AccountsPage, { route: '/accounts' })
+    const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.findComponent({ name: 'AccountGroupCard' }).exists()).toBe(
@@ -106,7 +107,7 @@ describe('CAT-07 category deletion', () => {
       ...handlers,
     })
     const groceries = categories[0]
-    const wrapper = await mountSuspended(CategoryDeleteModal, {
+    const wrapper = await mountInApp(CategoryDeleteModal, {
       props: { open: true, category: groceries ?? null, categories },
     })
     mounted.push(wrapper)
@@ -128,7 +129,9 @@ describe('CAT-07 category deletion', () => {
       'Elle est utilisée par 4 opérations, 1 échéance, 1 enveloppe',
     )
     expect(confirmButton()?.disabled).toBe(true)
-    expect(wrapper.emitted('deleted')).toBeUndefined()
+    expect(
+      wrapper.getComponent(CategoryDeleteModal).emitted('deleted'),
+    ).toBeUndefined()
   })
 
   it('deletes an unused category directly', async () => {
@@ -143,7 +146,9 @@ describe('CAT-07 category deletion', () => {
     confirmButton()?.click()
 
     await vi.waitFor(() => {
-      expect(wrapper.emitted('deleted')).toHaveLength(1)
+      expect(
+        wrapper.getComponent(CategoryDeleteModal).emitted('deleted'),
+      ).toHaveLength(1)
     })
     expect(
       api.requests.find((request) => request.method === 'DELETE')?.path,

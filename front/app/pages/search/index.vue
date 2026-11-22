@@ -80,12 +80,25 @@ const hasResults = computed(
       result.value.schedules.length > 0 ||
       result.value.envelopes.length > 0),
 )
+
+const searchForm = useTemplateRef<HTMLElement>('searchForm')
+
+useShortcut(
+  'search',
+  () => {
+    const input = searchForm.value?.querySelector('input')
+    input?.focus()
+    input?.select()
+  },
+  { enabled: () => !connectivity.offline },
+)
 </script>
 
 <template>
   <ViewPanel :title="t('search.pageTitle')">
     <div class="flex flex-col gap-6">
       <form
+        ref="searchForm"
         role="search"
         class="flex w-full max-w-2xl"
         data-testid="search-form"

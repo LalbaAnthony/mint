@@ -83,6 +83,21 @@ async function confirm(): Promise<void> {
     busy.value = false
   }
 }
+
+const connectivity = useConnectivityStore()
+const actions = useTemplateRef<HTMLElement>('actions')
+
+useDialogSubmitShortcut(
+  actions,
+  () => {
+    void confirm()
+  },
+  () =>
+    editor.proposalOpen &&
+    !connectivity.offline &&
+    selected.value !== undefined &&
+    !busy.value,
+)
 </script>
 
 <template>
@@ -94,7 +109,11 @@ async function confirm(): Promise<void> {
     "
   >
     <template #body>
-      <div class="flex flex-col gap-4" data-testid="reconciliation-proposal">
+      <div
+        ref="actions"
+        class="flex flex-col gap-4"
+        data-testid="reconciliation-proposal"
+      >
         <URadioGroup
           v-model="selected"
           :items="items"
@@ -108,15 +127,17 @@ async function confirm(): Promise<void> {
             @click="editor.proposalOpen = false"
           />
           <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :label="t('reconciliation.associate')"
-              color="primary"
-              variant="solid"
-              :loading="busy"
-              :disabled="offline || selected === undefined"
-              data-testid="reconciliation-confirm"
-              @click="confirm"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :label="t('reconciliation.associate')"
+                color="primary"
+                variant="solid"
+                :loading="busy"
+                :disabled="offline || selected === undefined"
+                data-testid="reconciliation-confirm"
+                @click="confirm"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </div>
       </div>

@@ -270,15 +270,17 @@ onMounted(async () => {
           </AppFormField>
           <div>
             <OfflineGuard v-slot="{ offline }">
-              <UButton
-                :disabled="offline"
-                type="submit"
-                :label="t('common.save')"
-                :loading="savingPreferences"
-                color="primary"
-                variant="solid"
-                data-testid="preferences-submit"
-              />
+              <ShortcutTooltip shortcut="submit">
+                <UButton
+                  :disabled="offline"
+                  type="submit"
+                  :label="t('common.save')"
+                  :loading="savingPreferences"
+                  color="primary"
+                  variant="solid"
+                  data-testid="preferences-submit"
+                />
+              </ShortcutTooltip>
             </OfflineGuard>
           </div>
         </AppForm>
@@ -413,15 +415,17 @@ onMounted(async () => {
             />
           </AppFormField>
           <OfflineGuard block v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('profile.sendConfirmation')"
-              :loading="sendingEmail"
-              color="primary"
-              variant="solid"
-              block
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('profile.sendConfirmation')"
+                :loading="sendingEmail"
+                color="primary"
+                variant="solid"
+                block
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
       </template>
@@ -474,15 +478,17 @@ onMounted(async () => {
             {{ t('profile.passwordChangeEffect') }}
           </p>
           <OfflineGuard block v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('auth.savePassword')"
-              :loading="changingPassword"
-              color="primary"
-              variant="solid"
-              block
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('auth.savePassword')"
+                :loading="changingPassword"
+                color="primary"
+                variant="solid"
+                block
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
       </template>

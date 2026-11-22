@@ -113,16 +113,18 @@ async function restore(): Promise<void> {
         </AppFormField>
         <div class="flex flex-col gap-2 sm:flex-row-reverse">
           <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('common.save')"
-              :loading="saving"
-              color="primary"
-              variant="solid"
-              class="justify-center"
-              data-testid="envelope-month-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('common.save')"
+                :loading="saving"
+                color="primary"
+                variant="solid"
+                class="justify-center"
+                data-testid="envelope-month-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
           <OfflineGuard v-if="line?.status.overridden" v-slot="{ offline }">
             <UButton

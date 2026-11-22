@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminPage from '~/pages/admin/index.vue'
 import ProfilePage from '~/pages/profile/index.vue'
@@ -13,6 +13,7 @@ import {
   selectByTestId,
 } from '../planning-fixtures'
 import { signIn, testProfile } from '../session'
+import { mountInApp } from '../app'
 
 const archivedAccountId = '00000000-0000-4000-8000-0000000000a9'
 
@@ -73,7 +74,7 @@ describe('administration console (ADM-01 to ADM-06, US-02)', () => {
       'GET /admin/users': () => [administrator, member],
     })
 
-    const wrapper = await mountSuspended(AdminPage, { route: '/admin' })
+    const wrapper = await mountInApp(AdminPage, { route: '/admin' })
 
     await vi.waitFor(() => {
       expect(wrapper.get('[data-testid="invitation-list"]').text()).toContain(
@@ -100,7 +101,7 @@ describe('administration console (ADM-01 to ADM-06, US-02)', () => {
       [`POST /admin/invitations/${pendingInvitation.id}/resend`]: () =>
         pendingInvitation,
     })
-    const wrapper = await mountSuspended(AdminPage, { route: '/admin' })
+    const wrapper = await mountInApp(AdminPage, { route: '/admin' })
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="invitation-list"]').exists()).toBe(
         true,
@@ -126,7 +127,7 @@ describe('administration console (ADM-01 to ADM-06, US-02)', () => {
       'GET /admin/users': () => [administrator],
     })
 
-    const wrapper = await mountSuspended(AdminPage, { route: '/admin' })
+    const wrapper = await mountInApp(AdminPage, { route: '/admin' })
 
     await vi.waitFor(() => {
       expect(wrapper.text()).toContain('Aucune invitation')
@@ -161,7 +162,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
       'GET /profile/sessions': () => sessions,
     })
 
-    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+    const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
 
     await vi.waitFor(() => {
       expect(wrapper.get('[data-testid="session-list"]').text()).toContain(
@@ -187,7 +188,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
         forecastHorizonMonths: 6,
       }),
     })
-    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+    const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
 
     await wrapper.get('[data-testid="preferences-form"]').trigger('submit')
 
@@ -224,7 +225,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
       }),
       'GET /profile/sessions': () => sessions,
     })
-    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+    const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
     const select = () => selectByTestId(wrapper, 'preferences-default-account')
 
     await vi.waitFor(() => {
@@ -254,7 +255,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
       }),
       'GET /profile/sessions': () => sessions,
     })
-    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+    const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
 
     await vi.waitFor(() => {
       expect(
@@ -273,7 +274,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
         defaultAccountId: patchedDefaultAccount(request.body),
       }),
     })
-    const wrapper = await mountSuspended(ProfilePage, { route: '/profile' })
+    const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
     const select = () => selectByTestId(wrapper, 'preferences-default-account')
     await vi.waitFor(() => {
       expect(select()?.value()).toBe(ids.current)

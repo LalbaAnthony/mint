@@ -1,5 +1,5 @@
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
 import App from '~/app.vue'
 import AuthLayout from '~/layouts/auth.vue'
@@ -16,13 +16,21 @@ import RulesPage from '~/pages/rules/index.vue'
 import SchedulesPage from '~/pages/schedules/index.vue'
 import SubscriptionsPage from '~/pages/subscriptions/index.vue'
 import { signOut, testProfile } from '../session'
+import { mountInApp } from '../app'
+
+const mounted: { unmount: () => void }[] = []
+
+afterEach(() => {
+  mounted.splice(0).forEach((wrapper) => wrapper.unmount())
+})
 
 describe('default layout (CHG-50)', () => {
   it('combines the sidebar, the content, the bottom bar and the FAB', async () => {
-    const wrapper = await mountSuspended(DefaultLayout, {
+    const wrapper = await mountInApp(DefaultLayout, {
       route: '/accounts',
       slots: { default: () => h('p', 'Contenu') },
     })
+    mounted.push(wrapper)
 
     expect(wrapper.get('main').text()).toBe('Contenu')
     expect(wrapper.find('[data-testid="sidebar-navigation"]').exists()).toBe(
@@ -35,9 +43,10 @@ describe('default layout (CHG-50)', () => {
 
 describe('auth layout (CHG-59)', () => {
   it('centers a max-w-sm card under the brand', async () => {
-    const wrapper = await mountSuspended(AuthLayout, {
+    const wrapper = await mountInApp(AuthLayout, {
       slots: { default: () => h('p', 'Formulaire') },
     })
+    mounted.push(wrapper)
 
     const main = wrapper.get('main')
     expect(main.get('img').classes()).toContain('size-12')
@@ -59,7 +68,8 @@ describe('placeholder views', () => {
     [ProfilePage, 'Profil et préférences'],
     [AdminPage, 'Administration'],
   ])('renders the view title %#', async (page, title) => {
-    const wrapper = await mountSuspended(page)
+    const wrapper = await mountInApp(page)
+    mounted.push(wrapper)
 
     expect(wrapper.get('h1').text()).toBe(title)
   })
@@ -67,7 +77,7 @@ describe('placeholder views', () => {
 
 describe('app', () => {
   it('sets the document title and language', async () => {
-    await mountSuspended(App, { route: '/accounts' })
+    mounted.push(await mountSuspended(App, { route: '/accounts' }))
 
     await vi.waitFor(() => {
       expect(document.title).toBe('Comptes - Mint')
@@ -88,7 +98,7 @@ describe('app', () => {
       ])
     }
 
-    await mountSuspended(App, { route: '/accounts' })
+    mounted.push(await mountSuspended(App, { route: '/accounts' }))
 
     await vi.waitFor(() => {
       expect(themeColors()).toEqual([
@@ -114,7 +124,7 @@ describe('app', () => {
   it('uses the login title on the login screen', async () => {
     signOut()
 
-    await mountSuspended(App, { route: '/login' })
+    mounted.push(await mountSuspended(App, { route: '/login' }))
 
     await vi.waitFor(() => {
       expect(document.title).toBe('Connexion - Mint')

@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Account } from '@mint/shared/types/accounts'
 import AccountFormModal from '~/components/AccountFormModal.vue'
@@ -16,6 +16,7 @@ import {
   referentialHandlers,
   submit,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -68,7 +69,7 @@ afterEach(() => {
 describe('savings caps and interest (LIV-01 to LIV-04)', () => {
   it('flags an account over its cap and shows its estimated interest (CHG-61)', async () => {
     installFakeApi(fetchMock, referentialHandlers())
-    const wrapper = await mountSuspended(AccountGroupCard, {
+    const wrapper = await mountInApp(AccountGroupCard, {
       props: {
         group: { usage: 'emergency', subtotalCents: 0, accounts: [lep()] },
         paymentMethods: [],
@@ -95,7 +96,7 @@ describe('savings caps and interest (LIV-01 to LIV-04)', () => {
       'GET /regulated-caps': () => caps,
       'POST /accounts': () => lep(),
     })
-    const wrapper = await mountSuspended(AccountFormModal, {
+    const wrapper = await mountInApp(AccountFormModal, {
       props: { open: true, account: null },
     })
     mounted.push(wrapper)
@@ -164,7 +165,7 @@ describe('savings caps and interest (LIV-01 to LIV-04)', () => {
         annualRatePct: 2.4,
       }),
     })
-    const wrapper = await mountSuspended(InterestModal, {
+    const wrapper = await mountInApp(InterestModal, {
       props: { open: true, account: lep() },
     })
     mounted.push(wrapper)
@@ -192,7 +193,7 @@ describe('savings caps and interest (LIV-01 to LIV-04)', () => {
   })
 
   it('offers no menu on an interest occurrence managed by Mint', async () => {
-    const wrapper = await mountSuspended(CalendarOccurrenceMenu, {
+    const wrapper = await mountInApp(CalendarOccurrenceMenu, {
       props: {
         occurrence: {
           scheduleId: ids.schedule,
@@ -232,7 +233,7 @@ describe('savings caps and interest (LIV-01 to LIV-04)', () => {
         capCents: 1_050_000,
       }),
     })
-    const wrapper = await mountSuspended(RegulatedCapsCard)
+    const wrapper = await mountInApp(RegulatedCapsCard)
     mounted.push(wrapper)
     await vi.waitFor(() => {
       expect(wrapper.find('[data-testid="regulated-cap-lep"]').exists()).toBe(

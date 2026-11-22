@@ -131,15 +131,17 @@ function remove(statement: Statement): Promise<void> {
             />
           </AppFormField>
           <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              type="submit"
-              :label="t('statements.record')"
-              color="primary"
-              variant="solid"
-              :loading="busy"
-              data-testid="statement-submit"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :disabled="offline"
+                type="submit"
+                :label="t('statements.record')"
+                color="primary"
+                variant="solid"
+                :loading="busy"
+                data-testid="statement-submit"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
         <p v-if="statements.length === 0" class="text-sm text-muted">

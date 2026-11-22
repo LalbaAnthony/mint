@@ -139,15 +139,17 @@ async function submit(): Promise<void> {
           data-testid="invitation-confirmation"
         />
       </AppFormField>
-      <UButton
-        type="submit"
-        :label="t('invitation.submit')"
-        :loading="pending"
-        color="primary"
-        variant="solid"
-        block
-        data-testid="invitation-submit"
-      />
+      <ShortcutTooltip shortcut="submit">
+        <UButton
+          type="submit"
+          :label="t('invitation.submit')"
+          :loading="pending"
+          color="primary"
+          variant="solid"
+          block
+          data-testid="invitation-submit"
+        />
+      </ShortcutTooltip>
     </AppForm>
   </div>
 </template>

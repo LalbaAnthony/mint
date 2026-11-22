@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, reactive, ref } from 'vue'
 import type { Component } from 'vue'
@@ -18,6 +18,7 @@ import {
   referentialHandlers,
 } from '../planning-fixtures'
 import { setDefaultAccount } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -54,7 +55,7 @@ function selectField(name: string, testId: string, value: string | undefined) {
 }
 
 async function mountAttached(component: Component) {
-  const wrapper = await mountSuspended(component, { attachTo: document.body })
+  const wrapper = await mountInApp(component, { attachTo: document.body })
   mounted.push(wrapper)
   await nextTick()
   await nextTick()
@@ -226,7 +227,7 @@ describe('AppForm autofocus (CHG-69)', () => {
 
 describe('form autofocus in the modals (CHG-69)', () => {
   it('focuses the name of a new tag', async () => {
-    const wrapper = await mountSuspended(TagFormModal, {
+    const wrapper = await mountInApp(TagFormModal, {
       props: { open: true, tag: null },
     })
     mounted.push(wrapper)
@@ -239,7 +240,7 @@ describe('form autofocus in the modals (CHG-69)', () => {
   it('focuses the amount of a new expense once the payment source is prefilled', async () => {
     setDefaultAccount(ids.current)
     installFakeApi(fetchMock, referentialHandlers())
-    const wrapper = await mountSuspended(OperationFormModal)
+    const wrapper = await mountInApp(OperationFormModal)
     mounted.push(wrapper)
 
     useOperationEditorStore().create('expense')
@@ -251,7 +252,7 @@ describe('form autofocus in the modals (CHG-69)', () => {
 
   it('focuses the payment source of a new expense without default account (ADR 0033)', async () => {
     installFakeApi(fetchMock, referentialHandlers())
-    const wrapper = await mountSuspended(OperationFormModal)
+    const wrapper = await mountInApp(OperationFormModal)
     mounted.push(wrapper)
 
     useOperationEditorStore().create('expense')
@@ -272,7 +273,7 @@ describe('form autofocus in the modals (CHG-69)', () => {
         candidates: [],
       }),
     })
-    const wrapper = await mountSuspended(OperationFormModal)
+    const wrapper = await mountInApp(OperationFormModal)
     mounted.push(wrapper)
 
     useOperationEditorStore().edit(uncategorized)
@@ -291,7 +292,7 @@ describe('form autofocus in the modals (CHG-69)', () => {
         rules: 0,
       }),
     })
-    const wrapper = await mountSuspended(CategoryDeleteModal, {
+    const wrapper = await mountInApp(CategoryDeleteModal, {
       props: { open: true, category: categories[0] ?? null, categories },
     })
     mounted.push(wrapper)

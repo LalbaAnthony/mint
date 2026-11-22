@@ -185,23 +185,30 @@ async function deleteEnvelope(): Promise<void> {
     busy.value = false
   }
 }
+
+const connectivity = useConnectivityStore()
+const createHint = useShortcut('create', () => openForm(null), {
+  enabled: () => !connectivity.offline,
+})
 </script>
 
 <template>
   <ViewPanel :title="t('navigation.envelopes')">
     <template #actions>
       <OfflineGuard v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :icon="icons.add"
-          :aria-label="t('envelopes.add')"
-          color="primary"
-          variant="soft"
-          data-testid="envelopes-add"
-          @click="openForm(null)"
-        >
-          <span class="max-sm:sr-only">{{ t('envelopes.add') }}</span>
-        </UButton>
+        <ShortcutTooltip :hint="createHint" :text="t('envelopes.add')">
+          <UButton
+            :disabled="offline"
+            :icon="icons.add"
+            :aria-label="t('envelopes.add')"
+            color="primary"
+            variant="soft"
+            data-testid="envelopes-add"
+            @click="openForm(null)"
+          >
+            <span class="max-sm:sr-only">{{ t('envelopes.add') }}</span>
+          </UButton>
+        </ShortcutTooltip>
       </OfflineGuard>
     </template>
 

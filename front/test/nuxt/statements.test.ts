@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AccountGroupCard from '~/components/AccountGroupCard.vue'
 import StatementsModal from '~/components/StatementsModal.vue'
@@ -9,6 +9,7 @@ import {
   findInBody,
   referentialHandlers,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -45,7 +46,7 @@ describe('statements and gap (CPT-05, CPT-08, US-05)', () => {
   it('flags an account whose latest statement keeps a gap', async () => {
     installFakeApi(fetchMock, referentialHandlers())
     const withGap = account({ reconciliationGapCents: -1_250 })
-    const wrapper = await mountSuspended(AccountGroupCard, {
+    const wrapper = await mountInApp(AccountGroupCard, {
       props: {
         group: { usage: 'current', subtotalCents: 0, accounts: [withGap] },
         paymentMethods: [],
@@ -68,7 +69,7 @@ describe('statements and gap (CPT-05, CPT-08, US-05)', () => {
       }),
       [`POST /statements/${statementId}/adjust`]: () => statement(0),
     })
-    const wrapper = await mountSuspended(StatementsModal, {
+    const wrapper = await mountInApp(StatementsModal, {
       props: { open: true, account: account() },
     })
     mounted.push(wrapper)
@@ -89,6 +90,8 @@ describe('statements and gap (CPT-05, CPT-08, US-05)', () => {
         ),
       ).toBe(true)
     })
-    expect(wrapper.emitted('changed')).toBeDefined()
+    expect(
+      wrapper.getComponent(StatementsModal).emitted('changed'),
+    ).toBeDefined()
   })
 })

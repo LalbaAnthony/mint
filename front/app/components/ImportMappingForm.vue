@@ -110,10 +110,18 @@ function submit(): void {
     colCredit: signed ? null : creditColumn.value,
   })
 }
+
+const connectivity = useConnectivityStore()
+const root = useTemplateRef<HTMLElement>('root')
+
+useShortcut('submit', submit, {
+  enabled: () => !connectivity.offline && !props.busy,
+  container: root,
+})
 </script>
 
 <template>
-  <div class="flex flex-col gap-4" data-testid="import-mapping">
+  <div ref="root" class="flex flex-col gap-4" data-testid="import-mapping">
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <AppFormField :label="t('imports.fields.delimiter')" name="delimiter">
         <USelect
@@ -254,16 +262,18 @@ function submit(): void {
       </table>
     </div>
     <OfflineGuard v-slot="{ offline }">
-      <UButton
-        :disabled="offline"
-        :label="t('imports.preview')"
-        color="primary"
-        variant="solid"
-        :loading="busy"
-        class="self-end"
-        data-testid="import-preview"
-        @click="submit"
-      />
+      <ShortcutTooltip shortcut="submit">
+        <UButton
+          :disabled="offline"
+          :label="t('imports.preview')"
+          color="primary"
+          variant="solid"
+          :loading="busy"
+          class="self-end"
+          data-testid="import-preview"
+          @click="submit"
+        />
+      </ShortcutTooltip>
     </OfflineGuard>
   </div>
 </template>

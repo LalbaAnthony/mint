@@ -1,4 +1,4 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Rule } from '@mint/shared/types/rules'
 import RulesPage from '~/pages/rules/index.vue'
@@ -10,6 +10,7 @@ import {
   referentialHandlers,
   submit,
 } from '../planning-fixtures'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -63,7 +64,7 @@ describe('rules view (REG-01 to REG-03)', () => {
       ],
     })
 
-    const wrapper = await mountSuspended(RulesPage, { route: '/rules' })
+    const wrapper = await mountInApp(RulesPage, { route: '/rules' })
     mounted.push(wrapper)
 
     await vi.waitFor(() => {
@@ -94,7 +95,7 @@ describe('rules view (REG-01 to REG-03)', () => {
       'POST /rules': () => rule({ pattern: 'PRLV SEPA DEEZER' }),
     })
 
-    const wrapper = await mountSuspended(RulesPage, {
+    const wrapper = await mountInApp(RulesPage, {
       route: `/rules?operation=${ids.operation}`,
     })
     mounted.push(wrapper)

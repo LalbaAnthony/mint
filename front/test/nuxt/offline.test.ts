@@ -1,7 +1,6 @@
-import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, reactive } from 'vue'
-import { UApp } from '#components'
 import { accountOverviewSchema } from '@mint/shared/schemas/accounts'
 import { categoryListResponseSchema } from '@mint/shared/schemas/categories'
 import ViewPanel from '~/components/ViewPanel.vue'
@@ -16,6 +15,7 @@ import {
   referentialHandlers,
 } from '../planning-fixtures'
 import { signIn, testProfile } from '../session'
+import { mountInApp } from '../app'
 
 const { fetchMock } = vi.hoisted(() => ({ fetchMock: vi.fn() }))
 
@@ -34,14 +34,6 @@ function cachedAt(isoInstant: string): string {
     timeStyle: 'short',
     timeZone: 'Europe/Paris',
   }).format(new Date(isoInstant))
-}
-
-function inApp(component: object) {
-  return defineComponent({
-    setup() {
-      return () => h(UApp, null, { default: () => h(component) })
-    },
-  })
 }
 
 beforeEach(() => {
@@ -80,7 +72,7 @@ describe('offline copies of the API (NF-PWA-02, US-20)', () => {
     const connectivity = useConnectivityStore()
     expect(connectivity.offline).toBe(true)
     expect(connectivity.dataAt).toBe('2026-11-16T08:30:00.000Z')
-    const wrapper = await mountSuspended(ViewPanel, {
+    const wrapper = await mountInApp(ViewPanel, {
       props: { title: 'Comptes' },
     })
     mounted.push(wrapper)
@@ -182,7 +174,7 @@ describe('offline preparation (NF-PWA-02)', () => {
         return () => h('div')
       },
     })
-    const wrapper = await mountSuspended(Host)
+    const wrapper = await mountInApp(Host)
     mounted.push(wrapper)
 
     await vi.advanceTimersByTimeAsync(2_000)
@@ -213,7 +205,7 @@ describe('offline views (NF-PWA-02, CHG-68)', () => {
     goOffline()
     useConnectivityStore().wentOffline()
 
-    const wrapper = await mountSuspended(inApp(OperationsPage), {
+    const wrapper = await mountInApp(OperationsPage, {
       route: '/operations',
     })
     mounted.push(wrapper)
@@ -249,7 +241,7 @@ describe('new version (NF-PWA-04, CHG-68)', () => {
       },
     })
 
-    const wrapper = await mountSuspended(Host)
+    const wrapper = await mountInApp(Host)
     mounted.push(wrapper)
     await nextTick()
 

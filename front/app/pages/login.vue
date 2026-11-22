@@ -87,15 +87,17 @@ async function submit(): Promise<void> {
           data-testid="login-password"
         />
       </AppFormField>
-      <UButton
-        type="submit"
-        :label="t('auth.submitLogin')"
-        :loading="pending"
-        color="primary"
-        variant="solid"
-        block
-        data-testid="login-submit"
-      />
+      <ShortcutTooltip shortcut="submit">
+        <UButton
+          type="submit"
+          :label="t('auth.submitLogin')"
+          :loading="pending"
+          color="primary"
+          variant="solid"
+          block
+          data-testid="login-submit"
+        />
+      </ShortcutTooltip>
     </AppForm>
     <template v-if="passkeyAvailable">
       <USeparator :label="t('auth.or')" />

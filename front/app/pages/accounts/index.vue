@@ -28,6 +28,7 @@ const activeAccounts = computed(
   () => overview.value?.groups.flatMap((group) => group.accounts) ?? [],
 )
 const hasActiveAccounts = computed(() => activeAccounts.value.length > 0)
+const connectivity = useConnectivityStore()
 
 function notify(title: string): void {
   toast.add({ title, icon: icons.success, color: 'success' })
@@ -364,41 +365,61 @@ onMounted(async () => {
   await openFromLink()
 })
 watch(() => route.query, openFromLink)
+
+const createHint = useShortcut('create', () => openAccountForm(null), {
+  enabled: () => !connectivity.offline,
+})
+const reorderHint = useShortcut(
+  'reorder',
+  () => {
+    reordering.value = !reordering.value
+  },
+  { enabled: () => hasActiveAccounts.value && !connectivity.offline },
+)
 </script>
 
 <template>
   <ViewPanel :title="t('navigation.accounts')">
     <template #actions>
       <OfflineGuard v-if="hasActiveAccounts" v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :icon="reordering ? icons.success : icons.reorder"
-          :aria-label="
-            reordering ? t('common.doneReordering') : t('common.reorder')
-          "
-          :aria-pressed="reordering"
-          color="primary"
-          variant="soft"
-          data-testid="accounts-reorder"
-          @click="reordering = !reordering"
+        <ShortcutTooltip
+          :hint="reorderHint"
+          :text="reordering ? t('common.doneReordering') : t('common.reorder')"
         >
-          <span class="max-sm:sr-only">
-            {{ reordering ? t('common.doneReordering') : t('common.reorder') }}
-          </span>
-        </UButton>
+          <UButton
+            :disabled="offline"
+            :icon="reordering ? icons.success : icons.reorder"
+            :aria-label="
+              reordering ? t('common.doneReordering') : t('common.reorder')
+            "
+            :aria-pressed="reordering"
+            color="primary"
+            variant="soft"
+            data-testid="accounts-reorder"
+            @click="reordering = !reordering"
+          >
+            <span class="max-sm:sr-only">
+              {{
+                reordering ? t('common.doneReordering') : t('common.reorder')
+              }}
+            </span>
+          </UButton>
+        </ShortcutTooltip>
       </OfflineGuard>
       <OfflineGuard v-slot="{ offline }">
-        <UButton
-          :disabled="offline"
-          :icon="icons.add"
-          :aria-label="t('accounts.add')"
-          color="primary"
-          variant="soft"
-          data-testid="accounts-add"
-          @click="openAccountForm(null)"
-        >
-          <span class="max-sm:sr-only">{{ t('accounts.add') }}</span>
-        </UButton>
+        <ShortcutTooltip :hint="createHint" :text="t('accounts.add')">
+          <UButton
+            :disabled="offline"
+            :icon="icons.add"
+            :aria-label="t('accounts.add')"
+            color="primary"
+            variant="soft"
+            data-testid="accounts-add"
+            @click="openAccountForm(null)"
+          >
+            <span class="max-sm:sr-only">{{ t('accounts.add') }}</span>
+          </UButton>
+        </ShortcutTooltip>
       </OfflineGuard>
     </template>
 

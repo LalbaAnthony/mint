@@ -255,6 +255,36 @@ async function abandon(batch: ImportBatch): Promise<void> {
     busy.value = false
   }
 }
+
+const connectivity = useConnectivityStore()
+const selectStep = useTemplateRef<HTMLElement>('selectStep')
+
+const importFileHint = useShortcut(
+  'importFile',
+  () => {
+    const input = selectStep.value?.querySelector('input[type="file"]')
+    if (input instanceof HTMLInputElement) {
+      input.click()
+    }
+  },
+  { enabled: () => step.value === 'select' && !connectivity.offline },
+)
+
+useShortcut(
+  'submit',
+  () => {
+    void upload()
+  },
+  {
+    enabled: () =>
+      !connectivity.offline &&
+      !busy.value &&
+      accountId.value !== undefined &&
+      file.value !== null &&
+      !fileTooLarge.value,
+    container: selectStep,
+  },
+)
 </script>
 
 <template>
@@ -268,6 +298,7 @@ async function abandon(batch: ImportBatch): Promise<void> {
         </template>
         <div
           v-if="step === 'select'"
+          ref="selectStep"
           class="flex flex-wrap items-end gap-3"
           data-testid="import-select"
         >
@@ -289,30 +320,34 @@ async function abandon(batch: ImportBatch): Promise<void> {
             name="file"
             class="min-w-48 flex-1"
           >
-            <UInput
-              type="file"
-              accept=".csv,text/csv,text/plain"
-              class="w-full"
-              data-testid="import-file"
-              @change="onFileChange"
-            />
+            <ShortcutTooltip :hint="importFileHint" :text="t('imports.file')">
+              <UInput
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                class="w-full"
+                data-testid="import-file"
+                @change="onFileChange"
+              />
+            </ShortcutTooltip>
           </AppFormField>
           <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :label="t('imports.upload')"
-              :icon="icons.import"
-              color="primary"
-              variant="soft"
-              :disabled="
-                offline ||
-                accountId === undefined ||
-                file === null ||
-                fileTooLarge
-              "
-              :loading="busy"
-              data-testid="import-upload"
-              @click="upload"
-            />
+            <ShortcutTooltip shortcut="submit">
+              <UButton
+                :label="t('imports.upload')"
+                :icon="icons.import"
+                color="primary"
+                variant="soft"
+                :disabled="
+                  offline ||
+                  accountId === undefined ||
+                  file === null ||
+                  fileTooLarge
+                "
+                :loading="busy"
+                data-testid="import-upload"
+                @click="upload"
+              />
+            </ShortcutTooltip>
           </OfflineGuard>
           <p v-if="fileTooLarge" class="w-full text-sm text-error">
             {{ t('imports.tooLarge') }}
