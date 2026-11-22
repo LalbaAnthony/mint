@@ -211,7 +211,10 @@ const noResult = computed(
           </p>
         </template>
         <template v-if="noResult" #footer>
-          <p class="text-sm text-muted" data-testid="search-no-result">
+          <p
+            class="py-6 text-center text-sm text-muted"
+            data-testid="search-no-result"
+          >
             {{ t('search.noResultFor', { text: text.trim() }) }}
           </p>
         </template>

@@ -208,6 +208,9 @@ describe('search modal (RCH-01, RCH-05)', () => {
         findInBody('[data-testid="search-no-result"]')?.textContent,
       ).toContain('« loyer »')
     })
+    expect(findInBody('[data-testid="search-no-result"]')?.classList).toContain(
+      'text-center',
+    )
     option('Voir tous les résultats').click()
 
     await vi.waitFor(() => {
