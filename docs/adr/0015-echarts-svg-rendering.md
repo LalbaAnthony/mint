@@ -1,6 +1,6 @@
 # ADR 0015 · Rendu SVG d'ECharts
 
-Statut : acceptée · 15 novembre 2026 · Exigences : CHG-70 à CHG-73, CHG-77, CHG-105, CODE-11, NF-ACC-01, NF-PERF-04
+Statut : acceptée, amendée par ADR 0036 (chargement différé des graphiques) · 15 novembre 2026 · Exigences : CHG-70 à CHG-73, CHG-77, CHG-105, CODE-11, NF-ACC-01, NF-PERF-04
 
 ## Contexte
 
@@ -13,7 +13,7 @@ Les graphiques du tableau de bord (DSH-01 à DSH-03) passent par ECharts via vue
 - Thème : `front/app/charts/theme.ts` lit les jetons `--data-*`, `--ui-text-muted`, `--ui-border-muted`, `--ui-border`, `--ui-bg`, `--ui-text` sur `<html>` et les convertit en hex sRGB par un canevas 1 x 1 hors écran, car les calculs de couleur d'ECharts ne gèrent pas OKLCH. Le composable `useChartTheme` le reconstruit quand la classe de `<html>` change (bascule claire ou sombre du lot 4) et coupe l'animation sous `prefers-reduced-motion: reduce`.
 - Les options sont construites par des fonctions pures (`front/app/charts/balance-curve.ts`), testées sans rendu.
 - Accessibilité : `aria.enabled` et `aria.decal.show` ; la série réelle porte une hachure vide (`{ symbol: 'none' }`), la série prévue une hachure diagonale. La valeur `'none'` documentée pour `decal` fait échouer le rendu d'une série de lignes d'ECharts 6 : un motif vide la remplace. Un bouton « Afficher les données » révèle le tableau équivalent.
-- Le composant du graphique est chargé en différé (`LazyBalanceCurveChart`) : le code d'ECharts, environ 590 Ko minifiés, n'entre pas dans le chargement initial de l'application.
+- Le composant du graphique est chargé en différé : le code d'ECharts, environ 590 Ko minifiés, n'entre pas dans le chargement initial de l'application. Depuis l'ADR 0036, chaque graphique est déclaré par `lazyComponent` avec son skeleton pour état de chargement, et son code est chargé en parallèle des données de sa section.
 
 ## Conséquences
 
