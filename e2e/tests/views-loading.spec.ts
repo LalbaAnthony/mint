@@ -6,6 +6,8 @@ import {
   guardPage,
   httpOrigin,
   login,
+  openView,
+  signedInViews,
 } from '../support.ts'
 
 const responseDelayMs = 800
@@ -87,7 +89,8 @@ test.describe('CHG-47, CHG-48: the views do not shift while they load', () => {
   })
 
   for (const width of widths) {
-    test(`dashboard at ${width} px`, async ({ browser }) => {
+    test(`signed-in views at ${width} px`, async ({ browser }) => {
+      test.setTimeout(180_000)
       const context = await browser.newContext({
         ...contextOptions,
         storageState: session,
@@ -95,26 +98,39 @@ test.describe('CHG-47, CHG-48: the views do not shift while they load', () => {
       })
       const page = await context.newPage()
       const guard = guardPage(page)
+      for (const view of signedInViews) {
+        await openView(page, view.path, view.title)
+        await expect(page.getByTestId('skeleton-zone')).toHaveCount(0)
+      }
+
       await page.addInitScript({ content: recordLayoutShift })
       await page.route('**/api/v1/**', async (route) => {
         await new Promise((resolve) => setTimeout(resolve, responseDelayMs))
         await route.continue()
       })
 
-      await page.goto('/')
-      await expect(page.getByTestId('skeleton-zone').first()).toBeVisible()
-      await expect(page.getByTestId('monthly-chart')).toBeVisible({
-        timeout: 15_000,
-      })
-      await expect(page.getByTestId('balance-curve-chart')).toBeVisible()
-      await expect(page.getByTestId('skeleton-zone')).toHaveCount(0)
-      await page.waitForLoadState('networkidle')
+      for (const view of signedInViews) {
+        await page.goto(view.path)
+        await expect(
+          page.locator('h1').filter({ hasText: view.title }),
+        ).toBeVisible()
+        if (view.path === '/') {
+          await expect(page.getByTestId('skeleton-zone').first()).toBeVisible()
+        }
+        await page.waitForLoadState('networkidle')
+        await expect(page.getByTestId('skeleton-zone')).toHaveCount(0, {
+          timeout: 15_000,
+        })
+        await page.waitForLoadState('networkidle')
 
-      const layoutShift: unknown = await page.evaluate(() =>
-        Reflect.get(globalThis, 'mintLayoutShift'),
-      )
-      expect(typeof layoutShift).toBe('number')
-      expect(Number(layoutShift)).toBeLessThan(maximumLayoutShift)
+        const layoutShift: unknown = await page.evaluate(() =>
+          Reflect.get(globalThis, 'mintLayoutShift'),
+        )
+        expect(typeof layoutShift, view.path).toBe('number')
+        expect
+          .soft(Number(layoutShift), view.path)
+          .toBeLessThan(maximumLayoutShift)
+      }
       guard.assertClean()
       await context.close()
     })
