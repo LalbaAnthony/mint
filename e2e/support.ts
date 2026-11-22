@@ -17,6 +17,7 @@ export const signedInViews = [
   { path: '/envelopes', title: 'Enveloppes' },
   { path: '/import', title: 'Import' },
   { path: '/rules', title: 'Règles' },
+  { path: '/search?q=co', title: 'Recherche' },
   { path: '/profile', title: 'Profil et préférences' },
   { path: '/admin', title: 'Administration' },
 ]
