@@ -43,7 +43,40 @@ async function load(): Promise<void> {
   }
 }
 
-onMounted(load)
+const route = useRoute()
+const {
+  highlightedId,
+  take: takeLinkedEnvelope,
+  reveal: revealLinkedEnvelope,
+} = useLinkedHighlight('envelope')
+
+async function openFromLink(): Promise<void> {
+  const envelopeId = await takeLinkedEnvelope()
+  if (envelopeId === null) {
+    return
+  }
+  if (
+    result.value === null ||
+    result.value.month !== result.value.currentMonth
+  ) {
+    month.value = null
+    await load()
+  }
+  if (result.value?.inactive.some((envelope) => envelope.id === envelopeId)) {
+    inactiveOpen.value = true
+  }
+  await revealLinkedEnvelope()
+}
+
+function rowClass(line: EnvelopeMonthLine): string {
+  return line.envelope.id === highlightedId.value ? linkedRowHighlightClass : ''
+}
+
+onMounted(async () => {
+  await load()
+  await openFromLink()
+})
+watch(() => route.query, openFromLink)
 watch(() => editor.savedVersion, load)
 
 function shift(offset: number): Promise<void> {
@@ -236,12 +269,18 @@ async function deleteEnvelope(): Promise<void> {
           :data="result.lines"
           :columns="columns"
           :ui="{ th: 'whitespace-nowrap', td: 'align-top' }"
+          :meta="{ class: { tr: (row) => rowClass(row.original) } }"
           data-testid="envelopes-table"
         >
           <template #label-cell="{ row }">
             <div
               class="flex min-w-0 flex-col"
               :data-testid="`envelope-${row.original.envelope.id}`"
+              v-bind="
+                linkedTargetAttributes(
+                  row.original.envelope.id === highlightedId,
+                )
+              "
             >
               <span class="font-medium text-highlighted">
                 {{ row.original.envelope.label }}
@@ -360,6 +399,7 @@ async function deleteEnvelope(): Promise<void> {
               :key="line.envelope.id"
               :line="line"
               :current-month="isCurrentMonth"
+              :highlighted="line.envelope.id === highlightedId"
               @month-amount="openMonthAmount"
               @edit="openForm"
               @delete="envelopeToDelete = $event"
@@ -447,6 +487,13 @@ async function deleteEnvelope(): Promise<void> {
                 v-for="envelope in result.inactive"
                 :key="envelope.id"
                 class="flex items-center gap-2 py-2"
+                :class="
+                  envelope.id === highlightedId
+                    ? `px-2 ${linkedHighlightClass}`
+                    : ''
+                "
+                :data-testid="`inactive-envelope-${envelope.id}`"
+                v-bind="linkedTargetAttributes(envelope.id === highlightedId)"
               >
                 <span class="min-w-0 flex-1 truncate text-sm text-muted">
                   {{ envelope.label }}

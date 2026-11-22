@@ -139,7 +139,9 @@ function actionItems(account: Account): DropdownMenuItem[][] {
         :key="account.id"
         :data-sortable-item="sortableScope"
         :data-testid="`account-${account.id}`"
+        v-bind="linkedTargetAttributes(account.id === highlightedId)"
         class="px-2 sm:px-4"
+        :class="account.id === highlightedId ? linkedHighlightClass : ''"
       >
         <div class="flex items-center gap-2 py-2">
           <span

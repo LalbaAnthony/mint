@@ -82,6 +82,7 @@ export interface AccountGroupCardProps {
   paymentMethods: PaymentMethod[]
   reordering: boolean
   expandedIds: string[]
+  highlightedId?: string | null
 }
 
 export type AccountGroupCardEmits = {
@@ -103,6 +104,7 @@ export type PaymentMethodListEmits = {
 
 export interface ArchivedAccountsCardProps {
   accounts: Account[]
+  highlightedId?: string | null
 }
 
 export type ArchivedAccountsCardEmits = {
@@ -179,4 +181,5 @@ export type InterestModalEmits = {
 
 export interface OfflineGuardProps {
   block?: boolean
+  message?: string
 }

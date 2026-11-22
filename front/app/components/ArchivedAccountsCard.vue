@@ -6,13 +6,23 @@ import type {
   ArchivedAccountsCardProps,
 } from '~~/types/components'
 
-defineProps<ArchivedAccountsCardProps>()
+const props = defineProps<ArchivedAccountsCardProps>()
 const emit = defineEmits<ArchivedAccountsCardEmits>()
 
 const { t } = useI18n()
 const connectivity = useConnectivityStore()
 
 const open = ref(false)
+
+watch(
+  () => props.highlightedId,
+  (id) => {
+    if (props.accounts.some((account) => account.id === id)) {
+      open.value = true
+    }
+  },
+  { immediate: true },
+)
 
 function actionItems(account: Account): DropdownMenuItem[][] {
   return [
@@ -55,7 +65,9 @@ function actionItems(account: Account): DropdownMenuItem[][] {
             v-for="account in accounts"
             :key="account.id"
             class="flex items-center gap-2 px-4 py-2 sm:px-6"
+            :class="account.id === highlightedId ? linkedHighlightClass : ''"
             :data-testid="`archived-account-${account.id}`"
+            v-bind="linkedTargetAttributes(account.id === highlightedId)"
           >
             <div class="flex min-w-0 flex-1 items-center gap-2">
               <span class="truncate text-sm text-muted">{{

@@ -10,7 +10,9 @@ useOfflineSync()
       <slot />
     </main>
     <AppBottomBar />
+    <AppSearchFab />
     <AppFab />
+    <GlobalSearchModal />
     <OperationFormModal />
     <ReconciliationProposalModal />
     <NotificationCenter />

@@ -21,7 +21,9 @@ const actions = computed<DropdownMenuItem[][]>(() =>
 <template>
   <li
     class="flex flex-col gap-2 py-3"
+    :class="highlighted ? `px-2 ${linkedHighlightClass}` : ''"
     :data-testid="`envelope-${line.envelope.id}`"
+    v-bind="linkedTargetAttributes(highlighted)"
   >
     <div class="flex items-start gap-2">
       <div class="min-w-0 flex-1">

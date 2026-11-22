@@ -338,7 +338,32 @@ function reorder(usageIndex: number, accountIds: string[]): Promise<void> {
   })
 }
 
-onMounted(load)
+const route = useRoute()
+const {
+  highlightedId,
+  take: takeLinkedAccount,
+  reveal: revealLinkedAccount,
+} = useLinkedHighlight('account')
+
+async function openFromLink(): Promise<void> {
+  const accountId = await takeLinkedAccount()
+  if (accountId === null) {
+    return
+  }
+  if (
+    activeAccounts.value.some((account) => account.id === accountId) &&
+    !expandedIds.value.includes(accountId)
+  ) {
+    expandedIds.value = [...expandedIds.value, accountId]
+  }
+  await revealLinkedAccount()
+}
+
+onMounted(async () => {
+  await load()
+  await openFromLink()
+})
+watch(() => route.query, openFromLink)
 </script>
 
 <template>
@@ -396,6 +421,7 @@ onMounted(load)
           :payment-methods="paymentMethods"
           :reordering="reordering"
           :expanded-ids="expandedIds"
+          :highlighted-id="highlightedId"
           @reorder="reorder(index, $event)"
           @toggle="toggle"
           @account-action="onAccountAction"
@@ -423,6 +449,7 @@ onMounted(load)
       <ArchivedAccountsCard
         v-if="overview.archived.length > 0"
         :accounts="overview.archived"
+        :highlighted-id="highlightedId"
         @account-action="onAccountAction"
       />
     </div>

@@ -28,6 +28,24 @@
     "income": "Revenu",
     "transfer": "Transfert"
   },
+  "search": {
+    "open": "Rechercher",
+    "placeholder": "Rechercher…",
+    "title": "Recherche",
+    "description": "Comptes, opérations, échéances et enveloppes",
+    "pageTitle": "Recherche",
+    "submit": "Lancer la recherche",
+    "hint": "Saisissez au moins 2 caractères.",
+    "seeAll": "Voir tous les résultats pour « {text} »",
+    "sectionCount": "{section} ({n})",
+    "nextOccurrence": "prochaine le {date}",
+    "perMonth": "{amount} par mois",
+    "more": "Voir plus",
+    "noResultTitle": "Aucun résultat",
+    "noResultFor": "Aucun compte, opération, échéance ni enveloppe ne correspond à « {text} ».",
+    "offline": "Recherche indisponible hors ligne",
+    "offlineText": "La recherche reprendra au retour du réseau."
+  },
   "common": {
     "cancel": "Annuler",
     "save": "Enregistrer",

@@ -8,7 +8,10 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <UTooltip v-if="connectivity.offline" :text="t('offline.writeDisabled')">
+  <UTooltip
+    v-if="connectivity.offline"
+    :text="message ?? t('offline.writeDisabled')"
+  >
     <span
       :class="block ? 'flex w-full' : 'inline-flex'"
       data-testid="offline-guard"

@@ -218,6 +218,7 @@ export type EnvelopeFormModalEmits = {
 export interface EnvelopeRowProps {
   line: EnvelopeMonthLine
   currentMonth: boolean
+  highlighted?: boolean
 }
 
 export type EnvelopeRowEmits = {

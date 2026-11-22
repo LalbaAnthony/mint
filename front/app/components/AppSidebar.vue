@@ -71,6 +71,8 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
     </template>
 
     <template #default="{ collapsed }">
+      <AppSearchTrigger :collapsed="collapsed" />
+
       <UDropdownMenu :items="quickAddItems" :content="{ align: 'start' }">
         <UButton
           :label="collapsed ? undefined : t('quickAdd.add')"

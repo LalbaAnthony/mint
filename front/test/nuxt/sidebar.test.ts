@@ -30,6 +30,17 @@ describe('AppSidebar (CHG-55)', () => {
     )
   })
 
+  it('puts the search trigger right above the Add button (RCH-01)', async () => {
+    const wrapper = await mountSuspended(AppSidebar, { route: '/' })
+
+    const search = wrapper.get('[data-testid="sidebar-search"]').element
+    const add = wrapper.get('[data-testid="sidebar-quick-add"]').element
+    expect(search.compareDocumentPosition(add)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+    expect(search.nextElementSibling?.contains(add)).toBe(true)
+  })
+
   it('groups the navigation in three separated lists', async () => {
     const wrapper = await mountSuspended(AppSidebar, { route: '/' })
 

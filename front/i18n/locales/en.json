@@ -28,6 +28,24 @@
     "income": "Income",
     "transfer": "Transfer"
   },
+  "search": {
+    "open": "Search",
+    "placeholder": "Search…",
+    "title": "Search",
+    "description": "Accounts, transactions, schedules and envelopes",
+    "pageTitle": "Search",
+    "submit": "Run the search",
+    "hint": "Type at least 2 characters.",
+    "seeAll": "See all results for \"{text}\"",
+    "sectionCount": "{section} ({n})",
+    "nextOccurrence": "next on {date}",
+    "perMonth": "{amount} per month",
+    "more": "Show more",
+    "noResultTitle": "No results",
+    "noResultFor": "No account, transaction, schedule or envelope matches \"{text}\".",
+    "offline": "Search unavailable offline",
+    "offlineText": "Search will resume when the network is back."
+  },
   "common": {
     "cancel": "Cancel",
     "save": "Save",
