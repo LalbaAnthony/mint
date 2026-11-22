@@ -56,6 +56,8 @@
   --ui-error: var(--ui-color-error-600);
   --ui-text-muted: var(--ui-color-neutral-600);
 
+  --app-visible-top: 0px;
+  --app-visible-height: 100dvh;
   --app-canvas: var(--ui-color-neutral-50);
   --app-primary-hover: var(--ui-color-primary-800);
   --app-accent-fill: var(--ui-color-secondary-400);

@@ -7,6 +7,8 @@ const toasterPosition = useToasterPosition()
 const colorMode = useColorMode()
 
 usePwaUpdates()
+useVisibleViewport()
+useKeyboardCentering()
 
 const uiLocale = computed(() => (locale.value === 'en' ? en : fr))
 

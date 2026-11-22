@@ -28,5 +28,25 @@ export default defineAppConfig({
         },
       ],
     },
+    modal: {
+      variants: {
+        fullscreen: {
+          true: {
+            content:
+              'bottom-auto top-(--app-visible-top) h-(--app-visible-height)',
+          },
+        },
+      },
+      compoundVariants: [
+        {
+          scrollable: false,
+          fullscreen: false,
+          class: {
+            content:
+              'top-[calc(var(--app-visible-top)_+_var(--app-visible-height)_/_2)] max-h-[calc(var(--app-visible-height)_-_2rem)] sm:max-h-[calc(var(--app-visible-height)_-_4rem)]',
+          },
+        },
+      ],
+    },
   },
 })

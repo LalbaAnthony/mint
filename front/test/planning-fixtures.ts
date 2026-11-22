@@ -340,7 +340,7 @@ export function submit(selector: string): void {
   )
 }
 
-export function setViewportWidth(width: number): void {
+function setHappyDomViewport(viewport: { width: number; height?: number }) {
   const happyDOM: unknown = Reflect.get(window, 'happyDOM')
   if (
     typeof happyDOM !== 'object' ||
@@ -350,7 +350,15 @@ export function setViewportWidth(width: number): void {
   ) {
     throw new Error('The front tests require the happy-dom environment')
   }
-  happyDOM.setViewport({ width })
+  happyDOM.setViewport(viewport)
+}
+
+export function setViewportWidth(width: number): void {
+  setHappyDomViewport({ width })
+}
+
+export function setViewportSize(width: number, height: number): void {
+  setHappyDomViewport({ width, height })
 }
 
 export function typeInto(root: Element, selector: string, value: string): void {
