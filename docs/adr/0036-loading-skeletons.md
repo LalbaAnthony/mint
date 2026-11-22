@@ -19,7 +19,7 @@ Rendu (CHG-47) :
 
 - Le skeleton reproduit la mise en page du contenu qu'il remplace : mêmes cartes, grilles, lignes de liste et en-têtes de tableau, graphiques à leur hauteur.
 - Barres `bg-elevated`, pulsation `animate-pulse` sous `motion-safe` seulement : seule exception à CHG-43, coupée par `prefers-reduced-motion: reduce`.
-- Une ligne de texte prend la classe typographique du texte réel et une hauteur de `1lh` : sa boîte a la hauteur de ligne de la police réelle, sans valeur en pixels. La barre visible mesure 0,75em de haut, centrée. Les montants étant en chiffres tabulaires, leur largeur se prédit en `ch` : 10ch, 5ch en mode masqué pour un montant masquable. Les contrôles prennent la hauteur de leur taille Nuxt UI : 32 px en `md`, 28 px en `sm`, 44 px pour les boutons d'icône tactiles.
+- Une ligne de texte prend la classe typographique du texte réel et une hauteur de `1lh` : sa boîte a la hauteur de ligne de la police réelle, sans valeur en pixels. La barre visible mesure 0,75em de haut, centrée. Les montants étant en chiffres tabulaires, leur largeur se prédit en `ch` : 8ch, sans dépasser la largeur de son conteneur, 5ch en mode masqué pour un montant masquable. Les contrôles prennent la hauteur de leur taille Nuxt UI : 32 px en `md`, 28 px en `sm`, 44 px pour les boutons d'icône tactiles.
 - Largeurs prises dans une liste fermée de classes Tailwind littérales, jamais calculées ni aléatoires : rendu stable d'un affichage à l'autre, tests stables, classes générées par Tailwind.
 - Accessibilité : les barres sont `aria-hidden` ; chaque zone en chargement porte une seule région `role="status"` `aria-busy="true"` avec le texte « Chargement... » réservé aux lecteurs d'écran (clés i18n en français et en anglais).
 
