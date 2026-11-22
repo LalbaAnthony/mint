@@ -1,3 +1,4 @@
+import type { TableColumn } from '@nuxt/ui'
 import type {
   ListRowAlign,
   ListRowDirection,
@@ -7,6 +8,9 @@ import type {
   SkeletonControlKind,
   SkeletonControlSize,
   SkeletonShape,
+  SkeletonTableCell,
+  SkeletonTableColumn,
+  SkeletonTextAlign,
   SkeletonWidth,
   StatGridColumns,
   StatTileEmphasis,
@@ -34,6 +38,12 @@ export const skeletonWidthClasses = {
   xl: 'w-64',
   full: 'w-full',
 } as const satisfies Record<SkeletonWidth, string>
+
+export const skeletonTextAlignClasses = {
+  start: '',
+  center: 'justify-center',
+  end: 'justify-end',
+} as const satisfies Record<SkeletonTextAlign, string>
 
 const rowWidths = ['lg', 'md', 'xl'] as const satisfies SkeletonWidth[]
 
@@ -119,3 +129,20 @@ export const listRowDirectionClasses = {
   column: 'flex-col',
   responsive: 'flex-col lg:flex-row lg:items-center',
 } as const satisfies Record<ListRowDirection, string>
+
+export function skeletonColumns<T>(
+  columns: TableColumn<T>[],
+  cells: Record<string, SkeletonTableCell>,
+  concealable: readonly string[] = [],
+): SkeletonTableColumn[] {
+  return columns.map((column) => {
+    const id =
+      column.id ?? ('accessorKey' in column ? String(column.accessorKey) : '')
+    return {
+      id,
+      header: typeof column.header === 'string' ? column.header : '',
+      cell: cells[id] ?? 'text',
+      concealable: concealable.includes(id),
+    }
+  })
+}

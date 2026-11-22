@@ -3,7 +3,7 @@ import type { LoadZoneProps } from '~~/types/skeleton'
 
 defineOptions({ inheritAttrs: false })
 
-const props = defineProps<LoadZoneProps>()
+const props = withDefaults(defineProps<LoadZoneProps>(), { errorState: true })
 
 function retry(): void {
   void props.state.retry()
@@ -18,7 +18,11 @@ function retry(): void {
   >
     <slot name="skeleton" />
   </SkeletonZone>
-  <slot v-else-if="state.phase === 'error'" name="error" :retry="retry">
+  <slot
+    v-else-if="state.phase === 'error' && errorState"
+    name="error"
+    :retry="retry"
+  >
     <LoadError @retry="retry" />
   </slot>
   <slot v-else-if="state.phase === 'ready'" />

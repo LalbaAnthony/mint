@@ -7,6 +7,7 @@ import type {
   OperationListResponse,
 } from '@mint/shared/types/operations'
 import type { OperationFilterState, OperationSorting } from '~~/types/planning'
+import type { LoadMode } from '~~/types/skeleton'
 
 const pageSize = 50
 
@@ -36,18 +37,17 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
+const loadState = useLoadState({ onError: notifyFailure })
+
 async function loadOffline(): Promise<void> {
   const offlineResult = await offlineOperations()
   if (offlineResult === null) {
-    notifyFailure(
-      new ApiError({ status: 0, code: 'offline_unavailable', issues: [] }),
-    )
-    return
+    throw new ApiError({ status: 0, code: 'offline_unavailable', issues: [] })
   }
   result.value = offlineResult
 }
 
-async function load(): Promise<void> {
+async function fetchOperations(): Promise<void> {
   if (connectivity.offline) {
     await loadOffline()
     return
@@ -64,8 +64,12 @@ async function load(): Promise<void> {
       await loadOffline()
       return
     }
-    notifyFailure(error)
+    throw error
   }
+}
+
+function load(mode: LoadMode = 'context'): Promise<void> {
+  return loadState.run(fetchOperations, mode)
 }
 
 const reloadFromFirstPage = useDebounceFn(() => {
@@ -77,12 +81,15 @@ const reloadFromFirstPage = useDebounceFn(() => {
 }, 300)
 
 watch([filters, sorting], () => void reloadFromFirstPage(), { deep: true })
-watch(page, load)
-watch(() => connectivity.offline, load)
+watch(page, () => load())
+watch(
+  () => connectivity.offline,
+  () => load(),
+)
 watch(
   () => editor.savedVersion,
   async () => {
-    await Promise.all([referentials.load(), load()])
+    await Promise.all([referentials.load(), load('background')])
   },
 )
 
@@ -152,7 +159,7 @@ function clearSelection(): void {
 
 async function reapplied(): Promise<void> {
   clearSelection()
-  await load()
+  await load('background')
 }
 
 const columns = computed<TableColumn<Operation>[]>(() => [
@@ -163,6 +170,17 @@ const columns = computed<TableColumn<Operation>[]>(() => [
   { accessorKey: 'amountCents', header: t('operations.fields.amount') },
   { id: 'actions', header: '' },
 ])
+
+const skeletonTableColumns = computed(() =>
+  skeletonColumns(columns.value, {
+    select: 'checkbox',
+    date: 'date',
+    label: 'text-detail',
+    accountId: 'text',
+    amountCents: 'amount',
+    actions: 'actions',
+  }),
+)
 
 function detailOf(operation: Operation): string {
   if (operation.transferGroupId !== null) {
@@ -234,7 +252,7 @@ async function deleteOperation(): Promise<void> {
       icon: icons.success,
       color: 'success',
     })
-    await load()
+    await load('background')
   } catch (error) {
     notifyFailure(error)
   } finally {
@@ -314,169 +332,207 @@ async function deleteOperation(): Promise<void> {
         </div>
       </UCard>
 
-      <UCard v-if="result !== null" data-testid="operations-list">
-        <EmptyState
-          v-if="items.length === 0"
-          :icon="icons.operations"
-          :title="t('operations.emptyTitle')"
-          :description="t('operations.emptyText')"
-        >
-          <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              :label="t('operations.add')"
-              :icon="icons.add"
-              color="primary"
-              variant="soft"
-              @click="editor.create('expense')"
-            />
-          </OfflineGuard>
-        </EmptyState>
-        <div
-          v-if="items.length > 0 && !connectivity.offline"
-          class="flex min-h-11 flex-wrap items-center gap-2 pb-3"
-          data-testid="operations-selection"
-        >
-          <UCheckbox
-            v-if="!isDesktop"
-            :model-value="pageSelection"
-            :label="t('rules.reapply.selectPage')"
-            data-testid="operations-select-page"
-            @update:model-value="togglePage"
-          />
-          <span
-            class="text-sm text-muted"
-            role="status"
-            data-testid="operations-selected-count"
+      <LoadZone :state="loadState">
+        <template #skeleton>
+          <UCard data-testid="operations-list-skeleton">
+            <div class="flex min-h-11 items-center gap-2 pb-3">
+              <template v-if="!isDesktop">
+                <SkeletonControl kind="checkbox" />
+                <SkeletonText width="md" class="text-sm" />
+              </template>
+            </div>
+            <SkeletonTable v-if="isDesktop" :columns="skeletonTableColumns" />
+            <SkeletonList
+              v-else
+              :row="{ gap: 3 }"
+              class="flex flex-col divide-y divide-default"
+            >
+              <template #default="{ index }">
+                <SkeletonControl kind="checkbox" />
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                  <div class="min-w-0 flex-1">
+                    <SkeletonText
+                      :width="skeletonRowWidth(index)"
+                      class="text-sm"
+                    />
+                    <SkeletonText width="md" class="text-xs" />
+                  </div>
+                  <SkeletonAmount class="text-sm font-medium" />
+                </div>
+                <SkeletonControl kind="touch-icon-button" />
+              </template>
+            </SkeletonList>
+          </UCard>
+        </template>
+        <template #error="{ retry }">
+          <UCard>
+            <LoadError @retry="retry" />
+          </UCard>
+        </template>
+        <UCard v-if="result !== null" data-testid="operations-list">
+          <EmptyState
+            v-if="items.length === 0"
+            :icon="icons.operations"
+            :title="t('operations.emptyTitle')"
+            :description="t('operations.emptyText')"
           >
-            {{
-              selected.size === 0
-                ? ''
-                : t(
-                    'rules.reapply.selected',
-                    { n: selected.size },
-                    selected.size,
-                  )
-            }}
-          </span>
-          <template v-if="selected.size > 0">
-            <UButton
-              :icon="icons.rules"
-              :label="t('rules.reapply.action')"
-              color="primary"
-              variant="soft"
-              data-testid="operations-reapply"
-              @click="reapplyOpen = true"
-            />
-            <UButton
-              :label="t('rules.reapply.clearSelection')"
-              color="neutral"
-              variant="ghost"
-              @click="clearSelection"
-            />
-          </template>
-        </div>
-        <UTable
-          v-if="items.length > 0 && isDesktop"
-          :data="items"
-          :columns="columns"
-          data-testid="operations-table"
-        >
-          <template #select-header>
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :label="t('operations.add')"
+                :icon="icons.add"
+                color="primary"
+                variant="soft"
+                @click="editor.create('expense')"
+              />
+            </OfflineGuard>
+          </EmptyState>
+          <div
+            v-if="items.length > 0 && !connectivity.offline"
+            class="flex min-h-11 flex-wrap items-center gap-2 pb-3"
+            data-testid="operations-selection"
+          >
             <UCheckbox
+              v-if="!isDesktop"
               :model-value="pageSelection"
-              :disabled="connectivity.offline"
-              :aria-label="t('rules.reapply.selectPage')"
+              :label="t('rules.reapply.selectPage')"
               data-testid="operations-select-page"
               @update:model-value="togglePage"
             />
-          </template>
-          <template #select-cell="{ row }">
-            <UCheckbox
-              :model-value="selected.has(row.original.id)"
-              :disabled="connectivity.offline"
-              :aria-label="
-                t('rules.reapply.selectOperation', {
-                  label: row.original.label,
-                })
-              "
-              data-testid="operation-select"
-              @update:model-value="toggleOperation(row.original)"
-            />
-          </template>
-          <template #actions-header>
-            <span class="sr-only">{{ t('common.actions') }}</span>
-          </template>
-          <template #date-cell="{ row }">
-            <span class="tabular-nums">{{
-              formatDate(row.original.date)
-            }}</span>
-          </template>
-          <template #label-cell="{ row }">
-            <div class="flex min-w-0 flex-col">
-              <span class="flex items-center gap-1 text-default">
-                <UIcon
-                  :name="originIcon(row.original)"
-                  class="size-4 shrink-0 text-muted"
-                  :aria-label="t(`operations.origins.${row.original.origin}`)"
-                />
-                {{ row.original.label }}
-                <OperationBadges :operation="row.original" />
-              </span>
-              <span class="text-xs text-muted">{{
-                detailOf(row.original)
+            <span
+              class="text-sm text-muted"
+              role="status"
+              data-testid="operations-selected-count"
+            >
+              {{
+                selected.size === 0
+                  ? ''
+                  : t(
+                      'rules.reapply.selected',
+                      { n: selected.size },
+                      selected.size,
+                    )
+              }}
+            </span>
+            <template v-if="selected.size > 0">
+              <UButton
+                :icon="icons.rules"
+                :label="t('rules.reapply.action')"
+                color="primary"
+                variant="soft"
+                data-testid="operations-reapply"
+                @click="reapplyOpen = true"
+              />
+              <UButton
+                :label="t('rules.reapply.clearSelection')"
+                color="neutral"
+                variant="ghost"
+                @click="clearSelection"
+              />
+            </template>
+          </div>
+          <UTable
+            v-if="items.length > 0 && isDesktop"
+            :data="items"
+            :columns="columns"
+            data-testid="operations-table"
+          >
+            <template #select-header>
+              <UCheckbox
+                :model-value="pageSelection"
+                :disabled="connectivity.offline"
+                :aria-label="t('rules.reapply.selectPage')"
+                data-testid="operations-select-page"
+                @update:model-value="togglePage"
+              />
+            </template>
+            <template #select-cell="{ row }">
+              <UCheckbox
+                :model-value="selected.has(row.original.id)"
+                :disabled="connectivity.offline"
+                :aria-label="
+                  t('rules.reapply.selectOperation', {
+                    label: row.original.label,
+                  })
+                "
+                data-testid="operation-select"
+                @update:model-value="toggleOperation(row.original)"
+              />
+            </template>
+            <template #actions-header>
+              <span class="sr-only">{{ t('common.actions') }}</span>
+            </template>
+            <template #date-cell="{ row }">
+              <span class="tabular-nums">{{
+                formatDate(row.original.date)
               }}</span>
-              <TagBadges :tag-ids="row.original.tagIds" class="mt-1" />
-            </div>
-          </template>
-          <template #accountId-cell="{ row }">
-            {{ referentials.accountName(row.original.accountId) }}
-          </template>
-          <template #amountCents-cell="{ row }">
-            <div class="text-right">
-              <MoneyAmount :cents="row.original.amountCents" variant="flow" />
-            </div>
-          </template>
-          <template #actions-cell="{ row }">
-            <div class="flex justify-end">
-              <UDropdownMenu :items="actionsOf(row.original)">
-                <UButton
-                  :icon="icons.rowActions"
-                  :aria-label="
-                    t('common.actionsFor', { name: row.original.label })
-                  "
-                  color="neutral"
-                  variant="ghost"
-                />
-              </UDropdownMenu>
-            </div>
-          </template>
-        </UTable>
-        <ul
-          v-else-if="items.length > 0"
-          class="flex flex-col divide-y divide-default"
-        >
-          <OperationRow
-            v-for="operation in items"
-            :key="operation.id"
-            :operation="operation"
-            :selected="selected.has(operation.id)"
-            @edit="editor.edit"
-            @delete="operationToDelete = $event"
-            @toggle="toggleOperation"
-          />
-        </ul>
-        <div
-          v-if="!connectivity.offline && result.total > pageSize"
-          class="flex justify-center pt-4"
-        >
-          <UPagination
-            v-model:page="page"
-            :total="result.total"
-            :items-per-page="pageSize"
-          />
-        </div>
-      </UCard>
+            </template>
+            <template #label-cell="{ row }">
+              <div class="flex min-w-0 flex-col">
+                <span class="flex items-center gap-1 text-default">
+                  <UIcon
+                    :name="originIcon(row.original)"
+                    class="size-4 shrink-0 text-muted"
+                    :aria-label="t(`operations.origins.${row.original.origin}`)"
+                  />
+                  {{ row.original.label }}
+                  <OperationBadges :operation="row.original" />
+                </span>
+                <span class="text-xs text-muted">{{
+                  detailOf(row.original)
+                }}</span>
+                <TagBadges :tag-ids="row.original.tagIds" class="mt-1" />
+              </div>
+            </template>
+            <template #accountId-cell="{ row }">
+              {{ referentials.accountName(row.original.accountId) }}
+            </template>
+            <template #amountCents-cell="{ row }">
+              <div class="text-right">
+                <MoneyAmount :cents="row.original.amountCents" variant="flow" />
+              </div>
+            </template>
+            <template #actions-cell="{ row }">
+              <div class="flex justify-end">
+                <UDropdownMenu :items="actionsOf(row.original)">
+                  <UButton
+                    :icon="icons.rowActions"
+                    :aria-label="
+                      t('common.actionsFor', { name: row.original.label })
+                    "
+                    color="neutral"
+                    variant="ghost"
+                  />
+                </UDropdownMenu>
+              </div>
+            </template>
+          </UTable>
+          <ul
+            v-else-if="items.length > 0"
+            class="flex flex-col divide-y divide-default"
+          >
+            <OperationRow
+              v-for="operation in items"
+              :key="operation.id"
+              :operation="operation"
+              :selected="selected.has(operation.id)"
+              @edit="editor.edit"
+              @delete="operationToDelete = $event"
+              @toggle="toggleOperation"
+            />
+          </ul>
+          <div
+            v-if="!connectivity.offline && result.total > pageSize"
+            class="flex justify-center pt-4"
+          >
+            <UPagination
+              v-model:page="page"
+              :total="result.total"
+              :items-per-page="pageSize"
+            />
+          </div>
+        </UCard>
+      </LoadZone>
     </div>
 
     <ReapplyRulesModal

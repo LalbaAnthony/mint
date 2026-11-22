@@ -22,7 +22,7 @@ function widthOf(line: number): string {
       v-for="line in lineIndexes"
       :key="line"
       class="flex h-[1lh] items-center"
-      :class="align === 'end' ? 'justify-end' : ''"
+      :class="skeletonTextAlignClasses[align]"
     >
       <SkeletonBlock
         shape="text"

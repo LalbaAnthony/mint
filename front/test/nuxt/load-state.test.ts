@@ -287,6 +287,25 @@ describe('LoadZone (CHG-47, CHG-49)', () => {
     expect(wrapper.find('[data-testid="zone-content"]').exists()).toBe(true)
   })
 
+  it('lets a secondary zone leave the error state to another zone', async () => {
+    const state = createState({ onError: vi.fn() })
+    await state.run(() => Promise.reject(new Error('down')))
+
+    const wrapper = await mountInApp(
+      defineComponent({
+        setup: () => () =>
+          h(
+            LoadZone,
+            { state, errorState: false },
+            { default: () => h('p', { 'data-testid': 'zone-content' }) },
+          ),
+      }),
+    )
+
+    expect(wrapper.find('[data-testid="load-error"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="zone-content"]').exists()).toBe(false)
+  })
+
   it('lets a zone replace the error state', async () => {
     const state = createState({ onError: vi.fn() })
     await state.run(() => Promise.reject(new Error('down')))

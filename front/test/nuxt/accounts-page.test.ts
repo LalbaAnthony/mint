@@ -453,10 +453,13 @@ describe('reorder mode (CPT-01)', () => {
     })
     const wrapper = await mountInApp(AccountsPage, { route: '/accounts' })
     await vi.waitFor(() => {
-      expect(wrapper.find('[data-testid="accounts-reorder"]').exists()).toBe(
-        true,
-      )
+      expect(
+        wrapper.find(`[data-testid="account-${current.id}"]`).exists(),
+      ).toBe(true)
     })
+    expect(
+      wrapper.get('[data-testid="accounts-reorder"]').attributes('disabled'),
+    ).toBeUndefined()
     expect(wrapper.find('[data-testid="move-down"]').exists()).toBe(false)
 
     await wrapper.get('[data-testid="accounts-reorder"]').trigger('click')

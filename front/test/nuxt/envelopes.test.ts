@@ -246,7 +246,9 @@ describe('envelopes view (ENV-06, ENV-08)', () => {
     const wrapper = await mountInApp(EnvelopesPage, { route: '/envelopes' })
     mounted.push(wrapper)
     await vi.waitFor(() => {
-      expect(wrapper.find('[data-testid="envelopes-next"]').exists()).toBe(true)
+      expect(wrapper.find('[data-testid="envelope-per-day"]').exists()).toBe(
+        true,
+      )
     })
 
     await wrapper.get('[data-testid="envelopes-next"]').trigger('click')

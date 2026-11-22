@@ -24,16 +24,18 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
-  try {
-    const [list] = await Promise.all([
-      apiGet('/rules', ruleListResponseSchema),
-      referentials.load(),
-    ])
-    rules.value = list
-  } catch (error) {
-    notifyFailure(error)
-  }
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchRules(): Promise<void> {
+  const [list] = await Promise.all([
+    apiGet('/rules', ruleListResponseSchema),
+    referentials.load(),
+  ])
+  rules.value = list
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchRules, 'background')
 }
 
 const formOpen = ref(false)
@@ -61,7 +63,7 @@ async function openSuggestion(operationId: string): Promise<void> {
 }
 
 onMounted(async () => {
-  await load()
+  await loadState.run(fetchRules)
   const operationId = route.query.operation
   if (typeof operationId === 'string') {
     await openSuggestion(operationId)
@@ -221,13 +223,16 @@ const reorderHint = useShortcut(
 <template>
   <ViewPanel :title="t('navigation.rules')">
     <template #actions>
-      <OfflineGuard v-if="(rules?.length ?? 0) > 1" v-slot="{ offline }">
+      <OfflineGuard
+        v-if="!loadState.settled || (rules?.length ?? 0) > 1"
+        v-slot="{ offline }"
+      >
         <ShortcutTooltip
           :hint="reorderHint"
           :text="reordering ? t('common.doneReordering') : t('common.reorder')"
         >
           <UButton
-            :disabled="offline"
+            :disabled="offline || !loadState.settled"
             :icon="icons.reorder"
             :label="
               reordering ? t('common.doneReordering') : t('common.reorder')
@@ -256,92 +261,119 @@ const reorderHint = useShortcut(
       </OfflineGuard>
     </template>
 
-    <UCard v-if="rules !== null" data-testid="rules-list">
-      <EmptyState
-        v-if="rules.length === 0"
-        :icon="icons.rules"
-        :title="t('rules.emptyTitle')"
-        :description="t('rules.emptyText')"
-      >
-        <OfflineGuard v-slot="{ offline }">
-          <UButton
-            :disabled="offline"
-            :label="t('rules.add')"
-            :icon="icons.add"
-            color="primary"
-            variant="soft"
-            @click="openForm(null, null)"
-          />
-        </OfflineGuard>
-      </EmptyState>
-      <template v-else>
-        <p class="pb-2 text-xs text-muted">{{ t('rules.priorityHelp') }}</p>
-        <ol ref="list" class="flex flex-col divide-y divide-default">
-          <ListRow
-            v-for="(rule, index) in rules"
-            :key="rule.id"
-            data-sortable-item="rule"
-            :data-testid="`rule-${rule.id}`"
-          >
-            <span
-              v-if="reordering"
-              data-drag-handle="rule"
-              class="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center text-muted max-lg:size-11"
-              aria-hidden="true"
-            >
-              <UIcon :name="icons.dragHandle" class="size-5" />
-            </span>
-            <span class="w-6 shrink-0 text-xs text-muted tabular-nums">
-              {{ index + 1 }}
-            </span>
-            <div class="min-w-0 flex-1">
-              <p
-                class="truncate text-sm"
-                :class="rule.active ? 'text-default' : 'text-muted'"
-              >
-                {{ conditionOf(rule) }}
-              </p>
-              <p class="truncate text-xs text-muted">→ {{ actionOf(rule) }}</p>
-            </div>
-            <UBadge
-              v-if="!rule.active"
-              :label="t('rules.inactive')"
-              color="neutral"
-              variant="soft"
-            />
-            <template v-if="reordering">
-              <UButton
-                :icon="icons.moveUp"
-                :aria-label="t('common.moveUp', { name: rule.pattern })"
-                :disabled="index === 0 || busy"
-                color="neutral"
-                variant="ghost"
-                square
-                @click="move(index, -1)"
-              />
-              <UButton
-                :icon="icons.moveDown"
-                :aria-label="t('common.moveDown', { name: rule.pattern })"
-                :disabled="index === rules.length - 1 || busy"
-                color="neutral"
-                variant="ghost"
-                square
-                @click="move(index, 1)"
-              />
+    <LoadZone :state="loadState">
+      <template #skeleton>
+        <UCard data-testid="rules-list-skeleton">
+          <p class="pb-2 text-xs text-muted">{{ t('rules.priorityHelp') }}</p>
+          <SkeletonList ordered class="flex flex-col divide-y divide-default">
+            <template #default="{ index }">
+              <SkeletonText width="xs" class="w-6 shrink-0 text-xs" />
+              <div class="min-w-0 flex-1">
+                <SkeletonText
+                  :width="skeletonRowWidth(index)"
+                  class="text-sm"
+                />
+                <SkeletonText width="md" class="text-xs" />
+              </div>
+              <SkeletonControl kind="touch-icon-button" />
             </template>
-            <UDropdownMenu v-else :items="actionsOf(rule)">
-              <UButton
-                :icon="icons.rowActions"
-                :aria-label="t('common.actionsFor', { name: rule.pattern })"
-                color="neutral"
-                variant="ghost"
-                class="size-11 justify-center lg:size-auto"
-              />
-            </UDropdownMenu>
-          </ListRow>
-        </ol>
+          </SkeletonList>
+        </UCard>
       </template>
-    </UCard>
+      <template #error="{ retry }">
+        <UCard>
+          <LoadError @retry="retry" />
+        </UCard>
+      </template>
+      <UCard v-if="rules !== null" data-testid="rules-list">
+        <EmptyState
+          v-if="rules.length === 0"
+          :icon="icons.rules"
+          :title="t('rules.emptyTitle')"
+          :description="t('rules.emptyText')"
+        >
+          <OfflineGuard v-slot="{ offline }">
+            <UButton
+              :disabled="offline"
+              :label="t('rules.add')"
+              :icon="icons.add"
+              color="primary"
+              variant="soft"
+              @click="openForm(null, null)"
+            />
+          </OfflineGuard>
+        </EmptyState>
+        <template v-else>
+          <p class="pb-2 text-xs text-muted">{{ t('rules.priorityHelp') }}</p>
+          <ol ref="list" class="flex flex-col divide-y divide-default">
+            <ListRow
+              v-for="(rule, index) in rules"
+              :key="rule.id"
+              data-sortable-item="rule"
+              :data-testid="`rule-${rule.id}`"
+            >
+              <span
+                v-if="reordering"
+                data-drag-handle="rule"
+                class="flex size-8 shrink-0 cursor-grab touch-none items-center justify-center text-muted max-lg:size-11"
+                aria-hidden="true"
+              >
+                <UIcon :name="icons.dragHandle" class="size-5" />
+              </span>
+              <span class="w-6 shrink-0 text-xs text-muted tabular-nums">
+                {{ index + 1 }}
+              </span>
+              <div class="min-w-0 flex-1">
+                <p
+                  class="truncate text-sm"
+                  :class="rule.active ? 'text-default' : 'text-muted'"
+                >
+                  {{ conditionOf(rule) }}
+                </p>
+                <p class="truncate text-xs text-muted">
+                  → {{ actionOf(rule) }}
+                </p>
+              </div>
+              <UBadge
+                v-if="!rule.active"
+                :label="t('rules.inactive')"
+                color="neutral"
+                variant="soft"
+              />
+              <template v-if="reordering">
+                <UButton
+                  :icon="icons.moveUp"
+                  :aria-label="t('common.moveUp', { name: rule.pattern })"
+                  :disabled="index === 0 || busy"
+                  color="neutral"
+                  variant="ghost"
+                  square
+                  @click="move(index, -1)"
+                />
+                <UButton
+                  :icon="icons.moveDown"
+                  :aria-label="t('common.moveDown', { name: rule.pattern })"
+                  :disabled="index === rules.length - 1 || busy"
+                  color="neutral"
+                  variant="ghost"
+                  square
+                  @click="move(index, 1)"
+                />
+              </template>
+              <UDropdownMenu v-else :items="actionsOf(rule)">
+                <UButton
+                  :icon="icons.rowActions"
+                  :aria-label="t('common.actionsFor', { name: rule.pattern })"
+                  color="neutral"
+                  variant="ghost"
+                  class="size-11 justify-center lg:size-auto"
+                />
+              </UDropdownMenu>
+            </ListRow>
+          </ol>
+        </template>
+      </UCard>
+    </LoadZone>
 
     <RuleFormModal
       v-model:open="formOpen"

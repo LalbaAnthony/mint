@@ -8,7 +8,7 @@ export interface SkeletonBlockProps {
 
 export type SkeletonWidth = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
 
-export type SkeletonTextAlign = 'start' | 'end'
+export type SkeletonTextAlign = 'start' | 'center' | 'end'
 
 export interface SkeletonTextProps {
   width?: SkeletonWidth
@@ -117,6 +117,7 @@ export interface LoadState {
 
 export interface LoadZoneProps {
   state: LoadState
+  errorState?: boolean
 }
 
 export type LoadErrorEmits = {
@@ -126,4 +127,34 @@ export type LoadErrorEmits = {
 export interface LazyComponent<T extends Component = Component> {
   component: T
   load: AsyncComponentLoader<T>
+}
+
+export type SkeletonTableCell =
+  | 'text'
+  | 'text-detail'
+  | 'date'
+  | 'amount'
+  | 'checkbox'
+  | 'actions'
+  | 'progress'
+  | 'empty'
+
+export interface SkeletonTableColumn {
+  id: string
+  header: string
+  cell: SkeletonTableCell
+  concealable?: boolean
+}
+
+export interface SkeletonTableRow {
+  index: number
+}
+
+export interface EnvelopeRowSkeletonProps {
+  index: number
+}
+
+export interface SkeletonTableProps {
+  columns: SkeletonTableColumn[]
+  count?: number
 }

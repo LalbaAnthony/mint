@@ -38,17 +38,19 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
-  try {
-    const [loadedOverview, loadedPaymentMethods] = await Promise.all([
-      apiGet('/accounts/overview', accountOverviewSchema),
-      apiGet('/payment-methods', paymentMethodListResponseSchema),
-    ])
-    overview.value = loadedOverview
-    paymentMethods.value = loadedPaymentMethods
-  } catch (error) {
-    notifyFailure(error)
-  }
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchAccounts(): Promise<void> {
+  const [loadedOverview, loadedPaymentMethods] = await Promise.all([
+    apiGet('/accounts/overview', accountOverviewSchema),
+    apiGet('/payment-methods', paymentMethodListResponseSchema),
+  ])
+  overview.value = loadedOverview
+  paymentMethods.value = loadedPaymentMethods
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchAccounts, 'background')
 }
 
 async function run(action: () => Promise<void>): Promise<void> {
@@ -361,7 +363,7 @@ async function openFromLink(): Promise<void> {
 }
 
 onMounted(async () => {
-  await load()
+  await loadState.run(fetchAccounts)
   await openFromLink()
 })
 watch(() => route.query, openFromLink)
@@ -381,13 +383,16 @@ const reorderHint = useShortcut(
 <template>
   <ViewPanel :title="t('navigation.accounts')">
     <template #actions>
-      <OfflineGuard v-if="hasActiveAccounts" v-slot="{ offline }">
+      <OfflineGuard
+        v-if="hasActiveAccounts || !loadState.settled"
+        v-slot="{ offline }"
+      >
         <ShortcutTooltip
           :hint="reorderHint"
           :text="reordering ? t('common.doneReordering') : t('common.reorder')"
         >
           <UButton
-            :disabled="offline"
+            :disabled="offline || !loadState.settled"
             :icon="reordering ? icons.success : icons.reorder"
             :aria-label="
               reordering ? t('common.doneReordering') : t('common.reorder')
@@ -423,60 +428,78 @@ const reorderHint = useShortcut(
       </OfflineGuard>
     </template>
 
-    <div v-if="overview !== null" class="flex flex-col gap-6">
-      <template v-if="hasActiveAccounts">
-        <StatTile
-          :label="t('accounts.total')"
-          emphasis="primary"
-          data-testid="accounts-total"
-        >
+    <LoadZone :state="loadState" class="flex flex-col gap-6">
+      <template #skeleton>
+        <StatTile :label="t('accounts.total')" emphasis="primary">
           <template #default="{ valueClass }">
-            <MoneyAmount
-              :cents="overview.totalCents"
-              concealable
-              :class="valueClass"
-            />
+            <SkeletonAmount concealable :class="valueClass" />
           </template>
         </StatTile>
-        <AccountGroupCard
-          v-for="(group, index) in overview.groups"
-          :key="group.usage"
-          :group="group"
-          :payment-methods="paymentMethods"
-          :reordering="reordering"
-          :expanded-ids="expandedIds"
-          :highlighted-id="highlightedId"
-          @reorder="reorder(index, $event)"
-          @toggle="toggle"
-          @account-action="onAccountAction"
-          @payment-method-action="onPaymentMethodAction"
+        <AccountGroupCardSkeleton
+          v-for="group in skeletonIndexes(skeletonAccountGroupCount)"
+          :key="group"
         />
       </template>
-      <UCard v-else>
-        <EmptyState
-          :icon="icons.accounts"
-          :title="t('accounts.emptyTitle')"
-          :description="t('accounts.emptyText')"
-        >
-          <OfflineGuard v-slot="{ offline }">
-            <UButton
-              :disabled="offline"
-              :label="t('accounts.add')"
-              :icon="icons.add"
-              color="primary"
-              variant="soft"
-              @click="openAccountForm(null)"
-            />
-          </OfflineGuard>
-        </EmptyState>
-      </UCard>
-      <ArchivedAccountsCard
-        v-if="overview.archived.length > 0"
-        :accounts="overview.archived"
-        :highlighted-id="highlightedId"
-        @account-action="onAccountAction"
-      />
-    </div>
+      <template #error="{ retry }">
+        <UCard>
+          <LoadError @retry="retry" />
+        </UCard>
+      </template>
+      <div v-if="overview !== null" class="flex flex-col gap-6">
+        <template v-if="hasActiveAccounts">
+          <StatTile
+            :label="t('accounts.total')"
+            emphasis="primary"
+            data-testid="accounts-total"
+          >
+            <template #default="{ valueClass }">
+              <MoneyAmount
+                :cents="overview.totalCents"
+                concealable
+                :class="valueClass"
+              />
+            </template>
+          </StatTile>
+          <AccountGroupCard
+            v-for="(group, index) in overview.groups"
+            :key="group.usage"
+            :group="group"
+            :payment-methods="paymentMethods"
+            :reordering="reordering"
+            :expanded-ids="expandedIds"
+            :highlighted-id="highlightedId"
+            @reorder="reorder(index, $event)"
+            @toggle="toggle"
+            @account-action="onAccountAction"
+            @payment-method-action="onPaymentMethodAction"
+          />
+        </template>
+        <UCard v-else>
+          <EmptyState
+            :icon="icons.accounts"
+            :title="t('accounts.emptyTitle')"
+            :description="t('accounts.emptyText')"
+          >
+            <OfflineGuard v-slot="{ offline }">
+              <UButton
+                :disabled="offline"
+                :label="t('accounts.add')"
+                :icon="icons.add"
+                color="primary"
+                variant="soft"
+                @click="openAccountForm(null)"
+              />
+            </OfflineGuard>
+          </EmptyState>
+        </UCard>
+        <ArchivedAccountsCard
+          v-if="overview.archived.length > 0"
+          :accounts="overview.archived"
+          :highlighted-id="highlightedId"
+          @account-action="onAccountAction"
+        />
+      </div>
+    </LoadZone>
 
     <AccountFormModal
       v-model:open="accountFormOpen"
