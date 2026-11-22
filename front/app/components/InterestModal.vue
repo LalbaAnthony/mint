@@ -207,10 +207,10 @@ function remove(rate: InterestRate): Promise<void> {
           {{ t('interest.empty') }}
         </p>
         <ul v-else class="flex flex-col divide-y divide-default">
-          <li
+          <ListRow
             v-for="rate in rates"
             :key="rate.id"
-            class="flex flex-wrap items-center gap-2 py-2"
+            wrap
             :data-testid="`interest-rate-${rate.effectiveDate}`"
           >
             <span class="text-sm tabular-nums">
@@ -235,7 +235,7 @@ function remove(rate: InterestRate): Promise<void> {
                 @click="remove(rate)"
               />
             </OfflineGuard>
-          </li>
+          </ListRow>
         </ul>
       </div>
     </template>

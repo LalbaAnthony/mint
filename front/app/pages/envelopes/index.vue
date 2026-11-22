@@ -490,10 +490,9 @@ const createHint = useShortcut('create', () => openForm(null), {
           />
           <template #content>
             <ul class="flex flex-col divide-y divide-default pt-2">
-              <li
+              <ListRow
                 v-for="envelope in result.inactive"
                 :key="envelope.id"
-                class="flex items-center gap-2 py-2"
                 :class="
                   envelope.id === highlightedId
                     ? `px-2 ${linkedHighlightClass}`
@@ -514,7 +513,7 @@ const createHint = useShortcut('create', () => openForm(null), {
                     @click="openForm(envelope)"
                   />
                 </OfflineGuard>
-              </li>
+              </ListRow>
             </ul>
           </template>
         </UCollapsible>

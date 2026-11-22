@@ -142,10 +142,10 @@ onMounted(load)
       {{ t('tags.empty') }}
     </p>
     <ul v-else class="flex flex-col divide-y divide-default">
-      <li
+      <ListRow
         v-for="tag in referentials.tags"
         :key="tag.id"
-        class="flex items-center justify-between gap-2 py-2"
+        spread
         :data-testid="`tag-row-${tag.id}`"
       >
         <div class="min-w-0">
@@ -161,7 +161,7 @@ onMounted(load)
             :data-testid="`tag-actions-${tag.id}`"
           />
         </UDropdownMenu>
-      </li>
+      </ListRow>
     </ul>
 
     <TagFormModal v-model:open="formOpen" :tag="editedTag" @saved="saved" />

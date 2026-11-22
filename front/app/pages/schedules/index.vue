@@ -177,44 +177,38 @@ const createHint = useShortcut('create', () => openForm(null), {
     </template>
 
     <div v-if="result !== null" class="flex flex-col gap-4">
-      <div
-        class="grid grid-cols-1 gap-4 md:grid-cols-3"
-        data-testid="schedule-totals"
-      >
-        <UCard>
-          <p class="text-sm font-medium text-muted">
-            {{ t('schedules.totals.expenses') }}
-          </p>
-          <MoneyAmount
-            :cents="result.totals.expensesCents"
-            class="text-xl font-semibold"
-            concealable
-            data-testid="total-expenses"
-          />
-        </UCard>
-        <UCard>
-          <p class="text-sm font-medium text-muted">
-            {{ t('schedules.totals.incomes') }}
-          </p>
-          <MoneyAmount
-            :cents="result.totals.incomesCents"
-            class="text-xl font-semibold"
-            concealable
-            data-testid="total-incomes"
-          />
-        </UCard>
-        <UCard>
-          <p class="text-sm font-medium text-muted">
-            {{ t('schedules.totals.savingsTransfers') }}
-          </p>
-          <MoneyAmount
-            :cents="result.totals.savingsTransfersCents"
-            class="text-xl font-semibold"
-            concealable
-            data-testid="total-savings"
-          />
-        </UCard>
-      </div>
+      <StatGrid :columns="3" data-testid="schedule-totals">
+        <StatTile :label="t('schedules.totals.expenses')">
+          <template #default="{ valueClass }">
+            <MoneyAmount
+              :cents="result.totals.expensesCents"
+              :class="valueClass"
+              concealable
+              data-testid="total-expenses"
+            />
+          </template>
+        </StatTile>
+        <StatTile :label="t('schedules.totals.incomes')">
+          <template #default="{ valueClass }">
+            <MoneyAmount
+              :cents="result.totals.incomesCents"
+              :class="valueClass"
+              concealable
+              data-testid="total-incomes"
+            />
+          </template>
+        </StatTile>
+        <StatTile :label="t('schedules.totals.savingsTransfers')">
+          <template #default="{ valueClass }">
+            <MoneyAmount
+              :cents="result.totals.savingsTransfersCents"
+              :class="valueClass"
+              concealable
+              data-testid="total-savings"
+            />
+          </template>
+        </StatTile>
+      </StatGrid>
 
       <URadioGroup
         v-model="kindFilter"
@@ -309,9 +303,9 @@ const createHint = useShortcut('create', () => openForm(null), {
         </UTable>
         <ul v-else class="flex flex-col divide-y divide-default">
           <li v-for="schedule in visible" :key="schedule.id">
-            <button
-              type="button"
-              class="flex w-full items-center gap-3 py-2 text-left"
+            <ListRow
+              as="button"
+              :gap="3"
               :data-testid="`schedule-${schedule.id}`"
               @click="selectedId = schedule.id"
             >
@@ -349,7 +343,7 @@ const createHint = useShortcut('create', () => openForm(null), {
                 variant="flow"
                 class="text-sm"
               />
-            </button>
+            </ListRow>
           </li>
         </ul>
       </UCard>
@@ -368,11 +362,7 @@ const createHint = useShortcut('create', () => openForm(null), {
           <template #content>
             <ul class="flex flex-col divide-y divide-default pt-2">
               <li v-for="schedule in folded" :key="schedule.id">
-                <button
-                  type="button"
-                  class="flex w-full items-center gap-3 py-2 text-left"
-                  @click="selectedId = schedule.id"
-                >
+                <ListRow as="button" :gap="3" @click="selectedId = schedule.id">
                   <p class="min-w-0 flex-1 truncate text-sm text-muted">
                     {{ schedule.label }}
                   </p>
@@ -385,7 +375,7 @@ const createHint = useShortcut('create', () => openForm(null), {
                     color="neutral"
                     variant="soft"
                   />
-                </button>
+                </ListRow>
               </li>
             </ul>
           </template>

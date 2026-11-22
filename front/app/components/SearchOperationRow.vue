@@ -10,9 +10,11 @@ const results = useSearchResults()
 
 <template>
   <li>
-    <button
-      type="button"
-      class="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-muted sm:px-6"
+    <ListRow
+      as="button"
+      :gap="3"
+      inset
+      class="hover:bg-muted"
       :disabled="connectivity.offline"
       :data-testid="`search-operation-${operation.id}`"
       @click="results.open({ kind: 'operation', operation: props.operation })"
@@ -37,6 +39,6 @@ const results = useSearchResults()
         variant="flow"
         class="text-sm font-medium"
       />
-    </button>
+    </ListRow>
   </li>
 </template>

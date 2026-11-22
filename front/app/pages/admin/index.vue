@@ -252,10 +252,14 @@ const createHint = useShortcut(
           class="divide-y divide-default"
           data-testid="invitation-list"
         >
-          <li
+          <ListRow
             v-for="invitation in invitations"
             :key="invitation.id"
-            class="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+            :gap="3"
+            :padding="3"
+            flush
+            wrap
+            spread
           >
             <div class="flex min-w-0 flex-col gap-1">
               <div class="flex flex-wrap items-center gap-2">
@@ -300,7 +304,7 @@ const createHint = useShortcut(
                 />
               </OfflineGuard>
             </div>
-          </li>
+          </ListRow>
         </ul>
       </UCard>
 
@@ -311,10 +315,14 @@ const createHint = useShortcut(
           </h2>
         </template>
         <ul class="divide-y divide-default" data-testid="user-list">
-          <li
+          <ListRow
             v-for="user in users"
             :key="user.id"
-            class="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+            :gap="3"
+            :padding="3"
+            flush
+            wrap
+            spread
           >
             <div class="flex min-w-0 flex-col gap-1">
               <div class="flex flex-wrap items-center gap-2">
@@ -390,7 +398,7 @@ const createHint = useShortcut(
                 />
               </OfflineGuard>
             </div>
-          </li>
+          </ListRow>
         </ul>
       </UCard>
 

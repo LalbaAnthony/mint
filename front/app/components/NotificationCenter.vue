@@ -82,10 +82,12 @@ async function remove(view: NotificationView): Promise<void> {
           :description="t('notifications.emptyDescription')"
         />
         <ul v-else class="flex flex-col divide-y divide-default">
-          <li
+          <ListRow
             v-for="view in views"
             :key="view.notification.id"
-            class="flex items-start gap-3 py-3"
+            :gap="3"
+            :padding="3"
+            align="start"
             :data-testid="`notification-${view.notification.id}`"
           >
             <PlanningMarker
@@ -143,7 +145,7 @@ async function remove(view: NotificationView): Promise<void> {
                 @click="remove(view)"
               />
             </OfflineGuard>
-          </li>
+          </ListRow>
         </ul>
       </div>
     </template>

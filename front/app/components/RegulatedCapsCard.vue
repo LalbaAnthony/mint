@@ -76,10 +76,11 @@ onMounted(load)
       <p class="text-sm text-muted">{{ t('admin.caps.help') }}</p>
     </template>
     <ul class="flex flex-col divide-y divide-default">
-      <li
+      <ListRow
         v-for="cap in caps"
         :key="cap.product"
-        class="flex flex-wrap items-end gap-2 py-2"
+        wrap
+        align="end"
         :data-testid="`regulated-cap-${cap.product}`"
       >
         <AppFormField
@@ -103,7 +104,7 @@ onMounted(load)
             @click="save(cap)"
           />
         </OfflineGuard>
-      </li>
+      </ListRow>
     </ul>
   </UCard>
 </template>

@@ -14,10 +14,10 @@ const { formatDateTime } = useFormatters()
       {{ t('imports.historyEmpty') }}
     </p>
     <ul v-else class="flex flex-col divide-y divide-default">
-      <li
+      <ListRow
         v-for="batch in batches"
         :key="batch.id"
-        class="flex flex-wrap items-center gap-2 py-2"
+        wrap
         :data-testid="`import-batch-${batch.id}`"
       >
         <div class="min-w-0 flex-1">
@@ -79,7 +79,7 @@ const { formatDateTime } = useFormatters()
             @click="emit('cancel', batch)"
           />
         </OfflineGuard>
-      </li>
+      </ListRow>
     </ul>
   </div>
 </template>

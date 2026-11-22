@@ -12,9 +12,11 @@ const badge = computed(() => results.scheduleBadge(props.schedule))
 
 <template>
   <li>
-    <button
-      type="button"
-      class="flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-muted sm:px-6"
+    <ListRow
+      as="button"
+      :gap="3"
+      inset
+      class="hover:bg-muted"
       :data-testid="`search-schedule-${schedule.id}`"
       @click="results.open({ kind: 'schedule', schedule: props.schedule })"
     >
@@ -56,6 +58,6 @@ const badge = computed(() => results.scheduleBadge(props.schedule))
           }}
         </span>
       </div>
-    </button>
+    </ListRow>
   </li>
 </template>

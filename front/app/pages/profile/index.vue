@@ -358,10 +358,13 @@ onMounted(async () => {
           </div>
         </template>
         <ul class="divide-y divide-default" data-testid="session-list">
-          <li
+          <ListRow
             v-for="item in sessions"
             :key="item.id"
-            class="flex flex-col gap-1 py-3 first:pt-0 last:pb-0"
+            direction="column"
+            :gap="1"
+            :padding="3"
+            flush
           >
             <div class="flex items-center gap-2">
               <span class="truncate text-sm text-highlighted">
@@ -382,7 +385,7 @@ onMounted(async () => {
                 })
               }}
             </p>
-          </li>
+          </ListRow>
         </ul>
       </UCard>
 

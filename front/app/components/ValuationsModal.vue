@@ -223,10 +223,10 @@ function remove(valuation: Valuation): Promise<void> {
           {{ t('valuations.empty') }}
         </p>
         <ul v-else class="flex flex-col divide-y divide-default">
-          <li
+          <ListRow
             v-for="valuation in valuations"
             :key="valuation.id"
-            class="flex flex-wrap items-center gap-2 py-2"
+            wrap
             :data-testid="`valuation-${valuation.date}`"
           >
             <span class="text-sm tabular-nums">
@@ -263,7 +263,7 @@ function remove(valuation: Valuation): Promise<void> {
                 />
               </OfflineGuard>
             </template>
-          </li>
+          </ListRow>
         </ul>
       </div>
     </template>

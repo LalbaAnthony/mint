@@ -88,33 +88,28 @@ const columns = computed<TableColumn<Schedule>[]>(() => [
 <template>
   <ViewPanel :title="t('navigation.subscriptions')">
     <div v-if="result !== null" class="flex flex-col gap-4">
-      <div
-        class="grid grid-cols-1 gap-4 md:grid-cols-2"
-        data-testid="subscription-totals"
-      >
-        <UCard>
-          <p class="text-sm font-medium text-muted">
-            {{ t('subscriptions.monthlyTotal') }}
-          </p>
-          <MoneyAmount
-            :cents="result.totals.monthlyCents"
-            class="text-xl font-semibold"
-            concealable
-            data-testid="subscriptions-monthly"
-          />
-        </UCard>
-        <UCard>
-          <p class="text-sm font-medium text-muted">
-            {{ t('subscriptions.annualTotal') }}
-          </p>
-          <MoneyAmount
-            :cents="result.totals.annualCents"
-            class="text-xl font-semibold"
-            concealable
-            data-testid="subscriptions-annual"
-          />
-        </UCard>
-      </div>
+      <StatGrid :columns="2" data-testid="subscription-totals">
+        <StatTile :label="t('subscriptions.monthlyTotal')">
+          <template #default="{ valueClass }">
+            <MoneyAmount
+              :cents="result.totals.monthlyCents"
+              :class="valueClass"
+              concealable
+              data-testid="subscriptions-monthly"
+            />
+          </template>
+        </StatTile>
+        <StatTile :label="t('subscriptions.annualTotal')">
+          <template #default="{ valueClass }">
+            <MoneyAmount
+              :cents="result.totals.annualCents"
+              :class="valueClass"
+              concealable
+              data-testid="subscriptions-annual"
+            />
+          </template>
+        </StatTile>
+      </StatGrid>
 
       <UCard data-testid="subscriptions-list">
         <EmptyState
@@ -184,9 +179,9 @@ const columns = computed<TableColumn<Schedule>[]>(() => [
         </UTable>
         <ul v-else class="flex flex-col divide-y divide-default">
           <li v-for="schedule in subscriptions" :key="schedule.id">
-            <button
-              type="button"
-              class="flex w-full items-center gap-3 py-2 text-left"
+            <ListRow
+              as="button"
+              :gap="3"
               :data-testid="`subscription-${schedule.id}`"
               @click="selectedId = schedule.id"
             >
@@ -224,7 +219,7 @@ const columns = computed<TableColumn<Schedule>[]>(() => [
                   }}
                 </span>
               </div>
-            </button>
+            </ListRow>
           </li>
         </ul>
       </UCard>

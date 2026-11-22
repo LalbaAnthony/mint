@@ -143,7 +143,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
         class="px-2 sm:px-4"
         :class="account.id === highlightedId ? linkedHighlightClass : ''"
       >
-        <div class="flex items-center gap-2 py-2">
+        <ListRow as="div">
           <span
             v-if="reordering"
             :data-drag-handle="sortableScope"
@@ -257,7 +257,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
               data-testid="account-actions"
             />
           </UDropdownMenu>
-        </div>
+        </ListRow>
         <PaymentMethodList
           v-if="isExpanded(account) && !reordering"
           :account="account"

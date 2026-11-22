@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core'
 import { chartInitOptions } from '~/charts/locale'
 import type { TableColumn } from '@nuxt/ui'
 import { LineChart } from 'echarts/charts'
@@ -37,7 +36,7 @@ const { t, locale } = useI18n()
 const { formatDate } = useFormatters()
 const { theme, animate } = useChartTheme()
 const { chartMoney, chartDescription } = useAmountMask()
-const isDesktop = useMediaQuery('(min-width: 1024px)')
+const chartHeight = useChartHeight(chartHeights.balanceCurve)
 const showData = ref(false)
 
 const roundedMoney = (cents: number) =>
@@ -94,7 +93,7 @@ const initOptions = computed(() => chartInitOptions(locale.value))
       :option="option"
       :init-options="initOptions"
       autoresize
-      :style="{ height: isDesktop ? '320px' : '240px' }"
+      :style="{ height: chartHeight }"
       class="w-full"
       data-testid="balance-curve-chart"
     />

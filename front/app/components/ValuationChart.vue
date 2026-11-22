@@ -21,6 +21,7 @@ const props = defineProps<ValuationChartProps>()
 const { t, locale } = useI18n()
 const { formatDate } = useFormatters()
 const { theme, animate } = useChartTheme()
+const chartHeight = useChartHeight(chartHeights.valuation)
 const showData = ref(false)
 
 const roundedMoney = (cents: number) =>
@@ -62,7 +63,7 @@ const initOptions = computed(() => chartInitOptions(locale.value))
       :option="option"
       :init-options="initOptions"
       autoresize
-      style="height: 200px"
+      :style="{ height: chartHeight }"
       class="w-full"
       data-testid="valuation-chart"
     />

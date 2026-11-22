@@ -93,9 +93,8 @@ function accountSuffix(accountId: string): string {
             :occurrence="item"
             @action="(action) => emit('occurrenceAction', action)"
           >
-            <button
-              type="button"
-              class="flex w-full items-center gap-2 py-2 text-left"
+            <ListRow
+              as="button"
               :data-testid="`detail-occurrence-${item.scheduleId}`"
             >
               <UIcon
@@ -136,7 +135,7 @@ function accountSuffix(accountId: string): string {
                 variant="flow"
                 class="text-sm"
               />
-            </button>
+            </ListRow>
           </CalendarOccurrenceMenu>
         </li>
       </ul>
@@ -166,9 +165,8 @@ function accountSuffix(accountId: string): string {
       </h3>
       <ul class="flex flex-col divide-y divide-default">
         <li v-for="operation in day.operations" :key="operation.id">
-          <button
-            type="button"
-            class="flex w-full items-center gap-2 py-2 text-left"
+          <ListRow
+            as="button"
             :disabled="connectivity.offline"
             :title="
               connectivity.offline ? t('offline.writeDisabled') : undefined
@@ -195,7 +193,7 @@ function accountSuffix(accountId: string): string {
               variant="flow"
               class="text-sm"
             />
-          </button>
+          </ListRow>
         </li>
       </ul>
     </div>

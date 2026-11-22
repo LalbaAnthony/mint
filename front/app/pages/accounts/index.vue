@@ -425,16 +425,19 @@ const reorderHint = useShortcut(
 
     <div v-if="overview !== null" class="flex flex-col gap-6">
       <template v-if="hasActiveAccounts">
-        <UCard data-testid="accounts-total">
-          <p class="text-sm font-medium text-muted">
-            {{ t('accounts.total') }}
-          </p>
-          <MoneyAmount
-            :cents="overview.totalCents"
-            concealable
-            class="text-3xl font-bold"
-          />
-        </UCard>
+        <StatTile
+          :label="t('accounts.total')"
+          emphasis="primary"
+          data-testid="accounts-total"
+        >
+          <template #default="{ valueClass }">
+            <MoneyAmount
+              :cents="overview.totalCents"
+              concealable
+              :class="valueClass"
+            />
+          </template>
+        </StatTile>
         <AccountGroupCard
           v-for="(group, index) in overview.groups"
           :key="group.usage"

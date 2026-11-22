@@ -19,8 +19,9 @@ const actions = computed<DropdownMenuItem[][]>(() =>
 </script>
 
 <template>
-  <li
-    class="flex flex-col gap-2 py-3"
+  <ListRow
+    direction="column"
+    :padding="3"
     :class="highlighted ? `px-2 ${linkedHighlightClass}` : ''"
     :data-testid="`envelope-${line.envelope.id}`"
     v-bind="linkedTargetAttributes(highlighted)"
@@ -91,5 +92,5 @@ const actions = computed<DropdownMenuItem[][]>(() =>
         </dd>
       </div>
     </dl>
-  </li>
+  </ListRow>
 </template>

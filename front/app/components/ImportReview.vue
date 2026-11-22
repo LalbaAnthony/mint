@@ -204,10 +204,10 @@ useShortcut('submit', () => emit('validate', decisions.value), {
       />
     </div>
     <ul class="flex flex-col divide-y divide-default">
-      <li
+      <ListRow
         v-for="row in visible"
         :key="row.rowIndex"
-        class="flex flex-col gap-2 py-2 lg:flex-row lg:items-center"
+        direction="responsive"
         :data-testid="`import-row-${row.rowIndex}`"
       >
         <UCheckbox
@@ -284,7 +284,7 @@ useShortcut('submit', () => emit('validate', decisions.value), {
           variant="flow"
           class="text-sm lg:w-28 lg:justify-end"
         />
-      </li>
+      </ListRow>
     </ul>
     <UPagination
       v-if="filtered.length > pageSize"

@@ -9,9 +9,12 @@ const results = useSearchResults()
 
 <template>
   <li>
-    <button
-      type="button"
-      class="flex w-full items-start gap-3 px-4 py-2 text-left hover:bg-muted sm:px-6"
+    <ListRow
+      as="button"
+      :gap="3"
+      inset
+      align="start"
+      class="hover:bg-muted"
       :data-testid="`search-envelope-${result.envelope.id}`"
       @click="results.open({ kind: 'envelope', envelope: props.result })"
     >
@@ -60,6 +63,6 @@ const results = useSearchResults()
           :status="result.status"
         />
       </div>
-    </button>
+    </ListRow>
   </li>
 </template>

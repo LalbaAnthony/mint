@@ -46,10 +46,7 @@ const actions = computed<DropdownMenuItem[][]>(() => [
 </script>
 
 <template>
-  <li
-    class="flex items-center gap-3 py-2"
-    :data-testid="`operation-${operation.id}`"
-  >
+  <ListRow :gap="3" :data-testid="`operation-${operation.id}`">
     <UCheckbox
       :model-value="selected"
       :disabled="connectivity.offline"
@@ -97,5 +94,5 @@ const actions = computed<DropdownMenuItem[][]>(() => [
         class="size-11 justify-center lg:size-auto"
       />
     </UDropdownMenu>
-  </li>
+  </ListRow>
 </template>

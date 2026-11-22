@@ -65,10 +65,11 @@ function actionItems(paymentMethod: PaymentMethod): DropdownMenuItem[][] {
       {{ t('paymentMethods.of', { name: account.name }) }}
     </h3>
     <ul v-if="paymentMethods.length > 0" class="flex flex-col">
-      <li
+      <ListRow
         v-for="paymentMethod in paymentMethods"
         :key="paymentMethod.id"
-        class="flex items-center gap-2 rounded-md py-1 pl-2"
+        :padding="1"
+        class="rounded-md pl-2"
         :data-testid="`payment-method-${paymentMethod.id}`"
       >
         <UIcon
@@ -109,7 +110,7 @@ function actionItems(paymentMethod: PaymentMethod): DropdownMenuItem[][] {
             data-testid="payment-method-actions"
           />
         </UDropdownMenu>
-      </li>
+      </ListRow>
     </ul>
     <p v-else class="text-sm text-muted">{{ t('paymentMethods.none') }}</p>
     <div>

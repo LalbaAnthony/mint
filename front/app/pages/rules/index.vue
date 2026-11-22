@@ -277,11 +277,10 @@ const reorderHint = useShortcut(
       <template v-else>
         <p class="pb-2 text-xs text-muted">{{ t('rules.priorityHelp') }}</p>
         <ol ref="list" class="flex flex-col divide-y divide-default">
-          <li
+          <ListRow
             v-for="(rule, index) in rules"
             :key="rule.id"
             data-sortable-item="rule"
-            class="flex items-center gap-2 py-2"
             :data-testid="`rule-${rule.id}`"
           >
             <span
@@ -339,7 +338,7 @@ const reorderHint = useShortcut(
                 class="size-11 justify-center lg:size-auto"
               />
             </UDropdownMenu>
-          </li>
+          </ListRow>
         </ol>
       </template>
     </UCard>

@@ -150,10 +150,10 @@ async function createRule(): Promise<void> {
         {{ t('reconciliation.candidates') }}
       </p>
       <ul class="flex flex-col divide-y divide-default">
-        <li
+        <ListRow
           v-for="candidate in candidates"
           :key="`${candidate.scheduleId}-${candidate.originalDate}`"
-          class="flex items-center gap-2 py-1"
+          :padding="1"
         >
           <span class="min-w-0 flex-1 truncate text-sm text-default">
             {{ candidate.scheduleLabel }}
@@ -174,7 +174,7 @@ async function createRule(): Promise<void> {
               @click="associate(candidate)"
             />
           </OfflineGuard>
-        </li>
+        </ListRow>
       </ul>
     </div>
     <div

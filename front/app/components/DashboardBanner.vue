@@ -18,30 +18,21 @@ const proposalsLink = computed(() => {
 </script>
 
 <template>
-  <div
-    class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
-    data-testid="dashboard-banner"
-  >
-    <UCard>
-      <div class="flex items-center gap-3">
-        <span
-          class="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-tile"
-        >
-          <UIcon :name="icons.accounts" class="size-5 text-accent-tile-icon" />
-        </span>
-        <div class="min-w-0">
-          <p class="text-sm font-medium text-muted">
-            {{ t('dashboard.wealth') }}
-          </p>
-          <MoneyAmount
-            :cents="summary.wealthCents"
-            concealable
-            class="text-3xl font-bold"
-            data-testid="dashboard-wealth"
-          />
-        </div>
-      </div>
-    </UCard>
+  <StatGrid :columns="4" data-testid="dashboard-banner">
+    <StatTile
+      :label="t('dashboard.wealth')"
+      :icon="icons.accounts"
+      emphasis="primary"
+    >
+      <template #default="{ valueClass }">
+        <MoneyAmount
+          :cents="summary.wealthCents"
+          concealable
+          :class="valueClass"
+          data-testid="dashboard-wealth"
+        />
+      </template>
+    </StatTile>
     <UCard data-testid="dashboard-alerts">
       <p class="flex items-center gap-2 text-sm font-medium text-muted">
         <UIcon :name="icons.belowThreshold" class="size-5 text-warning" />
@@ -122,5 +113,5 @@ const proposalsLink = computed(() => {
         </span>
       </NuxtLink>
     </UCard>
-  </div>
+  </StatGrid>
 </template>

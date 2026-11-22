@@ -259,10 +259,10 @@ async function deleteSchedule(): Promise<void> {
             class="flex flex-col divide-y divide-default"
             data-testid="schedule-occurrences"
           >
-            <li
+            <ListRow
               v-for="occurrence in occurrences"
               :key="occurrence.originalDate"
-              class="flex flex-wrap items-center gap-2 py-2"
+              wrap
               :data-testid="`occurrence-${occurrence.originalDate}`"
             >
               <div class="min-w-0 flex-1">
@@ -346,7 +346,7 @@ async function deleteSchedule(): Promise<void> {
                   />
                 </OfflineGuard>
               </template>
-            </li>
+            </ListRow>
           </ul>
         </section>
       </div>

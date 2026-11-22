@@ -228,10 +228,10 @@ onMounted(() => {
         {{ t('passkeys.empty') }}
       </p>
       <ul v-else class="flex flex-col divide-y divide-default">
-        <li
+        <ListRow
           v-for="passkey in passkeys"
           :key="passkey.id"
-          class="flex items-center justify-between gap-2 py-2"
+          spread
           :data-testid="`passkey-row-${passkey.id}`"
         >
           <div class="flex min-w-0 items-center gap-2">
@@ -257,7 +257,7 @@ onMounted(() => {
               :data-testid="`passkey-actions-${passkey.id}`"
             />
           </UDropdownMenu>
-        </li>
+        </ListRow>
       </ul>
     </div>
 

@@ -269,10 +269,10 @@ onMounted(() => {
           class="flex flex-col divide-y divide-default"
           data-testid="push-devices"
         >
-          <li
+          <ListRow
             v-for="device in devices"
             :key="device.id"
-            class="flex items-center justify-between gap-2 py-2"
+            spread
             :data-testid="`push-device-${device.id}`"
           >
             <div class="min-w-0">
@@ -307,7 +307,7 @@ onMounted(() => {
                 @click="removeDevice(device)"
               />
             </OfflineGuard>
-          </li>
+          </ListRow>
         </ul>
       </section>
     </div>

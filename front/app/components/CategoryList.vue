@@ -89,7 +89,7 @@ function actionItems(category: Category): DropdownMenuItem[][] {
       :data-sortable-item="sortableScope"
       :data-testid="`category-${node.category.id}`"
     >
-      <div class="flex items-center gap-2 py-1.5">
+      <ListRow as="div" :padding="1.5">
         <span
           v-if="reordering && !node.category.isSystem"
           :data-drag-handle="sortableScope"
@@ -161,7 +161,7 @@ function actionItems(category: Category): DropdownMenuItem[][] {
             />
           </UDropdownMenu>
         </template>
-      </div>
+      </ListRow>
       <CategoryList
         v-if="node.children.length > 0"
         :nodes="node.children"

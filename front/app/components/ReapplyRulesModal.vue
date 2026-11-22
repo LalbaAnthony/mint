@@ -202,10 +202,11 @@ useDialogSubmitShortcut(
             {{ t('rules.reapply.changes') }}
           </h3>
           <ul class="flex flex-col divide-y divide-default">
-            <li
+            <ListRow
               v-for="change in preview.changes"
               :key="change.operation.id"
-              class="flex items-start gap-3 py-2"
+              :gap="3"
+              align="start"
               :data-testid="`reapply-change-${change.operation.id}`"
             >
               <UCheckbox
@@ -255,7 +256,7 @@ useDialogSubmitShortcut(
                   </template>
                 </dl>
               </div>
-            </li>
+            </ListRow>
           </ul>
         </section>
         <section v-if="skippedCounts.length > 0" class="flex flex-col gap-1">

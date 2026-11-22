@@ -23,6 +23,7 @@ const props = defineProps<BreakdownChartProps>()
 
 const { t, locale } = useI18n()
 const { theme, animate } = useChartTheme()
+const chartHeight = useChartHeight(chartHeights.breakdown)
 const { chartMoney, chartDescription, money, spokenMoney } = useAmountMask()
 const referentials = useReferentialsStore()
 
@@ -109,7 +110,7 @@ const initOptions = computed(() => chartInitOptions(locale.value))
         :option="option"
         :init-options="initOptions"
         autoresize
-        style="height: 280px"
+        :style="{ height: chartHeight }"
         class="w-full"
         data-testid="breakdown-chart"
         @click="onSliceClick"
@@ -140,14 +141,16 @@ const initOptions = computed(() => chartInitOptions(locale.value))
         class="flex flex-col divide-y divide-default text-sm"
         data-testid="breakdown-data"
       >
-        <li
+        <ListRow
           v-for="slice in slices"
           :key="slice.id"
-          class="flex justify-between gap-2 py-1"
+          :padding="1"
+          align="stretch"
+          spread
         >
           <span>{{ slice.name }}</span>
           <MoneyAmount :cents="slice.valueCents" concealable />
-        </li>
+        </ListRow>
       </ul>
     </div>
     <table class="w-full text-sm lg:w-80" data-testid="breakdown-table">

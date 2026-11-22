@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMediaQuery } from '@vueuse/core'
 import { chartInitOptions } from '~/charts/locale'
 import { BarChart, LineChart } from 'echarts/charts'
 import {
@@ -31,7 +30,7 @@ const props = defineProps<MonthlyChartProps>()
 const { t, locale } = useI18n()
 const { theme, animate } = useChartTheme()
 const { chartMoney, chartDescription } = useAmountMask()
-const isDesktop = useMediaQuery('(min-width: 1024px)')
+const chartHeight = useChartHeight(chartHeights.monthly)
 const showData = ref(false)
 
 const roundedMoney = (cents: number) =>
@@ -77,7 +76,7 @@ const initOptions = computed(() => chartInitOptions(locale.value))
       :option="option"
       :init-options="initOptions"
       autoresize
-      :style="{ height: isDesktop ? '320px' : '240px' }"
+      :style="{ height: chartHeight }"
       class="w-full"
       data-testid="monthly-chart"
     />

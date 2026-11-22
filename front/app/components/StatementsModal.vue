@@ -148,10 +148,10 @@ function remove(statement: Statement): Promise<void> {
           {{ t('statements.empty') }}
         </p>
         <ul v-else class="flex flex-col divide-y divide-default">
-          <li
+          <ListRow
             v-for="statement in statements"
             :key="statement.id"
-            class="flex flex-wrap items-center gap-2 py-2"
+            wrap
             :data-testid="`statement-${statement.date}`"
           >
             <div class="min-w-0 flex-1 text-sm">
@@ -201,7 +201,7 @@ function remove(statement: Statement): Promise<void> {
                 @click="remove(statement)"
               />
             </OfflineGuard>
-          </li>
+          </ListRow>
         </ul>
       </div>
     </template>

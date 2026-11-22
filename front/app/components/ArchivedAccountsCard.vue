@@ -61,10 +61,10 @@ function actionItems(account: Account): DropdownMenuItem[][] {
       />
       <template #content>
         <ul class="divide-y divide-default border-t border-default">
-          <li
+          <ListRow
             v-for="account in accounts"
             :key="account.id"
-            class="flex items-center gap-2 px-4 py-2 sm:px-6"
+            inset
             :class="account.id === highlightedId ? linkedHighlightClass : ''"
             :data-testid="`archived-account-${account.id}`"
             v-bind="linkedTargetAttributes(account.id === highlightedId)"
@@ -98,7 +98,7 @@ function actionItems(account: Account): DropdownMenuItem[][] {
                 data-testid="archived-account-actions"
               />
             </UDropdownMenu>
-          </li>
+          </ListRow>
         </ul>
       </template>
     </UCollapsible>
