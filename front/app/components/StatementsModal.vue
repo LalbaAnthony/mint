@@ -31,22 +31,24 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchStatements(): Promise<void> {
   const account = props.account
   if (account === null) {
     statements.value = []
     return
   }
-  try {
-    statements.value = (
-      await apiGet(
-        `/accounts/${account.id}/statements`,
-        statementListResponseSchema,
-      )
-    ).statements
-  } catch (error) {
-    notifyFailure(error)
-  }
+  statements.value = (
+    await apiGet(
+      `/accounts/${account.id}/statements`,
+      statementListResponseSchema,
+    )
+  ).statements
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchStatements, 'background')
 }
 
 watch(
@@ -55,7 +57,7 @@ watch(
     if (isOpen) {
       state.date = parisDate(new Date())
       state.balance = ''
-      await load()
+      await loadState.run(fetchStatements)
     }
   },
   { immediate: true },
@@ -144,65 +146,79 @@ function remove(statement: Statement): Promise<void> {
             </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
-        <p v-if="statements.length === 0" class="text-sm text-muted">
-          {{ t('statements.empty') }}
-        </p>
-        <ul v-else class="flex flex-col divide-y divide-default">
-          <ListRow
-            v-for="statement in statements"
-            :key="statement.id"
-            wrap
-            :data-testid="`statement-${statement.date}`"
-          >
-            <div class="min-w-0 flex-1 text-sm">
-              <p class="tabular-nums text-default">
-                {{ formatDate(statement.date) }}
-              </p>
-              <p class="flex flex-wrap gap-2 text-xs text-muted">
-                <span>
-                  {{ t('statements.read') }}
-                  <MoneyAmount :cents="statement.balanceCents" />
-                </span>
-                <span>
-                  {{ t('statements.calculated') }}
-                  <MoneyAmount :cents="statement.calculatedBalanceCents" />
-                </span>
-              </p>
-            </div>
-            <span
-              class="tabular-nums text-sm"
-              :class="statement.gapCents === 0 ? 'text-muted' : 'text-warning'"
-              data-testid="statement-gap"
+        <LoadZone :state="loadState">
+          <template #skeleton>
+            <SkeletonDetailList
+              actions="button"
+              :row="{ wrap: true }"
+              class="flex flex-col divide-y divide-default"
+            />
+          </template>
+          <p v-if="statements.length === 0" class="text-sm text-muted">
+            {{ t('statements.empty') }}
+          </p>
+          <ul v-else class="flex flex-col divide-y divide-default">
+            <ListRow
+              v-for="statement in statements"
+              :key="statement.id"
+              wrap
+              :data-testid="`statement-${statement.date}`"
             >
-              {{ t('statements.gap') }}
-              {{ formatMoney(statement.gapCents, 'exceptZero') }}
-            </span>
-            <OfflineGuard v-if="statement.gapCents !== 0" v-slot="{ offline }">
-              <UButton
-                :disabled="offline"
-                :label="t('statements.adjust')"
-                :icon="icons.adjustment"
-                color="primary"
-                variant="soft"
-                size="sm"
-                :loading="busy"
-                data-testid="statement-adjust"
-                @click="adjust(statement)"
-              />
-            </OfflineGuard>
-            <OfflineGuard v-slot="{ offline }">
-              <UButton
-                :icon="icons.delete"
-                :aria-label="t('statements.delete')"
-                color="error"
-                variant="ghost"
-                size="sm"
-                :disabled="offline || busy"
-                @click="remove(statement)"
-              />
-            </OfflineGuard>
-          </ListRow>
-        </ul>
+              <div class="min-w-0 flex-1 text-sm">
+                <p class="tabular-nums text-default">
+                  {{ formatDate(statement.date) }}
+                </p>
+                <p class="flex flex-wrap gap-2 text-xs text-muted">
+                  <span>
+                    {{ t('statements.read') }}
+                    <MoneyAmount :cents="statement.balanceCents" />
+                  </span>
+                  <span>
+                    {{ t('statements.calculated') }}
+                    <MoneyAmount :cents="statement.calculatedBalanceCents" />
+                  </span>
+                </p>
+              </div>
+              <span
+                class="tabular-nums text-sm"
+                :class="
+                  statement.gapCents === 0 ? 'text-muted' : 'text-warning'
+                "
+                data-testid="statement-gap"
+              >
+                {{ t('statements.gap') }}
+                {{ formatMoney(statement.gapCents, 'exceptZero') }}
+              </span>
+              <OfflineGuard
+                v-if="statement.gapCents !== 0"
+                v-slot="{ offline }"
+              >
+                <UButton
+                  :disabled="offline"
+                  :label="t('statements.adjust')"
+                  :icon="icons.adjustment"
+                  color="primary"
+                  variant="soft"
+                  size="sm"
+                  :loading="busy"
+                  data-testid="statement-adjust"
+                  @click="adjust(statement)"
+                />
+              </OfflineGuard>
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :icon="icons.delete"
+                  :aria-label="t('statements.delete')"
+                  color="error"
+                  variant="ghost"
+                  size="sm"
+                  :disabled="offline || busy"
+                  @click="remove(statement)"
+                />
+              </OfflineGuard>
+            </ListRow>
+          </ul>
+        </LoadZone>
       </div>
     </template>
   </UModal>

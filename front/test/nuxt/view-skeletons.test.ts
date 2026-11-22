@@ -1,5 +1,7 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import NotificationCenter from '~/components/NotificationCenter.vue'
+import StatementsModal from '~/components/StatementsModal.vue'
 import TagManager from '~/components/TagManager.vue'
 import AccountsPage from '~/pages/accounts/index.vue'
 import AdminPage from '~/pages/admin/index.vue'
@@ -12,6 +14,7 @@ import SchedulesPage from '~/pages/schedules/index.vue'
 import SubscriptionsPage from '~/pages/subscriptions/index.vue'
 import { apiFailure, installFakeApi } from '../fake-api'
 import {
+  account,
   envelopeLine,
   envelopeMonth,
   referentialHandlers,
@@ -305,5 +308,48 @@ describe('search results skeleton (CHG-48)', () => {
       wrapper.find('[data-testid="search-section-skeleton"]').exists(),
     ).toBe(true)
     expect(wrapper.find('[data-testid="search-form"]').exists()).toBe(true)
+  })
+})
+
+describe('modals and panels (CHG-48)', () => {
+  function visibleZoneInBody(): Element | undefined {
+    return Array.from(
+      document.querySelectorAll('[data-testid="skeleton-zone"]'),
+    ).find((zone) => !zone.classList.contains('invisible'))
+  }
+
+  it('shows statement skeletons instead of the empty statement list', async () => {
+    const current = account()
+    installFakeApi(fetchMock, {
+      [`GET /accounts/${current.id}/statements`]: never,
+    })
+
+    const wrapper = await mountInApp(StatementsModal, {
+      props: { open: true, account: current },
+    })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(visibleZoneInBody()).toBeDefined()
+    })
+    expect(document.body.textContent).not.toContain('Aucun relevé saisi.')
+  })
+
+  it('shows notification skeletons until the first refresh', async () => {
+    const store = useNotificationsStore()
+    store.reset()
+    store.open = true
+    installFakeApi(fetchMock, {})
+
+    await mountView(NotificationCenter, '/')
+
+    await vi.waitFor(() => {
+      expect(visibleZoneInBody()).toBeDefined()
+    })
+    expect(
+      document.querySelector('[data-testid="notification-center"]')
+        ?.textContent,
+    ).not.toContain('Aucune notification')
+    store.open = false
   })
 })

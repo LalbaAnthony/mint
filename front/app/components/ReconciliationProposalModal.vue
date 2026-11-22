@@ -10,6 +10,14 @@ const { errorMessage } = useFormValidation()
 const { formatDate } = useFormatters()
 
 const candidates = ref<ImportCandidate[]>([])
+const candidatesState = useLoadState({
+  onError: (error) =>
+    toast.add({
+      title: errorMessage(error),
+      icon: icons.error,
+      color: 'error',
+    }),
+})
 const selected = ref<string | undefined>(undefined)
 const busy = ref(false)
 
@@ -25,7 +33,7 @@ watch(
     if (id === undefined) {
       return
     }
-    try {
+    await candidatesState.run(async () => {
       candidates.value = (
         await apiGet(
           `/operations/${id}/candidates`,
@@ -34,13 +42,7 @@ watch(
       ).candidates
       const [best] = candidates.value
       selected.value = best === undefined ? undefined : keyOf(best)
-    } catch (error) {
-      toast.add({
-        title: errorMessage(error),
-        icon: icons.error,
-        color: 'error',
-      })
-    }
+    })
   },
 )
 
@@ -114,11 +116,27 @@ useDialogSubmitShortcut(
         class="flex flex-col gap-4"
         data-testid="reconciliation-proposal"
       >
-        <URadioGroup
-          v-model="selected"
-          :items="items"
-          :legend="t('reconciliation.candidates')"
-        />
+        <LoadZone :state="candidatesState">
+          <template #skeleton>
+            <div class="flex flex-col gap-1">
+              <SkeletonText width="md" class="text-sm" />
+              <SkeletonList :row="{ padding: 1 }">
+                <template #default="{ index }">
+                  <SkeletonCircle :size="16" />
+                  <SkeletonText
+                    :width="skeletonRowWidth(index)"
+                    class="text-sm"
+                  />
+                </template>
+              </SkeletonList>
+            </div>
+          </template>
+          <URadioGroup
+            v-model="selected"
+            :items="items"
+            :legend="t('reconciliation.candidates')"
+          />
+        </LoadZone>
         <div class="flex justify-end gap-2">
           <UButton
             :label="t('reconciliation.ignore')"

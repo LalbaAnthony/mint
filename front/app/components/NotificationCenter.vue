@@ -75,8 +75,16 @@ async function remove(view: NotificationView): Promise<void> {
             />
           </OfflineGuard>
         </div>
+        <SkeletonZone v-if="!store.loaded">
+          <SkeletonDetailList
+            leading
+            actions="touch"
+            :row="{ gap: 3, padding: 3, align: 'start' }"
+            class="flex flex-col divide-y divide-default"
+          />
+        </SkeletonZone>
         <EmptyState
-          v-if="views.length === 0"
+          v-else-if="views.length === 0"
           :icon="icons.notifications"
           :title="t('notifications.emptyTitle')"
           :description="t('notifications.emptyDescription')"

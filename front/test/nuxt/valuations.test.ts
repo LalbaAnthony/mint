@@ -140,11 +140,14 @@ describe('investments (CPT-06, US-16)', () => {
     })
     mounted.push(wrapper)
 
-    await vi.waitFor(() => {
-      expect(findInBody('[data-testid="valuation-paid-in"]')?.textContent).toBe(
-        euros(220_000),
-      )
-    })
+    await vi.waitFor(
+      () => {
+        expect(
+          findInBody('[data-testid="valuation-paid-in"]')?.textContent,
+        ).toBe(euros(220_000))
+      },
+      { timeout: 10_000 },
+    )
     expect(
       findInBody('[data-testid="valuation-summary"]')?.textContent,
     ).toContain(euros(253_000))

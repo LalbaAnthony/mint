@@ -30,29 +30,31 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function loadOccurrences(): Promise<void> {
+const occurrencesState = useLoadState({ onError: notifyFailure })
+
+async function fetchOccurrences(): Promise<void> {
   const schedule = props.schedule
   if (schedule === null) {
     occurrences.value = []
     return
   }
-  try {
-    occurrences.value = (
-      await apiGet(
-        `/schedules/${schedule.id}/occurrences`,
-        scheduleOccurrenceListResponseSchema,
-      )
-    ).occurrences
-  } catch (error) {
-    notifyFailure(error)
-  }
+  occurrences.value = (
+    await apiGet(
+      `/schedules/${schedule.id}/occurrences`,
+      scheduleOccurrenceListResponseSchema,
+    )
+  ).occurrences
+}
+
+function loadOccurrences(): Promise<void> {
+  return occurrencesState.run(fetchOccurrences, 'background')
 }
 
 watch(
   [open, () => props.schedule?.id],
   async ([isOpen]) => {
     if (isOpen) {
-      await loadOccurrences()
+      await occurrencesState.run(fetchOccurrences)
     }
   },
   { immediate: true },
@@ -251,103 +253,112 @@ async function deleteSchedule(): Promise<void> {
           <h3 class="text-base font-semibold text-highlighted">
             {{ t('schedules.occurrences.title') }}
           </h3>
-          <p v-if="occurrences.length === 0" class="text-sm text-muted">
-            {{ t('schedules.occurrences.none') }}
-          </p>
-          <ul
-            v-else
-            class="flex flex-col divide-y divide-default"
-            data-testid="schedule-occurrences"
-          >
-            <ListRow
-              v-for="occurrence in occurrences"
-              :key="occurrence.originalDate"
-              wrap
-              :data-testid="`occurrence-${occurrence.originalDate}`"
+          <LoadZone :state="occurrencesState">
+            <template #skeleton>
+              <SkeletonDetailList
+                actions="button"
+                :row="{ wrap: true }"
+                class="flex flex-col divide-y divide-default"
+              />
+            </template>
+            <p v-if="occurrences.length === 0" class="text-sm text-muted">
+              {{ t('schedules.occurrences.none') }}
+            </p>
+            <ul
+              v-else
+              class="flex flex-col divide-y divide-default"
+              data-testid="schedule-occurrences"
             >
-              <div class="min-w-0 flex-1">
-                <p
-                  class="text-sm tabular-nums"
-                  :class="
-                    occurrence.status === 'skipped'
-                      ? 'text-muted line-through'
-                      : 'text-default'
-                  "
-                >
-                  {{ formatDate(occurrence.effectiveDate) }}
-                </p>
-                <p
-                  v-if="occurrence.effectiveDate !== occurrence.originalDate"
-                  class="text-xs text-muted"
-                >
-                  {{
-                    t('schedules.occurrences.originally', {
-                      date: formatDate(occurrence.originalDate),
-                    })
-                  }}
-                </p>
-              </div>
-              <UBadge
-                v-if="occurrence.status === 'skipped'"
-                :label="t('schedules.occurrences.skipped')"
-                color="neutral"
-                variant="soft"
-              />
-              <UBadge
-                v-else-if="occurrence.overridden"
-                :label="t('schedules.occurrences.overridden')"
-                color="neutral"
-                variant="soft"
-              />
-              <MoneyAmount
-                :cents="signed(occurrence.amountCents)"
-                variant="flow"
-                class="text-sm"
-              />
-              <template v-if="occurrence.editable">
-                <template v-if="occurrence.status === 'pending'">
-                  <OfflineGuard v-slot="{ offline }">
+              <ListRow
+                v-for="occurrence in occurrences"
+                :key="occurrence.originalDate"
+                wrap
+                :data-testid="`occurrence-${occurrence.originalDate}`"
+              >
+                <div class="min-w-0 flex-1">
+                  <p
+                    class="text-sm tabular-nums"
+                    :class="
+                      occurrence.status === 'skipped'
+                        ? 'text-muted line-through'
+                        : 'text-default'
+                    "
+                  >
+                    {{ formatDate(occurrence.effectiveDate) }}
+                  </p>
+                  <p
+                    v-if="occurrence.effectiveDate !== occurrence.originalDate"
+                    class="text-xs text-muted"
+                  >
+                    {{
+                      t('schedules.occurrences.originally', {
+                        date: formatDate(occurrence.originalDate),
+                      })
+                    }}
+                  </p>
+                </div>
+                <UBadge
+                  v-if="occurrence.status === 'skipped'"
+                  :label="t('schedules.occurrences.skipped')"
+                  color="neutral"
+                  variant="soft"
+                />
+                <UBadge
+                  v-else-if="occurrence.overridden"
+                  :label="t('schedules.occurrences.overridden')"
+                  color="neutral"
+                  variant="soft"
+                />
+                <MoneyAmount
+                  :cents="signed(occurrence.amountCents)"
+                  variant="flow"
+                  class="text-sm"
+                />
+                <template v-if="occurrence.editable">
+                  <template v-if="occurrence.status === 'pending'">
+                    <OfflineGuard v-slot="{ offline }">
+                      <UButton
+                        :icon="icons.edit"
+                        :aria-label="t('schedules.occurrences.edit')"
+                        color="neutral"
+                        variant="ghost"
+                        :disabled="offline || busy"
+                        data-testid="occurrence-edit"
+                        @click="editOccurrence(occurrence)"
+                      />
+                    </OfflineGuard>
+                    <OfflineGuard v-slot="{ offline }">
+                      <UButton
+                        :icon="icons.skip"
+                        :aria-label="t('schedules.occurrences.skip')"
+                        color="neutral"
+                        variant="ghost"
+                        :disabled="offline || busy"
+                        data-testid="occurrence-skip"
+                        @click="skip(occurrence)"
+                      />
+                    </OfflineGuard>
+                  </template>
+                  <OfflineGuard
+                    v-if="
+                      occurrence.status === 'skipped' || occurrence.overridden
+                    "
+                    v-slot="{ offline }"
+                  >
                     <UButton
-                      :icon="icons.edit"
-                      :aria-label="t('schedules.occurrences.edit')"
+                      :icon="icons.restoreOccurrence"
+                      :aria-label="t('schedules.occurrences.restore')"
                       color="neutral"
                       variant="ghost"
                       :disabled="offline || busy"
-                      data-testid="occurrence-edit"
-                      @click="editOccurrence(occurrence)"
-                    />
-                  </OfflineGuard>
-                  <OfflineGuard v-slot="{ offline }">
-                    <UButton
-                      :icon="icons.skip"
-                      :aria-label="t('schedules.occurrences.skip')"
-                      color="neutral"
-                      variant="ghost"
-                      :disabled="offline || busy"
-                      data-testid="occurrence-skip"
-                      @click="skip(occurrence)"
+                      data-testid="occurrence-restore"
+                      @click="restore(occurrence)"
                     />
                   </OfflineGuard>
                 </template>
-                <OfflineGuard
-                  v-if="
-                    occurrence.status === 'skipped' || occurrence.overridden
-                  "
-                  v-slot="{ offline }"
-                >
-                  <UButton
-                    :icon="icons.restoreOccurrence"
-                    :aria-label="t('schedules.occurrences.restore')"
-                    color="neutral"
-                    variant="ghost"
-                    :disabled="offline || busy"
-                    data-testid="occurrence-restore"
-                    @click="restore(occurrence)"
-                  />
-                </OfflineGuard>
-              </template>
-            </ListRow>
-          </ul>
+              </ListRow>
+            </ul>
+          </LoadZone>
         </section>
       </div>
     </template>

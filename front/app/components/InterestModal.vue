@@ -42,23 +42,25 @@ function notifyFailure(error: unknown): void {
   toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
 }
 
-async function load(): Promise<void> {
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchInterest(): Promise<void> {
   const account = props.account
   if (account === null) {
     rates.value = []
     summary.value = null
     return
   }
-  try {
-    const response = await apiGet(
-      `/accounts/${account.id}/interest`,
-      interestResponseSchema,
-    )
-    rates.value = response.rates
-    summary.value = response.summary
-  } catch (error) {
-    notifyFailure(error)
-  }
+  const response = await apiGet(
+    `/accounts/${account.id}/interest`,
+    interestResponseSchema,
+  )
+  rates.value = response.rates
+  summary.value = response.summary
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchInterest, 'background')
 }
 
 watch(
@@ -67,7 +69,7 @@ watch(
     if (isOpen) {
       state.effectiveDate = parisDate(new Date())
       state.rate = ''
-      await load()
+      await loadState.run(fetchInterest)
     }
   },
   { immediate: true },
@@ -121,56 +123,66 @@ function remove(rate: InterestRate): Promise<void> {
   >
     <template #body>
       <div class="flex flex-col gap-4" data-testid="interest">
-        <dl
-          v-if="summary !== null"
-          class="grid grid-cols-1 gap-3 sm:grid-cols-3"
-          data-testid="interest-summary"
-        >
-          <div>
-            <dt class="text-xs font-medium text-muted">
-              {{ t('interest.currentRate') }}
-            </dt>
-            <dd class="text-sm tabular-nums text-default">
-              {{
-                summary.annualRatePct === null
-                  ? t('interest.noRate')
-                  : formatRate(summary.annualRatePct)
-              }}
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs font-medium text-muted">
-              {{
-                t('interest.acquired', {
-                  date: formatDate(summary.periodStart),
-                })
-              }}
-            </dt>
-            <dd data-testid="interest-acquired">
-              <MoneyAmount
-                :cents="summary.acquiredCents"
-                variant="flow"
-                concealable
-              />
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs font-medium text-muted">
-              {{
-                t('interest.projected', {
-                  date: formatDate(summary.nextCapitalizationDate),
-                })
-              }}
-            </dt>
-            <dd data-testid="interest-projected">
-              <MoneyAmount
-                :cents="summary.projectedCents"
-                variant="flow"
-                concealable
-              />
-            </dd>
-          </div>
-        </dl>
+        <LoadZone :state="loadState" :error-state="false">
+          <template #skeleton>
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div v-for="index in skeletonIndexes()" :key="index">
+                <dt><SkeletonText width="md" class="text-xs" /></dt>
+                <dd><SkeletonAmount concealable /></dd>
+              </div>
+            </dl>
+          </template>
+          <dl
+            v-if="summary !== null"
+            class="grid grid-cols-1 gap-3 sm:grid-cols-3"
+            data-testid="interest-summary"
+          >
+            <div>
+              <dt class="text-xs font-medium text-muted">
+                {{ t('interest.currentRate') }}
+              </dt>
+              <dd class="text-sm tabular-nums text-default">
+                {{
+                  summary.annualRatePct === null
+                    ? t('interest.noRate')
+                    : formatRate(summary.annualRatePct)
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium text-muted">
+                {{
+                  t('interest.acquired', {
+                    date: formatDate(summary.periodStart),
+                  })
+                }}
+              </dt>
+              <dd data-testid="interest-acquired">
+                <MoneyAmount
+                  :cents="summary.acquiredCents"
+                  variant="flow"
+                  concealable
+                />
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium text-muted">
+                {{
+                  t('interest.projected', {
+                    date: formatDate(summary.nextCapitalizationDate),
+                  })
+                }}
+              </dt>
+              <dd data-testid="interest-projected">
+                <MoneyAmount
+                  :cents="summary.projectedCents"
+                  variant="flow"
+                  concealable
+                />
+              </dd>
+            </div>
+          </dl>
+        </LoadZone>
         <AppForm
           v-if="!archived"
           :state="state"
@@ -203,40 +215,49 @@ function remove(rate: InterestRate): Promise<void> {
             </ShortcutTooltip>
           </OfflineGuard>
         </AppForm>
-        <p v-if="rates.length === 0" class="text-sm text-muted">
-          {{ t('interest.empty') }}
-        </p>
-        <ul v-else class="flex flex-col divide-y divide-default">
-          <ListRow
-            v-for="rate in rates"
-            :key="rate.id"
-            wrap
-            :data-testid="`interest-rate-${rate.effectiveDate}`"
-          >
-            <span class="text-sm tabular-nums">
-              {{ formatDate(rate.effectiveDate) }}
-            </span>
-            <span class="ml-auto text-sm tabular-nums text-highlighted">
-              {{ formatRate(rate.annualRatePct) }}
-            </span>
-            <OfflineGuard v-if="!archived" v-slot="{ offline }">
-              <UButton
-                :disabled="offline"
-                :icon="icons.delete"
-                :aria-label="
-                  t('interest.deleteOf', {
-                    date: formatDate(rate.effectiveDate),
-                  })
-                "
-                color="error"
-                variant="ghost"
-                :loading="busy"
-                data-testid="interest-rate-delete"
-                @click="remove(rate)"
-              />
-            </OfflineGuard>
-          </ListRow>
-        </ul>
+        <LoadZone :state="loadState">
+          <template #skeleton>
+            <SkeletonDetailList
+              actions="button"
+              :row="{ wrap: true }"
+              class="flex flex-col divide-y divide-default"
+            />
+          </template>
+          <p v-if="rates.length === 0" class="text-sm text-muted">
+            {{ t('interest.empty') }}
+          </p>
+          <ul v-else class="flex flex-col divide-y divide-default">
+            <ListRow
+              v-for="rate in rates"
+              :key="rate.id"
+              wrap
+              :data-testid="`interest-rate-${rate.effectiveDate}`"
+            >
+              <span class="text-sm tabular-nums">
+                {{ formatDate(rate.effectiveDate) }}
+              </span>
+              <span class="ml-auto text-sm tabular-nums text-highlighted">
+                {{ formatRate(rate.annualRatePct) }}
+              </span>
+              <OfflineGuard v-if="!archived" v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :icon="icons.delete"
+                  :aria-label="
+                    t('interest.deleteOf', {
+                      date: formatDate(rate.effectiveDate),
+                    })
+                  "
+                  color="error"
+                  variant="ghost"
+                  :loading="busy"
+                  data-testid="interest-rate-delete"
+                  @click="remove(rate)"
+                />
+              </OfflineGuard>
+            </ListRow>
+          </ul>
+        </LoadZone>
       </div>
     </template>
   </UModal>

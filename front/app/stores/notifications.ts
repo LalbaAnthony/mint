@@ -5,6 +5,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const notifications = ref<Notification[]>([])
   const unreadCount = ref(0)
   const open = ref(false)
+  const loaded = ref(false)
 
   async function refresh(): Promise<void> {
     const response = await apiGet(
@@ -13,6 +14,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     )
     notifications.value = response.notifications
     unreadCount.value = response.unreadCount
+    loaded.value = true
   }
 
   async function markRead(id: string): Promise<void> {
@@ -34,12 +36,14 @@ export const useNotificationsStore = defineStore('notifications', () => {
     notifications.value = []
     unreadCount.value = 0
     open.value = false
+    loaded.value = false
   }
 
   return {
     notifications,
     unreadCount,
     open,
+    loaded,
     refresh,
     markRead,
     markAllRead,

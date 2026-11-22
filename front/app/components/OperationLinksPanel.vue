@@ -25,24 +25,33 @@ const canReconcile = computed(
   () => props.operation.origin !== 'schedule' && !props.operation.reconciled,
 )
 
-async function loadCandidates(): Promise<void> {
+const candidatesState = useLoadState({
+  onError: (error) =>
+    toast.add({
+      title: errorMessage(error),
+      icon: icons.error,
+      color: 'error',
+    }),
+})
+
+async function fetchCandidates(): Promise<void> {
   if (!canReconcile.value) {
     candidates.value = []
     return
   }
-  try {
-    candidates.value = (
-      await apiGet(
-        `/operations/${props.operation.id}/candidates`,
-        candidateListResponseSchema,
-      )
-    ).candidates
-  } catch (error) {
-    toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
-  }
+  candidates.value = (
+    await apiGet(
+      `/operations/${props.operation.id}/candidates`,
+      candidateListResponseSchema,
+    )
+  ).candidates
 }
 
-watch(() => props.operation.id, loadCandidates, { immediate: true })
+watch(
+  () => props.operation.id,
+  () => candidatesState.run(fetchCandidates),
+  { immediate: true },
+)
 
 async function run(action: () => Promise<unknown>, done: string) {
   busy.value = true
@@ -145,6 +154,34 @@ async function createRule(): Promise<void> {
         />
       </OfflineGuard>
     </div>
+    <LoadZone
+      v-else-if="canReconcile && candidatesState.phase !== 'ready'"
+      :state="candidatesState"
+      :error-state="false"
+    >
+      <template #skeleton>
+        <div class="flex flex-col gap-1">
+          <p class="text-sm font-medium text-muted">
+            {{ t('reconciliation.candidates') }}
+          </p>
+          <SkeletonList
+            :row="{ padding: 1 }"
+            class="flex flex-col divide-y divide-default"
+          >
+            <template #default="{ index }">
+              <div class="min-w-0 flex-1">
+                <SkeletonText
+                  :width="skeletonRowWidth(index)"
+                  class="text-sm"
+                />
+              </div>
+              <SkeletonAmount />
+              <SkeletonControl kind="button" size="sm" class="w-20" />
+            </template>
+          </SkeletonList>
+        </div>
+      </template>
+    </LoadZone>
     <div v-else-if="candidates.length > 0" class="flex flex-col gap-1">
       <p class="text-sm font-medium text-muted">
         {{ t('reconciliation.candidates') }}

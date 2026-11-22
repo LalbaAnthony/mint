@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { valuationChart } from '~/charts/lazy'
 import {
   valuationListResponseSchema,
   valuationSchema,
@@ -44,23 +45,27 @@ function resetForm(): void {
   state.value = ''
 }
 
-async function load(): Promise<void> {
+const ValuationsChart = valuationChart.component
+
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchValuations(): Promise<void> {
   const account = props.account
   if (account === null) {
     valuations.value = []
     summary.value = null
     return
   }
-  try {
-    const response = await apiGet(
-      `/accounts/${account.id}/valuations`,
-      valuationListResponseSchema,
-    )
-    valuations.value = response.valuations
-    summary.value = response.summary
-  } catch (error) {
-    notifyFailure(error)
-  }
+  const [response] = await Promise.all([
+    apiGet(`/accounts/${account.id}/valuations`, valuationListResponseSchema),
+    valuationChart.load(),
+  ])
+  valuations.value = response.valuations
+  summary.value = response.summary
+}
+
+function load(): Promise<void> {
+  return loadState.run(fetchValuations, 'background')
 }
 
 watch(
@@ -68,7 +73,7 @@ watch(
   async ([isOpen]) => {
     if (isOpen) {
       resetForm()
-      await load()
+      await loadState.run(fetchValuations)
     }
   },
   { immediate: true },
@@ -133,54 +138,69 @@ function remove(valuation: Valuation): Promise<void> {
   >
     <template #body>
       <div class="flex flex-col gap-4" data-testid="valuations">
-        <dl
-          v-if="summary !== null"
-          class="grid grid-cols-1 gap-3 sm:grid-cols-3"
-          data-testid="valuation-summary"
-        >
-          <div>
-            <dt class="text-xs font-medium text-muted">
-              {{ t('valuations.paidIn') }}
-            </dt>
-            <dd data-testid="valuation-paid-in">
-              <MoneyAmount :cents="summary.paidInCents" concealable />
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs font-medium text-muted">
-              {{ t('valuations.lastValuation') }}
-            </dt>
-            <dd v-if="summary.lastValuation !== null">
-              <MoneyAmount
-                :cents="summary.lastValuation.valueCents"
-                concealable
-              />
-              <span class="block text-xs text-muted tabular-nums">
-                {{ formatDate(summary.lastValuation.date) }}
-              </span>
-            </dd>
-            <dd v-else class="text-sm text-muted">
-              {{ t('valuations.none') }}
-            </dd>
-          </div>
-          <div>
-            <dt class="text-xs font-medium text-muted">
-              {{ t('valuations.gain') }}
-            </dt>
-            <dd>
-              <InvestmentGain
-                v-if="summary.latentGainCents !== null"
-                :summary="summary"
-                concealable
-              />
-              <span v-else class="text-sm text-muted">-</span>
-            </dd>
-          </div>
-        </dl>
-        <LazyValuationChart
-          v-if="valuations.length > 0"
-          :valuations="valuations"
-        />
+        <LoadZone :state="loadState" :error-state="false">
+          <template #skeleton>
+            <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div v-for="index in skeletonIndexes()" :key="index">
+                <dt><SkeletonText width="md" class="text-xs" /></dt>
+                <dd><SkeletonAmount concealable /></dd>
+              </div>
+            </dl>
+          </template>
+          <dl
+            v-if="summary !== null"
+            class="grid grid-cols-1 gap-3 sm:grid-cols-3"
+            data-testid="valuation-summary"
+          >
+            <div>
+              <dt class="text-xs font-medium text-muted">
+                {{ t('valuations.paidIn') }}
+              </dt>
+              <dd data-testid="valuation-paid-in">
+                <MoneyAmount :cents="summary.paidInCents" concealable />
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium text-muted">
+                {{ t('valuations.lastValuation') }}
+              </dt>
+              <dd v-if="summary.lastValuation !== null">
+                <MoneyAmount
+                  :cents="summary.lastValuation.valueCents"
+                  concealable
+                />
+                <span class="block text-xs text-muted tabular-nums">
+                  {{ formatDate(summary.lastValuation.date) }}
+                </span>
+              </dd>
+              <dd v-else class="text-sm text-muted">
+                {{ t('valuations.none') }}
+              </dd>
+            </div>
+            <div>
+              <dt class="text-xs font-medium text-muted">
+                {{ t('valuations.gain') }}
+              </dt>
+              <dd>
+                <InvestmentGain
+                  v-if="summary.latentGainCents !== null"
+                  :summary="summary"
+                  concealable
+                />
+                <span v-else class="text-sm text-muted">-</span>
+              </dd>
+            </div>
+          </dl>
+        </LoadZone>
+        <LoadZone :state="loadState" :error-state="false">
+          <template #skeleton>
+            <ValuationChartSkeleton />
+          </template>
+          <ValuationsChart
+            v-if="valuations.length > 0"
+            :valuations="valuations"
+          />
+        </LoadZone>
         <AppForm
           v-if="!archived"
           :state="state"
@@ -219,52 +239,63 @@ function remove(valuation: Valuation): Promise<void> {
             @click="resetForm"
           />
         </AppForm>
-        <p v-if="valuations.length === 0" class="text-sm text-muted">
-          {{ t('valuations.empty') }}
-        </p>
-        <ul v-else class="flex flex-col divide-y divide-default">
-          <ListRow
-            v-for="valuation in valuations"
-            :key="valuation.id"
-            wrap
-            :data-testid="`valuation-${valuation.date}`"
-          >
-            <span class="text-sm tabular-nums">
-              {{ formatDate(valuation.date) }}
-            </span>
-            <MoneyAmount :cents="valuation.valueCents" class="ml-auto" />
-            <template v-if="!archived">
-              <OfflineGuard v-slot="{ offline }">
-                <UButton
-                  :disabled="offline"
-                  :icon="icons.edit"
-                  :aria-label="
-                    t('valuations.editOf', { date: formatDate(valuation.date) })
-                  "
-                  color="neutral"
-                  variant="ghost"
-                  @click="startEdit(valuation)"
-                />
-              </OfflineGuard>
-              <OfflineGuard v-slot="{ offline }">
-                <UButton
-                  :disabled="offline"
-                  :icon="icons.delete"
-                  :aria-label="
-                    t('valuations.deleteOf', {
-                      date: formatDate(valuation.date),
-                    })
-                  "
-                  color="error"
-                  variant="ghost"
-                  :loading="busy"
-                  data-testid="valuation-delete"
-                  @click="remove(valuation)"
-                />
-              </OfflineGuard>
-            </template>
-          </ListRow>
-        </ul>
+        <LoadZone :state="loadState">
+          <template #skeleton>
+            <SkeletonDetailList
+              actions="button"
+              :row="{ wrap: true }"
+              class="flex flex-col divide-y divide-default"
+            />
+          </template>
+          <p v-if="valuations.length === 0" class="text-sm text-muted">
+            {{ t('valuations.empty') }}
+          </p>
+          <ul v-else class="flex flex-col divide-y divide-default">
+            <ListRow
+              v-for="valuation in valuations"
+              :key="valuation.id"
+              wrap
+              :data-testid="`valuation-${valuation.date}`"
+            >
+              <span class="text-sm tabular-nums">
+                {{ formatDate(valuation.date) }}
+              </span>
+              <MoneyAmount :cents="valuation.valueCents" class="ml-auto" />
+              <template v-if="!archived">
+                <OfflineGuard v-slot="{ offline }">
+                  <UButton
+                    :disabled="offline"
+                    :icon="icons.edit"
+                    :aria-label="
+                      t('valuations.editOf', {
+                        date: formatDate(valuation.date),
+                      })
+                    "
+                    color="neutral"
+                    variant="ghost"
+                    @click="startEdit(valuation)"
+                  />
+                </OfflineGuard>
+                <OfflineGuard v-slot="{ offline }">
+                  <UButton
+                    :disabled="offline"
+                    :icon="icons.delete"
+                    :aria-label="
+                      t('valuations.deleteOf', {
+                        date: formatDate(valuation.date),
+                      })
+                    "
+                    color="error"
+                    variant="ghost"
+                    :loading="busy"
+                    data-testid="valuation-delete"
+                    @click="remove(valuation)"
+                  />
+                </OfflineGuard>
+              </template>
+            </ListRow>
+          </ul>
+        </LoadZone>
       </div>
     </template>
   </UModal>

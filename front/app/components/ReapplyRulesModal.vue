@@ -33,22 +33,28 @@ const rules = ref<Rule[]>([])
 const kept = ref<Set<string>>(new Set())
 const applying = ref(false)
 
-async function loadPreview(): Promise<void> {
-  preview.value = null
-  try {
-    const [previewed, ruleList] = await Promise.all([
-      apiCall('POST', '/rules/reapply/preview', reapplyRulesPreviewSchema, {
-        operationIds: props.operationIds,
-      }),
-      apiGet('/rules', ruleListResponseSchema),
-    ])
-    rules.value = ruleList
-    preview.value = previewed
-    kept.value = new Set(previewed.changes.map((change) => change.operation.id))
-  } catch (error) {
+const previewState = useLoadState({
+  onError: (error) => {
     toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
     open.value = false
-  }
+  },
+})
+
+async function fetchPreview(): Promise<void> {
+  const [previewed, ruleList] = await Promise.all([
+    apiCall('POST', '/rules/reapply/preview', reapplyRulesPreviewSchema, {
+      operationIds: props.operationIds,
+    }),
+    apiGet('/rules', ruleListResponseSchema),
+  ])
+  rules.value = ruleList
+  preview.value = previewed
+  kept.value = new Set(previewed.changes.map((change) => change.operation.id))
+}
+
+function loadPreview(): Promise<void> {
+  preview.value = null
+  return previewState.run(fetchPreview)
 }
 
 watch(
@@ -181,14 +187,27 @@ useDialogSubmitShortcut(
     :fullscreen="!isDesktop"
   >
     <template #body>
-      <p
+      <LoadZone
         v-if="preview === null"
-        class="text-sm text-muted"
-        role="status"
+        :state="previewState"
+        :error-state="false"
         data-testid="reapply-loading"
       >
-        {{ t('rules.reapply.loading') }}
-      </p>
+        <template #skeleton>
+          <div class="flex flex-col gap-2">
+            <SkeletonText width="lg" class="text-base" />
+            <SkeletonList :row="{ gap: 3, align: 'start' }">
+              <template #default="{ index }">
+                <SkeletonControl kind="checkbox" class="pt-0.5" />
+                <div class="min-w-0 flex-1 text-sm">
+                  <SkeletonText :width="skeletonRowWidth(index)" />
+                  <SkeletonText width="xl" class="text-xs" />
+                </div>
+              </template>
+            </SkeletonList>
+          </div>
+        </template>
+      </LoadZone>
       <div v-else class="flex flex-col gap-4" data-testid="reapply-preview">
         <p
           v-if="preview.changes.length === 0"
