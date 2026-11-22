@@ -434,13 +434,14 @@ describe('links from the search (RCH-06)', () => {
     mounted.push(wrapper)
 
     const row = () => wrapper.get(`[data-testid="account-${ids.current}"]`)
+    // The ring appears before the query is cleared, the unfolding after it.
     await vi.waitFor(() => {
-      expect(row().classes()).toContain('ring-primary')
+      expect(
+        row().get('[data-testid="account-toggle"]').attributes('aria-expanded'),
+      ).toBe('true')
     })
+    expect(row().classes()).toContain('ring-primary')
     expect(row().attributes()).toHaveProperty('data-linked-target')
-    expect(
-      row().get('[data-testid="account-toggle"]').attributes('aria-expanded'),
-    ).toBe('true')
     expect(useRouter().currentRoute.value.query).toEqual({})
 
     document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }))
