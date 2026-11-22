@@ -11,9 +11,46 @@ import type {
   CalendarCell,
   CalendarDotKind,
   CalendarMonthRange,
+  CalendarWeekday,
 } from '~~/types/forecast'
 
 export const calendarOccurrencesPerCell = 3
+
+const firstMonday = '2026-11-16'
+
+export function calendarWeekdays(
+  locale: string,
+  compact: boolean,
+): CalendarWeekday[] {
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(`${firstMonday}T00:00:00Z`)
+    date.setUTCDate(date.getUTCDate() + index)
+    return {
+      short: new Intl.DateTimeFormat(locale, {
+        weekday: compact ? 'narrow' : 'short',
+        timeZone: 'UTC',
+      }).format(date),
+      long: new Intl.DateTimeFormat(locale, {
+        weekday: 'long',
+        timeZone: 'UTC',
+      }).format(date),
+    }
+  })
+}
+
+export function calendarDayNumber(date: string): number {
+  return Number(date.slice(8, 10))
+}
+
+export function calendarNumberClasses(
+  cell: CalendarCell,
+  today: string,
+): string {
+  if (cell.date === today && cell.inMonth) {
+    return 'bg-primary text-inverted'
+  }
+  return !cell.inMonth || cell.nonWorking ? 'text-muted' : 'text-default'
+}
 
 export function calendarCells(
   month: string,

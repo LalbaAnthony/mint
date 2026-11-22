@@ -14,24 +14,7 @@ const emit = defineEmits<CalendarGridEmits>()
 const { t, locale } = useI18n()
 const { money, spokenMoney } = useAmountMask()
 
-const firstMonday = '2026-11-16'
-
-const weekdays = computed(() =>
-  Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(`${firstMonday}T00:00:00Z`)
-    date.setUTCDate(date.getUTCDate() + index)
-    return {
-      short: new Intl.DateTimeFormat(locale.value, {
-        weekday: props.compact ? 'narrow' : 'short',
-        timeZone: 'UTC',
-      }).format(date),
-      long: new Intl.DateTimeFormat(locale.value, {
-        weekday: 'long',
-        timeZone: 'UTC',
-      }).format(date),
-    }
-  }),
-)
+const weekdays = computed(() => calendarWeekdays(locale.value, props.compact))
 
 const weeks = computed(() => {
   const rows: CalendarCell[][] = []
@@ -59,10 +42,6 @@ function alertOf(cell: CalendarCell): CalendarAlert {
     : 'none'
 }
 
-function dayNumber(date: string): number {
-  return Number(date.slice(8, 10))
-}
-
 function cellLabel(cell: CalendarCell): string {
   const date = new Intl.DateTimeFormat(locale.value, {
     dateStyle: 'full',
@@ -85,13 +64,6 @@ function visibleOccurrences(day: CalendarDay) {
 
 function hiddenCount(day: CalendarDay): number {
   return Math.max(0, day.occurrences.length - calendarOccurrencesPerCell)
-}
-
-function numberClasses(cell: CalendarCell): string {
-  if (cell.date === props.today && cell.inMonth) {
-    return 'bg-primary text-inverted'
-  }
-  return !cell.inMonth || cell.nonWorking ? 'text-muted' : 'text-default'
 }
 </script>
 
@@ -143,10 +115,10 @@ function numberClasses(cell: CalendarCell): string {
         />
         <span
           class="pointer-events-none flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-medium tabular-nums"
-          :class="numberClasses(cell)"
+          :class="calendarNumberClasses(cell, today)"
           aria-hidden="true"
         >
-          {{ dayNumber(cell.date) }}
+          {{ calendarDayNumber(cell.date) }}
         </span>
         <template v-if="cell.day !== null && hasCalendarContent(cell.day)">
           <template v-if="compact">

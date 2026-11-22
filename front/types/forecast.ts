@@ -72,6 +72,11 @@ export interface BalanceCurveChartProps {
   curve: BalanceCurveResponse
 }
 
+export type CalendarWeekday = {
+  short: string
+  long: string
+}
+
 export type CalendarCell = {
   date: string
   inMonth: boolean

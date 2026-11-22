@@ -1,6 +1,7 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AccountsPage from '~/pages/accounts/index.vue'
+import CalendarPage from '~/pages/calendar/index.vue'
 import EnvelopesPage from '~/pages/envelopes/index.vue'
 import OperationsPage from '~/pages/operations/index.vue'
 import RulesPage from '~/pages/rules/index.vue'
@@ -209,6 +210,43 @@ describe('list views skeletons (CHG-47, CHG-48)', () => {
     })
     expect(wrapper.get('[data-testid="envelopes-month"]').text()).toBe(
       'décembre 2026',
+    )
+  })
+})
+
+describe('calendar skeleton (CHG-48)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-11-11T10:00:00Z'))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('shows the real month grid with skeleton days while the month loads', async () => {
+    useReferentialsStore().accounts = []
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /calendar/2026-11-01?horizonMonths=3': never,
+    })
+
+    const wrapper = await mountView(CalendarPage, '/calendar')
+
+    await vi.waitFor(() => {
+      expect(
+        wrapper.find('[data-testid="calendar-grid-skeleton"]').exists(),
+      ).toBe(true)
+    })
+    expect(wrapper.get('[data-testid="calendar-month"]').text()).toBe(
+      'novembre 2026',
+    )
+    const grid = wrapper.get('[data-testid="calendar-grid-skeleton"]')
+    expect(grid.findAll('.grid-cols-7')).toHaveLength(7)
+    expect(grid.text()).toContain('30')
+    expect(grid.get('.bg-primary').text()).toBe('11')
+    expect(wrapper.find('[data-testid="calendar-day-skeleton"]').exists()).toBe(
+      true,
     )
   })
 })

@@ -158,3 +158,8 @@ export interface SkeletonTableProps {
   columns: SkeletonTableColumn[]
   count?: number
 }
+
+export interface CalendarGridSkeletonProps {
+  month: string
+  compact: boolean
+}

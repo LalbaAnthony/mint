@@ -10,6 +10,7 @@ import {
 import type { CalendarMonthResponse } from '@mint/shared/types/forecast'
 import type { Schedule, ScheduleOccurrence } from '@mint/shared/types/schedules'
 import type { CalendarOccurrenceAction } from '~~/types/forecast'
+import type { LoadMode } from '~~/types/skeleton'
 
 const { t, locale } = useI18n()
 const toast = useToast()
@@ -25,7 +26,6 @@ const currentMonth = monthStart(parisDate(new Date()))
 const month = ref(currentMonth)
 const result = ref<CalendarMonthResponse | null>(null)
 const selectedDate = ref<string | null>(null)
-const ready = ref(false)
 
 function applyDeepLink(): boolean {
   const link = calendarDeepLink(route.query)
@@ -73,7 +73,9 @@ function defaultSelection(response: CalendarMonthResponse): string {
   return today?.date ?? response.month
 }
 
-async function loadMonth(): Promise<void> {
+const loadState = useLoadState({ onError: notifyFailure })
+
+async function fetchMonth(): Promise<void> {
   if (referentials.activeAccounts.length === 0) {
     result.value = null
     return
@@ -99,31 +101,37 @@ async function loadMonth(): Promise<void> {
       view.calendarAccountId = null
       return
     }
-    notifyFailure(error)
+    throw error
   }
 }
 
-async function load(): Promise<void> {
-  try {
-    await referentials.load()
-  } catch (error) {
-    notifyFailure(error)
-  }
-  await loadMonth()
-  ready.value = true
+async function fetchCalendar(): Promise<void> {
+  await referentials.load()
+  await fetchMonth()
+}
+
+function loadMonth(mode: LoadMode = 'background'): Promise<void> {
+  return loadState.run(fetchMonth, mode)
+}
+
+function load(mode: LoadMode = 'background'): Promise<void> {
+  return loadState.run(fetchCalendar, mode)
 }
 
 onMounted(async () => {
-  await load()
+  await load('context')
   if (openedFromLink) {
     await router.replace({ query: {} })
   }
 })
-watch(() => editor.savedVersion, load)
+watch(
+  () => editor.savedVersion,
+  () => load(),
+)
 watch(() => route.query, clearDeepLink)
 watch(
   () => [month.value, view.calendarAccountId, view.horizonMonths],
-  loadMonth,
+  () => loadMonth('context'),
 )
 
 const monthLabel = computed(() =>
@@ -280,8 +288,10 @@ async function scheduleChanged(): Promise<void> {
 
 <template>
   <ViewPanel :title="t('navigation.calendar')">
-    <div v-if="ready" class="flex flex-col gap-4">
-      <UCard v-if="referentials.activeAccounts.length === 0">
+    <div class="flex flex-col gap-4">
+      <UCard
+        v-if="loadState.settled && referentials.activeAccounts.length === 0"
+      >
         <EmptyState
           :icon="icons.calendar"
           :title="t('forecast.noAccountTitle')"
@@ -298,7 +308,14 @@ async function scheduleChanged(): Promise<void> {
       </UCard>
       <template v-else>
         <UCard>
-          <ForecastScopeControls v-model:account-id="view.calendarAccountId" />
+          <ForecastScopeControls
+            v-if="referentials.activeAccounts.length > 0"
+            v-model:account-id="view.calendarAccountId"
+          />
+          <ForecastScopeControlsSkeleton
+            v-else
+            :class="loadState.phase === 'pending' ? 'invisible' : ''"
+          />
         </UCard>
         <div class="flex flex-col gap-4 xl:flex-row xl:items-start">
           <div
@@ -345,29 +362,45 @@ async function scheduleChanged(): Promise<void> {
                   />
                 </div>
               </template>
-              <CalendarGrid
-                v-if="result !== null"
-                :cells="cells"
-                :today="result.today"
-                :selected-date="selectedDate"
+              <LoadZone :state="loadState">
+                <template #skeleton>
+                  <CalendarGridSkeleton :month="month" :compact="!isWide" />
+                </template>
+                <CalendarGrid
+                  v-if="result !== null"
+                  :cells="cells"
+                  :today="result.today"
+                  :selected-date="selectedDate"
+                  :threshold-cents="result.thresholdCents"
+                  :compact="!isWide"
+                  @select="selectDay"
+                  @occurrence-action="onOccurrenceAction"
+                />
+              </LoadZone>
+            </UCard>
+          </div>
+          <LoadZone
+            :state="loadState"
+            :error-state="false"
+            class="xl:w-96 xl:shrink-0"
+          >
+            <template #skeleton>
+              <UCard>
+                <CalendarDayDetailSkeleton />
+              </UCard>
+            </template>
+            <UCard
+              v-if="result !== null && selectedDay !== null"
+              class="xl:w-96 xl:shrink-0"
+            >
+              <CalendarDayDetail
+                :day="selectedDay"
                 :threshold-cents="result.thresholdCents"
-                :compact="!isWide"
-                @select="selectDay"
+                :aggregate="result.accountId === null"
                 @occurrence-action="onOccurrenceAction"
               />
             </UCard>
-          </div>
-          <UCard
-            v-if="result !== null && selectedDay !== null"
-            class="xl:w-96 xl:shrink-0"
-          >
-            <CalendarDayDetail
-              :day="selectedDay"
-              :threshold-cents="result.thresholdCents"
-              :aggregate="result.accountId === null"
-              @occurrence-action="onOccurrenceAction"
-            />
-          </UCard>
+          </LoadZone>
         </div>
       </template>
     </div>
@@ -376,7 +409,7 @@ async function scheduleChanged(): Promise<void> {
       v-model:open="occurrenceFormOpen"
       :schedule-id="editedScheduleId"
       :occurrence="editedOccurrence"
-      @saved="loadMonth"
+      @saved="loadMonth()"
     />
     <ScheduleDetailModal
       v-model:open="scheduleDetailOpen"
