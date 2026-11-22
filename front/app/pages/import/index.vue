@@ -39,21 +39,23 @@ const accountItems = computed<SelectItem<string>[]>(() =>
   })),
 )
 
-async function loadHistory(): Promise<void> {
+const historyState = useLoadState({ onError: notifyFailure })
+
+async function fetchHistory(): Promise<void> {
   if (accountId.value === undefined) {
     history.value = []
     return
   }
-  try {
-    history.value = (
-      await apiGet(`/accounts/${accountId.value}/imports`, importHistorySchema)
-    ).batches
-  } catch (error) {
-    notifyFailure(error)
-  }
+  history.value = (
+    await apiGet(`/accounts/${accountId.value}/imports`, importHistorySchema)
+  ).batches
 }
 
-watch(accountId, loadHistory)
+function loadHistory(): Promise<void> {
+  return historyState.run(fetchHistory, 'background')
+}
+
+watch(accountId, () => historyState.run(fetchHistory))
 
 async function openBatch(batchId: string): Promise<void> {
   try {
@@ -73,6 +75,8 @@ async function openBatch(batchId: string): Promise<void> {
 }
 
 const preparing = ref(true)
+const prepareState = useLoadState()
+const openingBatch = typeof route.query.batch === 'string'
 
 provideFieldAutofocus({
   values: () => ({ accountId: accountId.value, file: file.value }),
@@ -96,7 +100,7 @@ async function prepare(): Promise<void> {
 
 onMounted(async () => {
   try {
-    await prepare()
+    await prepareState.run(prepare)
   } finally {
     preparing.value = false
   }
@@ -296,8 +300,14 @@ useShortcut(
             {{ t(`imports.steps.${step}`) }}
           </h2>
         </template>
+        <SkeletonZone
+          v-if="openingBatch && !prepareState.settled"
+          :class="prepareState.phase === 'pending' ? 'invisible' : ''"
+        >
+          <SkeletonDetailList actions="none" />
+        </SkeletonZone>
         <div
-          v-if="step === 'select'"
+          v-else-if="step === 'select'"
           ref="selectStep"
           class="flex flex-wrap items-end gap-3"
           data-testid="import-select"
@@ -377,13 +387,22 @@ useShortcut(
             {{ t('imports.history') }}
           </h2>
         </template>
-        <ImportHistory
-          :batches="history"
-          :busy="busy"
-          @resume="(batch) => openBatch(batch.id)"
-          @cancel="(batch) => (batchToCancel = batch)"
-          @abandon="abandon"
-        />
+        <LoadZone :state="historyState">
+          <template #skeleton>
+            <SkeletonDetailList
+              actions="none"
+              :row="{ wrap: true }"
+              class="flex flex-col divide-y divide-default"
+            />
+          </template>
+          <ImportHistory
+            :batches="history"
+            :busy="busy"
+            @resume="(batch) => openBatch(batch.id)"
+            @cancel="(batch) => (batchToCancel = batch)"
+            @abandon="abandon"
+          />
+        </LoadZone>
       </UCard>
     </div>
     <ConfirmModal

@@ -14,7 +14,7 @@ const router = useRouter()
 const search = useSearchStore()
 const referentials = useReferentialsStore()
 const results = useSearchResults()
-const { text, result, loading, searchable, reset } = useGlobalSearch({
+const { text, result, state, loading, searchable, reset } = useGlobalSearch({
   operationsLimit: searchPreviewSize,
 })
 
@@ -135,12 +135,14 @@ const seeAllGroup = computed<SearchPreviewGroup>(() => ({
   ],
 }))
 
+const previewLoading = computed(() => state.phase === 'skeleton')
+
 const groups = computed<SearchPreviewGroup[]>(() => {
   if (!searchable.value) {
     return []
   }
   const response = result.value
-  if (response === null) {
+  if (response === null || previewLoading.value) {
     return [seeAllGroup.value]
   }
   const sections: SearchPreviewGroup[] = [
@@ -176,7 +178,8 @@ const groups = computed<SearchPreviewGroup[]>(() => {
 })
 
 const noResult = computed(
-  () => groups.value.length === 1 && result.value !== null,
+  () =>
+    !previewLoading.value && groups.value.length === 1 && result.value !== null,
 )
 </script>
 
@@ -210,7 +213,16 @@ const noResult = computed(
             {{ t('search.hint') }}
           </p>
         </template>
-        <template v-if="noResult" #footer>
+        <template v-if="previewLoading" #footer>
+          <SkeletonZone class="px-2 pb-2">
+            <SkeletonDetailList
+              leading
+              actions="none"
+              :row="{ gap: 3, padding: 1.5 }"
+            />
+          </SkeletonZone>
+        </template>
+        <template v-else-if="noResult" #footer>
           <p
             class="py-6 text-center text-sm text-muted"
             data-testid="search-no-result"

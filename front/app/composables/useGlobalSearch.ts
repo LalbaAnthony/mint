@@ -2,6 +2,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { searchResponseSchema } from '@mint/shared/schemas/search'
 import type { SearchResponse } from '@mint/shared/types/search'
 import type { GlobalSearchOptions } from '~~/types/search'
+import type { LoadMode } from '~~/types/skeleton'
 
 const searchDelayMs = 300
 
@@ -13,7 +14,6 @@ export function useGlobalSearch(options: GlobalSearchOptions) {
 
   const text = ref(options.initialText ?? '')
   const result = ref<SearchResponse | null>(null)
-  const loading = ref(false)
   const loadingMore = ref(false)
   let requestId = 0
 
@@ -29,6 +29,9 @@ export function useGlobalSearch(options: GlobalSearchOptions) {
     toast.add({ title: errorMessage(error), icon: icons.error, color: 'error' })
   }
 
+  const state = useLoadState({ onError: notifyFailure })
+  const loading = computed(() => state.loading)
+
   function fetchBatch(query: string, offset: number): Promise<SearchResponse> {
     return apiGet(
       searchRequestPath(query, locale.value, offset, options.operationsLimit),
@@ -39,11 +42,10 @@ export function useGlobalSearch(options: GlobalSearchOptions) {
   function reset(): void {
     requestId += 1
     result.value = null
-    loading.value = false
     loadingMore.value = false
   }
 
-  async function runNow(): Promise<void> {
+  async function runNow(mode: LoadMode = 'context'): Promise<void> {
     const query = text.value
     if (!isSearchable(query) || connectivity.offline) {
       reset()
@@ -51,24 +53,15 @@ export function useGlobalSearch(options: GlobalSearchOptions) {
     }
     requestId += 1
     const current = requestId
-    loading.value = true
-    try {
+    await state.run(async () => {
       const response = await fetchBatch(query, 0)
       if (current === requestId) {
         result.value = response
       }
-    } catch (error) {
-      if (current === requestId) {
-        notifyFailure(error)
-      }
-    } finally {
-      if (current === requestId) {
-        loading.value = false
-      }
-    }
+    }, mode)
   }
 
-  const runLater = useDebounceFn(runNow, searchDelayMs)
+  const runLater = useDebounceFn(() => runNow(), searchDelayMs)
 
   watch(text, (value) => {
     if (!isSearchable(value)) {
@@ -115,6 +108,7 @@ export function useGlobalSearch(options: GlobalSearchOptions) {
   return {
     text,
     result,
+    state,
     loading,
     loadingMore,
     searchable,

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import TagManager from '~/components/TagManager.vue'
 import AccountsPage from '~/pages/accounts/index.vue'
 import AdminPage from '~/pages/admin/index.vue'
+import SearchPage from '~/pages/search/index.vue'
 import CalendarPage from '~/pages/calendar/index.vue'
 import EnvelopesPage from '~/pages/envelopes/index.vue'
 import OperationsPage from '~/pages/operations/index.vue'
@@ -285,5 +286,24 @@ describe('self-loading cards (CHG-48)', () => {
       expect(visibleZone(wrapper)).toBeDefined()
     })
     expect(wrapper.find('[data-testid="tags-empty"]').exists()).toBe(false)
+  })
+})
+
+describe('search results skeleton (CHG-48)', () => {
+  it('shows a result section skeleton while the search runs', async () => {
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /search?q=co&operationsOffset=0&operationsLimit=50': never,
+    })
+
+    const wrapper = await mountView(SearchPage, '/search?q=co')
+
+    await vi.waitFor(() => {
+      expect(visibleZone(wrapper)).toBeDefined()
+    })
+    expect(
+      wrapper.find('[data-testid="search-section-skeleton"]').exists(),
+    ).toBe(true)
+    expect(wrapper.find('[data-testid="search-form"]').exists()).toBe(true)
   })
 })

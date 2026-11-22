@@ -21,6 +21,7 @@ const initialText = queryText()
 const {
   text,
   result,
+  state,
   loading,
   loadingMore,
   searchable,
@@ -53,7 +54,10 @@ watch(
   },
 )
 
-watch(() => editor.savedVersion, runNow)
+watch(
+  () => editor.savedVersion,
+  () => runNow('background'),
+)
 watch(
   () => connectivity.offline,
   (offline) => {
@@ -102,7 +106,7 @@ useShortcut(
         role="search"
         class="flex w-full max-w-2xl"
         data-testid="search-form"
-        @submit.prevent="runNow"
+        @submit.prevent="runNow()"
       >
         <UFieldGroup class="w-full">
           <UInput
@@ -144,72 +148,95 @@ useShortcut(
       >
         {{ t('search.hint') }}
       </p>
-      <UCard v-else-if="result !== null && !hasResults">
-        <EmptyState
-          :icon="icons.search"
-          :title="t('search.noResultTitle')"
-          :description="t('search.noResultFor', { text: text.trim() })"
-        />
-      </UCard>
-      <template v-else-if="result !== null">
-        <SearchSectionCard
-          v-if="result.accounts.length > 0"
-          section="accounts"
-          :total="result.accounts.length"
-        >
-          <SearchAccountRow
-            v-for="account in result.accounts"
-            :key="account.id"
-            :account="account"
+      <LoadZone v-else :state="state" class="flex flex-col gap-6">
+        <template #skeleton>
+          <UCard
+            :ui="{ body: 'p-0 sm:p-0' }"
+            data-testid="search-section-skeleton"
+          >
+            <template #header>
+              <SkeletonText width="lg" class="text-base" />
+            </template>
+            <SkeletonDetailList
+              leading
+              actions="none"
+              :row="{ gap: 3, inset: true }"
+              class="divide-y divide-default"
+            />
+          </UCard>
+        </template>
+        <template #error="{ retry }">
+          <UCard>
+            <LoadError @retry="retry" />
+          </UCard>
+        </template>
+        <UCard v-if="result !== null && !hasResults">
+          <EmptyState
+            :icon="icons.search"
+            :title="t('search.noResultTitle')"
+            :description="t('search.noResultFor', { text: text.trim() })"
           />
-        </SearchSectionCard>
-        <SearchSectionCard
-          v-if="result.operations.total > 0"
-          section="operations"
-          :total="result.operations.total"
-        >
-          <SearchOperationRow
-            v-for="operation in result.operations.items"
-            :key="operation.id"
-            :operation="operation"
-          />
-          <template v-if="hasMore" #footer>
-            <div class="border-t border-default p-3">
-              <UButton
-                :label="t('search.more')"
-                :loading="loadingMore"
-                color="neutral"
-                variant="outline"
-                block
-                data-testid="search-more"
-                @click="loadMore"
-              />
-            </div>
-          </template>
-        </SearchSectionCard>
-        <SearchSectionCard
-          v-if="result.schedules.length > 0"
-          section="schedules"
-          :total="result.schedules.length"
-        >
-          <SearchScheduleRow
-            v-for="schedule in result.schedules"
-            :key="schedule.id"
-            :schedule="schedule"
-          />
-        </SearchSectionCard>
-        <SearchSectionCard
-          v-if="result.envelopes.length > 0"
-          section="envelopes"
-          :total="result.envelopes.length"
-        >
-          <SearchEnvelopeRow
-            v-for="line in result.envelopes"
-            :key="line.envelope.id"
-            :result="line"
-          />
-        </SearchSectionCard>
-      </template>
+        </UCard>
+        <template v-else-if="result !== null">
+          <SearchSectionCard
+            v-if="result.accounts.length > 0"
+            section="accounts"
+            :total="result.accounts.length"
+          >
+            <SearchAccountRow
+              v-for="account in result.accounts"
+              :key="account.id"
+              :account="account"
+            />
+          </SearchSectionCard>
+          <SearchSectionCard
+            v-if="result.operations.total > 0"
+            section="operations"
+            :total="result.operations.total"
+          >
+            <SearchOperationRow
+              v-for="operation in result.operations.items"
+              :key="operation.id"
+              :operation="operation"
+            />
+            <template v-if="hasMore" #footer>
+              <div class="border-t border-default p-3">
+                <UButton
+                  :label="t('search.more')"
+                  :loading="loadingMore"
+                  color="neutral"
+                  variant="outline"
+                  block
+                  data-testid="search-more"
+                  @click="loadMore"
+                />
+              </div>
+            </template>
+          </SearchSectionCard>
+          <SearchSectionCard
+            v-if="result.schedules.length > 0"
+            section="schedules"
+            :total="result.schedules.length"
+          >
+            <SearchScheduleRow
+              v-for="schedule in result.schedules"
+              :key="schedule.id"
+              :schedule="schedule"
+            />
+          </SearchSectionCard>
+          <SearchSectionCard
+            v-if="result.envelopes.length > 0"
+            section="envelopes"
+            :total="result.envelopes.length"
+          >
+            <SearchEnvelopeRow
+              v-for="line in result.envelopes"
+              :key="line.envelope.id"
+              :result="line"
+            />
+          </SearchSectionCard>
+        </template>
+      </LoadZone>
     </div>
   </ViewPanel>
 </template>
