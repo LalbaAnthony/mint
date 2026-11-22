@@ -1,5 +1,12 @@
+<script setup lang="ts">
+import type { SkeletonCountProps } from '~~/types/skeleton'
+
+defineProps<SkeletonCountProps>()
+</script>
+
 <template>
   <SkeletonList
+    :count="count"
     :row="{ gap: 3, padding: 3, flush: true, wrap: true, spread: true }"
     class="divide-y divide-default"
   >

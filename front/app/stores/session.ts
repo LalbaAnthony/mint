@@ -29,6 +29,7 @@ export const useSessionStore = defineStore('session', () => {
     status.value = 'anonymous'
     resetCsrfToken()
     useAmountMaskStore().forget()
+    useSkeletonCountsStore().forget()
     void forgetDeviceData()
   }
 

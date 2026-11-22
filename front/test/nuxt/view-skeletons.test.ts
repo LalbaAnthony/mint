@@ -17,6 +17,7 @@ import {
   account,
   envelopeLine,
   envelopeMonth,
+  holidaysTag,
   referentialHandlers,
   setViewportWidth,
 } from '../planning-fixtures'
@@ -42,6 +43,7 @@ afterEach(() => {
     wrapper.unmount()
   }
   setViewportWidth(initialWidth)
+  useSkeletonCountsStore().forget()
   fetchMock.mockReset()
   document.body.innerHTML = ''
 })
@@ -351,5 +353,35 @@ describe('modals and panels (CHG-48)', () => {
         ?.textContent,
     ).not.toContain('Aucune notification')
     store.open = false
+  })
+})
+
+describe('remembered row counts (CHG-48)', () => {
+  it('repeats the number of rows of the last display of a list', async () => {
+    useReferentialsStore().tags = []
+    installFakeApi(fetchMock, {
+      'GET /tags': () => [
+        holidaysTag,
+        {
+          ...holidaysTag,
+          id: '00000000-0000-4000-8000-0000000000c9',
+          name: 'Travaux',
+        },
+      ],
+    })
+    const first = await mountView(TagManager, '/profile')
+    await vi.waitFor(() => {
+      expect(first.findAll('[data-testid^="tag-row-"]')).toHaveLength(2)
+    })
+    first.unmount()
+    mounted.splice(mounted.indexOf(first), 1)
+
+    installFakeApi(fetchMock, { 'GET /tags': never })
+    const second = await mountView(TagManager, '/profile')
+
+    await vi.waitFor(() => {
+      expect(visibleZone(second)).toBeDefined()
+    })
+    expect(visibleZone(second)?.findAll('li')).toHaveLength(2)
   })
 })

@@ -105,6 +105,12 @@ function adjust(statement: Statement): Promise<void> {
 function remove(statement: Statement): Promise<void> {
   return run(() => apiCommand('DELETE', `/statements/${statement.id}`))
 }
+
+const skeletonRows = useRememberedCount(
+  'statements',
+  loadState,
+  () => statements.value.length,
+)
 </script>
 
 <template>
@@ -149,6 +155,7 @@ function remove(statement: Statement): Promise<void> {
         <LoadZone :state="loadState">
           <template #skeleton>
             <SkeletonDetailList
+              :count="skeletonRows"
               actions="button"
               :row="{ wrap: true }"
               class="flex flex-col divide-y divide-default"

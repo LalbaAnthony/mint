@@ -177,6 +177,12 @@ useDialogSubmitShortcut(
     kept.value.size > 0 &&
     !applying.value,
 )
+
+const skeletonRows = useRememberedCount(
+  'reapply.changes',
+  previewState,
+  () => preview.value?.changes.length ?? 0,
+)
 </script>
 
 <template>
@@ -196,7 +202,10 @@ useDialogSubmitShortcut(
         <template #skeleton>
           <div class="flex flex-col gap-2">
             <SkeletonText width="lg" class="text-base" />
-            <SkeletonList :row="{ gap: 3, align: 'start' }">
+            <SkeletonList
+              :count="skeletonRows"
+              :row="{ gap: 3, align: 'start' }"
+            >
               <template #default="{ index }">
                 <SkeletonControl kind="checkbox" class="pt-0.5" />
                 <div class="min-w-0 flex-1 text-sm">

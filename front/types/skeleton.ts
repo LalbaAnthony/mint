@@ -172,3 +172,9 @@ export interface SkeletonDetailListProps {
   row?: ListRowLayout
   count?: number
 }
+
+export type SkeletonCounts = Record<string, number[]>
+
+export interface SkeletonCountProps {
+  count: number
+}

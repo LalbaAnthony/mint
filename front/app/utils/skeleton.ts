@@ -24,6 +24,12 @@ export const skeletonRowCount = 3
 
 export const skeletonAccountGroupCount = 2
 
+export const skeletonMaximumRowCount = 20
+
+export function clampSkeletonRows(count: number): number {
+  return Math.min(skeletonMaximumRowCount, Math.max(1, count))
+}
+
 export const skeletonShapeClasses = {
   text: 'rounded-sm',
   control: 'rounded-md',

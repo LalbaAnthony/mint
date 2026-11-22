@@ -229,6 +229,12 @@ const connectivity = useConnectivityStore()
 const createHint = useShortcut('create', () => openForm(null), {
   enabled: () => !connectivity.offline,
 })
+
+const skeletonRows = useRememberedCount(
+  'envelopes',
+  loadState,
+  () => result.value?.lines.length ?? 0,
+)
 </script>
 
 <template>
@@ -311,6 +317,7 @@ const createHint = useShortcut('create', () => openForm(null), {
             <SkeletonTable
               v-if="isDesktop"
               :columns="skeletonTableColumns"
+              :count="skeletonRows"
               :ui="{ th: 'whitespace-nowrap', td: 'align-top' }"
             >
               <template #body-bottom>
@@ -341,7 +348,7 @@ const createHint = useShortcut('create', () => openForm(null), {
             <template v-else>
               <ul class="flex flex-col divide-y divide-default">
                 <EnvelopeRowSkeleton
-                  v-for="index in skeletonIndexes()"
+                  v-for="index in skeletonIndexes(skeletonRows)"
                   :key="index"
                   :index="index"
                 />

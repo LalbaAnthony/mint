@@ -164,6 +164,19 @@ function reorder(categoryIds: string[]): Promise<void> {
 }
 
 onMounted(() => loadState.run(fetchCategories))
+
+const categoryRows = useRememberedRows(
+  'categories',
+  loadState,
+  () =>
+    sections.value.map((section) =>
+      section.nodes.reduce(
+        (total, node) => total + 1 + node.children.length,
+        0,
+      ),
+    ),
+  sections.value.map(() => skeletonRowCount),
+)
 </script>
 
 <template>
@@ -205,7 +218,7 @@ onMounted(() => loadState.run(fetchCategories))
     <LoadZone :state="loadState" class="flex flex-col gap-6">
       <template #skeleton>
         <section
-          v-for="section in sections"
+          v-for="(section, sectionIndex) in sections"
           :key="section.id"
           class="flex flex-col gap-1"
         >
@@ -216,7 +229,11 @@ onMounted(() => loadState.run(fetchCategories))
           <p v-if="section.id === 'system'" class="text-xs text-muted">
             {{ t('categories.system.help') }}
           </p>
-          <SkeletonList :row="{ padding: 1.5 }" class="divide-y divide-default">
+          <SkeletonList
+            :count="categoryRows[sectionIndex] ?? skeletonRowCount"
+            :row="{ padding: 1.5 }"
+            class="divide-y divide-default"
+          >
             <template #default="{ index }">
               <div class="min-w-0 flex-1">
                 <SkeletonText

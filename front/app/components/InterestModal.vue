@@ -113,6 +113,12 @@ function record(): Promise<void> {
 function remove(rate: InterestRate): Promise<void> {
   return run(() => apiCommand('DELETE', `/interest-rates/${rate.id}`))
 }
+
+const skeletonRows = useRememberedCount(
+  'interest.rates',
+  loadState,
+  () => rates.value.length,
+)
 </script>
 
 <template>
@@ -218,6 +224,7 @@ function remove(rate: InterestRate): Promise<void> {
         <LoadZone :state="loadState">
           <template #skeleton>
             <SkeletonDetailList
+              :count="skeletonRows"
               actions="button"
               :row="{ wrap: true }"
               class="flex flex-col divide-y divide-default"

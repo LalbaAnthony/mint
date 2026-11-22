@@ -284,6 +284,14 @@ async function scheduleChanged(): Promise<void> {
     notifyFailure(error)
   }
 }
+
+const dayRows = useRememberedCount(
+  'calendar.day',
+  loadState,
+  () =>
+    (selectedDay.value?.occurrences.length ?? 0) +
+    (selectedDay.value?.operations.length ?? 0),
+)
 </script>
 
 <template>
@@ -386,7 +394,7 @@ async function scheduleChanged(): Promise<void> {
           >
             <template #skeleton>
               <UCard>
-                <CalendarDayDetailSkeleton />
+                <CalendarDayDetailSkeleton :count="dayRows" />
               </UCard>
             </template>
             <UCard

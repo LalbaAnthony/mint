@@ -149,6 +149,12 @@ async function deleteSchedule(): Promise<void> {
     busy.value = false
   }
 }
+
+const skeletonRows = useRememberedCount(
+  'schedule.occurrences',
+  occurrencesState,
+  () => occurrences.value.length,
+)
 </script>
 
 <template>
@@ -256,6 +262,7 @@ async function deleteSchedule(): Promise<void> {
           <LoadZone :state="occurrencesState">
             <template #skeleton>
               <SkeletonDetailList
+                :count="skeletonRows"
                 actions="button"
                 :row="{ wrap: true }"
                 class="flex flex-col divide-y divide-default"

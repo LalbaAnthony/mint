@@ -259,6 +259,12 @@ async function deleteOperation(): Promise<void> {
     busy.value = false
   }
 }
+
+const skeletonRows = useRememberedCount(
+  'operations',
+  loadState,
+  () => items.value.length,
+)
 </script>
 
 <template>
@@ -341,8 +347,13 @@ async function deleteOperation(): Promise<void> {
                 <SkeletonText width="md" class="text-sm" />
               </template>
             </div>
-            <SkeletonTable v-if="isDesktop" :columns="skeletonTableColumns" />
+            <SkeletonTable
+              v-if="isDesktop"
+              :columns="skeletonTableColumns"
+              :count="skeletonRows"
+            />
             <SkeletonList
+              :count="skeletonRows"
               v-else
               :row="{ gap: 3 }"
               class="flex flex-col divide-y divide-default"

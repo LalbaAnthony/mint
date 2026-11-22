@@ -99,6 +99,12 @@ const totalLabels = computed(() => [
   t('subscriptions.monthlyTotal'),
   t('subscriptions.annualTotal'),
 ])
+
+const skeletonRows = useRememberedCount(
+  'subscriptions',
+  loadState,
+  () => subscriptions.value.length,
+)
 </script>
 
 <template>
@@ -113,8 +119,13 @@ const totalLabels = computed(() => [
           </StatTile>
         </StatGrid>
         <UCard data-testid="subscriptions-list-skeleton">
-          <SkeletonTable v-if="isDesktop" :columns="skeletonTableColumns" />
+          <SkeletonTable
+            v-if="isDesktop"
+            :columns="skeletonTableColumns"
+            :count="skeletonRows"
+          />
           <SkeletonList
+            :count="skeletonRows"
             v-else
             :row="{ gap: 3 }"
             class="flex flex-col divide-y divide-default"

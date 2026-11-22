@@ -289,6 +289,12 @@ useShortcut(
     container: selectStep,
   },
 )
+
+const historyRows = useRememberedCount(
+  'imports.history',
+  historyState,
+  () => history.value.length,
+)
 </script>
 
 <template>
@@ -390,6 +396,7 @@ useShortcut(
         <LoadZone :state="historyState">
           <template #skeleton>
             <SkeletonDetailList
+              :count="historyRows"
               actions="none"
               :row="{ wrap: true }"
               class="flex flex-col divide-y divide-default"

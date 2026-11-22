@@ -74,6 +74,12 @@ async function save(cap: RegulatedCap): Promise<void> {
 }
 
 onMounted(() => loadState.run(fetchCaps))
+
+const skeletonRows = useRememberedCount(
+  'admin.caps',
+  loadState,
+  () => caps.value.length,
+)
 </script>
 
 <template>
@@ -87,6 +93,7 @@ onMounted(() => loadState.run(fetchCaps))
     <LoadZone :state="loadState">
       <template #skeleton>
         <SkeletonList
+          :count="skeletonRows"
           :row="{ wrap: true, align: 'end' }"
           class="flex flex-col divide-y divide-default"
         >

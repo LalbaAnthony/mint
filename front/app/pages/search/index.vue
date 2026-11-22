@@ -96,6 +96,10 @@ useShortcut(
   },
   { enabled: () => !connectivity.offline },
 )
+
+const skeletonRows = useRememberedCount('search', state, () =>
+  searchRowCount(result.value),
+)
 </script>
 
 <template>
@@ -158,6 +162,7 @@ useShortcut(
               <SkeletonText width="lg" class="text-base" />
             </template>
             <SkeletonDetailList
+              :count="skeletonRows"
               leading
               actions="none"
               :row="{ gap: 3, inset: true }"

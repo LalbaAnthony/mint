@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import type { SkeletonCountProps } from '~~/types/skeleton'
+
+defineProps<SkeletonCountProps>()
+</script>
+
 <template>
   <section class="flex flex-col gap-4" data-testid="calendar-day-skeleton">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
@@ -6,7 +12,10 @@
     </div>
     <div class="flex flex-col gap-1">
       <SkeletonText width="sm" class="text-sm" />
-      <SkeletonList class="flex flex-col divide-y divide-default">
+      <SkeletonList
+        :count="count"
+        class="flex flex-col divide-y divide-default"
+      >
         <template #default="{ index }">
           <SkeletonCircle :size="16" />
           <div class="min-w-0 flex-1">

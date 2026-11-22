@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import type { SkeletonCountProps } from '~~/types/skeleton'
+
+defineProps<SkeletonCountProps>()
+</script>
+
 <template>
   <UCard :ui="{ body: 'p-0 sm:p-0' }" data-testid="account-group-skeleton">
     <template #header>
@@ -10,7 +16,11 @@
       </div>
     </template>
     <ul class="divide-y divide-default">
-      <li v-for="index in skeletonIndexes()" :key="index" class="px-2 sm:px-4">
+      <li
+        v-for="index in skeletonIndexes(count)"
+        :key="index"
+        class="px-2 sm:px-4"
+      >
         <ListRow as="div">
           <SkeletonControl kind="touch-icon-button" />
           <div class="min-w-0 flex-1">

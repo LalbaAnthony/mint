@@ -185,6 +185,12 @@ onMounted(() => {
   supported.value = passkeysSupported()
   void loadState.run(fetchPasskeys)
 })
+
+const skeletonRows = useRememberedCount(
+  'passkeys',
+  loadState,
+  () => passkeys.value.length,
+)
 </script>
 
 <template>
@@ -222,6 +228,7 @@ onMounted(() => {
       <LoadZone :state="loadState">
         <template #skeleton>
           <SkeletonDetailList
+            :count="skeletonRows"
             leading
             actions="touch"
             :row="{ spread: true }"

@@ -162,6 +162,12 @@ onMounted(() => {
   permission.value = notificationPermission()
   void loadState.run(fetchSettings)
 })
+
+const skeletonRows = useRememberedCount(
+  'push.devices',
+  loadState,
+  () => devices.value.length,
+)
 </script>
 
 <template>
@@ -258,6 +264,7 @@ onMounted(() => {
         <LoadZone :state="loadState">
           <template #skeleton>
             <SkeletonDetailList
+              :count="skeletonRows"
               actions="touch"
               :row="{ spread: true }"
               class="flex flex-col divide-y divide-default"

@@ -218,6 +218,12 @@ const reorderHint = useShortcut(
   },
   { enabled: () => (rules.value?.length ?? 0) > 1 && !connectivity.offline },
 )
+
+const skeletonRows = useRememberedCount(
+  'rules',
+  loadState,
+  () => rules.value?.length ?? 0,
+)
 </script>
 
 <template>
@@ -265,7 +271,11 @@ const reorderHint = useShortcut(
       <template #skeleton>
         <UCard data-testid="rules-list-skeleton">
           <p class="pb-2 text-xs text-muted">{{ t('rules.priorityHelp') }}</p>
-          <SkeletonList ordered class="flex flex-col divide-y divide-default">
+          <SkeletonList
+            :count="skeletonRows"
+            ordered
+            class="flex flex-col divide-y divide-default"
+          >
             <template #default="{ index }">
               <SkeletonText width="xs" class="w-6 shrink-0 text-xs" />
               <div class="min-w-0 flex-1">

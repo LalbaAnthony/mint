@@ -46,6 +46,19 @@ async function remove(view: NotificationView): Promise<void> {
     notifyFailure(error)
   }
 }
+
+const skeletonCounts = useSkeletonCountsStore()
+watch(
+  () => (store.loaded ? store.notifications.length : null),
+  (length) => {
+    if (length !== null) {
+      skeletonCounts.remember('notifications', [length])
+    }
+  },
+)
+const skeletonRows = computed(
+  () => skeletonCounts.rowsOf('notifications', [skeletonRowCount])[0],
+)
 </script>
 
 <template>
@@ -77,6 +90,7 @@ async function remove(view: NotificationView): Promise<void> {
         </div>
         <SkeletonZone v-if="!store.loaded">
           <SkeletonDetailList
+            :count="skeletonRows"
             leading
             actions="touch"
             :row="{ gap: 3, padding: 3, align: 'start' }"

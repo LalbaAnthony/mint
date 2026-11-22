@@ -378,6 +378,13 @@ const reorderHint = useShortcut(
   },
   { enabled: () => hasActiveAccounts.value && !connectivity.offline },
 )
+
+const accountRows = useRememberedRows(
+  'accounts',
+  loadState,
+  () => overview.value?.groups.map((group) => group.accounts.length) ?? [],
+  skeletonIndexes(skeletonAccountGroupCount).map(() => skeletonRowCount),
+)
 </script>
 
 <template>
@@ -436,8 +443,9 @@ const reorderHint = useShortcut(
           </template>
         </StatTile>
         <AccountGroupCardSkeleton
-          v-for="group in skeletonIndexes(skeletonAccountGroupCount)"
+          v-for="(count, group) in accountRows"
           :key="group"
+          :count="count"
         />
       </template>
       <template #error="{ retry }">

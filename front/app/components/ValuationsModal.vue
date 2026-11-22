@@ -128,6 +128,12 @@ function record(): Promise<void> {
 function remove(valuation: Valuation): Promise<void> {
   return run(() => apiCommand('DELETE', `/valuations/${valuation.id}`))
 }
+
+const skeletonRows = useRememberedCount(
+  'valuations',
+  loadState,
+  () => valuations.value.length,
+)
 </script>
 
 <template>
@@ -242,6 +248,7 @@ function remove(valuation: Valuation): Promise<void> {
         <LoadZone :state="loadState">
           <template #skeleton>
             <SkeletonDetailList
+              :count="skeletonRows"
               actions="button"
               :row="{ wrap: true }"
               class="flex flex-col divide-y divide-default"

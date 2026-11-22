@@ -171,6 +171,12 @@ const connectivity = useConnectivityStore()
 const createHint = useShortcut('create', () => openForm(null), {
   enabled: () => !connectivity.offline,
 })
+
+const skeletonRows = useRememberedCount(
+  'schedules',
+  loadState,
+  () => visible.value.length,
+)
 </script>
 
 <template>
@@ -255,8 +261,13 @@ const createHint = useShortcut('create', () => openForm(null), {
       <LoadZone :state="loadState">
         <template #skeleton>
           <UCard data-testid="schedules-list-skeleton">
-            <SkeletonTable v-if="isDesktop" :columns="skeletonTableColumns" />
+            <SkeletonTable
+              v-if="isDesktop"
+              :columns="skeletonTableColumns"
+              :count="skeletonRows"
+            />
             <SkeletonList
+              :count="skeletonRows"
               v-else
               :row="{ gap: 3 }"
               class="flex flex-col divide-y divide-default"

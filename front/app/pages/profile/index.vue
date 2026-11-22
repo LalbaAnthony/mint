@@ -183,6 +183,12 @@ async function loadAccounts(): Promise<void> {
 onMounted(async () => {
   await Promise.all([sessionsState.run(fetchSessions), loadAccounts()])
 })
+
+const skeletonRows = useRememberedCount(
+  'sessions',
+  sessionsState,
+  () => sessions.value.length,
+)
 </script>
 
 <template>
@@ -355,6 +361,7 @@ onMounted(async () => {
         <LoadZone :state="sessionsState">
           <template #skeleton>
             <SkeletonDetailList
+              :count="skeletonRows"
               actions="none"
               :row="{
                 direction: 'column',

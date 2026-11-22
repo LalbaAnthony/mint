@@ -181,6 +181,10 @@ const noResult = computed(
   () =>
     !previewLoading.value && groups.value.length === 1 && result.value !== null,
 )
+
+const skeletonRows = useRememberedCount('search.preview', state, () =>
+  searchRowCount(result.value),
+)
 </script>
 
 <template>
@@ -216,6 +220,7 @@ const noResult = computed(
         <template v-if="previewLoading" #footer>
           <SkeletonZone class="px-2 pb-2">
             <SkeletonDetailList
+              :count="skeletonRows"
               leading
               actions="none"
               :row="{ gap: 3, padding: 1.5 }"

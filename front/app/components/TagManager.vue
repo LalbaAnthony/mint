@@ -114,6 +114,12 @@ function actionsFor(tag: Tag): DropdownMenuItem[][] {
 }
 
 onMounted(() => loadState.run(fetchTags))
+
+const skeletonRows = useRememberedCount(
+  'tags',
+  loadState,
+  () => referentials.tags.length,
+)
 </script>
 
 <template>
@@ -139,6 +145,7 @@ onMounted(() => loadState.run(fetchTags))
     <LoadZone :state="loadState">
       <template #skeleton>
         <SkeletonDetailList
+          :count="skeletonRows"
           :row="{ spread: true }"
           class="flex flex-col divide-y divide-default"
         />

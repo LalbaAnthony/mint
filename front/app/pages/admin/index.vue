@@ -201,6 +201,17 @@ const createHint = useShortcut(
   },
   { enabled: () => !connectivity.offline },
 )
+
+const invitationRows = useRememberedCount(
+  'admin.invitations',
+  loadState,
+  () => invitations.value.length,
+)
+const userRows = useRememberedCount(
+  'admin.users',
+  loadState,
+  () => users.value.length,
+)
 </script>
 
 <template>
@@ -230,7 +241,7 @@ const createHint = useShortcut(
         </template>
         <LoadZone :state="loadState">
           <template #skeleton>
-            <AdminListSkeleton />
+            <AdminListSkeleton :count="invitationRows" />
           </template>
           <EmptyState
             v-if="invitations.length === 0"
@@ -319,7 +330,7 @@ const createHint = useShortcut(
         </template>
         <LoadZone :state="loadState" :error-state="false">
           <template #skeleton>
-            <AdminListSkeleton />
+            <AdminListSkeleton :count="userRows" />
           </template>
           <ul class="divide-y divide-default" data-testid="user-list">
             <ListRow

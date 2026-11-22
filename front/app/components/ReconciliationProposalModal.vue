@@ -100,6 +100,12 @@ useDialogSubmitShortcut(
     selected.value !== undefined &&
     !busy.value,
 )
+
+const skeletonRows = useRememberedCount(
+  'reconciliation.candidates',
+  candidatesState,
+  () => candidates.value.length,
+)
 </script>
 
 <template>
@@ -120,7 +126,7 @@ useDialogSubmitShortcut(
           <template #skeleton>
             <div class="flex flex-col gap-1">
               <SkeletonText width="md" class="text-sm" />
-              <SkeletonList :row="{ padding: 1 }">
+              <SkeletonList :count="skeletonRows" :row="{ padding: 1 }">
                 <template #default="{ index }">
                   <SkeletonCircle :size="16" />
                   <SkeletonText

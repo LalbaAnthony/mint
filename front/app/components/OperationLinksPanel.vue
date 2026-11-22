@@ -121,6 +121,12 @@ async function createRule(): Promise<void> {
   editor.isOpen = false
   await navigateTo({ path: '/rules', query: { operation: props.operation.id } })
 }
+
+const skeletonRows = useRememberedCount(
+  'operation.candidates',
+  candidatesState,
+  () => candidates.value.length,
+)
 </script>
 
 <template>
@@ -165,6 +171,7 @@ async function createRule(): Promise<void> {
             {{ t('reconciliation.candidates') }}
           </p>
           <SkeletonList
+            :count="skeletonRows"
             :row="{ padding: 1 }"
             class="flex flex-col divide-y divide-default"
           >

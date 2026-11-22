@@ -10,6 +10,7 @@ import SkeletonCircle from '~/components/skeleton/Circle.vue'
 import SkeletonControl from '~/components/skeleton/Control.vue'
 import SkeletonList from '~/components/skeleton/List.vue'
 import SkeletonText from '~/components/skeleton/Text.vue'
+import { skeletonCountsStorageKey } from '~/stores/skeleton-counts'
 import { lazyComponent } from '~/utils/lazy-component'
 import type { StatTileProps } from '~~/types/skeleton'
 import { mountInApp } from '../app'
@@ -288,5 +289,40 @@ describe('lazyComponent (ADR 0036)', () => {
     await expect(lazy.load()).rejects.toThrow('offline')
     await expect(lazy.load()).resolves.toBe(Loaded)
     expect(loader).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('skeleton row counts (CHG-48)', () => {
+  afterEach(() => {
+    useSkeletonCountsStore().forget()
+  })
+
+  it('falls back to three rows, then keeps the last count between 1 and 20', () => {
+    const store = useSkeletonCountsStore()
+
+    expect(store.rowsOf('operations', [skeletonRowCount])).toEqual([3])
+    store.remember('operations', [7])
+    expect(store.rowsOf('operations', [skeletonRowCount])).toEqual([7])
+    store.remember('operations', [0])
+    expect(store.rowsOf('operations', [skeletonRowCount])).toEqual([1])
+    store.remember('operations', [50])
+    expect(store.rowsOf('operations', [skeletonRowCount])).toEqual([20])
+    store.remember('accounts', [])
+    expect(store.rowsOf('accounts', [3, 3])).toEqual([1])
+  })
+
+  it('keeps the counts for the tab and forgets them on logout', () => {
+    const store = useSkeletonCountsStore()
+
+    store.remember('rules', [4])
+    expect(
+      JSON.parse(
+        window.sessionStorage.getItem(skeletonCountsStorageKey) ?? '{}',
+      ),
+    ).toEqual({ rules: [4] })
+    useSessionStore().clear()
+
+    expect(store.rowsOf('rules', [skeletonRowCount])).toEqual([3])
+    expect(window.sessionStorage.getItem(skeletonCountsStorageKey)).toBeNull()
   })
 })
