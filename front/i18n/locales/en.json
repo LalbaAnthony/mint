@@ -925,7 +925,6 @@
       "selectOperation": "Select {label}",
       "title": "Reapply the rules",
       "description": "Changes that the active rules would bring to the selected operations. Uncheck the ones to leave as they are.",
-      "loading": "Computing the preview...",
       "noChange": "No selected operation changes.",
       "changes": "Proposed changes",
       "keep": "Apply the change to {label}",

@@ -925,7 +925,6 @@
       "selectOperation": "Sélectionner {label}",
       "title": "Réappliquer les règles",
       "description": "Changements que les règles actives apporteraient aux opérations sélectionnées. Décochez celles à laisser telles quelles.",
-      "loading": "Calcul de l'aperçu...",
       "noChange": "Aucune opération sélectionnée ne change.",
       "changes": "Changements proposés",
       "keep": "Appliquer le changement à {label}",
