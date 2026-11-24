@@ -11,6 +11,7 @@ import {
   episodeDecision,
   lowBalanceWindows,
   notificationLink,
+  upcomingManualPayments,
 } from './notifications.js'
 
 const current = '00000000-0000-4000-8000-000000000001'
@@ -140,6 +141,56 @@ describe('manual reminders (NOTIF-02, US-14)', () => {
     ).toEqual([])
     expect(
       dueReminders([{ ...occurrence, status: 'executed' }], 2, '2026-12-08'),
+    ).toEqual([])
+  })
+})
+
+describe('upcoming manual payments (DSH-04, NOTIF-02)', () => {
+  const occurrence = {
+    scheduleId: 'transfer',
+    originalDate: '2026-12-10',
+    effectiveDate: '2026-12-10',
+    amountCents: 10_000,
+    status: 'pending' as const,
+    matched: false,
+  }
+
+  it('keeps the occurrences from today to the reminder delay of their schedule', () => {
+    expect(upcomingManualPayments([occurrence], 2, '2026-12-08')).toEqual([
+      occurrence,
+    ])
+    expect(upcomingManualPayments([occurrence], 2, '2026-12-07')).toEqual([])
+    expect(upcomingManualPayments([occurrence], 3, '2026-12-07')).toEqual([
+      occurrence,
+    ])
+    expect(upcomingManualPayments([occurrence], 2, '2026-12-11')).toEqual([])
+  })
+
+  it('keeps the occurrence of the day whatever its state, unless skipped', () => {
+    const executed = { ...occurrence, status: 'executed' as const }
+    expect(upcomingManualPayments([executed], 0, '2026-12-10')).toEqual([
+      executed,
+    ])
+    expect(
+      upcomingManualPayments(
+        [{ ...occurrence, status: 'skipped' }],
+        0,
+        '2026-12-10',
+      ),
+    ).toEqual([])
+  })
+
+  it('leaves out a skipped, executed or already paid occurrence before its day', () => {
+    expect(
+      upcomingManualPayments(
+        [
+          { ...occurrence, status: 'skipped' },
+          { ...occurrence, status: 'executed' },
+          { ...occurrence, matched: true },
+        ],
+        2,
+        '2026-12-08',
+      ),
     ).toEqual([])
   })
 })

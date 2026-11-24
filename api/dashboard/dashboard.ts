@@ -6,6 +6,7 @@ import {
   monthStart,
 } from '@mint/shared/engines/dates'
 import { computeForecast } from '@mint/shared/engines/forecast'
+import { upcomingManualPayments } from '@mint/shared/engines/notifications'
 import {
   forecastMonthlyIncomeExpenses,
   monthlyIncomeExpenses,
@@ -16,6 +17,7 @@ import type {
   BreakdownQuery,
   BreakdownResponse,
   DashboardSummary,
+  ManualPayment,
   MonthlyReport,
   MonthlyReportResponse,
 } from '@mint/shared/types/dashboard'
@@ -25,9 +27,8 @@ import {
   loadCategoryInputs,
   toOperationInput,
 } from '../planning/inputs.js'
-import { loadInvestmentSummaries } from '../accounts/investments.js'
+import { loadManualOccurrences } from '../planning/manual.js'
 import { capAlertsOf, loadCapForecast } from '../accounts/caps.js'
-import { loadAccountBalances } from '../planning/usage.js'
 import type { UserModel } from '../types/models.js'
 import type { DataAccess } from '../types/planning.js'
 
@@ -149,6 +150,32 @@ export async function monthlyReport(
   }
 }
 
+async function upcomingManualPaymentsOf(
+  data: DataAccess,
+  userId: string,
+  today: string,
+): Promise<ManualPayment[]> {
+  const manual = await loadManualOccurrences(
+    data,
+    userId,
+    await loadAccountInputs(data, userId),
+    today,
+  )
+  return manual
+    .flatMap(({ schedule, accountId, occurrences }) =>
+      upcomingManualPayments(
+        occurrences,
+        schedule.reminderDaysBefore,
+        today,
+      ).map((occurrence) => ({ accountId, date: occurrence.effectiveDate })),
+    )
+    .sort(
+      (first, second) =>
+        first.date.localeCompare(second.date) ||
+        first.accountId.localeCompare(second.accountId),
+    )
+}
+
 export async function dashboardSummary(
   data: DataAccess,
   userId: string,
@@ -158,20 +185,6 @@ export async function dashboardSummary(
   const accounts = await data.models.Account.findAll({
     where: { userId, archivedAt: null },
   })
-  const balances = await loadAccountBalances(data, userId, today)
-  const investments = await loadInvestmentSummaries(
-    data,
-    userId,
-    accounts,
-    today,
-  )
-  const wealthCents = accounts.reduce(
-    (total, account) =>
-      total +
-      (investments.get(account.id)?.referenceBalanceCents ??
-        account.initialBalanceCents + (balances.get(account.id) ?? 0)),
-    0,
-  )
   const alerts: BalanceAlert[] = []
   if (accounts.some((account) => account.lowBalanceThresholdCents !== null)) {
     const forecastData = await loadForecastData(data, userId)
@@ -207,12 +220,14 @@ export async function dashboardSummary(
     order: [['createdAt', 'DESC']],
   })
   const pendingIds = pending.map((batch) => batch.id)
+  const manualPayments = await upcomingManualPaymentsOf(data, userId, today)
   return {
-    wealthCents,
     alerts,
     capAlerts: capAlertsOf(
       await loadCapForecast(data, userId, today, horizonMonths),
     ),
+    manualPaymentsCount: manualPayments.length,
+    nextManualPayment: manualPayments[0] ?? null,
     toCategorizeCount: await data.models.Transaction.count({
       where: { userId, status: 'to_categorize' },
     }),

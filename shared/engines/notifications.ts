@@ -95,6 +95,26 @@ export function dueReminders(
   })
 }
 
+export function upcomingManualPayments(
+  occurrences: readonly ReminderOccurrence[],
+  reminderDaysBefore: number,
+  today: string,
+): ReminderOccurrence[] {
+  const windowEnd = addDays(today, reminderDaysBefore)
+  return occurrences.filter((occurrence) => {
+    if (
+      occurrence.matched ||
+      occurrence.effectiveDate < today ||
+      occurrence.effectiveDate > windowEnd
+    ) {
+      return false
+    }
+    return occurrence.effectiveDate === today
+      ? occurrence.status !== 'skipped'
+      : occurrence.status === 'pending'
+  })
+}
+
 function calendarLink(accountId: string, day: string): string {
   return `/calendar?account=${encodeURIComponent(accountId)}&day=${encodeURIComponent(day)}`
 }

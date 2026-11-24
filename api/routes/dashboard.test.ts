@@ -153,7 +153,7 @@ describe('DSH-03 incomes and expenses per month', () => {
 })
 
 describe('DSH-04 dashboard banner', () => {
-  it('gives the wealth, the accounts going below their threshold within 7 days and the counters', async () => {
+  it('gives the accounts going below their threshold within 7 days and the counters', async () => {
     const user = await client()
     const checking = await createAccount(user, {
       lowBalanceThresholdCents: 50_000,
@@ -177,7 +177,6 @@ describe('DSH-04 dashboard banner', () => {
     )
 
     expect(summary).toEqual({
-      wealthCents: 99_300,
       capAlerts: [],
       alerts: [
         {
@@ -187,9 +186,71 @@ describe('DSH-04 dashboard banner', () => {
           thresholdCents: 50_000,
         },
       ],
+      manualPaymentsCount: 0,
+      nextManualPayment: null,
       toCategorizeCount: 1,
       pendingProposalsCount: 0,
       pendingImportIds: [],
+    })
+  })
+
+  it('counts the manual payments due within the reminder delay of their schedule (NOTIF-02)', async () => {
+    const user = await client()
+    const checking = await createAccount(user)
+    const savings = await createSavingsAccount(user)
+    const closed = await createAccount(user, { name: 'Compte clos' })
+    const housing = await categoryId(user, 'Logement')
+    const manualExpense = (
+      accountId: string,
+      startDate: string,
+      reminderDaysBefore: number,
+    ) =>
+      createSchedule(user, {
+        ...expenseScheduleBody(accountId, housing, {
+          triggerMode: 'manual',
+          frequency: 'once',
+          startDate,
+        }),
+        reminderDaysBefore,
+      })
+    await manualExpense(checking, '2026-11-11', 0)
+    await manualExpense(checking, '2026-11-13', 2)
+    await manualExpense(checking, '2026-11-14', 2)
+    const skipped = await manualExpense(checking, '2026-11-12', 2)
+    await user.post(`/schedules/${skipped}/occurrences/2026-11-12/skip`)
+    await manualExpense(closed, '2026-11-12', 2)
+    await user.post(`/accounts/${closed}/archive`)
+    await createSchedule(user, {
+      ...expenseScheduleBody(checking, housing, { frequency: 'once' }),
+      startDate: '2026-11-12',
+    })
+    await createSchedule(user, {
+      kind: 'transfer',
+      label: 'Versement Livret',
+      amountCents: 10_000,
+      triggerMode: 'manual',
+      reminderDaysBefore: 10,
+      note: null,
+      active: true,
+      frequency: 'once',
+      interval: 1,
+      startDate: '2026-11-20',
+      anchorLastDay: false,
+      endDate: null,
+      maxOccurrences: null,
+      businessDayRule: 'exact',
+      sourceAccountId: savings,
+      targetAccountId: checking,
+    })
+
+    const summary = dashboardSummarySchema.parse(
+      (await user.get('/dashboard/summary')).body,
+    )
+
+    expect(summary.manualPaymentsCount).toBe(3)
+    expect(summary.nextManualPayment).toEqual({
+      accountId: checking,
+      date: '2026-11-11',
     })
   })
 })

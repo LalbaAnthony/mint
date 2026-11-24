@@ -11,6 +11,13 @@ const alertCount = computed(
   () => props.summary.alerts.length + props.summary.capAlerts.length,
 )
 
+const manualPaymentsLink = computed(() => {
+  const next = props.summary.nextManualPayment
+  return next === null
+    ? '/calendar'
+    : `/calendar?account=${next.accountId}&day=${next.date}`
+})
+
 const proposalsLink = computed(() => {
   const [latest] = props.summary.pendingImportIds
   return latest === undefined ? '/import' : `/import?batch=${latest}`
@@ -19,20 +26,6 @@ const proposalsLink = computed(() => {
 
 <template>
   <StatGrid :columns="4" data-testid="dashboard-banner">
-    <StatTile
-      :label="t('dashboard.wealth')"
-      :icon="icons.accounts"
-      emphasis="primary"
-    >
-      <template #default="{ valueClass }">
-        <MoneyAmount
-          :cents="summary.wealthCents"
-          concealable
-          :class="valueClass"
-          data-testid="dashboard-wealth"
-        />
-      </template>
-    </StatTile>
     <UCard data-testid="dashboard-alerts">
       <p class="flex items-center gap-2 text-sm font-medium text-muted">
         <UIcon :name="icons.belowThreshold" class="size-5 text-warning" />
@@ -78,6 +71,23 @@ const proposalsLink = computed(() => {
       <p v-else class="mt-2 text-sm text-muted">
         {{ t('dashboard.noAlert') }}
       </p>
+    </UCard>
+    <UCard>
+      <NuxtLink
+        :to="manualPaymentsLink"
+        class="flex items-center justify-between gap-2"
+        data-testid="dashboard-manual-payments"
+      >
+        <span class="flex items-center gap-2 text-sm font-medium text-muted">
+          <UIcon :name="icons.manualMode" class="size-5" />
+          {{ t('dashboard.manualPayments') }}
+        </span>
+        <span
+          class="rounded-full bg-accent-fill px-2 text-xs font-semibold text-accent-on-fill tabular-nums"
+        >
+          {{ summary.manualPaymentsCount }}
+        </span>
+      </NuxtLink>
     </UCard>
     <UCard>
       <NuxtLink

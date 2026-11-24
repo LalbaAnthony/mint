@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { accountOverviewSchema } from '@mint/shared/schemas/accounts'
-import { dashboardSummarySchema } from '@mint/shared/schemas/dashboard'
 import { balanceCurveResponseSchema } from '@mint/shared/schemas/forecast'
 import { valuationListResponseSchema } from '@mint/shared/schemas/valuations'
 import { createTestContext } from '../tests/context.js'
@@ -95,10 +94,6 @@ describe('US-16 investment follow-up (CPT-06)', () => {
     )
     expect(investments?.subtotalCents).toBe(253_000)
     expect(investments?.accounts[0]?.investment?.latentGainCents).toBe(33_000)
-    expect(
-      dashboardSummarySchema.parse((await user.get('/dashboard/summary')).body)
-        .wealthCents,
-    ).toBe(253_000 + 100_000 - 120_000)
   })
 
   it('uses the valuation as the balance of its day, the following past days and the start of the forecast', async () => {

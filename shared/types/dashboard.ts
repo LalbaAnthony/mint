@@ -5,6 +5,7 @@ import type {
   breakdownQuerySchema,
   breakdownResponseSchema,
   dashboardSummarySchema,
+  manualPaymentSchema,
   monthlyReportResponseSchema,
   monthlyReportSchema,
 } from '../schemas/dashboard.js'
@@ -22,3 +23,5 @@ export type BalanceAlert = z.infer<typeof balanceAlertSchema>
 export type DashboardSummary = z.infer<typeof dashboardSummarySchema>
 
 export type CapAlert = z.infer<typeof capAlertSchema>
+
+export type ManualPayment = z.infer<typeof manualPaymentSchema>

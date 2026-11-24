@@ -2904,7 +2904,6 @@
       "DashboardSummary": {
         "type": "object",
         "properties": {
-          "wealthCents": { "type": "integer" },
           "alerts": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/BalanceAlert" }
@@ -2913,6 +2912,8 @@
             "type": "array",
             "items": { "$ref": "#/components/schemas/CapAlert" }
           },
+          "manualPaymentsCount": { "type": "integer" },
+          "nextManualPayment": { "$ref": "#/components/schemas/ManualPayment" },
           "toCategorizeCount": { "type": "integer" },
           "pendingProposalsCount": { "type": "integer" },
           "pendingImportIds": {
@@ -2921,9 +2922,10 @@
           }
         },
         "required": [
-          "wealthCents",
           "alerts",
           "capAlerts",
+          "manualPaymentsCount",
+          "nextManualPayment",
           "toCategorizeCount",
           "pendingProposalsCount",
           "pendingImportIds"
@@ -2952,6 +2954,14 @@
           "excessCents": { "type": "integer" }
         },
         "required": ["accountId", "date", "excessCents"]
+      },
+      "ManualPayment": {
+        "type": ["object", "null"],
+        "properties": {
+          "accountId": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date" }
+        },
+        "required": ["accountId", "date"]
       },
       "BreakdownResponse": {
         "type": "object",
@@ -10087,7 +10097,7 @@
     },
     "/api/v1/dashboard/summary": {
       "get": {
-        "summary": "Total wealth of the active accounts, accounts whose forecast balance goes below their threshold within 7 days, operations to categorize and pending reconciliation proposals (DSH-04)",
+        "summary": "Accounts whose forecast balance goes below their threshold within 7 days, manual payments due within the reminder delay of their schedule, operations to categorize and pending reconciliation proposals (DSH-04)",
         "tags": ["dashboard"],
         "security": [{ "session": [] }],
         "responses": {

@@ -74,11 +74,19 @@ export const capAlertSchema = z
   })
   .meta({ id: 'CapAlert' })
 
+export const manualPaymentSchema = z
+  .object({
+    accountId: z.uuid(),
+    date: z.iso.date(),
+  })
+  .meta({ id: 'ManualPayment' })
+
 export const dashboardSummarySchema = z
   .object({
-    wealthCents: z.number().int(),
     alerts: z.array(balanceAlertSchema),
     capAlerts: z.array(capAlertSchema),
+    manualPaymentsCount: z.number().int(),
+    nextManualPayment: manualPaymentSchema.nullable(),
     toCategorizeCount: z.number().int(),
     pendingProposalsCount: z.number().int(),
     pendingImportIds: z.array(z.uuid()),

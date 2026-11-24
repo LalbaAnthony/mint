@@ -981,11 +981,11 @@
     "ignore": "Ignore"
   },
   "dashboard": {
-    "wealth": "Total wealth",
     "alerts": "No alert | {n} active alert | {n} active alerts",
     "belowFrom": "below the threshold on {date}",
     "capFrom": "exceeds its cap on {date}",
     "noAlert": "No account goes below its threshold in the next 7 days.",
+    "manualPayments": "Upcoming manual payments",
     "toCategorize": "Operations to categorize",
     "proposals": "Reconciliations to confirm",
     "breakdownTitle": "Spending breakdown",

@@ -981,11 +981,11 @@
     "ignore": "Ignorer"
   },
   "dashboard": {
-    "wealth": "Patrimoine total",
     "alerts": "Aucune alerte | {n} alerte active | {n} alertes actives",
     "belowFrom": "sous le seuil le {date}",
     "capFrom": "dépasse son plafond le {date}",
     "noAlert": "Aucun compte ne passe sous son seuil dans les 7 prochains jours.",
+    "manualPayments": "Paiements manuels à venir",
     "toCategorize": "Opérations à catégoriser",
     "proposals": "Rapprochements à confirmer",
     "breakdownTitle": "Répartition des dépenses",

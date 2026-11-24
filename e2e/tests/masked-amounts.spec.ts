@@ -14,18 +14,29 @@ test('DSH-05: masked mode from the header, kept on the device, cleared at logout
   await login(page, administratorEmail, administratorPassword)
   await expect(page).toHaveURL('/')
 
-  const wealth = page.getByTestId('dashboard-wealth')
+  await page.goto('/accounts')
+  await page.getByTestId('accounts-add').click()
+  const form = page.getByTestId('account-form')
+  await expect(form).toBeVisible()
+  await page
+    .getByTestId('account-name-input')
+    .fill(`Compte masqué ${Date.now()}`)
+  await page.getByTestId('account-initial-balance').fill('500')
+  await page.getByTestId('account-submit').click()
+  await expect(form).toBeHidden()
+
+  const total = page.getByTestId('accounts-total')
   const toggle = page.getByTestId('amount-mask-toggle')
-  await expect(wealth).toContainText('€')
+  await expect(total).toContainText('€')
   await expect(toggle).toHaveAttribute('aria-pressed', 'false')
 
   await toggle.click()
   await expect(toggle).toHaveAttribute('aria-pressed', 'true')
-  await expect(wealth).toContainText('****')
-  await expect(wealth).not.toContainText('€')
+  await expect(total).toContainText('****')
+  await expect(total).not.toContainText('€')
 
   await page.reload()
-  await expect(wealth).toContainText('****')
+  await expect(total).toContainText('****')
   await expect(toggle).toHaveAttribute('aria-pressed', 'true')
 
   for (const view of signedInViews) {
@@ -36,14 +47,14 @@ test('DSH-05: masked mode from the header, kept on the device, cleared at logout
     await expect(toggle).toBeVisible()
   }
 
-  await page.goto('/')
+  await page.goto('/accounts')
   const otherTab = await page.context().newPage()
-  await otherTab.goto('/')
-  await expect(otherTab.getByTestId('dashboard-wealth')).toContainText('****')
+  await otherTab.goto('/accounts')
+  await expect(otherTab.getByTestId('accounts-total')).toContainText('****')
   await otherTab.getByTestId('amount-mask-toggle').click()
-  await expect(wealth).toContainText('€')
+  await expect(total).toContainText('€')
   await otherTab.getByTestId('amount-mask-toggle').click()
-  await expect(wealth).toContainText('****')
+  await expect(total).toContainText('****')
   await otherTab.close()
 
   await page.getByTestId('sidebar-profile').click()
@@ -53,6 +64,7 @@ test('DSH-05: masked mode from the header, kept on the device, cleared at logout
   await login(page, administratorEmail, administratorPassword)
   await expect(page).toHaveURL('/')
   await expect(toggle).toHaveAttribute('aria-pressed', 'false')
-  await expect(wealth).toContainText('€')
+  await page.goto('/accounts')
+  await expect(total).toContainText('€')
   guard.assertClean()
 })

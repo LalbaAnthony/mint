@@ -369,7 +369,6 @@ function monthlyFixture(): MonthlyReportResponse {
 function dashboardHandlers() {
   return {
     'GET /dashboard/summary': () => ({
-      wealthCents: 1_900_000,
       alerts: [
         {
           accountId: ids.current,
@@ -381,6 +380,8 @@ function dashboardHandlers() {
       capAlerts: [
         { accountId: ids.livret, date: '2026-12-06', excessCents: 5_000 },
       ],
+      manualPaymentsCount: 2,
+      nextManualPayment: { accountId: ids.current, date: '2026-11-12' },
       toCategorizeCount: 3,
       pendingProposalsCount: 2,
       pendingImportIds: ['00000000-0000-4000-8000-0000000000aa'],
@@ -530,7 +531,38 @@ describe('monthly chart (DSH-03, CHG-75)', () => {
 })
 
 describe('dashboard banner (DSH-04, CHG-65)', () => {
-  it('shows the wealth, the alert and the coral counters', async () => {
+  it('opens the calendar without a day when no manual payment is due', async () => {
+    const handlers = dashboardHandlers()
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /forecast/curve?horizonMonths=3': () => curve(),
+      ...handlers,
+      'GET /dashboard/summary': () => ({
+        ...handlers['GET /dashboard/summary'](),
+        manualPaymentsCount: 0,
+        nextManualPayment: null,
+      }),
+    })
+
+    const wrapper = await mountInApp(DashboardPage, {
+      route: '/',
+      global: { stubs: { Echarts: true } },
+    })
+    mounted.push(wrapper)
+
+    await vi.waitFor(() => {
+      expect(
+        wrapper.find('[data-testid="dashboard-manual-payments"]').exists(),
+      ).toBe(true)
+    })
+    const manualPayments = wrapper.get(
+      '[data-testid="dashboard-manual-payments"]',
+    )
+    expect(manualPayments.text()).toContain('0')
+    expect(manualPayments.attributes('href')).toBe('/calendar')
+  })
+
+  it('shows the alert and the coral counters, without any wealth', async () => {
     installFakeApi(fetchMock, {
       ...referentialHandlers(),
       'GET /forecast/curve?horizonMonths=3': () => curve(),
@@ -548,14 +580,26 @@ describe('dashboard banner (DSH-04, CHG-65)', () => {
         true,
       )
     })
-    expect(wrapper.get('[data-testid="dashboard-wealth"]').text()).toBe(
-      euros(1_900_000),
-    )
+    const banner = wrapper.get('[data-testid="dashboard-banner"]')
+    expect(banner.text()).not.toContain('Patrimoine')
+    expect(banner.findAll(':scope > *').map((card) => card.text())).toEqual([
+      expect.stringContaining('alertes actives'),
+      expect.stringContaining('Paiements manuels à venir'),
+      expect.stringContaining('Opérations à catégoriser'),
+      expect.stringContaining('Rapprochements à confirmer'),
+    ])
     expect(wrapper.get('[data-testid="dashboard-alerts"]').text()).toContain(
       'Compte courant',
     )
     expect(wrapper.get('[data-testid="dashboard-cap-alert"]').text()).toContain(
       `dépasse le plafond de ${euros(5_000)}`,
+    )
+    const manualPayments = wrapper.get(
+      '[data-testid="dashboard-manual-payments"]',
+    )
+    expect(manualPayments.text()).toContain('2')
+    expect(manualPayments.attributes('href')).toBe(
+      `/calendar?account=${ids.current}&day=2026-11-12`,
     )
     expect(
       wrapper.get('[data-testid="dashboard-to-categorize"]').text(),
@@ -602,10 +646,9 @@ describe('masked dashboard (DSH-05, CHG-45)', () => {
       },
       { timeout: 10_000 },
     )
-    const wealth = wrapper.get('[data-testid="dashboard-wealth"]')
-    expect(wealth.attributes('data-masked')).toBe('true')
-    expect(wealth.text()).toContain('****')
-    expect(wealth.text()).not.toContain(euros(1_900_000))
+    expect(
+      wrapper.get('[data-testid="dashboard-manual-payments"]').text(),
+    ).toContain('2')
     const alerts = wrapper.get('[data-testid="dashboard-alerts"]')
     expect(alerts.text()).toContain('Compte courant')
     expect(alerts.text()).not.toContain(euros(15_000))
@@ -681,13 +724,13 @@ describe('dashboard loading skeletons (CHG-47 to CHG-49, ADR 0036)', () => {
     expect(zone?.textContent).toContain('Chargement...')
     expect(
       wrapper.get('[data-testid="dashboard-banner-skeleton"]').text(),
-    ).toContain('Patrimoine total')
+    ).toContain('Paiements manuels à venir')
 
     summary.resolve(dashboardHandlers()['GET /dashboard/summary']())
     await vi.waitFor(() => {
-      expect(wrapper.find('[data-testid="dashboard-wealth"]').exists()).toBe(
-        true,
-      )
+      expect(
+        wrapper.find('[data-testid="dashboard-manual-payments"]').exists(),
+      ).toBe(true)
     })
     expect(
       wrapper.find('[data-testid="dashboard-banner-skeleton"]').exists(),
@@ -766,7 +809,7 @@ describe('dashboard loading skeletons (CHG-47 to CHG-49, ADR 0036)', () => {
 
     await wrapper.get('[data-testid="load-error-retry"]').trigger('click')
     await vi.waitFor(() => {
-      expect(wrapper.find('[data-testid="dashboard-wealth"]').exists()).toBe(
+      expect(wrapper.find('[data-testid="dashboard-banner"]').exists()).toBe(
         true,
       )
     })
@@ -830,7 +873,7 @@ describe('dashboard loading skeletons (CHG-47 to CHG-49, ADR 0036)', () => {
     })
     expect(wrapper.find('[data-testid="forecast-account"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="breakdown-chart"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="dashboard-wealth"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="dashboard-banner"]').exists()).toBe(true)
 
     curveSix.resolve(curve())
     monthlySix.resolve(monthlyFixture())

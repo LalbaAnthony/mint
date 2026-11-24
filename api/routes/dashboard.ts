@@ -26,7 +26,7 @@ export const dashboardSummaryRoute = defineUserRoute({
   method: 'get',
   path: '/dashboard/summary',
   summary:
-    'Total wealth of the active accounts, accounts whose forecast balance goes below their threshold within 7 days, operations to categorize and pending reconciliation proposals (DSH-04)',
+    'Accounts whose forecast balance goes below their threshold within 7 days, manual payments due within the reminder delay of their schedule, operations to categorize and pending reconciliation proposals (DSH-04)',
   tag,
   body: noBody,
   params: noParams,
