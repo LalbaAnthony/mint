@@ -1,6 +1,14 @@
+import type { ReminderOccurrence } from '@mint/shared/types/notifications'
 import type { AppDependencies } from './app.js'
+import type { ScheduleModel } from './models.js'
 
 export type DataAccess = Pick<AppDependencies, 'sequelize' | 'models'>
+
+export type ManualScheduleOccurrences = {
+  schedule: ScheduleModel
+  accountId: string
+  occurrences: ReminderOccurrence[]
+}
 
 export type PostingReference = {
   id: string

@@ -1,7 +1,6 @@
-import { Op, QueryTypes } from 'sequelize'
+import { QueryTypes } from 'sequelize'
 import type { Transaction } from 'sequelize'
 import { calculatedBalanceCents } from '@mint/shared/engines/balances'
-import { addDays } from '@mint/shared/engines/dates'
 import { computeForecast } from '@mint/shared/engines/forecast'
 import { balanceExcludingInterest } from '@mint/shared/engines/interest'
 import {
@@ -9,19 +8,14 @@ import {
   episodeDecision,
   lowBalanceWindows,
 } from '@mint/shared/engines/notifications'
-import {
-  activeAccountsById,
-  postingStartDate,
-} from '@mint/shared/engines/postings'
-import { occurrencesBetween } from '@mint/shared/engines/recurrence'
 import { pushNotificationTypes } from '@mint/shared/schemas/notifications'
-import { maxReminderDaysBefore } from '@mint/shared/schemas/schedules'
 import type { AccountInput } from '@mint/shared/types/accounts'
 import type { Forecast } from '@mint/shared/types/forecast'
 import type { NotificationDraft } from '@mint/shared/types/notifications'
 import { parisDate } from '../clock.js'
 import { loadForecastData } from '../forecast/views.js'
-import { loadAccountInputs, loadScheduleInputs } from '../planning/inputs.js'
+import { loadAccountInputs } from '../planning/inputs.js'
+import { loadManualOccurrences } from '../planning/manual.js'
 import { insertedIdRowsSchema } from '../schemas/planning.js'
 import type { ForecastData } from '../types/forecast.js'
 import type { AlertEpisodeModel, UserModel } from '../types/models.js'
@@ -177,87 +171,15 @@ function capDrafts(
   return drafts
 }
 
-async function matchedOccurrences(
-  context: NotificationContext,
-  scheduleIds: readonly string[],
-  from: string,
-  to: string,
-): Promise<Set<string>> {
-  if (scheduleIds.length === 0) {
-    return new Set()
-  }
-  const executed = await context.models.ScheduleOccurrence.findAll({
-    attributes: ['id', 'scheduleId', 'originalDate'],
-    where: {
-      scheduleId: { [Op.in]: [...scheduleIds] },
-      state: 'executed',
-      originalDate: { [Op.between]: [addDays(from, -7), to] },
-    },
-  })
-  if (executed.length === 0) {
-    return new Set()
-  }
-  const paid = await context.models.Transaction.findAll({
-    attributes: ['occurrenceId'],
-    where: {
-      occurrenceId: { [Op.in]: executed.map((row) => row.id) },
-      origin: { [Op.ne]: 'schedule' },
-    },
-  })
-  const paidIds = new Set(
-    paid.flatMap((operation) => operation.occurrenceId ?? []),
-  )
-  return new Set(
-    executed
-      .filter((row) => paidIds.has(row.id))
-      .map((row) => `${row.scheduleId}|${row.originalDate}`),
-  )
-}
-
 async function reminderDrafts(
   context: NotificationContext,
   userId: string,
   accounts: readonly AccountInput[],
   today: string,
 ): Promise<NotificationDraft[]> {
-  const schedules = await context.models.Schedule.findAll({
-    where: { userId, triggerMode: 'manual', active: true, isSystem: false },
-  })
-  if (schedules.length === 0) {
-    return []
-  }
-  const inputs = await loadScheduleInputs(context, userId)
-  const activeAccounts = activeAccountsById(accounts)
-  const until = addDays(today, maxReminderDaysBefore)
-  const matched = await matchedOccurrences(
-    context,
-    schedules.map((schedule) => schedule.id),
-    today,
-    until,
-  )
-  return schedules.flatMap((schedule) => {
-    const input = inputs.find((candidate) => candidate.id === schedule.id)
-    if (
-      input === undefined ||
-      postingStartDate(input, activeAccounts) === null
-    ) {
-      return []
-    }
-    const accountId =
-      input.posting.kind === 'transfer'
-        ? input.posting.sourceAccountId
-        : input.posting.accountId
-    const occurrences = occurrencesBetween(input, today, until).map(
-      (occurrence) => ({
-        scheduleId: schedule.id,
-        originalDate: occurrence.originalDate,
-        effectiveDate: occurrence.effectiveDate,
-        amountCents: occurrence.amountCents,
-        status: occurrence.status,
-        matched: matched.has(`${schedule.id}|${occurrence.originalDate}`),
-      }),
-    )
-    return dueReminders(occurrences, schedule.reminderDaysBefore, today).map(
+  const manual = await loadManualOccurrences(context, userId, accounts, today)
+  return manual.flatMap(({ schedule, accountId, occurrences }) =>
+    dueReminders(occurrences, schedule.reminderDaysBefore, today).map(
       (reminder): NotificationDraft => ({
         type: 'manual_reminder',
         dedupKey: `manual_reminder:${reminder.scheduleId}:${reminder.originalDate}:${reminder.dueToday ? 'day' : 'before'}`,
@@ -272,8 +194,8 @@ async function reminderDrafts(
           dueToday: reminder.dueToday,
         },
       }),
-    )
-  })
+    ),
+  )
 }
 
 async function insertNotification(
