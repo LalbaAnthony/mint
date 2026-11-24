@@ -1,6 +1,6 @@
 # ADR 0017 · Import bancaire, règles, rapprochement et tableau de bord du lot 2
 
-Statut : acceptée · 15 novembre 2026 · Exigences : IMP-01 à IMP-08, REG-01 à REG-04, RAP-01 à RAP-08, CPT-05, CPT-08, EXE-05, OPE-05, OPE-07, CAT-07, DSH-02 à DSH-04, NF-PERF-03, NF-SEC-04, NF-QUA-04, US-05, US-09, US-17, US-18 · Amende la section 5.4 du cahier des charges
+Statut : acceptée, amendée le 24 novembre 2026 (patrimoine retiré du bandeau, paiements manuels à venir) · 15 novembre 2026 · Exigences : IMP-01 à IMP-08, REG-01 à REG-04, RAP-01 à RAP-08, CPT-05, CPT-08, EXE-05, OPE-05, OPE-07, CAT-07, DSH-02 à DSH-04, NF-PERF-03, NF-SEC-04, NF-QUA-04, US-05, US-09, US-17, US-18 · Amende la section 5.4 du cahier des charges
 
 ## Contexte
 
@@ -38,7 +38,7 @@ Tableau de bord :
 
 - DSH-02 : période du mois (navigation de mois en mois) ou personnalisée ; groupes puis catégories de premier niveau au clic, nuances de la palette du groupe dans l'ordre d'affichage, hachure au-delà de huit catégories ; écart défavorable (Needs ou Wants au-dessus de la cible, Save en dessous) en `text-warning`.
 - DSH-03 : les 11 mois précédents en réel, le mois en cours en réel à date complété par son reste prévu (occurrences, parts d'enveloppe et opérations futures déjà saisies), puis les mois de l'horizon en prévu ; la part prévue est hachurée et empilée sur la part réelle.
-- DSH-04 : patrimoine des comptes actifs, comptes dont le solde prévisionnel passe sous le seuil dans les 7 prochains jours, opérations à catégoriser (lien vers la liste filtrée) et propositions de rapprochement des lots d'import en attente (lien vers le dernier lot).
+- DSH-04 : comptes dont le solde prévisionnel passe sous le seuil dans les 7 prochains jours, paiements manuels à venir (lien vers le jour de la prochaine occurrence dans le calendrier), opérations à catégoriser (lien vers la liste filtrée) et propositions de rapprochement des lots d'import en attente (lien vers le dernier lot).
 
 ## Conséquences
 
