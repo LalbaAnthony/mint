@@ -501,6 +501,22 @@ describe('bank states and reconciliation (CHG-61, RAP-01, RAP-05, OPE-07)', () =
     })
   })
 
+  it('offers to create a rule from a manual operation without bank label (REG-03)', async () => {
+    const manual = operation()
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      [`GET /operations/${manual.id}/candidates`]: () => ({ candidates: [] }),
+    })
+    await openEditor(
+      () => useOperationEditorStore().edit(manual),
+      '[data-testid="operation-links"]',
+    )
+
+    expect(
+      findInBody('[data-testid="operation-create-rule"]')?.textContent?.trim(),
+    ).toBe('Créer une règle depuis ce libellé')
+  })
+
   it('sends the reconciliation filters in the list query', () => {
     expect(
       operationQuery(
@@ -539,7 +555,7 @@ describe('reapplying the rules to a selection (REG-05)', () => {
           },
         },
       ],
-      skipped: [{ operationId: ids.operation, reason: 'no_bank_label' }],
+      skipped: [{ operationId: ids.operation, reason: 'no_matching_rule' }],
     }
   }
 
@@ -621,7 +637,7 @@ describe('reapplying the rules to a selection (REG-05)', () => {
     expect(change?.textContent).toContain('Vacances')
     expect(
       findInBody('[data-testid="reapply-skipped"]')?.textContent?.trim(),
-    ).toBe('1 sans libellé bancaire')
+    ).toBe('1 sans règle satisfaite')
     expect(
       findInBody('[data-testid="reapply-confirm"]')?.textContent,
     ).toContain('Appliquer à 1 opération')

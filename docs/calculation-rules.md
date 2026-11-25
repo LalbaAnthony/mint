@@ -167,7 +167,7 @@ Clé de doublon (IMP-05) : date, montant, rang parmi les lignes identiques du m�
 
 ## 10. Règles et rapprochement
 
-Règles (REG-01, REG-02) : la première règle active satisfaite, dans l'ordre de priorité, s'applique ; elle donne sa catégorie ou son compte de transfert, et ses éventuels tags (ADR 0018). Une règle est satisfaite si son compte (facultatif) est celui de la ligne, son sens convient, la valeur absolue du montant est dans la plage, et le libellé bancaire contient le motif ou commence par lui (casse et accents ignorés), ou correspond à l'expression régulière (accents retirés, casse ignorée, moteur RE2).
+Règles (REG-01, REG-02) : la première règle active satisfaite, dans l'ordre de priorité, s'applique ; elle donne sa catégorie ou son compte de transfert, et ses éventuels tags (ADR 0018). Une règle est satisfaite si son compte (facultatif) est celui de la ligne, son sens convient, la valeur absolue du montant est dans la plage, et le libellé bancaire, à défaut le libellé (ADR 0037), contient le motif ou commence par lui (casse et accents ignorés), ou correspond à l'expression régulière (accents retirés, casse ignorée, moteur RE2).
 
 Occurrences candidates d'une ligne ou d'une opération (RAP-01) : même compte, même sens, date effective à ±5 jours, écart de montant au plus égal à la tolérance de l'échéance (pourcentage du montant de l'occurrence, arrondi au centime inférieur), occurrence ni sautée ni déjà rapprochée d'une ligne bancaire, postérieure à la borne basse de la section 4. Score (RAP-02) :
 

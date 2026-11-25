@@ -29,6 +29,7 @@ import {
   validateOperationReferences,
   validateTransferAccounts,
 } from '../operations/operations.js'
+import { applyRulesToManualOperation } from '../rules/manual.js'
 import { errorResponse, noBody, noParams } from '../schemas/http.js'
 import { operationTagIds, replaceOperationTags } from '../tags/tags.js'
 import { capWarnings } from '../accounts/caps.js'
@@ -97,7 +98,7 @@ export const createOperationRoute = defineUserRoute({
   method: 'post',
   path: '/operations',
   summary:
-    'Record an expense or an income on an account, optionally through one of its payment methods (OPE-01)',
+    'Record an expense or an income on an account, optionally through one of its payment methods (OPE-01); the first matching rule gives its category or transfer when none is entered, and its tags when none are entered (REG-05)',
   tag,
   body: createOperationRequestSchema,
   params: noParams,
@@ -114,32 +115,47 @@ export const createOperationRoute = defineUserRoute({
     409: referenceConflicts,
   },
   handle: async ({ app, user, body }) => {
-    const row = await app.sequelize.transaction(async (transaction) => {
-      await validateOperationReferences(app, user.id, body, null, transaction)
-      const { tagIds, ...columns } = body
-      const created = await app.models.Transaction.create(
-        {
-          ...columns,
-          userId: user.id,
-          status: statusFor(body.categoryId),
-          origin: 'manual',
-        },
-        { transaction },
-      )
-      await replaceOperationTags(
-        app,
-        user.id,
-        [created.id],
-        tagIds,
-        transaction,
-      )
-      return created
-    })
+    const { row, counterpart } = await app.sequelize.transaction(
+      async (transaction) => {
+        await validateOperationReferences(app, user.id, body, null, transaction)
+        const { tagIds, ...columns } = body
+        const created = await app.models.Transaction.create(
+          {
+            ...columns,
+            userId: user.id,
+            status: statusFor(body.categoryId),
+            origin: 'manual',
+          },
+          { transaction },
+        )
+        await replaceOperationTags(
+          app,
+          user.id,
+          [created.id],
+          tagIds,
+          transaction,
+        )
+        return {
+          row: created,
+          counterpart: await applyRulesToManualOperation(
+            app,
+            user.id,
+            created,
+            tagIds,
+            transaction,
+          ),
+        }
+      },
+    )
     return {
       status: 201,
       body: {
         ...(await toOperation(app, row)),
-        capWarnings: await warningsFor(app, user.id, [row]),
+        capWarnings: await warningsFor(
+          app,
+          user.id,
+          counterpart === null ? [row] : [row, counterpart],
+        ),
       },
     }
   },

@@ -480,7 +480,6 @@
     "operations_before_initial_balance": "Des opérations sont datées avant cette nouvelle date de solde initial.",
     "occurrence_not_editable": "Cette occurrence ne peut plus être modifiée.",
     "operation_is_transfer": "Ce mouvement appartient à un transfert : modifiez le transfert.",
-    "operation_without_bank_label": "Cette opération n'a pas de libellé bancaire.",
     "statement_exists": "Un relevé existe déjà à cette date.",
     "statement_balanced": "Ce relevé n'a pas d'écart à corriger.",
     "valuation_exists": "Une valorisation existe déjà à cette date.",
@@ -893,7 +892,7 @@
     "deleteTitle": "Supprimer la règle",
     "deleteEffect": "La règle sera supprimée ; les opérations déjà classées gardent leur catégorie.",
     "emptyTitle": "Aucune règle",
-    "emptyText": "Classez automatiquement les libellés bancaires connus à l'import.",
+    "emptyText": "Classez automatiquement vos opérations à l'import et à la saisie.",
     "priorityHelp": "Seule la première règle satisfaite s'applique, dans cet ordre.",
     "inactive": "Inactive",
     "activate": "Activer",
@@ -939,7 +938,6 @@
       "applied": "{n} opération reclassée. | {n} opérations reclassées.",
       "outdated": "Les règles ou les opérations ont changé : l'aperçu a été recalculé.",
       "skipped": {
-        "no_bank_label": "{n} sans libellé bancaire",
         "no_matching_rule": "{n} sans règle satisfaite",
         "unchanged": "{n} déjà conforme | {n} déjà conformes",
         "too_many_tags": "{n} dépasserait 20 tags | {n} dépasseraient 20 tags",
@@ -952,7 +950,7 @@
     },
     "fields": {
       "matchType": "Condition",
-      "pattern": "Libellé bancaire",
+      "pattern": "Libellé",
       "account": "Compte",
       "sign": "Sens",
       "amountMin": "Montant minimal",

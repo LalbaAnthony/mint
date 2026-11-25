@@ -250,7 +250,7 @@ const skeletonRows = useRememberedCount(
         />
       </OfflineGuard>
     </div>
-    <OfflineGuard v-if="operation.bankLabel !== null" v-slot="{ offline }">
+    <OfflineGuard v-slot="{ offline }">
       <UButton
         :disabled="offline"
         :label="t('reconciliation.createRule')"

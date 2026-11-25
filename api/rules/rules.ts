@@ -190,16 +190,17 @@ export async function loadRuleInputs(
   return rules.map(toRule)
 }
 
+export function ruleLabelOf(operation: TransactionModel): string {
+  return operation.bankLabel ?? operation.label
+}
+
 export function suggestRule(
   operation: TransactionModel,
   tagIds: string[],
 ): RuleSuggestion {
-  if (operation.bankLabel === null) {
-    throw conflict('operation_without_bank_label')
-  }
   return {
     matchType: 'contains',
-    pattern: rulePatternFromBankLabel(operation.bankLabel),
+    pattern: rulePatternFromBankLabel(ruleLabelOf(operation)),
     accountId: null,
     sign: operation.amountCents < 0 ? 'debit' : 'credit',
     categoryId:

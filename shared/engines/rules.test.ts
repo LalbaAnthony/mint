@@ -24,7 +24,7 @@ const neverRegex = () => false
 const subject = {
   accountId: 'current',
   amountCents: -1_199,
-  bankLabel: 'PRLV SEPA DEEZER 06/12',
+  label: 'PRLV SEPA DEEZER 06/12',
 }
 
 describe('categorization rules (REG-01, REG-02, US-18)', () => {
@@ -35,16 +35,12 @@ describe('categorization rules (REG-01, REG-02, US-18)', () => {
     expect(
       ruleMatches(
         rule({ pattern: 'crêperie' }),
-        { ...subject, bankLabel: 'CB CREPERIE' },
+        { ...subject, label: 'CB CREPERIE' },
         neverRegex,
       ),
     ).toBe(true)
     expect(
-      ruleMatches(
-        rule(),
-        { ...subject, bankLabel: 'CB BOULANGERIE' },
-        neverRegex,
-      ),
+      ruleMatches(rule(), { ...subject, label: 'CB BOULANGERIE' }, neverRegex),
     ).toBe(false)
   })
 
@@ -75,7 +71,7 @@ describe('categorization rules (REG-01, REG-02, US-18)', () => {
     expect(
       ruleMatches(
         rule({ matchType: 'regex', pattern: '^PRLV.*Électricité' }),
-        { ...subject, bankLabel: 'PRLV ÉLECTRICITÉ' },
+        { ...subject, label: 'PRLV ÉLECTRICITÉ' },
         matcher,
       ),
     ).toBe(true)

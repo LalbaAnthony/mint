@@ -41,7 +41,6 @@ export const apiErrorCodes = [
   'operations_before_initial_balance',
   'occurrence_not_editable',
   'operation_is_transfer',
-  'operation_without_bank_label',
   'statement_exists',
   'statement_balanced',
   'account_not_investment',

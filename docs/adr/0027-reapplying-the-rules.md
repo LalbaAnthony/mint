@@ -1,6 +1,6 @@
 # ADR 0027 · Réappliquer les règles à une sélection d'opérations
 
-Statut : acceptée · 16 novembre 2026 · Exigences : REG-01, REG-02, REG-04, REG-05, OPE-07, CAT-09, RAP-03 · Complète les ADR 0017 et 0018
+Statut : acceptée, amendée le 25 novembre 2026 par l'ADR 0037 (libellé lu à défaut de libellé bancaire, motif `no_bank_label` retiré) · 16 novembre 2026 · Exigences : REG-01, REG-02, REG-04, REG-05, OPE-07, CAT-09, RAP-03 · Complète les ADR 0017 et 0018
 
 ## Contexte
 

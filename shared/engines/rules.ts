@@ -3,17 +3,17 @@ import { foldForMatching, stripAccents } from './labels.js'
 
 function matchesLabel(
   rule: RuleInput,
-  bankLabel: string,
+  label: string,
   matchesRegex: RegexMatcher,
 ): boolean {
   if (rule.matchType === 'regex') {
-    return matchesRegex(stripAccents(rule.pattern), stripAccents(bankLabel))
+    return matchesRegex(stripAccents(rule.pattern), stripAccents(label))
   }
-  const label = foldForMatching(bankLabel)
+  const folded = foldForMatching(label)
   const pattern = foldForMatching(rule.pattern)
   return rule.matchType === 'contains'
-    ? label.includes(pattern)
-    : label.startsWith(pattern)
+    ? folded.includes(pattern)
+    : folded.startsWith(pattern)
 }
 
 export function ruleMatches(
@@ -40,7 +40,7 @@ export function ruleMatches(
   if (rule.amountMaxCents !== null && magnitude > rule.amountMaxCents) {
     return false
   }
-  return matchesLabel(rule, subject.bankLabel, matchesRegex)
+  return matchesLabel(rule, subject.label, matchesRegex)
 }
 
 export function firstMatchingRule(

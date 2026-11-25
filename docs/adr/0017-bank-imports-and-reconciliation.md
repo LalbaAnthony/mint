@@ -1,6 +1,6 @@
 # ADR 0017 · Import bancaire, règles, rapprochement et tableau de bord du lot 2
 
-Statut : acceptée, amendée le 24 novembre 2026 (patrimoine retiré du bandeau, paiements manuels à venir) · 15 novembre 2026 · Exigences : IMP-01 à IMP-08, REG-01 à REG-04, RAP-01 à RAP-08, CPT-05, CPT-08, EXE-05, OPE-05, OPE-07, CAT-07, DSH-02 à DSH-04, NF-PERF-03, NF-SEC-04, NF-QUA-04, US-05, US-09, US-17, US-18 · Amende la section 5.4 du cahier des charges
+Statut : acceptée, amendée le 24 novembre 2026 (patrimoine retiré du bandeau, paiements manuels à venir) et le 25 novembre 2026 par l'ADR 0037 (règles lues sur le libellé à défaut de libellé bancaire et appliquées à la saisie manuelle, création rapide depuis toute opération) · 15 novembre 2026 · Exigences : IMP-01 à IMP-08, REG-01 à REG-04, RAP-01 à RAP-08, CPT-05, CPT-08, EXE-05, OPE-05, OPE-07, CAT-07, DSH-02 à DSH-04, NF-PERF-03, NF-SEC-04, NF-QUA-04, US-05, US-09, US-17, US-18 · Amende la section 5.4 du cahier des charges
 
 ## Contexte
 

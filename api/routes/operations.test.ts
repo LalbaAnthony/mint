@@ -1,6 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { accountOverviewSchema } from '@mint/shared/schemas/accounts'
-import { operationListResponseSchema } from '@mint/shared/schemas/operations'
+import {
+  operationListResponseSchema,
+  operationSaveResponseSchema,
+} from '@mint/shared/schemas/operations'
+import type { CreateOperationRequest } from '@mint/shared/types/operations'
+import type { CreateRuleRequest } from '@mint/shared/types/rules'
 import { createTestContext } from '../tests/context.js'
 import {
   categoryId,
@@ -10,6 +15,7 @@ import {
   createSavingsAccount,
   createSubcategory,
   operationBody,
+  readId,
   signedInClient,
   transferBody,
 } from '../tests/fixtures.js'
@@ -442,5 +448,207 @@ describe('OPE-05 list, sort, search and filter', () => {
 
     expect(response.status).toBe(400)
     expect(response.body.error).toBe('validation_failed')
+  })
+})
+
+describe('REG-05 rules applied to a manual entry (ADR 0037)', () => {
+  async function createTag(user: TestClient, name: string): Promise<string> {
+    const response = await user.post('/tags', { name })
+    expect(response.status).toBe(201)
+    return readId(response.body)
+  }
+
+  async function createRule(
+    user: TestClient,
+    overrides: Partial<CreateRuleRequest>,
+  ): Promise<void> {
+    const response = await user.post('/rules', {
+      matchType: 'contains',
+      pattern: 'SNCF',
+      accountId: null,
+      sign: 'any',
+      amountMinCents: null,
+      amountMaxCents: null,
+      categoryId: null,
+      transferAccountId: null,
+      tagIds: [],
+      active: true,
+      ...overrides,
+    })
+    expect(response.status).toBe(201)
+  }
+
+  async function record(
+    user: TestClient,
+    accountId: string,
+    overrides: Partial<CreateOperationRequest>,
+  ) {
+    const response = await user.post(
+      '/operations',
+      operationBody(accountId, overrides),
+    )
+    expect(response.status).toBe(201)
+    return operationSaveResponseSchema.parse(response.body)
+  }
+
+  it('gives the category and the tags of the first active matching rule, read on the label', async () => {
+    const user = await client()
+    const accountId = await createAccount(user)
+    const transports = await categoryId(user, 'Transports')
+    const leisure = await categoryId(user, 'Loisirs')
+    const train = await createTag(user, 'Train')
+    await createRule(user, {
+      pattern: 'billet',
+      categoryId: leisure,
+      active: false,
+    })
+    await createRule(user, {
+      pattern: 'sncf',
+      categoryId: transports,
+      tagIds: [train],
+    })
+    await createRule(user, { pattern: 'BILLET', categoryId: leisure })
+
+    const matched = await record(user, accountId, { label: 'Billet SNCF' })
+    const unmatched = await record(user, accountId, { label: 'Boulangerie' })
+
+    expect(matched).toMatchObject({
+      categoryId: transports,
+      status: 'categorized',
+      tagIds: [train],
+      transferGroupId: null,
+      bankLabel: null,
+      origin: 'manual',
+    })
+    expect(unmatched).toMatchObject({
+      categoryId: null,
+      status: 'to_categorize',
+      tagIds: [],
+    })
+  })
+
+  it('applies the category only without entered category and the tags only without entered tag, independently', async () => {
+    const user = await client()
+    const accountId = await createAccount(user)
+    const transports = await categoryId(user, 'Transports')
+    const groceries = await categoryId(user, 'Courses')
+    const train = await createTag(user, 'Train')
+    const work = await createTag(user, 'Travail')
+    await createRule(user, { categoryId: transports, tagIds: [train] })
+
+    const categorized = await record(user, accountId, {
+      label: 'SNCF',
+      categoryId: groceries,
+    })
+    const tagged = await record(user, accountId, {
+      label: 'SNCF',
+      tagIds: [work],
+    })
+    const both = await record(user, accountId, {
+      label: 'SNCF',
+      categoryId: groceries,
+      tagIds: [work],
+    })
+
+    expect(categorized).toMatchObject({
+      categoryId: groceries,
+      tagIds: [train],
+    })
+    expect(tagged).toMatchObject({
+      categoryId: transports,
+      status: 'categorized',
+      tagIds: [work],
+    })
+    expect(both).toMatchObject({ categoryId: groceries, tagIds: [work] })
+  })
+
+  it('converts the entry into a transfer linked to the opposite operation of the counterpart account, or with a created counterpart (OPE-07)', async () => {
+    const user = await client()
+    const checking = await createAccount(user)
+    const livret = await createSavingsAccount(user)
+    const saving = await createTag(user, 'Epargne')
+    const deposit = await createTag(user, 'Versement')
+    await createRule(user, {
+      pattern: 'VIR LIVRET',
+      transferAccountId: livret,
+      tagIds: [saving],
+    })
+    const opposite = await record(user, livret, {
+      label: 'Versement',
+      date: '2026-11-07',
+      amountCents: 10_000,
+      tagIds: [deposit],
+    })
+
+    const linked = await record(user, checking, {
+      label: 'VIR LIVRET A',
+      date: '2026-11-06',
+      amountCents: -10_000,
+    })
+    const created = await record(user, checking, {
+      label: 'VIR LIVRET A',
+      date: '2026-11-08',
+      amountCents: -2_500_000,
+    })
+
+    expect(linked).toMatchObject({
+      categoryId: null,
+      status: 'categorized',
+      counterpartAccountId: livret,
+      tagIds: [saving, deposit].sort(),
+    })
+    const operations = await list(user, '?pageSize=100')
+    expect(
+      operations.items.find((item) => item.id === opposite.id),
+    ).toMatchObject({
+      transferGroupId: linked.transferGroupId,
+      tagIds: [saving, deposit].sort(),
+    })
+    expect(created).toMatchObject({
+      counterpartAccountId: livret,
+      tagIds: [saving],
+    })
+    expect(created.capWarnings).toEqual([
+      expect.objectContaining({ accountId: livret, date: '2026-11-08' }),
+    ])
+    expect(
+      operations.items.filter(
+        (item) => item.transferGroupId === created.transferGroupId,
+      ),
+    ).toHaveLength(2)
+  })
+
+  it('leaves the entry to categorize when the rule cannot classify it, and still adds its tags', async () => {
+    const user = await client()
+    const checking = await createAccount(user)
+    const leisure = await categoryId(user, 'Loisirs')
+    const internal = await createTag(user, 'Interne')
+    const archived = await createTag(user, 'Archivee')
+    await createRule(user, {
+      pattern: 'VIR',
+      transferAccountId: checking,
+      tagIds: [internal],
+    })
+    await createRule(user, {
+      pattern: 'CINEMA',
+      categoryId: leisure,
+      tagIds: [archived],
+    })
+    expect((await user.post(`/categories/${leisure}/archive`)).status).toBe(200)
+
+    const toItself = await record(user, checking, { label: 'VIR INTERNE' })
+    const toArchived = await record(user, checking, { label: 'Cinema' })
+
+    expect(toItself).toMatchObject({
+      categoryId: null,
+      status: 'to_categorize',
+      transferGroupId: null,
+      tagIds: [internal],
+    })
+    expect(toArchived).toMatchObject({
+      categoryId: null,
+      status: 'to_categorize',
+      tagIds: [archived],
+    })
   })
 })

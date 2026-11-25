@@ -276,7 +276,7 @@ export async function previewBatch(
       {
         accountId: account.id,
         amountCents: line.amountCents,
-        bankLabel: line.bankLabel,
+        label: line.bankLabel,
       },
       matcher,
     )

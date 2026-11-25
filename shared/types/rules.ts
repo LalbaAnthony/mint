@@ -49,7 +49,7 @@ export type RuleInput = Pick<
 export type RuleSubject = {
   accountId: string
   amountCents: number
-  bankLabel: string
+  label: string
 }
 
 export type RegexMatcher = (pattern: string, text: string) => boolean

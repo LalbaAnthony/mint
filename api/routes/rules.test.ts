@@ -9,12 +9,14 @@ import {
 } from '@mint/shared/schemas/rules'
 import type { CreateOperationRequest } from '@mint/shared/types/operations'
 import type { CreateRuleRequest } from '@mint/shared/types/rules'
+import { executeDueOccurrences } from '../execution/execute.js'
 import { createTestContext } from '../tests/context.js'
 import {
   categoryId,
   createAccount,
   createOperation,
   createSavingsAccount,
+  expenseScheduleBody,
   readId,
   signedInClient,
   transferBody,
@@ -225,15 +227,27 @@ describe('REG-01, REG-02 categorization rules', () => {
 })
 
 describe('REG-03 rule suggested from an operation', () => {
-  it('needs an operation with a bank label', async () => {
+  it('falls back on the label of an operation without bank label', async () => {
     const user = await client()
     const checking = await createAccount(user)
-    const manual = await createOperation(user, checking)
+    const transports = await categoryId(user, 'Transports')
+    const manual = await createOperation(user, checking, {
+      label: 'Pass Navigo 05/11',
+      categoryId: transports,
+    })
 
     const response = await user.get(`/rules/suggestion?operationId=${manual}`)
 
-    expect(response.status).toBe(409)
-    expect(response.body).toEqual({ error: 'operation_without_bank_label' })
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual({
+      matchType: 'contains',
+      pattern: 'PASS NAVIGO',
+      accountId: null,
+      sign: 'debit',
+      categoryId: transports,
+      transferAccountId: null,
+      tagIds: [],
+    })
   })
 
   it('removes digits and dates from the bank label and keeps the category and the sign', async () => {
@@ -356,7 +370,7 @@ describe('REG-05 reapplying the rules to selected operations', () => {
     ])
     expect(previewed.skipped).toEqual([
       { operationId: unmatched, reason: 'no_matching_rule' },
-      { operationId: manual, reason: 'no_bank_label' },
+      { operationId: manual, reason: 'no_matching_rule' },
       { operationId: alreadyFiled, reason: 'unchanged' },
     ])
     expect((await operation(user, misfiled)).categoryId).toBe(groceries)
@@ -460,6 +474,92 @@ describe('REG-05 reapplying the rules to selected operations', () => {
       categoryId: null,
       counterpartAccountId: livret,
       tagIds: [savingTag],
+    })
+  })
+
+  it('evaluates an operation without bank label on its label, and only adds tags to a generated one (ADR 0037)', async () => {
+    const user = await client()
+    const checking = await createAccount(user)
+    const housing = await categoryId(user, 'Logement')
+    const transports = await categoryId(user, 'Transports')
+    const train = await createTag(user, 'Train')
+    const manual = await createOperation(user, checking, { label: 'SNCF' })
+    const scheduled = await user.post(
+      '/schedules',
+      expenseScheduleBody(checking, housing, { startDate: '2026-11-20' }),
+    )
+    expect(scheduled.status).toBe(201)
+    await executeDueOccurrences(
+      {
+        sequelize: context.dependencies.sequelize,
+        models: context.dependencies.models,
+      },
+      '2026-11-20',
+    )
+    const generated = operationListResponseSchema
+      .parse((await user.get('/operations?origins=schedule')).body)
+      .items.find((item) => item.label === 'Loyer')
+    if (generated === undefined) {
+      throw new Error('No generated operation')
+    }
+    const trainRule = readId(
+      (
+        await user.post(
+          '/rules',
+          ruleBody({
+            pattern: 'sncf',
+            categoryId: transports,
+            tagIds: [train],
+          }),
+        )
+      ).body,
+    )
+    const rentRule = readId(
+      (
+        await user.post(
+          '/rules',
+          ruleBody({
+            pattern: 'LOYER',
+            categoryId: transports,
+            tagIds: [train],
+          }),
+        )
+      ).body,
+    )
+
+    const previewed = await preview(user, [manual, generated.id])
+
+    expect(previewed.skipped).toEqual([])
+    expect(previewed.changes.map((change) => change.after)).toEqual([
+      {
+        operationId: manual,
+        ruleId: trainRule,
+        categoryId: transports,
+        transferAccountId: null,
+        tagIds: [train],
+      },
+      {
+        operationId: generated.id,
+        ruleId: rentRule,
+        categoryId: housing,
+        transferAccountId: null,
+        tagIds: [train],
+      },
+    ])
+
+    const applied = await user.post('/rules/reapply', {
+      changes: previewed.changes.map((change) => change.after),
+    })
+
+    expect(applied.body).toEqual({ updated: 2 })
+    expect(await operation(user, manual)).toMatchObject({
+      categoryId: transports,
+      status: 'categorized',
+      tagIds: [train],
+    })
+    expect(await operation(user, generated.id)).toMatchObject({
+      categoryId: housing,
+      tagIds: [train],
     })
   })
 

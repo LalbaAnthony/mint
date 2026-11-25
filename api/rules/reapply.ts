@@ -25,7 +25,7 @@ import type {
   ReapplyOutcome,
   ReapplyPlan,
 } from '../types/rules.js'
-import { createRegexMatcher, loadRuleInputs } from './rules.js'
+import { createRegexMatcher, loadRuleInputs, ruleLabelOf } from './rules.js'
 
 function skip(reason: ReapplySkipReason): ReapplyOutcome {
   return { kind: 'skip', reason }
@@ -160,9 +160,6 @@ async function planOperation(
   operation: TransactionModel,
   view: Operation,
 ): Promise<ReapplyOutcome> {
-  if (operation.bankLabel === null) {
-    return skip('no_bank_label')
-  }
   const currentCategory =
     operation.categoryId === null
       ? undefined
@@ -175,7 +172,7 @@ async function planOperation(
     {
       accountId: operation.accountId,
       amountCents: operation.amountCents,
-      bankLabel: operation.bankLabel,
+      label: ruleLabelOf(operation),
     },
     context.matcher,
   )

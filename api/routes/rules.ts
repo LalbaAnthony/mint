@@ -173,7 +173,7 @@ export const suggestRuleRoute = defineUserRoute({
   method: 'get',
   path: '/rules/suggestion',
   summary:
-    'Rule prefilled from an imported operation: its bank label without digits nor dates, its sign, its category and its tags (REG-03)',
+    'Rule prefilled from an operation: its bank label, or else its label, without digits nor dates, its sign, its category and its tags (REG-03)',
   tag,
   body: noBody,
   params: noParams,
@@ -183,7 +183,6 @@ export const suggestRuleRoute = defineUserRoute({
     400: errorResponse('Invalid operation identifier'),
     ...accessErrors,
     404: errorResponse('Unknown operation'),
-    409: errorResponse('Operation without bank label'),
   },
   handle: async ({ app, user, query }) => {
     const operation = await findUserOperation(app, user.id, query.operationId)

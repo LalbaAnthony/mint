@@ -2275,7 +2275,6 @@
       "ReapplySkipReason": {
         "type": "string",
         "enum": [
-          "no_bank_label",
           "no_matching_rule",
           "unchanged",
           "too_many_tags",
@@ -6490,7 +6489,7 @@
         }
       },
       "post": {
-        "summary": "Record an expense or an income on an account, optionally through one of its payment methods (OPE-01)",
+        "summary": "Record an expense or an income on an account, optionally through one of its payment methods (OPE-01); the first matching rule gives its category or transfer when none is entered, and its tags when none are entered (REG-05)",
         "tags": ["operations"],
         "security": [{ "session": [] }],
         "parameters": [
@@ -7962,7 +7961,7 @@
     },
     "/api/v1/rules/suggestion": {
       "get": {
-        "summary": "Rule prefilled from an imported operation: its bank label without digits nor dates, its sign, its category and its tags (REG-03)",
+        "summary": "Rule prefilled from an operation: its bank label, or else its label, without digits nor dates, its sign, its category and its tags (REG-03)",
         "tags": ["rules"],
         "security": [{ "session": [] }],
         "parameters": [
@@ -8000,14 +7999,6 @@
           },
           "404": {
             "description": "Unknown operation",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ApiError" }
-              }
-            }
-          },
-          "409": {
-            "description": "Operation without bank label",
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/ApiError" }

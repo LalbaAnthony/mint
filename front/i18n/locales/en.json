@@ -480,7 +480,6 @@
     "operations_before_initial_balance": "Operations are dated before this new initial balance date.",
     "occurrence_not_editable": "This occurrence can no longer be changed.",
     "operation_is_transfer": "This movement belongs to a transfer: edit the transfer.",
-    "operation_without_bank_label": "This operation has no bank label.",
     "statement_exists": "A statement already exists at this date.",
     "statement_balanced": "This statement has no gap to correct.",
     "valuation_exists": "A valuation already exists at this date.",
@@ -893,7 +892,7 @@
     "deleteTitle": "Delete the rule",
     "deleteEffect": "The rule will be deleted; the operations already classified keep their category.",
     "emptyTitle": "No rule",
-    "emptyText": "Classify the known bank labels automatically at import.",
+    "emptyText": "Classify your operations automatically at import and on entry.",
     "priorityHelp": "Only the first satisfied rule applies, in this order.",
     "inactive": "Inactive",
     "activate": "Activate",
@@ -939,7 +938,6 @@
       "applied": "{n} operation reclassified. | {n} operations reclassified.",
       "outdated": "The rules or the operations changed: the preview was computed again.",
       "skipped": {
-        "no_bank_label": "{n} without bank label",
         "no_matching_rule": "{n} without matching rule",
         "unchanged": "{n} already up to date",
         "too_many_tags": "{n} would exceed 20 tags",
@@ -952,7 +950,7 @@
     },
     "fields": {
       "matchType": "Condition",
-      "pattern": "Bank label",
+      "pattern": "Label",
       "account": "Account",
       "sign": "Direction",
       "amountMin": "Minimum amount",

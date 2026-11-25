@@ -12,7 +12,6 @@ export const rulePatternMaxLength = 200
 export const maxReappliedOperations = 50
 
 export const reapplySkipReasons = [
-  'no_bank_label',
   'no_matching_rule',
   'unchanged',
   'too_many_tags',
