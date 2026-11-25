@@ -32,6 +32,53 @@ async function horizontalOverflow(page: Page): Promise<number> {
     )
 }
 
+async function verticalClipping(page: Page): Promise<number> {
+  return page
+    .locator('[data-testid=view-panel] > [data-slot=body] > *')
+    .evaluateAll((sections: unknown[]) =>
+      Math.max(
+        ...sections.map((section) => {
+          if (typeof section !== 'object' || section === null) {
+            throw new Error('The section is not an element')
+          }
+          const scrollHeight: unknown = Reflect.get(section, 'scrollHeight')
+          const clientHeight: unknown = Reflect.get(section, 'clientHeight')
+          if (
+            typeof scrollHeight !== 'number' ||
+            typeof clientHeight !== 'number'
+          ) {
+            throw new Error('The section has no scroll height')
+          }
+          return scrollHeight - clientHeight
+        }),
+      ),
+    )
+}
+
+test.describe('NF-UX-01, NF-ACC-01: reflow at 256 px of height', () => {
+  for (const viewport of [
+    { width: 1280, height: 256 },
+    { width: 320, height: 256 },
+  ]) {
+    test.describe(`${viewport.width} px wide`, () => {
+      test.use({ viewport })
+
+      test('no signed-in view clips its content vertically', async ({
+        page,
+      }) => {
+        const guard = guardPage(page)
+        await login(page, administratorEmail, administratorPassword)
+        await expect(page).toHaveURL('/')
+        for (const view of signedInViews) {
+          await openView(page, view.path, view.title)
+          expect.soft(await verticalClipping(page), view.path).toBe(0)
+        }
+        guard.assertClean()
+      })
+    })
+  }
+})
+
 test.describe('NF-UX-01, NF-ACC-01: reflow at 320 px', () => {
   test.use({ viewport: { width: 320, height: 800 } })
 

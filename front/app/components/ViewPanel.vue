@@ -28,7 +28,7 @@ useHead({ title: () => props.title })
 </script>
 
 <template>
-  <UDashboardPanel :ui="{ body: bodyClass }">
+  <UDashboardPanel :ui="{ body: bodyClass }" data-testid="view-panel">
     <template #header>
       <UDashboardNavbar
         :title="title"
