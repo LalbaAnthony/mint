@@ -276,7 +276,11 @@ const indicators = computed(() => curve.value?.indicators ?? null)
                 class="w-48"
                 data-testid="breakdown-period"
               />
-              <template v-if="periodMode === 'month'">
+              <div
+                v-if="periodMode === 'month'"
+                class="flex items-center gap-2"
+                data-testid="breakdown-month-navigation"
+              >
                 <UButton
                   :icon="icons.previous"
                   :aria-label="t('calendar.previousMonth')"
@@ -284,7 +288,9 @@ const indicators = computed(() => curve.value?.indicators ?? null)
                   variant="ghost"
                   @click="shiftMonth(-1)"
                 />
-                <span class="text-sm font-medium first-letter:uppercase">
+                <span
+                  class="text-sm font-medium whitespace-nowrap first-letter:uppercase"
+                >
                   {{ monthTitle }}
                 </span>
                 <UButton
@@ -294,7 +300,7 @@ const indicators = computed(() => curve.value?.indicators ?? null)
                   variant="ghost"
                   @click="shiftMonth(1)"
                 />
-              </template>
+              </div>
               <template v-else>
                 <UInput
                   v-model="customFrom"

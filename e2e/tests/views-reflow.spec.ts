@@ -46,6 +46,28 @@ test.describe('NF-UX-01, NF-ACC-01: reflow at 320 px', () => {
     guard.assertClean()
   })
 
+  test('the breakdown month navigation stays on one row', async ({ page }) => {
+    const guard = guardPage(page)
+    await login(page, administratorEmail, administratorPassword)
+    await expect(page).toHaveURL('/')
+
+    const navigation = page.getByTestId('breakdown-month-navigation')
+    await expect(navigation).toBeVisible()
+    const controls = await navigation.locator(':scope > *').all()
+    expect(controls).toHaveLength(3)
+    const middles = await Promise.all(
+      controls.map(async (control) => {
+        const box = await control.boundingBox()
+        if (box === null) {
+          throw new Error('The month navigation control is not rendered')
+        }
+        return box.y + box.height / 2
+      }),
+    )
+    expect(Math.max(...middles) - Math.min(...middles)).toBeLessThan(1)
+    guard.assertClean()
+  })
+
   test('the forms with a kind choice do not scroll horizontally', async ({
     page,
   }) => {
