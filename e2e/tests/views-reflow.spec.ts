@@ -75,8 +75,8 @@ test.describe('NF-UX-01, NF-ACC-01: reflow at 320 px', () => {
     await login(page, administratorEmail, administratorPassword)
     await expect(page).toHaveURL('/')
 
-    await page.getByTestId('fab').click()
-    await page.getByTestId('fab-expense').click()
+    await page.getByTestId('add-fab').click()
+    await page.getByTestId('add-fab-expense').click()
     await expect(page.getByTestId('operation-kind')).toBeVisible()
     expect.soft(await horizontalOverflow(page), 'operation form').toBe(0)
 

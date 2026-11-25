@@ -1,7 +1,6 @@
 import { useMediaQuery } from '@vueuse/core'
 
 export function useGlobalShortcuts(): void {
-  const route = useRoute()
   const { profileEntry } = useNavigation()
   const connectivity = useConnectivityStore()
   const search = useSearchStore()
@@ -9,6 +8,7 @@ export function useGlobalShortcuts(): void {
   const amountMask = useAmountMaskStore()
   const notifications = useNotificationsStore()
   const shortcuts = useShortcutsStore()
+  const { addVisible } = useFloatingButtons()
   const isDesktopLayout = useMediaQuery('(min-width: 1024px)')
 
   useShortcut('search', () => search.openModal(), {
@@ -27,8 +27,7 @@ export function useGlobalShortcuts(): void {
     },
     {
       enabled: () =>
-        !connectivity.offline &&
-        (isDesktopLayout.value || route.meta.hideFab !== true),
+        !connectivity.offline && (isDesktopLayout.value || addVisible.value),
       fallback: true,
     },
   )

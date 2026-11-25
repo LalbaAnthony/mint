@@ -1,18 +1,13 @@
 <script setup lang="ts">
 const { t } = useI18n()
-const route = useRoute()
 const search = useSearchStore()
 const hint = useShortcutHint('search', { fallbackOnly: true })
-
-const isHidden = computed(
-  () =>
-    route.meta.hideFab === true || isRouteActive(route.path, searchPagePath),
-)
+const { searchVisible } = useFloatingButtons()
 </script>
 
 <template>
   <OfflineGuard
-    v-if="!isHidden"
+    v-if="searchVisible"
     v-slot="{ offline }"
     :message="t('search.offline')"
   >

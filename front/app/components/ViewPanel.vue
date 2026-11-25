@@ -6,6 +6,17 @@ const props = defineProps<ViewPanelProps>()
 const { t } = useI18n()
 const { formatDateTime } = useFormatters()
 const connectivity = useConnectivityStore()
+const { addVisible, searchVisible } = useFloatingButtons()
+
+const bodyClass = computed(() => {
+  if (searchVisible.value) {
+    return 'max-lg:pb-[calc(64px+16px+56px+16px+56px+16px+env(safe-area-inset-bottom))]'
+  }
+  if (addVisible.value) {
+    return 'max-lg:pb-[calc(64px+16px+56px+16px+env(safe-area-inset-bottom))]'
+  }
+  return 'max-lg:pb-[calc(64px+16px+env(safe-area-inset-bottom))]'
+})
 
 const offlineTitle = computed(() =>
   connectivity.dataAt === null
@@ -17,9 +28,7 @@ useHead({ title: () => props.title })
 </script>
 
 <template>
-  <UDashboardPanel
-    :ui="{ body: 'max-lg:pb-[calc(152px+env(safe-area-inset-bottom))]' }"
-  >
+  <UDashboardPanel :ui="{ body: bodyClass }">
     <template #header>
       <UDashboardNavbar
         :title="title"

@@ -37,7 +37,7 @@ describe('default layout (CHG-50)', () => {
       true,
     )
     expect(wrapper.find('[data-testid="bottom-bar"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="fab"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="add-fab"]').exists()).toBe(true)
   })
 })
 

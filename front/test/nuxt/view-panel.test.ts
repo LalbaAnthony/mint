@@ -1,7 +1,53 @@
-import { describe, expect, it } from 'vitest'
+import { mockNuxtImport } from '@nuxt/test-utils/runtime'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
 import AppBrand from '~/components/AppBrand.vue'
 import ViewPanel from '~/components/ViewPanel.vue'
 import { mountInApp } from '../app'
+
+const { routeState } = vi.hoisted(() => ({
+  routeState: { path: '/', fullPath: '/', meta: { hideFab: false } },
+}))
+
+mockNuxtImport('useRoute', () => () => reactive(routeState))
+
+afterEach(() => {
+  routeState.path = '/'
+  routeState.fullPath = '/'
+  routeState.meta.hideFab = false
+})
+
+async function bodyClasses(): Promise<string[]> {
+  const wrapper = await mountInApp(ViewPanel, {
+    props: { title: 'Comptes' },
+  })
+  return wrapper.get('[data-slot="body"]').classes()
+}
+
+describe('ViewPanel bottom space (CHG-54)', () => {
+  it('ends the content 16 px above the search button', async () => {
+    expect(await bodyClasses()).toContain(
+      'max-lg:pb-[calc(64px+16px+56px+16px+56px+16px+env(safe-area-inset-bottom))]',
+    )
+  })
+
+  it('ends the content 16 px above the add button on the results page', async () => {
+    routeState.path = '/search'
+    routeState.fullPath = '/search?q=loyer'
+
+    expect(await bodyClasses()).toContain(
+      'max-lg:pb-[calc(64px+16px+56px+16px+env(safe-area-inset-bottom))]',
+    )
+  })
+
+  it('ends the content 16 px above the bottom bar on views flagged with hideFab', async () => {
+    routeState.meta.hideFab = true
+
+    expect(await bodyClasses()).toContain(
+      'max-lg:pb-[calc(64px+16px+env(safe-area-inset-bottom))]',
+    )
+  })
+})
 
 describe('ViewPanel (CHG-51, CHG-56)', () => {
   it('renders the view title as the page heading', async () => {

@@ -2,23 +2,22 @@
 import type { QuickAddKind } from '~~/types/navigation'
 
 const { t } = useI18n()
-const route = useRoute()
 const connectivity = useConnectivityStore()
 const { quickAddEntries } = useNavigation()
 const editor = useOperationEditorStore()
 const quickAdd = useQuickAddStore()
 const hint = useShortcutHint('create', { fallbackOnly: true })
+const { addVisible } = useFloatingButtons()
 
 function choose(kind: QuickAddKind): void {
   quickAdd.drawerOpen = false
   editor.create(kind)
 }
-const isHidden = computed(() => route.meta.hideFab === true)
 </script>
 
 <template>
   <UDrawer
-    v-if="!isHidden"
+    v-if="addVisible"
     v-model:open="quickAdd.drawerOpen"
     :title="t('quickAdd.title')"
   >
@@ -30,12 +29,12 @@ const isHidden = computed(() => route.meta.hideFab === true)
         color="primary"
         variant="solid"
         class="fixed right-4 bottom-[calc(64px+16px+env(safe-area-inset-bottom))] z-10 size-14 justify-center rounded-full shadow-lg lg:hidden"
-        data-testid="fab"
+        data-testid="add-fab"
       />
     </ShortcutTooltip>
 
     <template #body>
-      <ul class="flex flex-col gap-1" data-testid="fab-actions">
+      <ul class="flex flex-col gap-1" data-testid="add-fab-actions">
         <li v-for="entry in quickAddEntries" :key="entry.kind">
           <UButton
             :label="entry.label"
@@ -45,7 +44,7 @@ const isHidden = computed(() => route.meta.hideFab === true)
             variant="ghost"
             block
             class="justify-start"
-            :data-testid="`fab-${entry.kind}`"
+            :data-testid="`add-fab-${entry.kind}`"
             @click="choose(entry.kind)"
           />
         </li>

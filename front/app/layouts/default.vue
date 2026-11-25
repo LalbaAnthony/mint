@@ -12,7 +12,7 @@ useGlobalShortcuts()
     </main>
     <AppBottomBar />
     <AppSearchFab />
-    <AppFab />
+    <AppAddFab />
     <GlobalSearchModal />
     <OperationFormModal />
     <ReconciliationProposalModal />
