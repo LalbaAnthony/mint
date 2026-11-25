@@ -17,9 +17,9 @@ import { mountInApp } from '../app'
 
 const archivedAccountId = '00000000-0000-4000-8000-0000000000a9'
 
-// Mounting the profile page and loading its accounts already takes over a
+// Loading the profile page accounts or saving its preferences can take over a
 // second under coverage: the default waitFor timeout fails in CI.
-const accountsLoad = { timeout: 5_000 }
+const slowUnderCoverage = { timeout: 5_000 }
 
 function patchedDefaultAccount(body: unknown): string | null | undefined {
   if (typeof body !== 'object' || body === null) {
@@ -198,7 +198,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
 
     await vi.waitFor(() => {
       expect(useSessionStore().user?.forecastHorizonMonths).toBe(6)
-    })
+    }, slowUnderCoverage)
     expect(
       api.requests.find((request) => request.method === 'PATCH')?.body,
     ).toEqual({
@@ -210,7 +210,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     })
     await vi.waitFor(() => {
       expect(useColorMode().preference).toBe('dark')
-    })
+    }, slowUnderCoverage)
   })
 
   it('offers None and the active accounts as default account, without focusing None (ADR 0033, CHG-69)', async () => {
@@ -238,7 +238,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
         { label: 'Compte courant', value: ids.current },
         { label: 'Livret A', value: ids.livret },
       ])
-    }, accountsLoad)
+    }, slowUnderCoverage)
     expect(select()?.value()).toBe('none')
     expect(focusedTestId()).toBeNull()
   })
@@ -265,7 +265,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
       expect(
         selectByTestId(wrapper, 'preferences-default-account')?.value(),
       ).toBe('none')
-    }, accountsLoad)
+    }, slowUnderCoverage)
   })
 
   it('saves the chosen default account, then None as null (ADR 0033)', async () => {
@@ -286,20 +286,20 @@ describe('profile (AUTH-05, AUTH-07)', () => {
         label: 'Livret A',
         value: ids.livret,
       })
-    }, accountsLoad)
+    }, slowUnderCoverage)
     expect(select()?.value()).toBe(ids.current)
 
     select()?.choose(ids.livret)
     await wrapper.get('[data-testid="preferences-form"]').trigger('submit')
     await vi.waitFor(() => {
       expect(useSessionStore().user?.defaultAccountId).toBe(ids.livret)
-    })
+    }, slowUnderCoverage)
 
     select()?.choose('none')
     await wrapper.get('[data-testid="preferences-form"]').trigger('submit')
     await vi.waitFor(() => {
       expect(useSessionStore().user?.defaultAccountId).toBeNull()
-    })
+    }, slowUnderCoverage)
     expect(
       api.requests
         .filter((request) => request.method === 'PATCH')
