@@ -193,7 +193,7 @@ const skeletonRows = useRememberedCount(
 
 <template>
   <ViewPanel :title="t('navigation.profileAndPreferences')">
-    <div class="flex max-w-2xl flex-col gap-6">
+    <CardColumns class="max-w-2xl lg:max-w-none">
       <UCard>
         <template #header>
           <h2 class="text-base font-semibold text-highlighted">
@@ -406,7 +406,7 @@ const skeletonRows = useRememberedCount(
       </UCard>
 
       <PersonalDataCard />
-    </div>
+    </CardColumns>
 
     <UModal v-model:open="emailOpen" :title="t('profile.changeEmail')">
       <template #body>

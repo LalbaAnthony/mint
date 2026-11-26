@@ -1,5 +1,6 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import CardColumns from '~/components/CardColumns.vue'
 import AdminPage from '~/pages/admin/index.vue'
 import ProfilePage from '~/pages/profile/index.vue'
 import { installFakeApi } from '../fake-api'
@@ -20,6 +21,16 @@ const archivedAccountId = '00000000-0000-4000-8000-0000000000a9'
 // Loading the profile page accounts or saving its preferences can take over a
 // second under coverage: the default waitFor timeout fails in CI.
 const slowUnderCoverage = { timeout: 5_000 }
+
+const masonryClasses = [
+  'flex',
+  'flex-col',
+  'gap-6',
+  'lg:block',
+  'lg:columns-2',
+  'lg:*:mb-6',
+  'lg:*:break-inside-avoid',
+]
 
 function patchedDefaultAccount(body: unknown): string | null | undefined {
   if (typeof body !== 'object' || body === null) {
@@ -137,6 +148,24 @@ describe('administration console (ADM-01 to ADM-06, US-02)', () => {
       expect(wrapper.text()).toContain('Aucune invitation')
     })
   })
+
+  it('lays its cards out in masonry columns from lg, full width below (CHG-57)', async () => {
+    signIn('admin')
+    installFakeApi(fetchMock, {
+      'GET /admin/invitations': () => [pendingInvitation],
+      'GET /admin/users': () => [administrator],
+    })
+
+    const wrapper = await mountInApp(AdminPage, { route: '/admin' })
+
+    const columns = wrapper.getComponent(CardColumns)
+    await vi.waitFor(() => {
+      expect(columns.find('[data-testid="user-list"]').exists()).toBe(true)
+    })
+    expect(columns.find('[data-testid="invitation-list"]').exists()).toBe(true)
+    expect(columns.classes()).toEqual(expect.arrayContaining(masonryClasses))
+    expect(columns.classes()).not.toContain('max-w-2xl')
+  })
 })
 
 describe('profile (AUTH-05, AUTH-07)', () => {
@@ -178,6 +207,36 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     expect(list).toContain('Appareil inconnu')
     expect(wrapper.get('[data-testid="profile-email"]').text()).toBe(
       testProfile.email,
+    )
+  })
+
+  it('lays its cards out in masonry columns from lg, max-w-2xl below (CHG-57)', async () => {
+    signIn('user')
+    installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /profile/sessions': () => sessions,
+    })
+
+    const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
+
+    const columns = wrapper.getComponent(CardColumns)
+    await vi.waitFor(() => {
+      expect(columns.find('[data-testid="session-list"]').exists()).toBe(true)
+    })
+    for (const testId of [
+      'preferences-form',
+      'notification-settings',
+      'category-manager',
+      'tag-manager',
+      'passkey-manager',
+      'personal-data',
+    ]) {
+      expect(columns.find(`[data-testid="${testId}"]`).exists(), testId).toBe(
+        true,
+      )
+    }
+    expect(columns.classes()).toEqual(
+      expect.arrayContaining([...masonryClasses, 'max-w-2xl', 'lg:max-w-none']),
     )
   })
 

@@ -232,7 +232,7 @@ const userRows = useRememberedCount(
       </OfflineGuard>
     </template>
 
-    <div class="flex flex-col gap-6">
+    <CardColumns>
       <UCard>
         <template #header>
           <h2 class="text-base font-semibold text-highlighted">
@@ -424,7 +424,7 @@ const userRows = useRememberedCount(
       </UCard>
 
       <RegulatedCapsCard />
-    </div>
+    </CardColumns>
 
     <UModal v-model:open="inviteOpen" :title="t('admin.invite')">
       <template #body>
