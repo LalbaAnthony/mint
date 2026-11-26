@@ -232,95 +232,99 @@ const userRows = useRememberedCount(
       </OfflineGuard>
     </template>
 
-    <CardColumns>
-      <UCard>
-        <template #header>
-          <h2 class="text-base font-semibold text-highlighted">
-            {{ t('admin.invitations') }}
-          </h2>
-        </template>
-        <LoadZone :state="loadState">
-          <template #skeleton>
-            <AdminListSkeleton :count="invitationRows" />
+    <CardStack>
+      <CardRow>
+        <UCard>
+          <template #header>
+            <h2 class="text-base font-semibold text-highlighted">
+              {{ t('admin.invitations') }}
+            </h2>
           </template>
-          <EmptyState
-            v-if="invitations.length === 0"
-            :icon="icons.invite"
-            :title="t('admin.noInvitationTitle')"
-            :description="t('admin.noInvitationText')"
-          >
-            <OfflineGuard v-slot="{ offline }">
-              <UButton
-                :disabled="offline"
-                :label="t('admin.invite')"
-                :icon="icons.invite"
-                color="primary"
-                variant="soft"
-                @click="inviteOpen = true"
-              />
-            </OfflineGuard>
-          </EmptyState>
-          <ul
-            v-else
-            class="divide-y divide-default"
-            data-testid="invitation-list"
-          >
-            <ListRow
-              v-for="invitation in invitations"
-              :key="invitation.id"
-              :gap="3"
-              :padding="3"
-              flush
-              wrap
-              spread
+          <LoadZone :state="loadState">
+            <template #skeleton>
+              <AdminListSkeleton :count="invitationRows" />
+            </template>
+            <EmptyState
+              v-if="invitations.length === 0"
+              :icon="icons.invite"
+              :title="t('admin.noInvitationTitle')"
+              :description="t('admin.noInvitationText')"
             >
-              <div class="flex min-w-0 flex-col gap-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="truncate text-sm text-highlighted">
-                    {{ invitation.email }}
-                  </span>
-                  <UBadge
-                    :label="t(`admin.invitationStatus.${invitation.status}`)"
-                    :color="invitationColors[invitation.status]"
-                    variant="soft"
-                  />
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :label="t('admin.invite')"
+                  :icon="icons.invite"
+                  color="primary"
+                  variant="soft"
+                  @click="inviteOpen = true"
+                />
+              </OfflineGuard>
+            </EmptyState>
+            <ul
+              v-else
+              class="divide-y divide-default"
+              data-testid="invitation-list"
+            >
+              <ListRow
+                v-for="invitation in invitations"
+                :key="invitation.id"
+                :gap="3"
+                :padding="3"
+                flush
+                wrap
+                spread
+              >
+                <div class="flex min-w-0 flex-col gap-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="truncate text-sm text-highlighted">
+                      {{ invitation.email }}
+                    </span>
+                    <UBadge
+                      :label="t(`admin.invitationStatus.${invitation.status}`)"
+                      :color="invitationColors[invitation.status]"
+                      variant="soft"
+                    />
+                  </div>
+                  <p class="text-xs text-muted tabular-nums">
+                    {{
+                      t('admin.sentOn', {
+                        date: formatDateTime(invitation.createdAt),
+                      })
+                    }}
+                    · {{ invitationDate(invitation) }}
+                  </p>
                 </div>
-                <p class="text-xs text-muted tabular-nums">
-                  {{
-                    t('admin.sentOn', {
-                      date: formatDateTime(invitation.createdAt),
-                    })
-                  }}
-                  · {{ invitationDate(invitation) }}
-                </p>
-              </div>
-              <div v-if="isReusable(invitation)" class="flex flex-wrap gap-1">
-                <OfflineGuard v-slot="{ offline }">
-                  <UButton
-                    :disabled="offline"
-                    :label="t('admin.resend')"
-                    :icon="icons.resend"
-                    :loading="busyId === invitation.id"
-                    color="neutral"
-                    variant="ghost"
-                    @click="resend(invitation)"
-                  />
-                </OfflineGuard>
-                <OfflineGuard v-slot="{ offline }">
-                  <UButton
-                    :disabled="offline"
-                    :label="t('admin.revoke')"
-                    :icon="icons.revoke"
-                    color="error"
-                    variant="ghost"
-                    @click="invitationToRevoke = invitation"
-                  />
-                </OfflineGuard>
-              </div>
-            </ListRow>
-          </ul>
-        </LoadZone>
-      </UCard>
+                <div v-if="isReusable(invitation)" class="flex flex-wrap gap-1">
+                  <OfflineGuard v-slot="{ offline }">
+                    <UButton
+                      :disabled="offline"
+                      :label="t('admin.resend')"
+                      :icon="icons.resend"
+                      :loading="busyId === invitation.id"
+                      color="neutral"
+                      variant="ghost"
+                      @click="resend(invitation)"
+                    />
+                  </OfflineGuard>
+                  <OfflineGuard v-slot="{ offline }">
+                    <UButton
+                      :disabled="offline"
+                      :label="t('admin.revoke')"
+                      :icon="icons.revoke"
+                      color="error"
+                      variant="ghost"
+                      @click="invitationToRevoke = invitation"
+                    />
+                  </OfflineGuard>
+                </div>
+              </ListRow>
+            </ul>
+          </LoadZone>
+        </UCard>
+
+        <RegulatedCapsCard />
+      </CardRow>
 
       <UCard>
         <template #header>
@@ -422,9 +426,7 @@ const userRows = useRememberedCount(
           </ul>
         </LoadZone>
       </UCard>
-
-      <RegulatedCapsCard />
-    </CardColumns>
+    </CardStack>
 
     <UModal v-model:open="inviteOpen" :title="t('admin.invite')">
       <template #body>

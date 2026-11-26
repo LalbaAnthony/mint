@@ -1,6 +1,7 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import CardColumns from '~/components/CardColumns.vue'
+import CardRow from '~/components/CardRow.vue'
+import CardStack from '~/components/CardStack.vue'
 import AdminPage from '~/pages/admin/index.vue'
 import ProfilePage from '~/pages/profile/index.vue'
 import { installFakeApi } from '../fake-api'
@@ -22,15 +23,27 @@ const archivedAccountId = '00000000-0000-4000-8000-0000000000a9'
 // second under coverage: the default waitFor timeout fails in CI.
 const slowUnderCoverage = { timeout: 5_000 }
 
-const masonryClasses = [
+const cardRowClasses = [
   'flex',
   'flex-col',
   'gap-6',
-  'lg:block',
-  'lg:columns-2',
-  'lg:*:mb-6',
-  'lg:*:break-inside-avoid',
+  'lg:grid',
+  'lg:auto-cols-fr',
+  'lg:grid-flow-col',
 ]
+
+function childElements(element: unknown): Element[] {
+  return element instanceof Element ? Array.from(element.children) : []
+}
+
+function testIdsIn(
+  element: Element | undefined,
+  wanted: readonly string[],
+): string[] {
+  return Array.from(element?.querySelectorAll('[data-testid]') ?? [])
+    .map((node) => node.getAttribute('data-testid') ?? '')
+    .filter((testId) => wanted.includes(testId))
+}
 
 function patchedDefaultAccount(body: unknown): string | null | undefined {
   if (typeof body !== 'object' || body === null) {
@@ -149,7 +162,7 @@ describe('administration console (ADM-01 to ADM-06, US-02)', () => {
     })
   })
 
-  it('lays its cards out in masonry columns from lg, full width below (CHG-57)', async () => {
+  it('sets invitations beside the regulated caps, then the users (CHG-57)', async () => {
     signIn('admin')
     installFakeApi(fetchMock, {
       'GET /admin/invitations': () => [pendingInvitation],
@@ -158,13 +171,24 @@ describe('administration console (ADM-01 to ADM-06, US-02)', () => {
 
     const wrapper = await mountInApp(AdminPage, { route: '/admin' })
 
-    const columns = wrapper.getComponent(CardColumns)
+    const stack = wrapper.getComponent(CardStack)
     await vi.waitFor(() => {
-      expect(columns.find('[data-testid="user-list"]').exists()).toBe(true)
+      expect(stack.find('[data-testid="user-list"]').exists()).toBe(true)
     })
-    expect(columns.find('[data-testid="invitation-list"]').exists()).toBe(true)
-    expect(columns.classes()).toEqual(expect.arrayContaining(masonryClasses))
-    expect(columns.classes()).not.toContain('max-w-2xl')
+    expect(stack.classes()).not.toContain('max-w-2xl')
+    const [row, users, ...rest] = childElements(stack.element)
+    expect(rest).toHaveLength(0)
+    expect(row).toBe(stack.getComponent(CardRow).element)
+    expect(row?.className.split(' ')).toEqual(
+      expect.arrayContaining(cardRowClasses),
+    )
+    const columns = childElements(row)
+    expect(columns).toHaveLength(2)
+    expect(
+      columns[0]?.querySelector('[data-testid="invitation-list"]'),
+    ).not.toBe(null)
+    expect(columns[1]?.getAttribute('data-testid')).toBe('regulated-caps')
+    expect(users?.querySelector('[data-testid="user-list"]')).not.toBe(null)
   })
 })
 
@@ -210,7 +234,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     )
   })
 
-  it('lays its cards out in masonry columns from lg, max-w-2xl below (CHG-57)', async () => {
+  it('sets the settings on the left, categories and tags on the right (CHG-57)', async () => {
     signIn('user')
     installFakeApi(fetchMock, {
       ...referentialHandlers(),
@@ -219,25 +243,27 @@ describe('profile (AUTH-05, AUTH-07)', () => {
 
     const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
 
-    const columns = wrapper.getComponent(CardColumns)
+    const row = wrapper.getComponent(CardRow)
     await vi.waitFor(() => {
-      expect(columns.find('[data-testid="session-list"]').exists()).toBe(true)
+      expect(row.find('[data-testid="session-list"]').exists()).toBe(true)
     })
-    for (const testId of [
+    expect(row.classes()).toEqual(
+      expect.arrayContaining([...cardRowClasses, 'max-w-2xl', 'lg:max-w-none']),
+    )
+    const settings = [
       'preferences-form',
       'notification-settings',
-      'category-manager',
-      'tag-manager',
+      'profile-email',
       'passkey-manager',
+      'session-list',
       'personal-data',
-    ]) {
-      expect(columns.find(`[data-testid="${testId}"]`).exists(), testId).toBe(
-        true,
-      )
-    }
-    expect(columns.classes()).toEqual(
-      expect.arrayContaining([...masonryClasses, 'max-w-2xl', 'lg:max-w-none']),
-    )
+    ] as const
+    const referentials = ['category-manager', 'tag-manager'] as const
+    const columns = childElements(row.element)
+    expect(columns).toHaveLength(2)
+    const [left, right] = columns
+    expect(testIdsIn(left, settings)).toEqual(settings)
+    expect(testIdsIn(right, referentials)).toEqual(referentials)
   })
 
   it('saves the preferences and applies the returned profile, theme included (NF-UX-02)', async () => {

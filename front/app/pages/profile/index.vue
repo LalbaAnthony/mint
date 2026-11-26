@@ -193,220 +193,224 @@ const skeletonRows = useRememberedCount(
 
 <template>
   <ViewPanel :title="t('navigation.profileAndPreferences')">
-    <CardColumns class="max-w-2xl lg:max-w-none">
-      <UCard>
-        <template #header>
-          <h2 class="text-base font-semibold text-highlighted">
-            {{ t('profile.preferences') }}
-          </h2>
-        </template>
-        <AppForm
-          :state="preferences"
-          :validate="validator(profileFormSchema)"
-          class="flex flex-col gap-4"
-          data-testid="preferences-form"
-          @submit="savePreferences"
-        >
-          <AppFormField :label="t('profile.language')" name="locale">
-            <USelect
-              v-model="preferences.locale"
-              :items="localeItems"
-              class="w-full"
-            />
-          </AppFormField>
-          <AppFormField
-            :label="t('profile.theme')"
-            :hint="t('profile.themeHint')"
-            name="theme"
+    <CardRow class="max-w-2xl lg:max-w-none">
+      <CardStack>
+        <UCard>
+          <template #header>
+            <h2 class="text-base font-semibold text-highlighted">
+              {{ t('profile.preferences') }}
+            </h2>
+          </template>
+          <AppForm
+            :state="preferences"
+            :validate="validator(profileFormSchema)"
+            class="flex flex-col gap-4"
+            data-testid="preferences-form"
+            @submit="savePreferences"
           >
-            <USelect
-              v-model="preferences.theme"
-              :items="themeItems"
-              class="w-full"
-              data-testid="preferences-theme"
-            />
-          </AppFormField>
-          <AppFormField
-            :label="t('profile.forecastHorizon')"
-            name="forecastHorizonMonths"
-          >
-            <USelect
-              v-model="preferences.forecastHorizonMonths"
-              :items="horizonItems"
-              class="w-full"
-            />
-          </AppFormField>
-          <AppFormField
-            :label="t('profile.defaultAccount')"
-            :hint="t('profile.defaultAccountHint')"
-            name="defaultAccountId"
-          >
-            <USelect
-              v-model="preferences.defaultAccountId"
-              :items="defaultAccountItems"
-              class="w-full"
-              data-testid="preferences-default-account"
-            />
-          </AppFormField>
-          <AppFormField
-            :label="t('profile.targets')"
-            :hint="t('profile.targetsRule')"
-            name="targets"
-          >
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <AppFormField
-                v-for="key in targetKeys"
-                :key="key"
-                :label="t(`groups.${key}`)"
-                :name="`targets.${key}`"
-              >
-                <UInputNumber
-                  v-model="preferences.targets[key]"
-                  :min="0"
-                  :max="100"
-                  class="w-full tabular-nums"
-                />
-              </AppFormField>
+            <AppFormField :label="t('profile.language')" name="locale">
+              <USelect
+                v-model="preferences.locale"
+                :items="localeItems"
+                class="w-full"
+              />
+            </AppFormField>
+            <AppFormField
+              :label="t('profile.theme')"
+              :hint="t('profile.themeHint')"
+              name="theme"
+            >
+              <USelect
+                v-model="preferences.theme"
+                :items="themeItems"
+                class="w-full"
+                data-testid="preferences-theme"
+              />
+            </AppFormField>
+            <AppFormField
+              :label="t('profile.forecastHorizon')"
+              name="forecastHorizonMonths"
+            >
+              <USelect
+                v-model="preferences.forecastHorizonMonths"
+                :items="horizonItems"
+                class="w-full"
+              />
+            </AppFormField>
+            <AppFormField
+              :label="t('profile.defaultAccount')"
+              :hint="t('profile.defaultAccountHint')"
+              name="defaultAccountId"
+            >
+              <USelect
+                v-model="preferences.defaultAccountId"
+                :items="defaultAccountItems"
+                class="w-full"
+                data-testid="preferences-default-account"
+              />
+            </AppFormField>
+            <AppFormField
+              :label="t('profile.targets')"
+              :hint="t('profile.targetsRule')"
+              name="targets"
+            >
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <AppFormField
+                  v-for="key in targetKeys"
+                  :key="key"
+                  :label="t(`groups.${key}`)"
+                  :name="`targets.${key}`"
+                >
+                  <UInputNumber
+                    v-model="preferences.targets[key]"
+                    :min="0"
+                    :max="100"
+                    class="w-full tabular-nums"
+                  />
+                </AppFormField>
+              </div>
+            </AppFormField>
+            <div>
+              <OfflineGuard v-slot="{ offline }">
+                <ShortcutTooltip shortcut="submit">
+                  <UButton
+                    :disabled="offline"
+                    type="submit"
+                    :label="t('common.save')"
+                    :loading="savingPreferences"
+                    color="primary"
+                    variant="solid"
+                    data-testid="preferences-submit"
+                  />
+                </ShortcutTooltip>
+              </OfflineGuard>
             </div>
-          </AppFormField>
-          <div>
-            <OfflineGuard v-slot="{ offline }">
-              <ShortcutTooltip shortcut="submit">
+          </AppForm>
+        </UCard>
+
+        <NotificationSettings />
+
+        <UCard>
+          <template #header>
+            <h2 class="text-base font-semibold text-highlighted">
+              {{ t('profile.account') }}
+            </h2>
+          </template>
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="min-w-0">
+                <p class="text-sm font-medium text-muted">
+                  {{ t('auth.email') }}
+                </p>
+                <p
+                  class="truncate text-sm text-highlighted"
+                  data-testid="profile-email"
+                >
+                  {{ session.user?.email }}
+                </p>
+              </div>
+              <OfflineGuard v-slot="{ offline }">
                 <UButton
                   :disabled="offline"
-                  type="submit"
-                  :label="t('common.save')"
-                  :loading="savingPreferences"
-                  color="primary"
-                  variant="solid"
-                  data-testid="preferences-submit"
+                  :label="t('profile.changeEmail')"
+                  color="neutral"
+                  variant="outline"
+                  @click="emailOpen = true"
                 />
-              </ShortcutTooltip>
-            </OfflineGuard>
-          </div>
-        </AppForm>
-      </UCard>
-
-      <NotificationSettings />
-
-      <CategoryManager />
-
-      <TagManager />
-
-      <UCard>
-        <template #header>
-          <h2 class="text-base font-semibold text-highlighted">
-            {{ t('profile.account') }}
-          </h2>
-        </template>
-        <div class="flex flex-col gap-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div class="min-w-0">
-              <p class="text-sm font-medium text-muted">
-                {{ t('auth.email') }}
-              </p>
-              <p
-                class="truncate text-sm text-highlighted"
-                data-testid="profile-email"
-              >
-                {{ session.user?.email }}
-              </p>
+              </OfflineGuard>
             </div>
-            <OfflineGuard v-slot="{ offline }">
-              <UButton
-                :disabled="offline"
-                :label="t('profile.changeEmail')"
-                color="neutral"
-                variant="outline"
-                @click="emailOpen = true"
-              />
-            </OfflineGuard>
-          </div>
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <p class="text-sm text-muted">{{ t('profile.passwordHelp') }}</p>
-            <OfflineGuard v-slot="{ offline }">
-              <UButton
-                :disabled="offline"
-                :label="t('profile.changePassword')"
-                color="neutral"
-                variant="outline"
-                @click="passwordOpen = true"
-              />
-            </OfflineGuard>
-          </div>
-        </div>
-      </UCard>
-
-      <PasskeyManager />
-
-      <UCard>
-        <template #header>
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-base font-semibold text-highlighted">
-              {{ t('profile.sessions') }}
-            </h2>
-            <OfflineGuard v-slot="{ offline }">
-              <UButton
-                :disabled="offline"
-                :label="t('profile.logoutEverywhere')"
-                :icon="icons.logout"
-                color="error"
-                variant="outline"
-                data-testid="logout-everywhere"
-                @click="revokeOpen = true"
-              />
-            </OfflineGuard>
-          </div>
-        </template>
-        <LoadZone :state="sessionsState">
-          <template #skeleton>
-            <SkeletonDetailList
-              :count="skeletonRows"
-              actions="none"
-              :row="{
-                direction: 'column',
-                gap: 1,
-                padding: 3,
-                flush: true,
-              }"
-              class="divide-y divide-default"
-            />
-          </template>
-          <ul class="divide-y divide-default" data-testid="session-list">
-            <ListRow
-              v-for="item in sessions"
-              :key="item.id"
-              direction="column"
-              :gap="1"
-              :padding="3"
-              flush
-            >
-              <div class="flex items-center gap-2">
-                <span class="truncate text-sm text-highlighted">
-                  {{ item.userAgent ?? t('profile.unknownDevice') }}
-                </span>
-                <UBadge
-                  v-if="item.current"
-                  :label="t('profile.currentSession')"
-                  color="primary"
-                  variant="soft"
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <p class="text-sm text-muted">{{ t('profile.passwordHelp') }}</p>
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :label="t('profile.changePassword')"
+                  color="neutral"
+                  variant="outline"
+                  @click="passwordOpen = true"
                 />
-              </div>
-              <p class="text-xs text-muted tabular-nums">
-                {{
-                  t('profile.sessionDetails', {
-                    ip: item.ip ?? '-',
-                    lastSeen: formatDateTime(item.lastSeenAt),
-                  })
-                }}
-              </p>
-            </ListRow>
-          </ul>
-        </LoadZone>
-      </UCard>
+              </OfflineGuard>
+            </div>
+          </div>
+        </UCard>
 
-      <PersonalDataCard />
-    </CardColumns>
+        <PasskeyManager />
+
+        <UCard>
+          <template #header>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h2 class="text-base font-semibold text-highlighted">
+                {{ t('profile.sessions') }}
+              </h2>
+              <OfflineGuard v-slot="{ offline }">
+                <UButton
+                  :disabled="offline"
+                  :label="t('profile.logoutEverywhere')"
+                  :icon="icons.logout"
+                  color="error"
+                  variant="outline"
+                  data-testid="logout-everywhere"
+                  @click="revokeOpen = true"
+                />
+              </OfflineGuard>
+            </div>
+          </template>
+          <LoadZone :state="sessionsState">
+            <template #skeleton>
+              <SkeletonDetailList
+                :count="skeletonRows"
+                actions="none"
+                :row="{
+                  direction: 'column',
+                  gap: 1,
+                  padding: 3,
+                  flush: true,
+                }"
+                class="divide-y divide-default"
+              />
+            </template>
+            <ul class="divide-y divide-default" data-testid="session-list">
+              <ListRow
+                v-for="item in sessions"
+                :key="item.id"
+                direction="column"
+                :gap="1"
+                :padding="3"
+                flush
+              >
+                <div class="flex items-center gap-2">
+                  <span class="truncate text-sm text-highlighted">
+                    {{ item.userAgent ?? t('profile.unknownDevice') }}
+                  </span>
+                  <UBadge
+                    v-if="item.current"
+                    :label="t('profile.currentSession')"
+                    color="primary"
+                    variant="soft"
+                  />
+                </div>
+                <p class="text-xs text-muted tabular-nums">
+                  {{
+                    t('profile.sessionDetails', {
+                      ip: item.ip ?? '-',
+                      lastSeen: formatDateTime(item.lastSeenAt),
+                    })
+                  }}
+                </p>
+              </ListRow>
+            </ul>
+          </LoadZone>
+        </UCard>
+
+        <PersonalDataCard />
+      </CardStack>
+
+      <CardStack>
+        <CategoryManager />
+
+        <TagManager />
+      </CardStack>
+    </CardRow>
 
     <UModal v-model:open="emailOpen" :title="t('profile.changeEmail')">
       <template #body>
