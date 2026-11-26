@@ -52,14 +52,19 @@ export const useSessionStore = defineStore('session', () => {
     setUser(await apiGet('/auth/session', userProfileSchema))
   }
 
+  async function startSession(profile: UserProfile): Promise<void> {
+    resetCsrfToken()
+    await forgetDeviceData()
+    await storeOfflineCopy('/auth/session', profile)
+    setUser(profile)
+  }
+
   async function login(email: string, password: string): Promise<void> {
     const profile = await apiCall('POST', '/auth/login', userProfileSchema, {
       email,
       password,
     })
-    resetCsrfToken()
-    await forgetDeviceData()
-    setUser(profile)
+    await startSession(profile)
   }
 
   async function loginWithPasskey(): Promise<boolean> {
@@ -67,9 +72,7 @@ export const useSessionStore = defineStore('session', () => {
     if (typeof result === 'string') {
       return false
     }
-    resetCsrfToken()
-    await forgetDeviceData()
-    setUser(result)
+    await startSession(result)
     return true
   }
 

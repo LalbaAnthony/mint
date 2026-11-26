@@ -139,8 +139,30 @@ describe('offline data is forgotten (NF-PWA-03)', () => {
 
     await apiGet('/categories', categoryListResponseSchema)
     await useSessionStore().login('me@example.org', 'correct horse battery')
-    expect(stores.has(offlineCacheName)).toBe(false)
+    expect(stores.get(offlineCacheName)?.size).toBe(1)
+    expect(await readOfflineEntry('/categories')).toBeNull()
+    expect((await readOfflineEntry('/auth/session'))?.body).toEqual(testProfile)
     signIn()
+  })
+})
+
+describe('offline launch right after a login (NF-PWA-02)', () => {
+  it('serves the session copied at login when no session was read yet', async () => {
+    installFakeApi(fetchMock, {
+      'POST /auth/login': () => testProfile,
+    })
+    const session = useSessionStore()
+    await session.login('me@example.org', 'correct horse battery')
+    goOffline()
+
+    await session.load()
+
+    expect(session.status).toBe('authenticated')
+    expect(session.user).toEqual(testProfile)
+    expect(useConnectivityStore().offline).toBe(true)
+    expect((await readOfflineEntry('/auth/session'))?.savedAt).toBe(
+      '2026-11-16T08:30:00.000Z',
+    )
   })
 })
 

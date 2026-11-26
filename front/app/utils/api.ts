@@ -174,6 +174,16 @@ export async function prefetchOffline(path: string): Promise<void> {
   await cacheableGet(path)
 }
 
+export async function storeOfflineCopy(
+  path: string,
+  body: unknown,
+): Promise<void> {
+  if (!isOfflineCacheable(path)) {
+    throw new Error(`${path} is not kept offline`)
+  }
+  await storeOfflineEntry(path, { savedAt: new Date().toISOString(), body })
+}
+
 export async function apiCall<Schema extends z.ZodType>(
   method: Exclude<ApiMethod, 'GET'>,
   path: string,

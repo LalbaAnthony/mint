@@ -13,15 +13,15 @@ function workspaceDirectory(relativePath: string): string {
   return url.protocol === 'file:' ? fileURLToPath(url) : url.pathname
 }
 
+const sharedAlias = { '@mint/shared': workspaceDirectory('../shared') }
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-11-12',
   ssr: false,
   experimental: {
     entryImportMap: false,
   },
-  alias: {
-    '@mint/shared': workspaceDirectory('../shared'),
-  },
+  alias: sharedAlias,
   devServer: {
     port: 8080,
   },
@@ -201,6 +201,15 @@ export default defineNuxtConfig({
     strategies: 'buildSW',
     buildSW: {
       swSrc: workspaceDirectory('./service-worker/sw.ts'),
+      plugins: () => [
+        {
+          name: 'mint-service-worker-shared-alias',
+          options: (inputOptions) => ({
+            ...inputOptions,
+            resolve: { ...inputOptions.resolve, alias: sharedAlias },
+          }),
+        },
+      ],
       globPatterns: ['**/*.{js,css,html,svg,ico,woff2}'],
       globIgnores: ['**/apple-splash-*'],
     },
