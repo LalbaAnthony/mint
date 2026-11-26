@@ -19,8 +19,10 @@ import { mountInApp } from '../app'
 
 const archivedAccountId = '00000000-0000-4000-8000-0000000000a9'
 
-// Loading the profile page accounts or saving its preferences can take over a
-// second under coverage: the default waitFor timeout fails in CI.
+// Loading the profile page sessions or accounts, or saving its preferences,
+// can take over a second under coverage: the default waitFor timeout fails in
+// CI. Past the skeleton delay, the sessions skeleton also holds its minimum
+// display time.
 const slowUnderCoverage = { timeout: 5_000 }
 
 const cardRowClasses = [
@@ -225,7 +227,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
       expect(wrapper.get('[data-testid="session-list"]').text()).toContain(
         'Firefox',
       )
-    })
+    }, slowUnderCoverage)
     const list = wrapper.get('[data-testid="session-list"]').text()
     expect(list).toContain('Cette session')
     expect(list).toContain('Appareil inconnu')
@@ -246,7 +248,7 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     const row = wrapper.getComponent(CardRow)
     await vi.waitFor(() => {
       expect(row.find('[data-testid="session-list"]').exists()).toBe(true)
-    })
+    }, slowUnderCoverage)
     expect(row.classes()).toEqual(
       expect.arrayContaining([...cardRowClasses, 'max-w-2xl', 'lg:max-w-none']),
     )
