@@ -162,7 +162,10 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
         :hint="sidebarHint"
         :text="t('shortcuts.actions.sidebar')"
       >
-        <UDashboardSidebarCollapse data-testid="sidebar-collapse" />
+        <UDashboardSidebarCollapse
+          :class="collapsed ? undefined : 'px-2.5'"
+          data-testid="sidebar-collapse"
+        />
       </ShortcutTooltip>
     </template>
   </UDashboardSidebar>

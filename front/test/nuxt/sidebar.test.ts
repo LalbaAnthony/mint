@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
+import { h } from 'vue'
+import { UDashboardGroup } from '#components'
 import { signIn } from '../session'
 import AppSidebar from '~/components/AppSidebar.vue'
 import { mountInApp } from '../app'
@@ -66,6 +68,33 @@ describe('AppSidebar (CHG-55)', () => {
     const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
     expect(wrapper.get('[data-testid="sidebar-profile"]').text()).toBe('Profil')
+  })
+
+  it('aligns the footer icons on the navigation links', async () => {
+    signIn('admin')
+    const wrapper = await mountInApp(UDashboardGroup, {
+      route: '/',
+      props: { unit: 'px' },
+      slots: { default: () => h(AppSidebar) },
+    })
+
+    const profile = wrapper.get('[data-testid="sidebar-profile"]')
+    const administrationLink = wrapper.get(
+      '[data-testid="sidebar-administration"] [data-slot="link"]',
+    )
+    const collapse = wrapper.get('[data-testid="sidebar-collapse"]')
+    for (const control of [profile, administrationLink, collapse]) {
+      expect(control.classes()).toContain('px-2.5')
+    }
+
+    await collapse.trigger('click')
+
+    expect(wrapper.get('[data-testid="sidebar-collapse"]').classes()).toEqual(
+      expect.arrayContaining(['p-1.5']),
+    )
+    expect(
+      wrapper.get('[data-testid="sidebar-collapse"]').classes(),
+    ).not.toContain('px-2.5')
   })
 
   it('shows Administration to an administrator only', async () => {
