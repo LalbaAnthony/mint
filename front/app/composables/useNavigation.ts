@@ -59,6 +59,11 @@ export function useNavigation() {
     session.isAdmin ? [createEntry('administration')] : [],
   )
 
+  const secondaryEntries = computed(() => [
+    createEntry('profile'),
+    ...administrationEntries.value,
+  ])
+
   const moreEntries = computed(() => [
     ...planningEntries.value,
     ...toolEntries.value,
@@ -85,6 +90,7 @@ export function useNavigation() {
     toolEntries,
     profileEntry,
     administrationEntries,
+    secondaryEntries,
     moreEntries,
     isMoreActive,
     quickAddEntries,

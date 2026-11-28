@@ -64,8 +64,7 @@ test('RAC-02 to RAC-07: search, add, submit and get help from the keyboard', asy
   await page.keyboard.press('Escape')
   await expect(help).toBeHidden()
 
-  await page.getByTestId('sidebar-profile').click()
-  await page.getByRole('menuitem', { name: /Raccourcis clavier/ }).click()
+  await page.getByTestId('shortcut-help-button').click()
   await expect(help).toBeVisible()
 
   guard.assertClean()

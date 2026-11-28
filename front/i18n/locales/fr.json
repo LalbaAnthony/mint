@@ -19,7 +19,7 @@
     "profile": "Profil",
     "profileAndPreferences": "Profil et préférences",
     "administration": "Administration",
-    "logout": "Déconnexion"
+    "secondary": "Navigation secondaire"
   },
   "quickAdd": {
     "add": "Ajouter",
@@ -325,6 +325,7 @@
     "currentSession": "Cette session",
     "unknownDevice": "Appareil inconnu",
     "sessionDetails": "Adresse IP {ip} · dernière activité {lastSeen}",
+    "logout": "Déconnexion",
     "logoutEverywhere": "Se déconnecter partout",
     "logoutEverywhereEffect": "Toutes vos sessions seront fermées, celle-ci comprise.",
     "loggedOutEverywhere": "Toutes vos sessions sont fermées."

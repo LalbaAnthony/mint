@@ -25,8 +25,11 @@ test('AUTH-02: wrong password refused, then login, logout and guarded views', as
   await page.getByRole('button', { name: 'Se connecter', exact: true }).click()
   await expect(page).toHaveURL('/')
 
-  await page.getByTestId('sidebar-profile').click()
-  await page.getByRole('menuitem', { name: 'Déconnexion' }).click()
+  await page
+    .getByTestId('sidebar-secondary-navigation')
+    .getByRole('link', { name: 'Profil' })
+    .click()
+  await page.getByTestId('logout').click()
   await expect(page).toHaveURL('/login')
 
   await page.goto('/')

@@ -50,6 +50,7 @@ useHead({ title: () => props.title })
         <template #right>
           <slot name="actions" />
           <AmountMaskToggle />
+          <ShortcutHelpButton />
           <NotificationBell />
         </template>
       </UDashboardNavbar>

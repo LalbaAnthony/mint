@@ -8,15 +8,12 @@ const {
   mainEntries,
   planningEntries,
   toolEntries,
-  profileEntry,
-  administrationEntries,
+  secondaryEntries,
   quickAddEntries,
 } = useNavigation()
-const logout = useLogout()
 const editor = useOperationEditorStore()
 const connectivity = useConnectivityStore()
 const quickAdd = useQuickAddStore()
-const shortcuts = useShortcutsStore()
 const isDesktopLayout = useMediaQuery('(min-width: 1024px)')
 
 const collapsed = ref(false)
@@ -28,8 +25,6 @@ const sidebarHint = useShortcut(
   { enabled: isDesktopLayout },
 )
 const quickAddHint = useShortcutHint('create', { fallbackOnly: true })
-const profileHint = useShortcutHint('profile')
-const helpHint = useShortcutHint('help')
 
 function toNavigationItems(entries: NavigationEntry[]): NavigationMenuItem[] {
   return entries.map(({ label, icon, to }) => ({ label, icon, to }))
@@ -50,38 +45,9 @@ const navigationLists = computed(() => [
   toNavigationItems(toolEntries.value),
 ])
 
-const administrationItems = computed(() =>
-  toNavigationItems(administrationEntries.value),
-)
+const secondaryItems = computed(() => toNavigationItems(secondaryEntries.value))
 
 const quickAddItems = computed(() => toQuickAddItems(quickAddEntries.value))
-
-const profileItems = computed<DropdownMenuItem[]>(() => [
-  {
-    label: profileEntry.value.label,
-    icon: profileEntry.value.icon,
-    to: profileEntry.value.to,
-    kbds: profileHint.value?.kbds,
-  },
-  ...(helpHint.value === undefined
-    ? []
-    : [
-        {
-          label: t('shortcuts.title'),
-          icon: icons.keyboard,
-          kbds: helpHint.value.kbds,
-          onSelect: () => {
-            shortcuts.helpOpen = true
-          },
-        },
-      ]),
-  {
-    label: t('navigation.logout'),
-    icon: icons.logout,
-    disabled: connectivity.offline,
-    onSelect: logout,
-  },
-])
 </script>
 
 <template>
@@ -132,30 +98,13 @@ const profileItems = computed<DropdownMenuItem[]>(() => [
     </template>
 
     <template #footer="{ collapsed }">
-      <UDropdownMenu
-        :items="profileItems"
-        :content="{ side: 'top', align: 'start' }"
-      >
-        <UButton
-          :label="collapsed ? undefined : t('navigation.profile')"
-          :aria-label="collapsed ? t('navigation.profile') : undefined"
-          :icon="icons.profile"
-          color="neutral"
-          variant="ghost"
-          block
-          class="justify-start"
-          data-testid="sidebar-profile"
-        />
-      </UDropdownMenu>
-
       <UNavigationMenu
-        v-if="administrationItems.length > 0"
-        :items="administrationItems"
+        :items="secondaryItems"
         :collapsed="collapsed"
         orientation="vertical"
         tooltip
-        :aria-label="t('navigation.administration')"
-        data-testid="sidebar-administration"
+        :aria-label="t('navigation.secondary')"
+        data-testid="sidebar-secondary-navigation"
       />
 
       <ShortcutTooltip

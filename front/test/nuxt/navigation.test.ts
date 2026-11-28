@@ -59,6 +59,28 @@ describe('useNavigation', () => {
     expect(wrapper.vm.moreEntries.at(-1)?.label).toBe('Administration')
   })
 
+  it('lists Profile, then Administration for an administrator, in the sidebar footer (CHG-55)', async () => {
+    const wrapper = await mountSuspended(NavigationProbe)
+
+    expect(wrapper.vm.secondaryEntries).toEqual([
+      {
+        id: 'profile',
+        label: 'Profil',
+        icon: 'lucide:circle-user',
+        to: '/profile',
+      },
+    ])
+
+    signIn('admin')
+
+    expect(
+      wrapper.vm.secondaryEntries.map(({ label, to }) => [label, to]),
+    ).toEqual([
+      ['Profil', '/profile'],
+      ['Administration', '/admin'],
+    ])
+  })
+
   it('offers expense, income and transfer', async () => {
     const wrapper = await mountSuspended(NavigationProbe)
 

@@ -6,6 +6,7 @@ import type { ShortcutHint, ShortcutKeyEvent } from '~~/types/shortcuts'
 import AmountMaskToggle from '~/components/AmountMaskToggle.vue'
 import AppForm from '~/components/AppForm.vue'
 import ConfirmModal from '~/components/ConfirmModal.vue'
+import ShortcutHelpButton from '~/components/ShortcutHelpButton.vue'
 import ShortcutHelpModal from '~/components/ShortcutHelpModal.vue'
 import AccountsPage from '~/pages/accounts/index.vue'
 import {
@@ -382,6 +383,8 @@ describe('device without a precise pointer (RAC-01)', () => {
     await mountHost(() => useShortcut('search', action))
     const wrapper = await mountInApp(AmountMaskToggle)
     mounted.push(wrapper)
+    const help = await mountInApp(ShortcutHelpButton)
+    mounted.push(help)
 
     setTouchPoints(5)
     await vi.waitFor(() => {
@@ -394,6 +397,9 @@ describe('device without a precise pointer (RAC-01)', () => {
     const toggle = wrapper.get('[data-testid="amount-mask-toggle"]')
     expect(toggle.attributes('title')).toBe('Masquer les montants')
     expect(toggle.attributes('aria-keyshortcuts')).toBeUndefined()
+    expect(help.find('[data-testid="shortcut-help-button"]').exists()).toBe(
+      false,
+    )
   })
 })
 
@@ -447,6 +453,22 @@ describe('global shortcuts (RAC-02, RAC-03)', () => {
     expect(
       help?.querySelector('[data-testid="shortcut-help-create"]')?.textContent,
     ).toContain('Ctrl')
+  })
+
+  it('opens the help modal from the header button (CHG-46)', async () => {
+    const wrapper = await mountHost(
+      () => undefined,
+      () => h('div', [h(ShortcutHelpButton), h(ShortcutHelpModal)]),
+    )
+
+    const button = wrapper.get('[data-testid="shortcut-help-button"]')
+    expect(button.attributes('aria-label')).toBe('Raccourcis clavier')
+    expect(button.attributes('aria-keyshortcuts')).toBe('Control+/')
+    await button.trigger('click')
+
+    await vi.waitFor(() => {
+      expect(findInBody('[data-testid="shortcut-help"]')).not.toBeNull()
+    })
   })
 
   it('opens the Add menu of the sidebar on desktop and the drawer of the button below', async () => {

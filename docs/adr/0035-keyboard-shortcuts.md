@@ -1,6 +1,6 @@
 # ADR 0035 · Raccourcis clavier
 
-Statut : acceptée · 22 novembre 2026 · Exigences : RAC-01 à RAC-08, RCH-01, DSH-05, NOTIF-04, IMP-01, NF-ACC-01, NF-PWA-02, NF-COMP-01, CHG-44, CHG-45, CHG-46, CHG-55, CHG-69, CHG-102 · Amende l'ADR 0034 (raccourci de la recherche globale), le cahier des charges (nouvelle section 3.19, lot 4) et la charte graphique (CHG-44, CHG-46, CHG-55, CHG-102, rattachement aux lots, registre des décisions)
+Statut : acceptée, amendée par ADR 0038 (bouton d'aide de l'en-tête) · 22 novembre 2026 · Exigences : RAC-01 à RAC-08, RCH-01, DSH-05, NOTIF-04, IMP-01, NF-ACC-01, NF-PWA-02, NF-COMP-01, CHG-44, CHG-45, CHG-46, CHG-55, CHG-69, CHG-102 · Amende l'ADR 0034 (raccourci de la recherche globale), le cahier des charges (nouvelle section 3.19, lot 4) et la charte graphique (CHG-44, CHG-46, CHG-55, CHG-102, rattachement aux lots, registre des décisions)
 
 ## Contexte
 

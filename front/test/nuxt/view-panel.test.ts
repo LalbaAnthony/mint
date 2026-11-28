@@ -94,6 +94,22 @@ describe('ViewPanel (CHG-51, CHG-56)', () => {
 
     expect(wrapper.get('[data-slot="right"]').text()).toBe('Action')
   })
+
+  it('puts the shortcuts help between the masked mode and the bell (CHG-46)', async () => {
+    const wrapper = await mountInApp(ViewPanel, {
+      props: { title: 'Comptes' },
+    })
+
+    const controls = wrapper
+      .get('[data-slot="right"]')
+      .findAll('button')
+      .map((button) => button.attributes('data-testid'))
+    expect(controls).toEqual([
+      'amount-mask-toggle',
+      'shortcut-help-button',
+      'notification-bell',
+    ])
+  })
 })
 
 describe('AppBrand (CHG-04, CHG-05, CHG-59)', () => {

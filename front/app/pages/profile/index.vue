@@ -20,6 +20,7 @@ import type {
 const { t } = useI18n()
 const toast = useToast()
 const session = useSessionStore()
+const logout = useLogout()
 const referentials = useReferentialsStore()
 const { validator, errorMessage } = useFormValidation()
 const { formatDateTime } = useFormatters()
@@ -342,17 +343,30 @@ const skeletonRows = useRememberedCount(
               <h2 class="text-base font-semibold text-highlighted">
                 {{ t('profile.sessions') }}
               </h2>
-              <OfflineGuard v-slot="{ offline }">
-                <UButton
-                  :disabled="offline"
-                  :label="t('profile.logoutEverywhere')"
-                  :icon="icons.logout"
-                  color="error"
-                  variant="outline"
-                  data-testid="logout-everywhere"
-                  @click="revokeOpen = true"
-                />
-              </OfflineGuard>
+              <div class="flex flex-wrap items-center gap-2">
+                <OfflineGuard v-slot="{ offline }">
+                  <UButton
+                    :disabled="offline"
+                    :label="t('profile.logout')"
+                    :icon="icons.logout"
+                    color="neutral"
+                    variant="outline"
+                    data-testid="logout"
+                    @click="logout"
+                  />
+                </OfflineGuard>
+                <OfflineGuard v-slot="{ offline }">
+                  <UButton
+                    :disabled="offline"
+                    :label="t('profile.logoutEverywhere')"
+                    :icon="icons.logout"
+                    color="error"
+                    variant="outline"
+                    data-testid="logout-everywhere"
+                    @click="revokeOpen = true"
+                  />
+                </OfflineGuard>
+              </div>
             </div>
           </template>
           <LoadZone :state="sessionsState">

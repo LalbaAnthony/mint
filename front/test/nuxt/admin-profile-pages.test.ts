@@ -236,6 +236,32 @@ describe('profile (AUTH-05, AUTH-07)', () => {
     )
   })
 
+  it('logs this session out from the sessions card, before logging out everywhere (ADR 0038)', async () => {
+    signIn('user')
+    const { requests } = installFakeApi(fetchMock, {
+      ...referentialHandlers(),
+      'GET /profile/sessions': () => sessions,
+      'POST /auth/logout': () => undefined,
+    })
+
+    const wrapper = await mountInApp(ProfilePage, { route: '/profile' })
+
+    expect(testIdsIn(wrapper.element, ['logout', 'logout-everywhere'])).toEqual(
+      ['logout', 'logout-everywhere'],
+    )
+    const logout = wrapper.get('[data-testid="logout"]')
+    expect(logout.text()).toBe('Déconnexion')
+    await logout.trigger('click')
+
+    await vi.waitFor(() => {
+      expect(useRouter().currentRoute.value.path).toBe('/login')
+    }, slowUnderCoverage)
+    expect(useSessionStore().status).toBe('anonymous')
+    expect(
+      requests.filter(({ method }) => method !== 'GET').map(({ path }) => path),
+    ).toEqual(['/auth/logout'])
+  })
+
   it('sets the settings on the left, categories and tags on the right (CHG-57)', async () => {
     signIn('user')
     installFakeApi(fetchMock, {

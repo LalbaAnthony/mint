@@ -64,10 +64,49 @@ describe('AppSidebar (CHG-55)', () => {
     expect(navigation.findAll('[data-slot="separator"]')).toHaveLength(2)
   })
 
-  it('puts Profile in the footer', async () => {
+  it('puts Profile and Administration in a secondary navigation in the footer', async () => {
+    signIn('admin')
     const wrapper = await mountInApp(AppSidebar, { route: '/' })
 
-    expect(wrapper.get('[data-testid="sidebar-profile"]').text()).toBe('Profil')
+    const secondary = wrapper.get(
+      '[data-testid="sidebar-secondary-navigation"]',
+    )
+    expect(secondary.attributes('aria-label')).toBe('Navigation secondaire')
+    const links = secondary.findAll('[data-slot="link"]')
+    expect(links.map((link) => link.text())).toEqual([
+      'Profil',
+      'Administration',
+    ])
+    expect(links.map((link) => link.attributes('href'))).toEqual([
+      '/profile',
+      '/admin',
+    ])
+    expect(wrapper.text()).not.toContain('Déconnexion')
+    expect(wrapper.text()).not.toContain('Raccourcis clavier')
+  })
+
+  it('renders Profile and Administration like the other entries', async () => {
+    signIn('admin')
+    const selector = '[data-testid="sidebar-secondary-navigation"] a'
+
+    const elsewhere = await mountInApp(AppSidebar, { route: '/accounts' })
+    const [profile, administration] = elsewhere.findAll(selector)
+    expect(profile?.classes()).toContain('text-muted')
+    expect(administration?.classes()).toContain('text-muted')
+    elsewhere.unmount()
+
+    const onProfile = await mountInApp(AppSidebar, { route: '/profile' })
+    expect(onProfile.findAll(selector)[0]?.classes()).toContain('text-primary')
+    expect(onProfile.findAll(selector)[1]?.classes()).toContain('text-muted')
+    onProfile.unmount()
+
+    const onAdministration = await mountInApp(AppSidebar, { route: '/admin' })
+    expect(onAdministration.findAll(selector)[0]?.classes()).toContain(
+      'text-muted',
+    )
+    expect(onAdministration.findAll(selector)[1]?.classes()).toContain(
+      'text-primary',
+    )
   })
 
   it('aligns the footer icons on the navigation links', async () => {
@@ -78,13 +117,12 @@ describe('AppSidebar (CHG-55)', () => {
       slots: { default: () => h(AppSidebar) },
     })
 
-    const profile = wrapper.get('[data-testid="sidebar-profile"]')
-    const administrationLink = wrapper.get(
-      '[data-testid="sidebar-administration"] [data-slot="link"]',
+    const [profile, administration] = wrapper.findAll(
+      '[data-testid="sidebar-secondary-navigation"] a',
     )
     const collapse = wrapper.get('[data-testid="sidebar-collapse"]')
-    for (const control of [profile, administrationLink, collapse]) {
-      expect(control.classes()).toContain('px-2.5')
+    for (const control of [profile, administration, collapse]) {
+      expect(control?.classes()).toContain('px-2.5')
     }
 
     await collapse.trigger('click')
@@ -99,16 +137,14 @@ describe('AppSidebar (CHG-55)', () => {
 
   it('shows Administration to an administrator only', async () => {
     const wrapper = await mountInApp(AppSidebar, { route: '/' })
+    const secondary = () =>
+      wrapper.get('[data-testid="sidebar-secondary-navigation"]').text()
 
-    expect(
-      wrapper.find('[data-testid="sidebar-administration"]').exists(),
-    ).toBe(false)
+    expect(secondary()).toBe('Profil')
 
     signIn('admin')
     await wrapper.vm.$nextTick()
 
-    expect(
-      wrapper.get('[data-testid="sidebar-administration"]').text(),
-    ).toContain('Administration')
+    expect(secondary()).toContain('Administration')
   })
 })

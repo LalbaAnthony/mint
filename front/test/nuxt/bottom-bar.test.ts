@@ -84,7 +84,6 @@ describe('AppBottomBar (CHG-52)', () => {
       'Import',
       'Règles',
       'Profil et préférences',
-      'Déconnexion',
     ])
   })
 })

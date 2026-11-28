@@ -57,8 +57,11 @@ test('DSH-05: masked mode from the header, kept on the device, cleared at logout
   await expect(total).toContainText('****')
   await otherTab.close()
 
-  await page.getByTestId('sidebar-profile').click()
-  await page.getByRole('menuitem', { name: 'Déconnexion' }).click()
+  await page
+    .getByTestId('sidebar-secondary-navigation')
+    .getByRole('link', { name: 'Profil' })
+    .click()
+  await page.getByTestId('logout').click()
   await expect(page).toHaveURL('/login')
 
   await login(page, administratorEmail, administratorPassword)

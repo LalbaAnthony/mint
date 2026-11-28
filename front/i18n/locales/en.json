@@ -19,7 +19,7 @@
     "profile": "Profile",
     "profileAndPreferences": "Profile and preferences",
     "administration": "Administration",
-    "logout": "Log out"
+    "secondary": "Secondary navigation"
   },
   "quickAdd": {
     "add": "Add",
@@ -325,6 +325,7 @@
     "currentSession": "This session",
     "unknownDevice": "Unknown device",
     "sessionDetails": "IP address {ip} · last activity {lastSeen}",
+    "logout": "Log out",
     "logoutEverywhere": "Log out everywhere",
     "logoutEverywhereEffect": "All your sessions will be closed, this one included.",
     "loggedOutEverywhere": "All your sessions are closed."
